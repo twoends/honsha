@@ -15,7 +15,8 @@ in that user's separate home repository, never here.
 - [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile.
 
-All three are drafts under review.
+All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
+that have not been tested yet; they are listed in its section 8.
 
 Identifiers such as D21 or O02 in these documents refer to the author's decision log, which is kept outside this
 repository.

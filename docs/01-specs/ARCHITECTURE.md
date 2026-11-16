@@ -1,6 +1,6 @@
 # Architecture
 
-**Status:** draft, 2026-11-16, for review. Identifiers such as D21 or O02 refer to the author's decision log, which is kept outside this repository. Terms are defined in
+**Status:** approved as the starting base on 2026-11-16. Identifiers such as D21 or O02 refer to the author's decision log, which is kept outside this repository. Terms are defined in
 the [vision](../00-vision/VISION.md) glossary.
 
 Several parts rest on platform features that are research previews or were read from documentation and not yet tried.

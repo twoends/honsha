@@ -1,6 +1,6 @@
 # Workflow
 
-**Status:** draft, 2026-11-16, for review. Identifiers such as D21 refer to the author's decision log, which is kept
+**Status:** approved as the starting base on 2026-11-16. Identifiers such as D21 refer to the author's decision log, which is kept
 outside this repository. Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
 ## 1. Key facts
