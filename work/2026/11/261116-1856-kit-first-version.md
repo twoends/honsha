@@ -266,14 +266,102 @@ section 7 and the vision's principle on models are reworded in this pull request
   checker has exactly `Read`, `Grep` and `Glob`. The worker runs on `claude-opus-5-5`, and on the model given with
   `--model` when there is one. For the same reason as the template, the diff for the checker goes to an uncommitted
   file in the repository root, not outside the repository (deviation 4).
+- A6: three runs of the worker on a record that names the area `labels`, with a throwaway pack in a scratch copy of
+  the kit. In all three the session stream shows the skill `honsha:area-labels` invoked before the first change,
+  the new file starts with the line only the pack requires, and the log of the rehearsed item names the pack. The
+  prompt never mentioned packs, areas or skills. A6 is true.
+- A4, behaviour: a plain session (no agent, no `CLAUDE.md`, the plugin as the only source of rules) received "add
+  login with email and password, so that only signed-in users can read the notes". It sized the item full because
+  it touches authentication, created `work/261116-2154-login-email-password`, wrote the record from the template
+  with the intent verbatim and `awaiting-approval`, committed only the record and asked for approval. No other file
+  changed. A4 is true.
+- Documents updated: README, the vision's principle on models, the architecture (sections 3.1, 7 and 8) and the
+  workflow (who writes `model`, the example's model identifier).
+- Rehearsal of a whole small item, in the A6 project, with only the push and the pull request left out. The worker
+  loaded the pack, made and committed the change, wrote the diff file, invoked `honsha:checker` as a subagent,
+  deleted the diff file, copied the report into the record, wrote the outcome, set `done` and wrote
+  `model: claude-opus-5-5`; the hook had written `effort: medium`. The checker ran on the worker's model, used only
+  `Read` and `Glob`, and returned a report in the shape its definition asks for, verdict `pass`.
+- The rehearsal's report listed two things the checker could not check: the "always full" cases, which it did not
+  know, and the rule of the area pack, which it cannot load. The cases are now written in the checker's definition.
+  The second is left as a known limit until a real pack exists.
+- Core rules reworded after the live runs: sessions tried to open the workflow document in the kit directory and
+  were refused. The rules now say that they and the template are enough for ordinary work, and that reading the kit
+  can need a permission.
 
 ## Verification
 
-Not started.
+Environment: Windows 11, Claude Code 2.1.325, Node.js 26, Git for Windows. The live checks ran `claude -p` in
+disposable repositories outside this one, with the kit loaded by `--plugin-dir` and the machine's user settings
+left out (`--setting-sources project`). Nothing was installed into Claude Code. The kit has no profile yet: its
+verification commands are the two below.
+
+### Commands
+
+- `claude plugin validate .`: passed with warnings, exit code 0. The warning about the manifests: no version
+  (deviation 1). The validator's other remarks concern a submission to the public plugin directory: no licence and
+  no icon.
+- `node --test hooks/`: 16 tests, 16 passed.
+
+### Acceptance criteria
+
+1. **Manifests:** met without `--strict` (deviation 1).
+2. **Core rules:** met. `rules/core.md` is 4,239 characters, covers the eight subjects and names no project.
+3. **A4:** met. (a) The hook event in the session stream ends with exit code 0 and carries the rules, and the
+   session answered four questions about them without a tool call. (b) A plain session, asked for a login, wrote
+   only the record, on its `work/…` branch, with `awaiting-approval`.
+4. **Record template:** met. A committed test compares its keys and their order with the workflow's section 4.1.
+5. **Agents:** met. The init event of a session lists `honsha:worker` and `honsha:checker`. A session run as the
+   checker has the tools `Read`, `Grep`, `Glob`. A worker session runs on `claude-opus-5-5`; started with
+   `--model sonnet` it runs on `claude-sonnet-5-5`. The checker's model as a subagent is in the rehearsal below.
+6. **A6:** met, three runs out of three.
+7. **A7:** met for the effort level, by the hook, with three different levels and for a record created in the
+   session. The model is written by the session, not by the hook (deviation 2); in two runs it matched the
+   identifier reported by the platform.
+8. **Checker:** its report on this item is below.
+9. **Public from the first commit:** before each commit the author address was read from the repository's local
+   configuration, a GitHub noreply address, and the staged diff was searched for names of people, accounts,
+   projects and providers and for machine paths. Nothing was found.
+10. **Delivery:** the pull request is opened after this section is written; its number is in the front matter.
+11. **Documents:** met. README, the vision's principle, the architecture's sections 3.1, 7 and 8, the workflow.
+
+### Rehearsal of a whole item
+
+One small item in a disposable repository, executed by `honsha:worker` up to the commit that sets `done`: the
+record ends with `state: done`, `model: claude-opus-5-5` (the identifier the platform reported), `effort: medium`
+(written by the hook) and the checker's report under "Verification". In the session stream the checker is a
+subagent of type `honsha:checker`, runs on `claude-opus-5-5` like the worker, and calls only `Read` and `Glob`.
+
+### Not verified
+
+- Linux and macOS.
+- An installation from the marketplace manifest. Only `--plugin-dir` was used.
+- A session in the terminal interface, where the session-start input may carry the model.
+- A session of the desktop application with the kit installed. Sessions driven through stream input, as an
+  application drives them, were tested from the command line only.
+- What a session holds after a compaction. The documentation says the session-start hook runs again then.
+- A project whose profile has verification commands and gates. The rehearsals' profile had none.
+- Whether a result follows the rules of an area pack: the checker has no tool to load a pack.
 
 ## Deviations
 
-None.
+1. **Criterion 1, `--strict`.** Strict mode turns the validator's "no version" warning into a failure, and the
+   version is left out on purpose (design point 1). The manifests are validated without `--strict`: they pass, with
+   that one warning.
+2. **Design point 5 and criterion 7: the hook writes the effort level only.** No hook receives the model in a
+   session started without a terminal interface, which is how workers run. The model is written by the session
+   that finishes the item, which is A7's fallback. The script is `hooks/record-effort.mjs`, with one hook entry and
+   no stored state. Criterion 7 is met for the effort level; for the model it is met by the session, not by a hook.
+3. **Design points 2 and 3: the record template is delivered at session start,** after the core rules, not opened
+   from a path. A session in a project needs a permission to read a file of the kit. The core rules still name the
+   kit directory for the workflow document, which a session can open only where reading the kit is allowed.
+4. **Design point 7: the diff for the checker is an uncommitted file in the repository root,** deleted after the
+   check, not a file outside the repository, for the same reason.
+5. **Design point 10: the committed tests are `node --test hooks/`,** two files, not one: the second checks that
+   every file a hook names exists, that what a session receives at start stays under the platform's limit, and
+   that the template's front matter matches the workflow's.
+6. **Risk "Older Claude Code": not tried.** The older build was no longer on the test machine when the build
+   started, and the event the risk was about (`PostModelSwitch`) is no longer used.
 
 ## Outcome
 

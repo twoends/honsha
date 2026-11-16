@@ -1,8 +1,9 @@
 # Honsha core rules
 
 This project is run with the Honsha workflow. These rules hold in every session of the project, whatever the task.
-The full procedure is `docs/01-specs/WORKFLOW.md` in the kit directory named after these rules; it is the reference
-when a rule here is not enough.
+Together with the record template that follows them, they are enough for ordinary work. The full procedure is
+`docs/01-specs/WORKFLOW.md` in the kit directory named after these rules. It is the reference for a case the rules
+do not cover; the kit lies outside the project, so reading it can need a permission.
 
 ## Work items
 

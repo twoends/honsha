@@ -32,7 +32,10 @@ If the record or the diff file is missing or cannot be read, say so and stop: th
    that is missing from the record, or recorded as failing, is a finding.
 6. **The record.** The intent is quoted. The sections its size requires are there. The log has entries. A full item
    has its approval written. Everything in the diff that departs from the scope or the criteria is declared under
-   "Deviations". A case from the "always full" list in an item sized smaller is a finding.
+   "Deviations". An item sized trivial or small that contains a case that is always full is a finding. Those cases
+   are: a data schema change, a migration or a deletion of data; a new dependency or a major upgrade;
+   authentication, permissions or secrets; deploy or CI configuration; a change to a public interface; anything
+   the profile lists under `always-full`.
 
 ## What you return
 
