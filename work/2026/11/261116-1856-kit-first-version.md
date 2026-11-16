@@ -240,6 +240,32 @@ section 7 and the vision's principle on models are reworded in this pull request
   a read-only Bash. Both changed the design before any file was written (design points 5 and 7).
 - 2026-11-16. Record written on its branch. State set to `awaiting-approval`.
 - 2026-11-16. Approved with one change (see Approval). State set to `in-progress`.
+- Manifests written. `claude plugin validate .` passes with warnings on Claude Code 2.1.325. The only warning about
+  the manifests is the missing version, which is deliberate; `--strict` turns it into a failure (deviation 1).
+- The command line on the test machine was updated to 2.1.325 before the build started, so nothing could be tried
+  on an older build.
+- Core rules written, 4,077 characters. A4, delivery: the session stream shows the `SessionStart` hook ending with
+  exit code 0 and the rules as its output, and the session answered from its context alone, with no tool call,
+  where a record lives, how its branch is named, what a full item waits for and which directory holds the kit.
+- A7, first live run: the hook ran and wrote nothing. A throwaway plugin that dumps the input of each hook showed
+  why. In a session started without a terminal interface (`claude -p`, with text input or with stream input) the
+  `SessionStart` input has no `model` field, and no other event carries the model. `effort.level` is in the
+  `PostToolUse` and `Stop` inputs, and `$CLAUDE_EFFORT` holds the same value. A7 is true for the effort level and
+  false for the model. The architecture's fallback is applied to the model: the session that finishes the item
+  writes its own identifier. The hook was reduced to the effort level: one hook entry, no stored state
+  (deviation 2).
+- A7, live runs with the reduced hook. (1) Effort low, two edits of a record: `effort: low` after the first edit,
+  and the second edit went through without a re-read. (2) Effort high, a session asked to finish an item "as this
+  project's rules say": the hook wrote `effort: high` and the session wrote `model: claude-sonnet-5-5`, the
+  identifier in the stream's init event. (3) A record created in the session with `Write` and a relative path:
+  `effort: medium`. The script now resolves a relative path against the session's working directory.
+- Found in run 2: a session in a project is refused when it reads a file of the kit, because the kit lies outside
+  the project. The record template is therefore delivered at session start, after the core rules, and a test keeps
+  the two under the platform's 10,000-character limit (deviation 3).
+- Worker and checker written. Both load, as `honsha:worker` and `honsha:checker`. Run as the agent of a session, the
+  checker has exactly `Read`, `Grep` and `Glob`. The worker runs on `claude-opus-5-5`, and on the model given with
+  `--model` when there is one. For the same reason as the template, the diff for the checker goes to an uncommitted
+  file in the repository root, not outside the repository (deviation 4).
 
 ## Verification
 

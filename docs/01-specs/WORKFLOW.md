@@ -98,7 +98,7 @@ updated: 2026-11-16
 requested-by: person # person | hub | check
 source: null # inbox item or parent work item, when there is one
 pr: null
-model: null # written by a hook
+model: null # written by the session that finishes the item
 effort: null # written by a hook
 checks: [] # each: { due: 2026-11-20, what: "…" }
 ```
@@ -140,8 +140,9 @@ be added if they are broken in practice.
    appends to the log as it goes.
 6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
    with the intent, the acceptance criteria and the profile's gates, from a fresh context and without write access.
-7. **Deliver.** The worker writes the outcome, sets the state to `done` and opens the pull request. Its description is
-   generated from the record: intent, what changed, verification evidence, checker report, deviations.
+7. **Deliver.** The worker writes the outcome and its own model identifier, sets the state to `done` and opens the
+   pull request. Its description is generated from the record: intent, what changed, verification evidence, checker
+   report, deviations.
 8. **Merge.** The person reviews and merges. A project whose profile says that merging deploys is deployed by that
    merge.
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
@@ -307,7 +308,7 @@ updated: 2026-11-16
 requested-by: person
 source: null
 pr: 212
-model: fable
+model: claude-opus-5-5
 effort: high
 checks:
   - { due: 2026-11-20, what: "A full month of orders opens correctly in a spreadsheet" }

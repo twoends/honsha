@@ -72,20 +72,29 @@ Three kinds. The split between the first two is what keeps a user's content out 
 Indicative layout:
 
 ```
+.claude-plugin/        plugin manifest and marketplace manifest
 rules/core.md          the few always-on rules
 skills/                workflow, triage, radar, status, one pack per area
 agents/                worker, reader, checker
-hooks/                 write model and effort into records; session start
+hooks/                 session start; write the effort level into records
 templates/             record, inbox item, radar entry, profile
 board/                 the board generator
 docs/                  vision and specifications
 work/                  the kit's own work records
 ```
 
-- It is distributed as a Claude Code plugin from a private marketplace repository.
+Built so far: the manifests, the core rules, the record template, the worker, the checker and the hooks. The rest
+of the layout is still indicative.
+
+- It is distributed as a Claude Code plugin from a private marketplace repository. The repository is its own
+  marketplace: the plugin is the repository root.
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
-- An area pack is written only when a real work item needs it (D52).
+- An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,
+  invoked as `honsha:area-<name>`.
+- A session in a project cannot read the kit's files without a permission, because they lie outside the project.
+  What every session needs is therefore put into its context when it starts: the core rules and the record
+  template. Together they must stay under 10,000 characters, the platform's limit for what a hook can deliver.
 
 ### 3.2 Home (one per user, private)
 
@@ -244,12 +253,17 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ## 7. Models
 
-- The strongest available model does everything that needs judgement: the hub, workers, the checker.
+- Everything that needs judgement runs on a strong model: the hub, workers, the checker. The default is Opus. The
+  strongest model is used when the work is too complex for the default: for a full item the strategy says so, and
+  the person approves that choice with the strategy.
+- The checker runs on the model of the session that calls it, so it is never weaker than the work it checks.
 - A cheaper model is fixed only for mechanical steps: the reader's extraction and summarising, searching, bulk
   formatting.
-- The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table.
-- A hook writes model and effort into each record, so the choice can be reviewed later with data. The policy is
-  revisited only if usage limits are reached (D20).
+- The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table. A model
+  given when a session is started overrides the definition.
+- Each record holds the model and the effort level of the session that did the work, so the choice can be reviewed
+  later with data. A hook writes the effort level; the session that finishes the item writes its model identifier
+  (section 8, A7). The policy is revisited with that data, or when usage limits are reached (D20).
 
 ---
 
@@ -270,6 +284,18 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 **Where they are tested (D42).** On a personal computer first: A2, A4, A5, A6, A7, A9, and the functional part of A1 and A3. Only on
 the always-on host: keeping A1 alive as a service, and A8. Background sessions are documented for macOS and Linux; on
 Windows A3 is tried as it is, and falls back to WSL2 or waits for the host.
+
+**Results so far.** Tested on 2026-11-16 on Windows 11 with Claude Code 2.1.325, in sessions started without a
+terminal interface and with the kit loaded for one session. Not tested: Linux, an installation from the
+marketplace, a session in the terminal interface, and what happens after a compaction.
+
+| ID  | Result                                                                                                                              | Consequence                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| A4  | True. A session-start hook puts the core rules in the session's context, and a session with no `CLAUDE.md` followed them: asked for a change to authentication, it wrote the record on its branch, set it to `awaiting-approval` and changed nothing else | None. The fallback is not needed                                                         |
+| A6  | True. In three runs out of three the worker invoked the pack of the area named in the record before its first change, and applied a rule only the pack states | None. The fallback is not needed                                                         |
+| A7  | True for the effort level, false for the model. The effort level reaches the hook that runs after an edit. The model reaches no hook in such a session: the session-start input carries no model | The fallback applies to the model only: the session that finishes the item writes its own model identifier. The hook writes the effort level |
+
+A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
 
 ---
 

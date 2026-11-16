@@ -3,11 +3,60 @@
 Honsha (本社, "head office") is one place from which a person runs all their software projects with AI agents: send
 it anything, ask it anything about the projects, tell it what to build.
 
-**Status:** design. Nothing is built yet.
+**Status:** the first version of the kit exists: the core rules of the workflow, the record template, a worker, a
+checker and two hooks. The hub, the channels, the board and the rest of the design are not built yet.
 
-This repository is the **kit**: the shareable part of the system. It will hold the workflow, the rules, the skills,
-the agent definitions, the hooks and the templates. Everything specific to a user, a project or an installation lives
-in that user's separate home repository, never here.
+This repository is the **kit**: the shareable part of the system, packaged as a Claude Code plugin. Everything
+specific to a user, a project or an installation lives in that user's separate home repository, never here.
+
+## What is in the kit
+
+| Path                   | What it is                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `rules/core.md`        | The rules every session of a project receives when it starts                               |
+| `templates/record.md`  | The work-item record. Sessions receive it together with the rules                          |
+| `agents/worker.md`     | `honsha:worker`: executes one work item, from its record to an open pull request           |
+| `agents/checker.md`    | `honsha:checker`: verifies a finished item against its record, with read-only tools        |
+| `hooks/`               | The hook definitions, the script that writes the effort level into a record, and the tests |
+| `.claude-plugin/`      | The plugin manifest and the marketplace manifest                                           |
+| `docs/`                | Vision and specifications                                                                  |
+| `work/`                | The kit's own work records                                                                 |
+
+## Requirements
+
+- Claude Code 2.1.325 or later. It is the version the kit was tested with, on Windows 11. It has not been tried on
+  Linux or macOS yet.
+- git. On Windows, Git for Windows: the hooks run through Git Bash.
+- Node.js, for one hook script. No packages are installed.
+
+## Trying it
+
+Load the kit for one session, without installing anything:
+
+```
+claude --plugin-dir <path to this repository>
+```
+
+Run the worker as the session of a work item:
+
+```
+claude --plugin-dir <path to this repository> --agent honsha:worker
+```
+
+The worker runs on Opus unless the session is started with another model (`--model`).
+
+Installing the kit from its marketplace manifest has not been tried yet. It is part of adopting the kit in a first
+project.
+
+## Checking a change to the kit
+
+```
+claude plugin validate .
+node --test hooks/
+```
+
+The validator reports one warning: the plugin has no version. That is deliberate, so that an installation follows
+the repository's commits.
 
 ## Documents
 
@@ -16,7 +65,7 @@ in that user's separate home repository, never here.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile.
 
 All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
-that have not been tested yet; they are listed in its section 8.
+that have not all been tested yet; they are listed in its section 8, with the results of those tested so far.
 
 Identifiers such as D21 or O02 in these documents refer to the author's decision log, which is kept outside this
 repository.

@@ -1,0 +1,28 @@
+{
+  "description": "Delivers the core rules and the record template when a session starts, and writes the effort level into work-item records.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/rules/core.md\" && printf '\\nKit directory: %s\\n\\nThe record template, templates/record.md in the kit directory:\\n\\n' \"${CLAUDE_PLUGIN_ROOT}\" && cat \"${CLAUDE_PLUGIN_ROOT}/templates/record.md\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/record-effort.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

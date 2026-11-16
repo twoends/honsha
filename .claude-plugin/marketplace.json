@@ -1,0 +1,14 @@
+{
+  "name": "honsha",
+  "description": "The Honsha kit.",
+  "owner": {
+    "name": "Honsha"
+  },
+  "plugins": [
+    {
+      "name": "honsha",
+      "source": "./",
+      "description": "A workflow for running software projects with AI agents: core rules, work-item records, a worker and a checker."
+    }
+  ]
+}
