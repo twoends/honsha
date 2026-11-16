@@ -4,7 +4,7 @@ title: First version of the kit as a Claude Code plugin
 project: honsha
 type: change
 size: full
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-16
 updated: 2026-11-16
@@ -49,8 +49,8 @@ conversation with the session working on this item.
 5. The hook that writes model and effort into a record, with an automated test of its script.
 6. Tests of A4, A6 and A7, recorded here. A false assumption gets the fallback of
    [ARCHITECTURE.md](../../../docs/01-specs/ARCHITECTURE.md), section 8.
-7. The documents this change affects: the README, the architecture (sections 3.1 and 8) and the workflow where what
-   is built differs from what is written.
+7. The documents this change affects: the README, the architecture (sections 3.1, 7 and 8), the vision's principle
+   on models, and the workflow where what is built differs from what is written.
 
 ### Out of scope
 
@@ -84,7 +84,8 @@ conversation with the session working on this item.
 4. **Record template.** `templates/record.md` has the front matter of [WORKFLOW.md](../../../docs/01-specs/WORKFLOW.md)
    section 4.1, same keys in the same order, and the sections of section 4.2 with what each size keeps.
 5. **Agents.** The definitions load as `honsha:worker` and `honsha:checker`. The checker's tools in a real run are
-   `Read`, `Grep` and `Glob` and nothing else. Both name the model as the architecture's section 7 requires.
+   `Read`, `Grep` and `Glob` and nothing else. The worker names Opus as its default model, and a worker started on
+   another model runs on that one. The checker runs on the model of the session that calls it.
 6. **A6.** With a throwaway pack in a scratch copy of the kit and a record that names its area, the worker loads the
    pack: the session stream shows the skill being invoked and the result follows a rule only the pack states. Three
    runs out of three, or the assumption is recorded as false and the fallback is applied.
@@ -98,7 +99,8 @@ conversation with the session working on this item.
 10. **Delivery.** A pull request from `work/261116-1856-kit-first-version` to `main` holds the plugin files and this
     record with its log, verification and outcome. It is not merged by the worker.
 11. **Documents.** The README says what exists and how to load it. The architecture's sections 3.1 and 8 match what
-    was built and what the tests showed, including anything that could not be verified.
+    was built and what the tests showed, including anything that could not be verified. Its section 7 and the
+    vision's principle on models state the model policy of the addendum.
 
 ## Strategy
 
@@ -156,8 +158,11 @@ before anything depends on them.
    itself, so the worker writes the diff to a file outside the repository and passes the path. The checker compares
    the record, the diff and the files, and returns a report the worker copies into the record unchanged. It does not
    re-run commands: it checks the output the worker recorded.
-8. **Models.** `model: fable` in both definitions. Effort is not fixed in them: the level of the session applies and
-   the hook records it.
+8. **Models.** `model: opus` in the worker: Opus is the default. The strongest model is for work too complex for the
+   default. For a full item the strategy says so and is approved with that choice; whoever starts the worker then
+   starts it on that model, which overrides the definition. The checker has `model: inherit`: it runs on the model
+   of the session that calls it, so it is never weaker than the work it checks. Effort is not fixed in the
+   definitions: the level of the session applies and the hook records it.
 9. **Area packs (A6).** A pack is a skill of the kit in `skills/area-<name>/`, invoked as `honsha:area-<name>`. The
    core rules and the worker definition say to load the pack of each area in the record. None is written now.
 10. **Tests.** Live tests run Claude Code without a terminal interface (`claude -p`) in a disposable repository
@@ -186,6 +191,7 @@ the independence test of the workflow's section 5.1. Only the reading fanned out
   directory.
 - The `PostToolUse` input for `Write` and `Edit` carries `tool_input.file_path` and `effort.level`.
 - A hook that changes a record right after the session edited it costs the session one re-read at most.
+- A model given when the worker is started (`--model`) overrides the model in its definition.
 
 ### Risks
 
@@ -217,7 +223,14 @@ the independence test of the workflow's section 5.1. Only the reading fanned out
 
 ## Approval
 
-Pending.
+Approved by the person on 2026-11-16, in the conversation with the session working on this item, with one change:
+decision 2. The default model is Opus, not Fable; Fable is used when the work is too complex for the default (see
+the addendum to the intent). Decisions 1, 3 and 4 were accepted as proposed, and the command line of decision 5 was
+logged in by the person.
+
+What the change did to this record before work started: design point 8, acceptance criteria 5 and 11, and item 7 of
+the scope. Because the approved specifications gave every judgement task to the strongest model, the architecture's
+section 7 and the vision's principle on models are reworded in this pull request.
 
 ## Log
 
@@ -226,6 +239,7 @@ Pending.
 - 2026-11-16. Found that no single hook event carries both model and effort, and that a plugin agent cannot be given
   a read-only Bash. Both changed the design before any file was written (design points 5 and 7).
 - 2026-11-16. Record written on its branch. State set to `awaiting-approval`.
+- 2026-11-16. Approved with one change (see Approval). State set to `in-progress`.
 
 ## Verification
 
