@@ -55,8 +55,9 @@ claude plugin validate .
 node --test hooks/
 ```
 
-The validator reports one warning: the plugin has no version. That is deliberate, so that an installation follows
-the repository's commits.
+The validator reports one warning about the manifests: the plugin has no version. That is deliberate, so that an
+installation follows the repository's commits. It also remarks that there is no licence and no icon, which matters
+only for a submission to the public plugin directory.
 
 ## Documents
 

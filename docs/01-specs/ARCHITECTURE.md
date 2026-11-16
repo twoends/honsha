@@ -286,8 +286,9 @@ the always-on host: keeping A1 alive as a service, and A8. Background sessions a
 Windows A3 is tried as it is, and falls back to WSL2 or waits for the host.
 
 **Results so far.** Tested on 2026-11-16 on Windows 11 with Claude Code 2.1.325, in sessions started without a
-terminal interface and with the kit loaded for one session. Not tested: Linux, an installation from the
-marketplace, a session in the terminal interface, and what happens after a compaction.
+terminal interface and with the kit loaded for one session. Not tested: Linux and macOS, an installation from the
+marketplace, a session in the terminal interface, a session of the desktop application with the kit installed, a
+project whose profile has verification commands and gates, and what happens after a compaction.
 
 | ID  | Result                                                                                                                              | Consequence                                                                              |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |

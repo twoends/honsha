@@ -4,14 +4,14 @@ title: First version of the kit as a Claude Code plugin
 project: honsha
 type: change
 size: full
-state: in-progress
+state: done
 areas: []
 created: 2026-11-16
 updated: 2026-11-16
 requested-by: person
 source: null
 pr: null
-model: null
+model: claude-fable-5-2
 effort: null
 checks: []
 ---
@@ -315,14 +315,16 @@ verification commands are the two below.
    checker has the tools `Read`, `Grep`, `Glob`. A worker session runs on `claude-opus-5-5`; started with
    `--model sonnet` it runs on `claude-sonnet-5-5`. The checker's model as a subagent is in the rehearsal below.
 6. **A6:** met, three runs out of three.
-7. **A7:** met for the effort level, by the hook, with three different levels and for a record created in the
-   session. The model is written by the session, not by the hook (deviation 2); in two runs it matched the
-   identifier reported by the platform.
+7. **A7:** met for the effort level, by the hook, in four live runs: `claude-haiku-5-5` at low, `claude-sonnet-5-5`
+   at high, `claude-haiku-5-5` at medium with a record created in the session, and `claude-opus-5-5` at medium in
+   the rehearsal below. The model is written by the session, not by the hook (deviation 2): it was asked for in
+   two of those runs, the second and the fourth, and both times it matched the identifier the platform reported.
 8. **Checker:** its report on this item is below.
 9. **Public from the first commit:** before each commit the author address was read from the repository's local
    configuration, a GitHub noreply address, and the staged diff was searched for names of people, accounts,
    projects and providers and for machine paths. Nothing was found.
-10. **Delivery:** the pull request is opened after this section is written; its number is in the front matter.
+10. **Delivery:** the pull request is opened after the checker's report is in this record; its number is written
+    into the front matter as the last change.
 11. **Documents:** met. README, the vision's principle, the architecture's sections 3.1, 7 and 8, the workflow.
 
 ### Rehearsal of a whole item
@@ -343,6 +345,92 @@ subagent of type `honsha:checker`, runs on `claude-opus-5-5` like the worker, an
 - A project whose profile has verification commands and gates. The rehearsals' profile had none.
 - Whether a result follows the rules of an area pack: the checker has no tool to load a pack.
 
+### Checker report
+
+**Verdict:** pass
+
+The pass rests on two criteria (1 and 7) that are not met as written but are declared as deviations; the person should accept or reject those at review. Criteria 8 and 10 cannot be complete at this point, because the checker runs before delivery.
+
+**Acceptance criteria**
+
+1. Manifests pass `validate --strict`, version recorded: not met as written, declared (deviation 1). The record reports `claude plugin validate .` passing with warnings on Claude Code 2.1.325, and says `--strict` fails on the deliberately missing version. `.claude-plugin/plugin.json` and `marketplace.json` exist and carry no `version`.
+2. Core rules cover the eight subjects, under 6,000 characters, name no project: met. `rules/core.md` has all eight: record path and branch (Work items), sizes and approval gate (Sizes), pull requests and merging (Delivery), what may not be rewritten (The record), Stop conditions, Area packs, profile and language (Work items), Lessons. It is 70 lines, consistent with the recorded 4,239 characters, and names no project.
+3. A4: (a) met, observed in this run: the session-start output with the core rules, the kit directory and the template was in my context, and matches `rules/core.md` and `templates/record.md`. (b) not verifiable: the behaviour run is only in the log (record `work/261116-2154-login-email-password` in a disposable repository).
+4. Record template: met. The front matter of `templates/record.md` has the same 15 keys in the same order as `WORKFLOW.md` lines 89–103. All eight sections of section 4.2 are present, each with a comment saying which sizes keep it.
+5. Agents: met in the definitions; partly observed, partly not verifiable.
+   - `agents/checker.md` has `tools: Read, Grep, Glob` and `model: inherit`; `agents/worker.md` has `model: opus`.
+   - Observed in this run: my tools are exactly `Read`, `Grep` and `Glob`.
+   - Not verifiable: loading as `honsha:worker` and `honsha:checker`, the `--model` override, and that my model equals the calling session's.
+6. A6, three runs out of three: not verifiable. It is recorded in the log and in `ARCHITECTURE.md` line 295. No `skills/` directory exists in the repository, so the throwaway pack did not enter it.
+7. A7: not met as written, declared (deviation 2).
+   - `hooks/record-effort.mjs` writes `effort` only; `model` is written by the finishing session (`agents/worker.md` Delivery step 3, `rules/core.md` line 36). This is the fallback the intent asks for when an assumption is false, and `ARCHITECTURE.md` line 296 says so.
+   - The automated test is recorded as passing; the two test files do contain 16 tests (13 + 3).
+   - The live runs are not verifiable.
+8. Checker verifies this item, report in record and pull request: in progress. This report is that verification; it is not yet in the record or in a pull request.
+9. Public from the first commit: met as far as readable.
+   - `.git/logs/HEAD` shows the four commits of this branch made with [the account's GitHub noreply address], and `.git/config` sets that address.
+   - A search of the tree outside `work/` for personal names, account names, machine paths and e-mail addresses found nothing.
+   - Commit contents were checked only through the cumulative diff.
+10. Delivery: not verifiable yet. `pr: null`, `state: in-progress`, Outcome reads "Not yet", and there is no remote ref for the branch. Nothing shows a merge: `main` still points at the commit before the branch.
+11. Documents: met, with one gap (finding 1).
+   - The README lists what exists and how to load it.
+   - `ARCHITECTURE.md` 3.1 (lines 75–97) and section 8 (lines 288–298) match what was built.
+   - Section 7 (lines 256–266) and `VISION.md` line 56 state the Opus-by-default policy of the addendum.
+
+**Intent:** Part 1 is delivered: plugin manifests, core rules, record template, worker and checker definitions, and a hook. Part 2 is recorded: A4 and A6 true, A7 false for the model, with the fallback applied and stated in the record and in the architecture.
+
+**Scope:** Every file in the diff belongs to the scope. The second test file, `hooks/hooks.test.mjs`, is declared (deviation 5). No skills, area packs, profile or profile template were added. No change outside the scope.
+
+**Gates:** no gates. `.hub/profile.yml` does not exist; a profile for the kit is out of scope.
+
+**Verification evidence:** With no profile there are no `verify` commands. The record names two of its own, not run again:
+- `claude plugin validate .`: recorded as passed with warnings, exit code 0.
+- `node --test hooks/`: recorded as 16 tests, 16 passed.
+
+**Record:**
+- In order: the intent restates the request; scope, criteria, strategy, approval (who, when, channel), log, verification and deviations are present; six deviations are declared and cover every departure I found in the diff; size is full.
+- Not final: `state: in-progress`, `pr`, `model` and `effort` are null, and Outcome is a placeholder. That is expected before delivery but must be completed.
+- The intent is an excerpt: the record says passages were left out. The addendum restates the person's answer. Both are stated openly in the record.
+- The addendum gives four answers to "the five decisions"; the fifth is covered only in Approval.
+
+**Findings**
+
+1. `ARCHITECTURE.md` section 8 (lines 288–290) lists four untested things. The record's "Not verified" lists seven: macOS, a desktop-application session and a project with verification commands and gates are missing from the architecture. Criterion 11 asks for "anything that could not be verified".
+2. The README says "The validator reports one warning". The record says the validator also remarks on a missing licence and icon.
+3. Verification, criterion 10, says the pull request's number "is in the front matter"; it is `pr: null`.
+4. Verification, criterion 7, reports three effort levels. The criterion asks for two combinations of model and effort, and the model is recorded for one live run only (`claude-sonnet-5-5`).
+
+**Not verified**
+
+- Every live result (validator output, A4 behaviour, A6, A7, agent loading, model override, the rehearsal): I cannot run commands or see session streams.
+- Whether the build started only after the approval was written. The reflog puts the approval commit at 21:40 UTC and the commit with all plugin files at 21:55 UTC, with the A4 test record stamped 21:54. The described work does not fit in those 15 minutes, so files were in the working tree before the approval was committed; whether the approval was already written in the record then cannot be seen.
+- Why `effort` is still null in this record although the hook stamps a record on every edit by a main session with the kit loaded.
+- Whether the model names in the documents count under the first boundary: D57 and D59 are in a decision log outside the repository.
+- Commit authors as distinct from committers, and the content of each single commit: git objects are not readable with my tools.
+- The exact character count of `rules/core.md`.
+
+### After the report
+
+The report above is the checker's, run as `honsha:checker` on `claude-fable-5-2`, the model of the session that did
+the work. It is copied unchanged except for one thing: in criterion 9 the address is replaced by a description,
+because the kit names no account (D57).
+
+What was done about it:
+
+- Finding 1: the architecture's section 8 now lists everything this record lists as not verified.
+- Finding 2: the README now says what else the validator remarks on.
+- Finding 3: the pull request's number is written into the front matter once the pull request exists.
+- Finding 4: criterion 7 above now names the model and the level of each live run.
+- The checker was not run again after these four corrections: the verdict was `pass` and they change wording only.
+
+Answers to three of its open points:
+
+- The build started after the approval was committed. The fifteen minutes between the two commits are the real
+  duration of the build, live runs included.
+- `effort` is null in this record because the session that did the work ran without the kit, which it was
+  building: no hook was there to write it.
+- Criteria 1 and 7 are met only as their deviations say. Accepting them is the person's decision at review.
+
 ## Deviations
 
 1. **Criterion 1, `--strict`.** Strict mode turns the validator's "no version" warning into a failure, and the
@@ -362,7 +450,23 @@ subagent of type `honsha:checker`, runs on `claude-opus-5-5` like the worker, an
    that the template's front matter matches the workflow's.
 6. **Risk "Older Claude Code": not tried.** The older build was no longer on the test machine when the build
    started, and the event the risk was about (`PostModelSwitch`) is no longer used.
+7. **Risk "Usage".** The runs that test judgement used Opus, which the approval made the default, not the strongest
+   model. There were about twenty short sessions, not ten. The checker on this item ran on the strongest model,
+   the one that did the work.
 
 ## Outcome
 
-Not yet.
+The kit is a Claude Code plugin. Loaded in a session, it delivers the core rules and the record template when the
+session starts, provides `honsha:worker` and `honsha:checker`, and writes the effort level into a record whenever
+the session edits one. A4 and A6 are true. A7 is true for the effort level and false for the model, so the
+fallback applies to the model only: the session that finishes an item writes its own model identifier. The model
+policy is the one of the addendum: Opus by default, the strongest model when the work is too complex for it.
+
+Left for later steps, because it could not be verified here: Linux and macOS; an installation from the
+marketplace; a session of the desktop application with the kit installed; a session in the terminal interface;
+what a session holds after a compaction; a project whose profile has verification commands and gates.
+
+Two known limits. The checker cannot see the rules of an area pack. A session in a project needs a permission to
+read the kit's files, so the workflow document is out of its reach unless reading the kit is allowed there.
+
+No deferred check.
