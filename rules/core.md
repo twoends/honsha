@@ -42,11 +42,26 @@ do not cover; the kit lies outside the project, so reading it can need a permiss
 - A commit message is one plain imperative sentence in English. It gets a body only when the reason is not in the
   record. A convention of the project's own is stated in the project's rules.
 - Every commit on a work branch ends with the trailer `Work-Item: <id>`.
+- An item makes as few commits as it can. A small or trivial item: the work with its record, then one closing commit.
+  A full item: the record with its strategy, the approval, the work, then one closing commit. The closing commit
+  holds the verification, the checker's report, the outcome and the pull request's number together.
+- The work is split into more than one commit only where its parts are separate enough to be reviewed one at a time.
+  A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their own.
 - A full item's record with its strategy, and then its approval, are two commits that hold only the record. No other
   file changes before the commit of the approval.
 - A work branch only grows: no amend, no rebase, no squash. A mistake is corrected by a new commit.
 - A work branch is brought up to date only on a conflict, a need or a request, by merging the default branch into
   it. The verification commands and the checker then run again.
+
+## Comments
+
+In code and in every other file of the project:
+
+- A comment says why, not what: the reason, a constraint, a trap. What the code does is read from the code.
+- No history: no "changed for", no dates, no mention of earlier versions or of finished work items. History is in
+  the records and in git.
+- No code left commented out. Git keeps it.
+- A TODO names the identifier of the record that will do it: `TODO(<id>): …`. A TODO without one is not written.
 
 ## Delivery
 

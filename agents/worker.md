@@ -39,10 +39,15 @@ core rules in your context always hold. This is the procedure that goes with the
   commit the record and tell the person. Do not guess a way around it.
 - When the work turns out larger than its size, stop, raise the size and write a deviation. Raising to full means
   the approval gate applies.
-- Commit on the item's branch as the work goes, in coherent steps. The log lines of a step go in the same commit as
-  the step. A message is one plain imperative sentence in English, with a body only when the reason is not in the
-  record, and it ends with the trailer `Work-Item: <id>`. Never amend, rebase or squash: a mistake is corrected by a
-  new commit.
+- Update the specifications the change affects as part of the work, before the verification.
+- Write comments by the core rules: why, not what; no history; no code commented out; a TODO with a record's
+  identifier.
+- Make as few commits as the core rules allow. The work, with the record and its log, is one commit, made when the
+  work is ready for the verification. Split it only where its parts are separate enough to be reviewed one at a
+  time. A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their
+  own. A message is one plain imperative sentence in English, with a body only when the reason is not in the record,
+  and it ends with the trailer `Work-Item: <id>`. Never amend, rebase or squash: a mistake is corrected by a new
+  commit.
 
 ## When the default branch moves
 
@@ -81,17 +86,20 @@ into the branch of a part.
 
 ## Delivery
 
-1. Update the specifications the change affects, on the same branch.
+The verification and the checker have run on the committed work. What follows makes one closing commit, so that no
+commit exists only to write the pull request's number.
+
+1. Push the branch and open the pull request to the default branch, with the command-line client of the service that
+   hosts the project. The kit's piece for that service lists its commands: `services/<name>/README.md` in the kit
+   directory. The description comes from the record and from the checker's report: intent, what changed,
+   verification evidence, checker report, deviations.
 2. Write the outcome. A criterion that only a future event can verify goes into `checks` with its date and what to
    look at.
-3. Set `updated` and set the state to `done`. Write your own model identifier into `model`, exactly as the platform
-   states it. `effort` is written by a hook: leave it alone.
-4. Commit, push the branch and open the pull request to the default branch, with the command-line client of the
-   service that hosts the project. The kit's piece for that service lists its commands: `services/<name>/README.md`
-   in the kit directory. The description comes from the record: intent, what changed, verification evidence, checker
-   report, deviations.
-5. Write the pull request's number into `pr`, commit and push.
-6. Stop there. The person reviews and merges, with a merge commit. Never merge, never push to the default branch,
+3. Write the pull request's number into `pr`. Set `updated` and set the state to `done`. Write your own model
+   identifier into `model`, exactly as the platform states it. `effort` is written by a hook: leave it alone.
+4. Make the closing commit: the verification, the checker's report, the outcome and the front matter, together. Push
+   it to the open pull request.
+5. Stop there. The person reviews and merges, with a merge commit. Never merge, never push to the default branch,
    never force-push.
 
 ## After the merge
