@@ -1,0 +1,168 @@
+---
+id: 261117-2114
+title: Say each rule once, keep records short, and keep it that way
+project: honsha
+type: change
+size: full
+state: awaiting-approval
+areas: []
+created: 2026-11-17
+updated: 2026-11-17
+requested-by: person
+source: null
+pr: null
+model: null
+effort: null
+checks: []
+---
+
+## Intent
+
+Before going on with the assessment, the person asked for all the documents produced so far to be gone over, with the
+same reasoning as for the decisions, to find out whether too much material is starting to accumulate. Two independent
+reviews of the kit and the home found that it is: the same rule is stated in three or four documents, checker reports
+copied in full make up 38% of the records, the architecture keeps history and measurements, and some documents
+contradict each other.
+
+The person then asked to go ahead, and asked for more than fixing what is there now: that it does not happen again,
+without the person having to remember it in everything that is done. The home's part is done in the home, outside this
+pull request. Asked on 2026-11-17, in the chat of a session on the kit.
+
+## Scope and acceptance criteria
+
+### In scope
+
+- Each rule stated once in the kit's documents, with pointers elsewhere.
+- A shorter checker report and a shorter Verification section in future records.
+- History, status and measurements removed from the kit's specifications and README.
+- The inconsistencies the reviews found in the kit.
+- Mechanisms that keep the material from growing again without the person having to ask.
+
+### Out of scope
+
+- Records already merged: they are history and are not rewritten.
+- The home's documents, cleaned in the home.
+- Any change to what a rule requires, beyond the inconsistencies listed below.
+
+### Boundaries
+
+- No rule is lost: every rule deleted from one document is still stated in another, which the deleting text points to.
+- What a session needs and cannot otherwise read stays where the session reads it: the core rules for every session,
+  the checker's file for the checker, which does not receive the core rules.
+
+### Acceptance criteria
+
+1. The core rules are the only place for every rule they state; the workflow and the worker point to them instead of
+   repeating them. The checker keeps what it needs, since it does not receive the core rules.
+2. The checker's report is shorter: a criterion met takes one line, only a criterion not met or not verifiable is
+   argued, standing limits are said once in the checker's file, and "Record" lists only what is not in order.
+3. A record keeps in full only the last checker report; an earlier one keeps its verdict and findings. Verification
+   holds the commands and the report, not a second walk through the criteria.
+4. The architecture, the vision, the README and the GitHub piece hold no test dates, no measurements kept for a past
+   decision, no status lines and no assumption already settled.
+5. The inconsistencies listed in the strategy are fixed.
+6. Three mechanisms keep the material from growing, described below, are in place: a rule, a check on every pull
+   request, and a periodic review.
+7. The kit's `verify` list passes; the core rules and the template stay under their budget.
+
+## Strategy
+
+### Facts it rests on
+
+From the two reviews on 2026-11-17:
+
+- Kit documents: about 100k characters. WORKFLOW 32k, ARCHITECTURE 26k, worker 7.7k, GitHub piece 7.1k, README 6.8k,
+  core 6.5k, checker 5.9k, vision 5.8k, template 2.2k. Core and template: 8,687 of the 9,000 the hooks' test allows.
+- Records: 195k characters for 8 items in one day. Verification is 49% of it; checker reports alone 38%; three
+  records hold two full reports.
+- The same rule appears in the core rules, the worker, the workflow and often the checker: commits, comments,
+  documents, stop conditions, the always-full list, lessons, delivery.
+- Inconsistencies: the architecture says the hub's identity cannot merge and default branches are protected, which a
+  free personal account does not give (the GitHub piece and section 14 say so); it says the hook limit is 10,000 while
+  the test enforces 9,000; it calls the marketplace private while the kit is meant to be public; the always-full list
+  has three wordings, and the checker's lacks "anything ambiguous"; the checker is asked to check the sections a size
+  requires and to apply "the core rules", neither of which it receives; the core rules lack the allowance, which the
+  workflow and the checker have, to name once the identifier an entry replaces; the strategy of a full item has two
+  lists of contents; the workflow's example shows a one-line checker summary while the rules ask for the full report.
+
+### Design
+
+**Fix now.**
+
+- **One source per rule.** The core rules hold every rule a session needs while working. The workflow keeps what the
+  core rules do not say (reasons, the contract of a hosting service, the profile, derived views, dependencies, the
+  parts of sections 13 to 17 that are not rules for a session) and points to the core rules for the rest. The worker
+  keeps the procedure only. The checker keeps its checks, written out, with the always-full list and the sections by
+  size, because it does not receive the core rules.
+- **Checker report.** New shape in `agents/checker.md`: verdict; criteria, one line each when met; intent, scope,
+  comments and documents, gates, commits, each one line when in order; findings in full; "Not verified" without the
+  limits that always hold, which the checker's file states once.
+- **Records.** Template and worker: the last report in full, an earlier one reduced to its verdict and findings;
+  Verification holds the commands and the reports, nothing else; what happened after a check goes into the log only.
+- **Specifications.** The architecture loses its status lines, the measurement table of section 3.4 (one sentence
+  stays), the results and dates of section 8 and the settled assumptions A4, A6 and A7, repeated statements of
+  hosting independence and of the guard's limits, and the paragraph on versions repeated from O10. The README, the
+  vision and the GitHub piece lose status and "tried on" lines that the specifications or the records already hold.
+- **Inconsistencies.** Each one above, fixed in the document that is wrong.
+
+**Keep it that way.** Three mechanisms, none of which depends on the person remembering:
+
+1. **A rule,** in the core rules' "Documents": a rule is stated in one place, and a document that needs it points to
+   it; a record copies nothing that another document already holds. Every session receives it.
+2. **A check on every pull request,** two parts:
+   - the checker's step on comments and documents reports, in the parts a change touches, a rule restated that
+     another document already states, and a record over the size its item calls for. Both fail the item;
+   - a new test in the kit's `verify` list gives each document a session reads at every start or every item (core
+     and template together, the worker, the checker) a budget in characters, and fails when one is exceeded. A budget
+     is raised only by a work item that says why.
+3. **A periodic review,** in the workflow next to the radar review of section 17: on the same date, the documents and
+   logs of the kit, the home and each project are read for duplication, stale text and size, and the findings become
+   one work item. Until the installation has a scheduler, a scheduled task on the person's computer starts it each
+   month and reports; it changes nothing by itself. The task belongs to the installation and is created in the home's
+   part, after the approval.
+
+### Plan
+
+1. Core rules: the "one place" rule and the allowance on identifiers; the internal duplicates merged, to make room.
+2. Workflow: pointers in place of the repeated rules; the periodic review; the example fixed.
+3. Worker and template: procedure only; the record rules on reports.
+4. Checker: the new report shape; the always-full list and the sections by size written out; the two new findings.
+5. Architecture, vision, README, GitHub piece: history, status and measurements out; inconsistencies fixed.
+6. The budget test and its numbers, set a little above the sizes reached after the cuts.
+7. Verification, the checker under its own new rules, the pull request, the closing commit.
+
+One worker, in sequence: every step touches files the next one reads.
+
+### Assumptions to confirm while building
+
+- Removing the repeated rules frees enough of the core budget for the new rule.
+- The checker can tell a restated rule from a pointer reliably enough to fail an item on it; if not, the finding
+  becomes a report without a fail.
+
+### Risks
+
+- **A rule lost in the cutting.** Mitigation: the checker is asked to list every rule removed and where it is still
+  stated.
+- **The workflow no longer reads on its own.** Accepted: it points to the core rules, which every reader of a project
+  has.
+- **Budgets too tight,** forcing work items only to raise them. Mitigation: budgets set about 10% above the size after
+  the cuts.
+
+### Decisions for the person
+
+1. **The checker fails an item** for a restated rule or an oversized record, rather than only reporting it.
+   Recommended: a report that nothing enforces is how the material grew.
+2. **Budgets in characters** for the documents read at every start or every item, enforced by a test. Recommended.
+3. **A monthly scheduled task on this PC** starts the review until the scheduler exists. Recommended; it reports and
+   changes nothing.
+
+## Approval
+
+## Log
+
+- 2026-11-17: two read-only reviews, one of the kit and one of the home, on Opus; their findings are under "Facts it
+  rests on". The strategy is written and the item waits for approval.
+
+## Verification
+
+## Outcome
