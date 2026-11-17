@@ -1,12 +1,13 @@
 # GitHub
 
 This folder is the kit's piece for GitHub: everything that is specific to that hosting service, kept apart from the
-rules. What a piece has to say is in [WORKFLOW.md](../../docs/01-specs/WORKFLOW.md), section 14. A user of another
-service writes a piece like this one for it, next to this folder or outside the kit; the rules do not change either way.
+rules. What a piece has to say is in [WORKFLOW.md](../../docs/01-specs/WORKFLOW.md), section 14.
 
-Everything here works with a free account: the kit asks no user for more. Read in GitHub's documentation on
-2026-11-17, and tried where it says so. GitHub changes what it offers: check a statement about what it gives or what it
-costs against GitHub's own pages before relying on it.
+Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
+on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
+the repository settings and the alerts below.
+GitHub changes what it offers: check a statement about what it gives or what it costs against GitHub's own pages
+before relying on it.
 
 ## Commands
 
@@ -21,8 +22,7 @@ With `gh`, GitHub's command-line client.
 | Delete a merged branch that is still there | `git push origin --delete <branch>`                                         |
 
 The person merges, on the site or with `gh pr merge --merge`. A session never does: the guard refuses the commands that
-match the patterns in [merge-commands.json](merge-commands.json). Tried: `gh pr create`, `gh pr view` and
-`gh pr checks`.
+match the patterns in [merge-commands.json](merge-commands.json).
 
 ## Settings the rules rely on
 
@@ -37,12 +37,12 @@ In the repository:
 gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false --delete-branch-on-merge
 ```
 
-A free account has these settings. Tried on a private repository of one.
+A free account has these settings.
 
 Two things on the site are not used:
 
 - **"Update branch" on a pull request.** A session merges the default branch into the work branch itself and runs the
-  verification again (WORKFLOW.md, section 13.5). "Update with rebase" would also rewrite the branch.
+  verification again (the core rules, "Commits and branches"). "Update with rebase" would also rewrite the branch.
 - **Squash and rebase in the merge menu,** which the first setting removes.
 
 For dependencies (WORKFLOW.md, section 17):
@@ -59,7 +59,7 @@ gh api -i repos/<owner>/<repository>/vulnerability-alerts
 ```
 
 The first command turns the alerts on; the second answers `204` when they are on and `404` when they are off. A free
-account has them on private repositories. Tried on two private repositories of one.
+account has them on private repositories.
 
 In the account of whoever merges:
 
@@ -68,11 +68,9 @@ In the account of whoever merges:
 
 ## What GitHub enforces, and what it does not
 
-The kit is built to work with a free account, so its rules rely on nothing that GitHub enforces.
-
 - **In a private repository of a free account nothing on GitHub stops an account that can write** from pushing to the
-  default branch or from merging: branch protection and rulesets are not there. The kit's guard is the stop. It stops
-  a mistake, not a session that was manipulated.
+  default branch or from merging: branch protection and rulesets are not there. The kit's guard is the stop
+  (WORKFLOW.md, section 14.3).
 - **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
   works the same with them: they add a stop on the server and change no rule.
@@ -105,5 +103,3 @@ What it costs: nothing on a free account, within a limit. On a private repositor
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
 minutes count for more than Linux ones. With no payment method on the account, runs stop when that amount is used and
 nothing is billed. On a public repository the standard runners are free.
-
-A template of this workflow for other projects is not written yet.

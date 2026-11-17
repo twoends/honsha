@@ -1,7 +1,5 @@
 # Vision
 
-**Status:** approved as the starting base on 2026-11-16.
-
 ## Key facts
 
 - **Name:** Honsha (本社, "head office").

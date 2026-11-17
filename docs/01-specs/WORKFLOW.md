@@ -1,7 +1,6 @@
 # Workflow
 
-**Status:** approved as the starting base on 2026-11-16. Terms are defined in the [vision](../00-vision/VISION.md)
-glossary.
+Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
 ## 1. Key facts
 
@@ -10,7 +9,7 @@ glossary.
 - **One record per work item,** one file, with front matter. Its sections depend on the size of the work.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
-  the change. The person merges, with a merge commit.
+  the change. The person merges (core rules, Delivery).
 - **Everything that is not a change to a project lives in the home:** backlog, inbox and verdicts, reports, check
   outcomes.
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
@@ -18,16 +17,12 @@ glossary.
 
 ---
 
-## 2. What the workflow guarantees
+## 2. Where the rules are
 
-- The intent is captured verbatim and then frozen.
-- Work that deserves it has an explicit scope and stops for approval before any code is written.
-- What happened is written in an append-only log.
-- A deviation from the scope is written down, never silent.
-- A worker stops when it meets a stop condition, instead of guessing.
-- A check that can only be done later is declared with its date and run on that date.
-- The effort of recording is proportional to the size of the work.
-- Nothing about the state of the work is kept by hand in a second place.
+The rules a session follows while it works are the [core rules](../../rules/core.md), which every session of a
+project receives when it starts, together with the record template. This document points to them instead of repeating
+them, and keeps what they do not say: the reasons, the profile, the derived views, the contract of a hosting service,
+decisions, dependencies and the upkeep review.
 
 ---
 
@@ -41,24 +36,10 @@ glossary.
 
 ### 3.2 Sizes
 
-| Size    | When                                                                            | Before work           | Evidence                              |
-| ------- | ------------------------------------------------------------------------------- | --------------------- | ------------------------------------- |
-| trivial | One obvious change of a few lines, with no effect beyond what the intent states | Nothing               | The profile's verification commands   |
-| small   | One concern, a few files, clear acceptance                                      | A short strategy      | Verification commands and the checker |
-| full    | Everything else                                                                 | Strategy and approval | Verification commands and the checker |
-
-Always full, whatever the number of lines:
-
-- a data schema change or migration, or deletion of data;
-- a new dependency or a major upgrade;
-- authentication, permissions or secrets;
-- deploy or CI configuration;
-- a change to a public interface;
-- anything ambiguous, or with more than one reasonable design;
-- anything the project's profile adds to this list.
-
-The size is proposed when the item is created and the person can change it. A worker that discovers the work is larger
-than its size stops, raises the size and records a deviation. Raising to full triggers the approval gate.
+The three sizes, what each needs before work starts and the cases that are always full are in the core rules (Sizes);
+a profile adds cases under `always-full` (section 9). The size is proposed when the item is created and the person can
+change it. The effort of recording follows the size, so that a small change does not carry the paperwork of a large
+one.
 
 ### 3.3 States
 
@@ -80,8 +61,9 @@ in the home.
 
 ## 4. The record
 
-One Markdown file: `work/<yyyy>/<mm>/<id>-<slug>.md`, in folders by year and month. The identifier is the creation time in UTC, `YYMMDD-HHMM`, so two branches
-cannot produce the same one. The branch is named `work/<id>-<slug>`.
+One Markdown file, whose path and branch are named in the core rules (Work items). The identifier is a time in UTC so
+that two branches cannot produce the same one; folders by year and month keep each folder small (architecture, section
+3.4).
 
 ### 4.1 Front matter
 
@@ -98,33 +80,25 @@ updated: 2026-11-16
 requested-by: person # person | hub | check
 source: null # inbox item or parent work item, when there is one
 pr: null
-model: null # written by the session that finishes the item
-effort: null # written by a hook
+model: null
+effort: null
 checks: [] # each: { due: 2026-11-20, what: "…" }
 ```
 
+Who writes `model` and `effort` is in the core rules (The record).
+
 ### 4.2 Sections by size
 
-| Section                       | trivial  | small                | full                                   |
-| ----------------------------- | -------- | -------------------- | -------------------------------------- |
-| Intent                        | yes      | yes                  | yes                                    |
-| Scope and acceptance criteria | —        | acceptance criteria  | scope in and out, criteria, boundaries |
-| Strategy                      | —        | a few lines          | plan, assumptions, risks               |
-| Approval                      | —        | —                    | who, when, through which channel       |
-| Log                           | —        | yes                  | yes                                    |
-| Verification                  | one line | commands and checker | commands and checker                   |
-| Deviations                    | if any   | if any               | if any                                 |
-| Outcome                       | yes      | yes                  | yes                                    |
+The record template (`templates/record.md`) says, section by section, which sizes keep it and what it holds. What
+Verification holds, and how much of each checker report a record keeps, is in the core rules (The record): only
+the last report in full, because an earlier one matters only for what it found. A record is as long as its size calls
+for, and copies nothing another document holds (core rules, Documents); the checker fails an item whose record is
+longer.
 
 ### 4.3 What may not be rewritten
 
-- **Intent** is the person's words, verbatim. After creation it is only extended, under "Addenda".
-- **Scope and acceptance criteria** are fixed once work starts (small) or once approved (full). A change is a
-  deviation.
-- **Log** is append-only.
-
-In the first version these are rules for agents and reviewers. A check that compares the sections across commits can
-be added if they are broken in practice.
+The intent, the scope and acceptance criteria once fixed, and the log: the core rules (The record) say how each is
+extended instead.
 
 ---
 
@@ -132,22 +106,17 @@ be added if they are broken in practice.
 
 1. **Capture.** A record is created with the intent verbatim. It is an `idea` or `ready` in the home's backlog, or it
    starts at once.
-2. **Size and areas.** Proposed from the rules in 3.2 and the profile's area map.
+2. **Size and areas.** Proposed from the core rules (Sizes) and the profile's area map.
 3. **Start.** A branch is created in the project and the record moves into it.
-4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written, the state becomes
-   `awaiting-approval`, and the person is asked. Work continues only after approval, which is written into the record.
-   The record with its strategy, and then the approval, are each committed alone (section 13.3).
-5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas. It
-   appends to the log as it goes.
+4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written and the item stops for the
+   approval, as the core rules say (Sizes; Commits and branches).
+5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas.
 6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
-   with the intent, the acceptance criteria and the profile's gates, from a fresh context and without write access.
-7. **Deliver.** The worker opens the pull request. Its description is generated from the record and the checker's
-   report: intent, what changed, verification evidence, checker report, deviations. The worker then writes the
-   outcome, the pull request's number and its own model identifier, sets the state to `done`, and pushes all of it in
-   one closing commit (section 13.3). The checks that are wired to the hosting service run on the pull request
-   (section 14.2).
-8. **Merge.** The person reviews and merges, with a merge commit, and the merged branch is deleted (section 13.4). A
-   project whose profile says that merging deploys is deployed by that merge.
+   with the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
+7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
+   branches). The checks that are wired to the hosting service run on the pull request (section 14.2).
+8. **Merge.** The person reviews and merges (section 13.4). A project whose profile says that merging deploys is
+   deployed by that merge.
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
 
 A trivial item goes from step 3 to step 5.
@@ -163,8 +132,8 @@ Work is split and run in parallel whenever its parts are independent. Nobody has
 3. each part can be verified on its own;
 4. between two separate requests: their pull requests can be merged in either order.
 
-Parts that fail the test run in sequence. A split is never forced: published comparisons have found that agents
-sharing one piece of work do worse than a single agent, so the gain exists only where no coordination is needed.
+Parts that fail the test run in sequence. A split is never forced: the gain exists only where no coordination is
+needed.
 
 **Where it applies.**
 
@@ -173,8 +142,6 @@ sharing one piece of work do worse than a single agent, so the gain exists only 
 | Parts of one request | One request is one work item and one pull request, even when its parts could land separately. The worker runs the independent parts in separate worktrees, on local branches cut from the item's branch, and merges them into it (section 13.6). Verification and the checker run once, on the integrated result |
 | Separate requests    | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits                                                                                                                             |
 | Reading              | Searching, exploring, researching and reviewing always fan out                                                                                                                                                                                                                                                   |
-
-**Approval.** For full-size work the split into parts is part of the strategy and is approved with it.
 
 **Limits.** `max-workers` in the home's settings caps the workers on a host. `parallel.max` in a profile caps the
 workers in a project. `parallel.exclusive` names resources that only one worker may use at a time, such as a test
@@ -186,14 +153,8 @@ database or a development server; a worker that needs one waits its turn. Work b
 
 ## 6. Stop conditions
 
-A worker stops, sets the state to `blocked` and reports when:
-
-- the intent or an acceptance criterion is ambiguous;
-- a breaking change is required;
-- security or permissions are unclear;
-- the work conflicts with the documented architecture;
-- the work goes beyond the scope;
-- an item in the "always full" list appears in work that was sized smaller.
+The conditions that stop a worker, and what it does then, are in the core rules (Stop conditions). A worker that
+stops instead of guessing leaves a choice to the person that only the person can make.
 
 ---
 
@@ -207,8 +168,8 @@ the item. A failed check creates a new work item.
 
 ## 8. Lessons
 
-When a tool is misused or the person corrects an approach, the correct action is written down as a short preventive
-rule, with no history. It goes to the level where it applies, so that it is learned once:
+When a lesson is written is in the core rules (Lessons). It goes to the level where it applies, so that it is learned
+once:
 
 | Level      | Applies to                              | Example                                                         | Where                                      | How it enters                |
 | ---------- | --------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
@@ -267,9 +228,7 @@ legacy:
   - docs/old-worklogs
 ```
 
-- `language` sets the language of the project's documents and records. When it is omitted, they are in English.
-  Code, comments, commit messages and pull requests stay in English in every project. How comments are written is in
-  section 15.
+- `language` sets the language of the project's documents and records (core rules, Work items).
 - `stack` lists the technologies whose lessons the project's sessions load (section 8).
 - `parallel` sets how many workers may run in the project at once and which resources cannot be shared (section 5.1).
 - `lessons` names the file that holds the project-level lessons only. The file name is the project's choice.
@@ -279,8 +238,8 @@ legacy:
   runs in the default shell of the machine.
 - `verify` is expected to cover four things, with the tools of the project's own stack: formatting, lint, types where
   the language has them, and tests. One command may cover several, as `npm run check` does in the example. A project
-  that leaves one out says why in a comment beside the list. The checker reports what the list does not cover; it
-  is a finding only when the profile lists that coverage among its gates.
+  that leaves one out says why in a comment beside the list. The checker reports what the list does not cover
+  (`agents/checker.md`).
 - `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
   must match. A profile without it sets no rule on addresses.
 
@@ -351,7 +310,31 @@ empty result.
 ## Verification
 
 - `npm run check`: passed.
-- Checker: both criteria met; no change outside `src/orders`.
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. A download button returns the current filter as CSV: met, `src/orders/export.ts`.
+2. Amounts and dates use the page's format: met, `src/orders/format.ts`.
+
+- **Intent:** in order.
+- **Scope:** in order.
+- **Comments and documents:** in order.
+- **Gates:** in order.
+- **Verification evidence:** in order; `npm run check` covers formatting, lint, types and tests.
+- **Record:** in order.
+- **Commits:** in order.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
 
 ## Outcome
 
@@ -362,18 +345,17 @@ Orders can be downloaded as CSV with the active filter. One deferred check on a 
 
 ## 13. Commits and branches
 
-The same in every project. A project adds to it only in its own rules.
+The rules on commits and branches are in the core rules (Commits and branches; Delivery). A project adds to them only
+in its own rules. What follows is why they are as they are, and what they do not say.
 
 ### 13.1 Commit messages
 
-- One plain imperative sentence in English, short enough to be read as a title. A body follows only when the reason is
-  not in the record.
-- A project that has its own convention for messages states it in its own rules. The engine has none beyond this.
+A message is read as a title in the history; the reasons are in the record, so the message needs no more.
 
 ### 13.2 The trailer
 
-- Every commit a session makes on a work branch ends with the trailer `Work-Item: <id>`, in the last block of the
-  message. Other trailers, such as the one the platform adds for its co-author, can share the block.
+- The trailer goes in the last block of the message. Other trailers, such as the one the platform adds for its
+  co-author, can share the block.
 - It ties each commit to its record without walking the history:
   `git log --format='%(trailers:key=Work-Item,valueonly)'` prints it. It cannot be added later, because commits are
   never rewritten.
@@ -381,55 +363,29 @@ The same in every project. A project adds to it only in its own rules.
 
 ### 13.3 Which commits an item makes
 
-- For a full item, two commits hold only the record: the record with its strategy and the state `awaiting-approval`, and
-  then the approval. No other file changes before the commit of the approval. This is what lets the approval gate be
-  read from the history.
-- An item makes as few commits as it can:
-
-  | Size             | Commits                                                                  |
-  | ---------------- | ------------------------------------------------------------------------ |
-  | trivial or small | the work with its record; the closing commit                             |
-  | full             | the record with its strategy; the approval; the work; the closing commit |
-
-- **The work** is one commit, with the record and its log, made when the work is ready for the verification. It is
-  split only where its parts are separate enough to be reviewed one at a time. The specifications the change affects
-  are part of it.
-- **The closing commit** holds the verification, the checker's report, the outcome and the front matter, the pull
-  request's number included. It is made after the pull request is opened, so no commit exists only to write that
-  number.
-- **Commits of their own,** besides these: a stop that sets the state to `blocked`, a merge of the default branch
-  (13.5), and a fix asked by the checker or the person.
+- The two commits of a full item that hold only the record let the approval gate be read from the history.
+- The closing commit is made after the pull request is opened, so no commit exists only to write its number.
 - A pull request is reviewed as a whole. Fewer commits make the history shorter; the record says what happened in
   between.
-- A work branch only grows: no amend, no rebase, no squash, whether its commits were pushed or not. A mistake is
-  corrected by a new commit.
 
 ### 13.4 Merging
 
-- A pull request is merged with a merge commit. Every commit of the item then reaches the default branch as it was made,
-  and the default branch shows one entry for each item (`git log --first-parent`).
-- After the merge the branch is deleted, on the hosting service and locally, with its worktrees. A merged branch left
-  behind shows a finished item among the open ones (section 10).
+- With a merge commit, every commit of the item reaches the default branch as it was made, and the default branch
+  shows one entry for each item (`git log --first-parent`).
+- A merged branch left behind shows a finished item among the open ones (section 10).
 - A project that already merges in another way can keep it. The record still arrives whole and the trailer still ties
   the commits to it; the order of the approval gate is then visible only where the hosting service keeps the pull
   request.
 
 ### 13.5 Keeping a work branch up to date
 
-- A work branch does not need to hold the latest default branch. It is brought up to date only when its pull request
-  shows a conflict, when the item needs something that was merged after it started, or when the person asks.
-- It is done by merging the default branch into the work branch, never by a rebase. The verification commands and the
-  checker then run again, and the log says so.
-- A conflict that cannot be resolved inside the scope is a stop condition.
+A work branch does not need to hold the latest default branch: its pull request shows a conflict when there is one. A
+conflict that cannot be resolved inside the scope stops the work, as any work beyond the scope does.
 
 ### 13.6 Branches of parallel parts
 
-- Each part of an item (section 5.1) works in its own worktree, on a local branch that is cut from the tip of the item's
-  branch and is never pushed. Git refuses a branch named below an existing one, so the name takes a suffix:
-  `work/<id>-<slug>.<part>`.
-- The parts are merged into the item's branch. Their branches and worktrees are then removed.
-- The default branch is merged only into the item's branch, before the split or after the integration, never into a
-  part.
+How the parts of an item (section 5.1) get their worktrees and branches, and how they are merged back, is in the
+worker (`agents/worker.md`, "While working" and "When the default branch moves").
 
 ---
 
@@ -437,8 +393,7 @@ The same in every project. A project adds to it only in its own rules.
 
 The kit does not depend on the service that hosts a project's repository and its pull requests, and its rules name no
 service. What is specific to one service is a separate piece of the kit, `services/<name>/`, which a user of another
-service replaces with their own. This section says what such a piece holds. The piece for the one service the kit has
-been tried with is the worked example.
+service replaces with their own. This section says what such a piece holds; `services/github/` is a worked example.
 
 The rules rely on nothing that a service enforces or sells. They hold with a free account, where a service may give
 no protection at all: what a service adds beyond that is a further stop, never something a user of the kit must have.
@@ -448,8 +403,9 @@ no protection at all: what a service adds beyond that is a further stop, never s
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
    merged it.
 2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
-3. **The settings the rules rely on:** pull requests are merged with a merge commit, merged branches are deleted, and,
-   where the service has them, alerts on vulnerable dependencies are on without automatic pull requests (section 17).
+3. **The settings the rules rely on:** pull requests are merged with the method the core rules name (Delivery), merged
+   branches are deleted, and, where the service has them, alerts on vulnerable dependencies are on without automatic
+   pull requests (section 17).
 4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.
@@ -490,32 +446,23 @@ that reads the three variables.
 
 ## 15. Comments and documents
 
-The same in every project, in code and in every other file: documents, configuration, scripts. A project adds to it
-only in its own rules.
+The rules are in the core rules (Comments; Documents), for code and every other file. A project adds to them only in
+its own rules. What the checker reviews of them is in `agents/checker.md`.
 
 ### 15.1 Comments
 
-- **Why, not what.** A comment gives the reason, a constraint or a trap that the code cannot show. What the code does
-  is read from the code.
-- **No history.** No "changed for", no dates, no mention of earlier versions or of finished work items. History is in
-  the records and in git.
-- **No code left commented out.** Git keeps it.
-- **A TODO names its record:** `TODO(<id>): …`, where `<id>` is the identifier of a work item in the home's backlog or
-  in a project. A TODO without one is not written.
-- **Formatting is the project's choice,** with the tools of its stack, and its `verify` list checks it (section 9).
-- The checker reviews the comments a change adds, not those it leaves untouched.
+- A comment that says what the code does goes stale with the code; the reason behind it does not.
+- Formatting is the project's choice, with the tools of its stack, and its `verify` list checks it (section 9).
 
 ### 15.2 Documents
 
-- **A document says what holds now.** What a change replaces is deleted, not kept beside the new text with a note
-  such as "previously" or "replaced by". Git keeps the earlier wording, and the record of the change says why.
-- **The same holds for lists that grow:** a log of decisions, open points, a plan. An entry that no longer holds is
-  deleted; one that holds in part is rewritten to what still holds. An identifier is never given to anything else.
-  Where records cite identifiers, the entry that deletes another may name it once, so that a citation can be followed.
-- **Exceptions:** records, which follow their own rules (section 4.3); notes of a past discussion kept as such; and a
-  project's earlier documents listed under `legacy` (section 11). They are not rewritten to the current state.
-- The checker reports text that a change leaves beside what replaced it, in the parts of a document the change
-  touches; the rest of the document is not checked.
+- A document that keeps what was replaced beside the new text has to be read with its history to know what holds.
+  Git keeps the earlier wording, and the record of the change says why.
+- Naming once the identifier an entry deletes, as the core rules allow, keeps a citation in a record traceable; an
+  identifier is never reused for the same reason.
+- A rule stated twice drifts: one copy is changed and the other is not. The second document points to the first. A
+  record that copies another document grows with every item and says nothing new.
+- The records' own rules are in section 4; a project's earlier documents are in section 11.
 
 ---
 
@@ -530,9 +477,8 @@ know the current rules.
   nowhere else. A log may point to the record; it does not copy it.
 - **Taken outside any work item:** a choice about one installation, or a standing preference of the person. It goes
   into the decision log of the home, one entry each.
-- **The log holds only decisions in force,** as section 15.2 says for every document. A later choice rewrites the
-  entry it changes, or deletes it and names it once (15.2). Git keeps the earlier wording. Identifiers are never
-  reused, because records and other history cite them.
+- **The log holds only decisions in force,** as the core rules say for every document (Documents). A later choice
+  rewrites the entry it changes, or deletes it.
 - **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
   log: they state the rule, with its reason in a few words where the reason helps.
 
@@ -551,7 +497,7 @@ The same in every project that has dependencies. A project adds to it only in it
   of a work branch.
 - **A fix of a known vulnerability goes in at once.** When a report or an alert names a dependency, a work item starts
   the same day, with the version that fixes it as soon as that version is out. No waiting period applies. Its size
-  follows section 3.2: a major upgrade is full, and its approval is asked the same day.
+  follows the core rules (Sizes): a major upgrade is full, and its approval is asked the same day.
 - **Ordinary updates wait and come on a cadence.** Each direct dependency of a project is covered by a radar entry of
   the installation, with a review date. At the review, the outdated dependencies are listed with the package manager.
   The updates worth making become one work item, full if it holds a major upgrade and small otherwise. A version is
@@ -560,3 +506,18 @@ The same in every project that has dependencies. A project adds to it only in it
 - **Who.** The review is started on its date by the scheduler where an installation has one; until then, by the
   person or by a session asked to. An update worth making ends in a work item and a pull request that the person
   merges; a review that finds none moves the review date.
+
+---
+
+## 18. Upkeep review
+
+Documents and logs grow by small additions, each reasonable on its own: a rule restated where it is needed, a
+paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
+working, so a review on a date looks for it.
+
+- **When.** On the same date as the radar review of section 17.
+- **What.** The documents and logs of the kit, of the home and of each project are read for duplication, stale text
+  and size.
+- **Result.** The findings become one work item.
+- **Who.** The review is started by the scheduler where an installation has one; until then, by a scheduled task of
+  the installation, which reports its findings and changes nothing.
