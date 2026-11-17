@@ -4,7 +4,7 @@ title: Delivery conventions, checks on pull requests and the guard
 project: honsha
 type: change
 size: full
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -252,11 +252,17 @@ section 5.1.
 
 ## Approval
 
+Approved by the person on 2026-11-17, in the chat of the session that wrote this record, when asked whether the
+strategy was approved. The approval takes the six decisions for the person as the strategy
+recommends them: the names and places; the profile key `commits.address`; what the pipeline downloads; Node.js 22 as the
+lowest version; the work continues in the session that wrote the record, on the strongest model; one work item.
+
 ## Log
 
 - 2026-11-17. Record written on its branch, cut from the default branch. The session that wrote it ran without the kit
   loaded, so no hook wrote `effort`. The pull request that words the architecture for any hosting service was still
   open.
+- 2026-11-17. Approval written. The work starts with the checks, as the plan says.
 
 ## Verification
 
