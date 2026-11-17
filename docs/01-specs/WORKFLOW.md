@@ -418,6 +418,9 @@ service. What is specific to one service is a separate piece of the kit, `servic
 service replaces with their own. This section says what such a piece holds. The piece for the one service the kit has
 been tried with is the worked example.
 
+The rules rely on nothing that a service enforces or sells. They hold with a free account, where a service may give
+no protection at all: what a service adds beyond that is a further stop, never something a user of the kit must have.
+
 ### 14.1 What the piece of a service says
 
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who

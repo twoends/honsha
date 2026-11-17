@@ -4,8 +4,9 @@ This folder is the kit's piece for GitHub: everything that is specific to that h
 rules. What a piece has to say is in [WORKFLOW.md](../../docs/01-specs/WORKFLOW.md), section 14. A user of another
 service writes a piece like this one for it, next to this folder or outside the kit; the rules do not change either way.
 
-Read in GitHub's documentation on 2026-11-17, and tried where it says so. GitHub changes what its plans include: check a
-statement about plans or costs against GitHub's own pages before relying on it.
+Everything here works with a free account: the kit asks no user for more. Read in GitHub's documentation on
+2026-11-17, and tried where it says so. GitHub changes what it offers: check a statement about what it gives or what it
+costs against GitHub's own pages before relying on it.
 
 ## Commands
 
@@ -20,7 +21,8 @@ With `gh`, GitHub's command-line client.
 | Delete a merged branch that is still there | `git push origin --delete <branch>`                                         |
 
 The person merges, on the site or with `gh pr merge --merge`. A session never does: the guard refuses the commands that
-match the patterns in [merge-commands.json](merge-commands.json). Tried: `gh pr create`, `gh pr view` and `gh pr checks`.
+match the patterns in [merge-commands.json](merge-commands.json). Tried: `gh pr create`, `gh pr view` and
+`gh pr checks`.
 
 ## Settings the rules rely on
 
@@ -35,7 +37,7 @@ In the repository:
 gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false --delete-branch-on-merge
 ```
 
-GitHub's documentation states no plan restriction for these settings.
+A free account has these settings. Tried on a private repository of one.
 
 Two things on the site are not used:
 
@@ -48,20 +50,20 @@ In the account of whoever merges:
 - **"Keep my email addresses private".** A merge made on the site is authored with the account's noreply address when it
   is on, and with the address chosen in the merge dialog when it is off. The committer of such a merge is GitHub itself.
 
-## What GitHub can enforce
+## What GitHub enforces, and what it does not
 
-- **Protected branches and rulesets** are available in public repositories on the Free plan, and in public and private
-  repositories with the Pro, Team and Enterprise plans.
-- **With them,** the default branch can refuse direct pushes, forced pushes and deletion, also from administrators, and
-  a check can be required before a merge.
-- **Without them,** nothing on GitHub stops an account that can write to the repository from pushing to the default
-  branch or from merging. The kit's guard is then the only stop, and it stops a mistake, not a session that was
-  manipulated.
+The kit is built to work with a free account, so its rules rely on nothing that GitHub enforces.
+
+- **In a private repository of a free account nothing on GitHub stops an account that can write** from pushing to the
+  default branch or from merging: branch protection and rulesets are not there. The kit's guard is the stop. It stops
+  a mistake, not a session that was manipulated.
+- **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
+  pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
+  works the same with them: they add a stop on the server and change no rule.
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
-  need write access to the contents. In a repository owned by an organisation an account can have a role that reads but
-  does not write, and pushes to a branch can be restricted to named accounts; the restriction needs a plan with
-  protected branches for that repository.
+  need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
+  not by GitHub. In a repository owned by an organisation an account can have a role that reads but does not write.
 
 ## Checks on a pull request
 
@@ -78,13 +80,14 @@ the contract of WORKFLOW.md, section 14.2, in this way.
 3. **What it gives the commands.** `HONSHA_BRANCH` from `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base
    and head commits of the pull request.
 4. **What it reports.** One result for each job, shown on the pull request and read with `gh pr checks`.
-5. **What can block.** A failed job stops a merge only where a protected branch or a ruleset requires it. Elsewhere it
-   is shown and nothing more.
+5. **What can block.** A failed job stops a merge only where branch protection or a ruleset requires it. Elsewhere, and
+   so in a private repository of a free account, it is shown and nothing more.
 6. **What it may not do.** The workflow's token has read access to the contents and nothing else. The actions it uses
    are pinned to a commit.
 
-What it costs: on a private repository the minutes of GitHub's runners are counted against an amount the plan includes
-each month, each job rounded up to a whole minute, and Windows minutes cost more than Linux ones. With no payment method
-on the account, runs stop when the included amount is used. On a public repository the standard runners are free.
+What it costs: nothing on a free account, within a limit. On a private repository the minutes of GitHub's runners are
+counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
+minutes count for more than Linux ones. With no payment method on the account, runs stop when that amount is used and
+nothing is billed. On a public repository the standard runners are free.
 
 A template of this workflow for other projects is not written yet.

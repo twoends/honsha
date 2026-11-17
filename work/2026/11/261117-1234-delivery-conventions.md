@@ -348,6 +348,14 @@ lowest version; the work continues in the session that wrote the record, on the 
   The Linux job failed on one test of the effort hook, which existed before this item and gave the hook a Windows path;
   the other 54 tests passed there, on Node.js 22, the first time the kit's tests ran on Linux. The test was split: the
   line endings on every system, the Windows path only on Windows. Declared as deviation 9. 56 tests pass on Windows.
+- 2026-11-17. The pipeline's second run passed on both systems. On Ubuntu 26.04 with Node.js 22 the whole list ran for
+  the first time: 55 tests passed, the one on the Windows path was skipped, and the validator and the commit check
+  passed.
+- The person decided that the GitHub piece names no plan of GitHub, because by default everything must work with a free
+  account (addendum). The piece was reworded, and section 14 of the workflow says that the rules rely on nothing a
+  service enforces or sells. The README and the architecture say what ran on Linux.
+- At the person's request the session set the repository's settings as the piece says, merge commits only and merged
+  branches deleted, and it merges this pull request: deviation 10.
 
 ## Verification
 
@@ -380,10 +388,11 @@ The criteria, one by one:
 5. **Contracts:** met. Section 14 of the workflow holds what the piece of a service says (14.1) and the contract of a
    wiring (14.2). The only mention of a service in the whole document is the `.github/**` path of the indicative
    profile, which was there before.
-6. **GitHub piece:** met in the files, not yet in a run. `services/github/README.md` answers the five points of 14.1 and
-   the six of 14.2. `.github/workflows/verify.yml` sets `permissions: contents: read` and pins its two actions to a
-   commit; the two commits were read from GitHub as those of the tags `v7.0.1` of `actions/checkout` and `v7.1.0` of
-   `actions/setup-node`. Its first run needs this item's pull request: the result is written below once it has run.
+6. **GitHub piece:** met. `services/github/README.md` answers the five points of 14.1 and the six of 14.2.
+   `.github/workflows/verify.yml` sets `permissions: contents: read` and pins its two actions to a commit; the two
+   commits were read from GitHub as those of the tags `v7.0.1` of `actions/checkout` and `v7.1.0` of
+   `actions/setup-node`. It ran on this item's pull request, on Linux and on Windows: the runs are under "The pipeline"
+   below.
 7. **Guard:** met. Live run: `claude -p` with the kit loaded, on `claude-haiku-5-5`, in a disposable repository with a
    local remote. A push to the default branch, a forced push and `gh pr merge` were each refused, and the session
    reported the guard's reason; an ordinary push of the work branch went through; the remote's default branch did not
@@ -391,16 +400,16 @@ The criteria, one by one:
    invented service. GitHub's own commands are tested in its piece, `services/github/merge-commands.test.mjs`.
 8. **Patterns:** met. `checks/public.test.mjs` passes on the kit. With a file that held an e-mail address, and then with
    one that held a path into a user's folder, it failed and named the file and the line.
-9. **Documents:** met, but for one line. `ARCHITECTURE.md` (3.1, 3.3, section 6 rule 3, O10) and `README.md` match what
-   was built. The README still says that the kit has not been tried on Linux: that line is settled by the pipeline's
-   first run.
+9. **Documents:** met. `ARCHITECTURE.md` (3.1, 3.3, section 6 rule 3, O10) and `README.md` match what was built. Both
+   say what ran on Linux: the kit's checks, in its pipeline; a session there has not been tried.
 10. **Budget:** met. The core rules and the record template are 7,304 bytes; the test that sets the limit passes, and so
     do the other 15 tests that existed before this item.
 11. **Public from the first commit:** met as far as the checks reach. The commit check and the patterns test pass.
     GitHub is named in the GitHub piece, in the kit's profile and workflow file, where a document says what the kit was
     tried with, and where the README and the architecture list what is in the kit (deviation 8). The rules and the hooks
     name no service.
-12. **Delivery:** follows this section.
+12. **Delivery:** met, but for who merges. Pull request 3 holds the change and this record. The person asked the session
+    to merge it, where the criterion says the worker does not: deviation 10.
 
 ### First check
 
@@ -558,8 +567,24 @@ The first run started when the pull request was opened, on the commit that close
   the effort hook a path written with backslashes, which is a path only on Windows. The list stops at the first command
   that fails, so the validator and the commit check did not run there.
 
-The test was split in two: the line endings are tested on every system, the Windows path only on Windows. The second run
-is the one on the commit that makes this correction.
+The test was split in two: the line endings are tested on every system, the Windows path only on Windows.
+
+The second run, on the commit that makes this correction:
+
+- **Ubuntu 26.04, Node.js 22:** passed. Of 56 tests, 55 passed and the one on the Windows path was skipped; the
+  validator passed with its warnings; the commit check passed on the 14 commits the branch had. It is the first time the
+  whole list ran on Linux.
+- **Windows Server 2025, Node.js 26:** passed.
+
+The commits after it change documents and this record only. Their runs are on the pull request.
+
+### After the pull request was opened
+
+- **GitHub's plans left the piece,** by the person's decision in the addendum. The piece says what holds with a free
+  account and names no plan. Section 14 of the workflow says that the rules rely on nothing a service enforces or sells.
+- **The repository's settings** were set as the piece says, at the person's request: merge commits only, merged branches
+  deleted. The piece says that it was tried.
+- **The merge.** The person asked the session to merge this pull request: deviation 10.
 
 ## Deviations
 
@@ -584,6 +609,9 @@ is the one on the commit that makes this correction.
 9. **A test from before this item was changed.** `hooks/record-effort.test.mjs` had one test for a Windows path and for
    Windows line endings together, which cannot pass on Linux. It is now two tests, and the one on the Windows path is
    skipped on other systems. The pipeline's first run found it.
+10. **The session merges this item's pull request,** because the person asked it to. Criterion 12 and the last boundary
+    say that the worker does not merge. It is merged with a merge commit, authored with the noreply address the kit's
+    commits use.
 
 ## Outcome
 
@@ -597,13 +625,14 @@ The kit now says how work is delivered, in words that name no hosting service.
 - **Checks as commands.** The kit has a profile of its own. One command runs the `verify` list of any profile; a second
   checks the commits of a work branch; a test looks for personal content that needs no list.
 - **The guard.** A hook refuses merging, a push to the default branch and a forced push in every session.
-- **The hosting service.** Section 14 of the workflow says what the piece of a service holds. The piece for GitHub is
-  the first: its commands, its settings, what it can enforce, and the workflow file that runs the checks on pull
-  requests.
+- **The hosting service.** Section 14 of the workflow says what the piece of a service holds, and that the rules rely on
+  nothing a service enforces or sells. The piece for GitHub is the first: its commands, its settings, what GitHub does
+  and does not enforce with a free account, and the workflow file that runs the checks on pull requests. It names no
+  plan.
 
 Left out by the scope: the settings on the hosting service, the hook with the word list, a pipeline template for
 projects.
 
-Not verified here: Linux and Node.js 22, which the pipeline's first run on this item's pull request shows; the guard
-under the `PowerShell` tool in a live session, where only the reading of commands is tested; the setting
-`worktree.baseRef`; macOS.
+Not verified here: a session of Claude Code on Linux or on macOS, where only the kit's checks ran, in the pipeline; the
+guard under the `PowerShell` tool in a live session, where only the reading of commands is tested; the setting
+`worktree.baseRef`.
