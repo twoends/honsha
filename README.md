@@ -39,8 +39,8 @@ their own piece from the contract in the workflow, section 14.
   Linux or macOS yet.
 - git. On Windows, Git for Windows: the hooks run through Git Bash.
 - Node.js 22 or later, for the hook scripts and the checks. No packages are installed.
-- A command-line client for the service that hosts the repositories, to open pull requests and to read them. With
-  GitHub it is `gh`.
+- A command-line client for the service that hosts the repositories, to open pull requests and to read them. The
+  piece of that service names it.
 
 ## Trying it
 

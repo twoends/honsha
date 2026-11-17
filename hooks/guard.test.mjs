@@ -50,12 +50,20 @@ function repository(branch = WORK, profile = null) {
 const onWork = repository();
 const onMain = repository('main');
 
+// The piece of an invented hosting service, so that these tests name no real one. The commands of
+// a real service are tested in its own piece.
+const pieces = fs.mkdtempSync(path.join(os.tmpdir(), 'honsha-pieces-'));
+made.push(pieces);
+fs.mkdirSync(path.join(pieces, 'forge'));
+fs.writeFileSync(path.join(pieces, 'forge', 'merge-commands.json'), JSON.stringify({ merge: ['^forge( .*)? merge( |$)'] }));
+
 const refused = (line, cwd = onWork) => {
-  const reason = judge(line, { cwd });
+  const reason = judge(line, { cwd, services: pieces });
   assert.ok(reason, `let through: ${line}`);
   return reason;
 };
-const allowed = (line, cwd = onWork) => assert.equal(judge(line, { cwd }), null, `refused: ${line}`);
+const allowed = (line, cwd = onWork) =>
+  assert.equal(judge(line, { cwd, services: pieces }), null, `refused: ${line}`);
 
 test('splits a command line into simple commands and keeps quoted text as one word', () => {
   assert.deepEqual(simpleCommands('cd repo && git commit -m "Add a thing; push later" | cat'), [
@@ -121,14 +129,11 @@ test('refuses a push of every branch', () => {
 
 test('refuses the commands that the piece of a hosting service lists as merging', () => {
   for (const line of [
-    'gh pr merge 12',
-    'gh pr merge --merge --delete-branch',
-    'gh pr merge 12 --squash --auto',
-    'gh -R owner/repository pr merge 3',
-    'gh api -X PUT repos/owner/repository/pulls/3/merge',
-    "gh api graphql -f query='mutation { mergePullRequest(input: {pullRequestId: \"x\"}) { clientMutationId } }'",
-    'curl -X PUT https://api.github.com/repos/owner/repository/pulls/3/merge',
-    'gh pr checks 12 && gh pr merge 12',
+    'forge merge 12',
+    'forge --repository owner/repository merge 12',
+    'FORGE_TOKEN=x forge merge 12',
+    '/usr/local/bin/forge merge 12',
+    'forge checks 12 && forge merge 12',
   ]) {
     assert.match(refused(line), /merges a pull request/);
   }
@@ -153,12 +158,12 @@ test('lets through what a work item needs', () => {
     'git commit -m "Say that a session never runs git push --force"',
     'git commit -m "Refuse git push origin main" && git push',
     'echo "git push origin main"',
-    'cat > notes.md <<EOF\ngit push --force origin main\ngh pr merge 12\nEOF',
+    'cat > notes.md <<EOF\ngit push --force origin main\nforge merge 12\nEOF',
     "cat > notes.md <<'EOF'\ngit push origin main\nEOF\ngit add notes.md",
-    'gh pr create --base main --title "Export orders as CSV"',
-    'gh pr view 12 --json state',
-    'gh pr checks 12',
-    'gh api repos/owner/repository/pulls/3',
+    'forge open --base main --title "Export orders as CSV"',
+    'forge view 12',
+    'forge checks 12',
+    'echo "forge merge 12"',
     'npm run check',
     '',
     '"unfinished',
@@ -177,14 +182,14 @@ test('takes the default branch from the profile when it names one', () => {
 test('reads the merge commands of every piece, and none when there is no piece', () => {
   const services = fs.mkdtempSync(path.join(os.tmpdir(), 'honsha-services-'));
   made.push(services);
-  assert.equal(judge('gh pr merge 12', { cwd: onWork, services }), null);
+  assert.equal(judge('tracker merge 12', { cwd: onWork, services }), null);
   fs.mkdirSync(path.join(services, 'example'));
-  fs.writeFileSync(path.join(services, 'example', 'merge-commands.json'), JSON.stringify({ merge: ['^forge merge( |$)'] }));
+  fs.writeFileSync(path.join(services, 'example', 'merge-commands.json'), JSON.stringify({ merge: ['^tracker merge( |$)'] }));
   fs.mkdirSync(path.join(services, 'broken'));
   fs.writeFileSync(path.join(services, 'broken', 'merge-commands.json'), 'not JSON');
-  assert.match(judge('forge merge 12', { cwd: onWork, services }), /merges a pull request/);
-  assert.equal(judge('forge view 12', { cwd: onWork, services }), null);
-  assert.equal(judge('gh pr merge 12', { cwd: onWork, services: path.join(services, 'missing') }), null);
+  assert.match(judge('tracker merge 12', { cwd: onWork, services }), /merges a pull request/);
+  assert.equal(judge('tracker view 12', { cwd: onWork, services }), null);
+  assert.equal(judge('tracker merge 12', { cwd: onWork, services: path.join(services, 'missing') }), null);
 });
 
 function hook(input) {
