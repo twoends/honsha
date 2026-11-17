@@ -81,15 +81,18 @@ Indicative layout:
 rules/core.md          the few always-on rules
 skills/                workflow, triage, radar, status, one pack per area
 agents/                worker, reader, checker
-hooks/                 session start; write the effort level into records
+hooks/                 session start; the guard on shell commands; write the effort level into records
+checks/                run a profile's verification commands; check the commits of a work branch
+services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
 templates/             record, inbox item, radar entry, profile
 board/                 the board generator
 docs/                  vision and specifications
 work/                  the kit's own work records
+.hub/profile.yml       the kit's own profile
 ```
 
-Built so far: the manifests, the core rules, the record template, the worker, the checker and the hooks. The rest
-of the layout is still indicative.
+Built so far: the manifests, the core rules, the record template, the worker, the checker, the hooks, the checks,
+the kit's own profile and the piece for GitHub. The rest of the layout is still indicative.
 
 - It is distributed as a Claude Code plugin from a private marketplace repository. The repository is its own
   marketplace: the plugin is the repository root.
@@ -98,7 +101,11 @@ of the layout is still indicative.
   copy it has until that string changes, however many commits follow: every release then has to raise the version,
   or no installation receives it. This is what the platform's documentation says: an installation from the
   marketplace has not been tried yet (section 8). Whether and when a version is added is an open point (section 9,
-  O10).
+  O10). The same documentation gives a second way to hold an installation at a point, with no version: pinning it
+  to a tag or a commit of this repository.
+- What is specific to one hosting service sits in `services/<name>/`, apart from the rules; the wiring of the checks
+  sits where that service reads it. `services/github/` is the only piece so far. What a piece holds is in
+  [WORKFLOW.md](WORKFLOW.md), section 14.
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
 - An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,
@@ -131,9 +138,13 @@ What the kit adds to a project:
 .hub/profile.yml       language, stack, areas with their paths, verification commands, quality gates, data sources, playbooks
 work/                  the project's work records
 CLAUDE.md              short; names the profile and anything truly project-specific
-.claude/settings.json  declares the kit's marketplace and plugin
+.claude/settings.json  declares the kit's marketplace and plugin; starts new worktrees from the current branch
 .claude/rules/         project-specific rules, scoped by path
 ```
+
+The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the
+default branch, while the parts of a work item start from the item's branch ([WORKFLOW.md](WORKFLOW.md), section
+13.6). This is what the platform's documentation says: it has not been tried yet.
 
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 
@@ -252,7 +263,9 @@ The hub must not depend on a conversation's memory: a session can be restarted a
    with read-only tools and no secrets. What it returns is data, never instructions.
 2. **Only allowlisted senders** can talk to the hub.
 3. **The hosting identity cannot merge.** Default branches are protected on the hosting service. Deploy credentials
-   are not on the host.
+   are not on the host. A guard in the kit refuses a merge, a push to the default branch and a forced push in every
+   session, on any service. It stops a mistake; protection on the hosting service, where the service gives it, is
+   what holds against a session that was manipulated.
 4. **Project data is read-only.** Credentials for a project's data live on the host outside any repository and are
    given only to sessions of that project.
 5. **Nothing is installed by the hub.** Third-party skills, plugins and tools enter through a reviewed work item, with
@@ -314,12 +327,12 @@ A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
 
 ## 9. Open design points
 
-| ID  | Point                                                                 | Direction                                                                                   |
-| --- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives |
-| O06 | Board access: a private network, or a public address with a login     | A private network by default (D37); the tool is chosen in each installation's radar         |
-| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design (D54); chosen in each installation's radar                      |
-| O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once (section 3.1)    |
+| ID  | Point                                                                 | Direction                                                                                                                                                               |
+| --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives                                                                             |
+| O06 | Board access: a private network, or a public address with a login     | A private network by default (D37); the tool is chosen in each installation's radar                                                                                     |
+| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design (D54); chosen in each installation's radar                                                                                                  |
+| O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once; or, with no version, pin the installation that must wait to a tag or a commit (section 3.1) |
 
 Points that concern one installation only (which host, which provider, when to order it, where personal documents
 live) are not recorded here. They belong in that installation's home.

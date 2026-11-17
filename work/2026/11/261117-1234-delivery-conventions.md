@@ -331,6 +331,10 @@ lowest version; the work continues in the session that wrote the record, on the 
 - 2026-11-17. The pull request that words the architecture for any hosting service is in the default branch: the person
   asked the session to merge it, and it was merged with a merge commit. The default branch was then merged into this
   branch, as section 13.5 of the workflow says, without conflict. State back to `in-progress`.
+- 2026-11-17. The architecture changed in four places: the layout of 3.1, with the checks, the pieces of the hosting
+  services and the kit's profile, and a line on where what is specific to a service sits; in 3.3 the project's settings
+  also set `worktree.baseRef` to `"head"`, read in the platform's documentation and not tried; one sentence on the guard
+  in section 6, rule 3; the second route in the direction of O10, also named where 3.1 speaks of the version.
 
 ## Verification
 
