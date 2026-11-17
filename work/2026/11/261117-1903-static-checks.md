@@ -4,7 +4,7 @@ title: Static checks for the kit, and a default for projects
 project: honsha
 type: change
 size: full
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -145,6 +145,9 @@ request.
 6. **The home's part** as described, outside the workflow and without a pipeline. Recommended.
 
 ## Approval
+
+Approved by the person on 2026-11-17, in the chat of the session that wrote the strategy, with the six decisions as
+recommended.
 
 ## Log
 
