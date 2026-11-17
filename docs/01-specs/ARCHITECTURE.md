@@ -1,7 +1,8 @@
 # Architecture
 
-**Status:** approved as the starting base on 2026-11-16. Identifiers such as D21 or O02 refer to the author's decision log, which is kept outside this repository. Terms are defined in
-the [vision](../00-vision/VISION.md) glossary.
+**Status:** approved as the starting base on 2026-11-16. Identifiers such as O02 are the open design points of
+section 9; A1 to A9 are the assumptions of section 8. Terms are defined in the [vision](../00-vision/VISION.md)
+glossary.
 
 Several parts rest on platform features that are research previews or were read from documentation and not yet tried.
 They are listed as assumptions in section 8, and the plan starts by testing them.
@@ -9,7 +10,7 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 ## 1. Key facts
 
 - **Host:** one always-on Linux VPS. It holds clones of the kit, the home and every registered project. A first
-  installation can run on the person's own computer (D42); nothing in the design depends on which machine it is.
+  installation can run on the person's own computer; nothing in the design depends on which machine it is.
 - **Hub:** a long-lived Claude Code session whose working directory is the home repository.
 - **Channels:** a messaging app for capture, quick questions, approvals and notifications; the Claude app and a board
   page for everything longer.
@@ -70,7 +71,7 @@ flowchart LR
 
 ## 3. Repositories
 
-Three kinds. The split between the first two is what keeps a user's content out of the template (D28).
+Three kinds. The split between the first two is what keeps a user's content out of the template.
 
 ### 3.1 Kit (template, shared)
 
@@ -110,8 +111,8 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
   type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
   from the lockfile without their install scripts. An installation of the plugin does not need them.
 - It contains nothing about any user or project.
-- It is itself a registered project (D12): changes to it are work items like any other.
-- An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,
+- It is itself a registered project: changes to it are work items like any other.
+- An area pack is written only when a real work item needs it. A pack is the skill `area-<name>` of the kit,
   invoked as `honsha:area-<name>`.
 - A session in a project cannot read the kit's files without a permission, because they lie outside the project.
   What every session needs is therefore put into its context when it starts: the core rules and the record
@@ -123,6 +124,7 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
 registry.yml           projects: name, repository, path on each host, state
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
+decisions.md           choices about this installation and standing preferences, those in force (workflow, section 16)
 inbox/                 one file per item received, with its verdict
 backlog/               work items not yet started, per project
 radar/                 one file per tool
@@ -206,18 +208,18 @@ words, not real records. At about 10,000 records a year, a high estimate for one
 ### 4.1 Evaluate
 
 1. An item arrives by message. The hub writes it to `inbox/` as received.
-2. The reader fetches what official means allow (D16) and returns a summary. If the subject cannot be identified, the
+2. The reader fetches what official means allow and returns a summary. If the subject cannot be identified, the
    hub asks for one line.
 3. The hub researches the primary source of the thing shown, through the reader, and judges it against the registry
    and the radar.
 4. The verdict (Adopt, Trial, Watch, Ignore), its flags and its evidence level are written to the item's file and sent
    back.
 5. Adopt or Trial produces a proposal: a radar change, or a draft work item in the home's backlog for a project or for
-   the kit. Nothing is installed (D04).
+   the kit. Nothing is installed.
 
-Proactive research (D35) is the same flow started by the scheduler, with items marked as found by the hub. It
+Proactive research is the same flow started by the scheduler, with items marked as found by the hub. It
 proposes a few items a day at most (three by default) and notifies only Adopt and Trial verdicts; the rest is on the
-board (D51). Both limits are settings in the home.
+board. Both limits are settings in the home.
 
 ### 4.2 Ask
 
@@ -228,15 +230,15 @@ board (D51). Both limits are settings in the home.
 
 ### 4.3 Dispatch
 
-1. The hub identifies the project. One request is one work item and one pull request (D47): the hub proposes its size
+1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size
    and areas and creates the record in a new branch of the project (moved from the backlog if it was there). Parts of
    the request that are independent are run in parallel by the worker and integrated before verification
    ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at the same
    time, within the limits of the host and the project.
-2. A full-size item stops here: the strategy is sent for approval (D21). Trivial and small items continue (D32).
+2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
 4. The checker verifies the result. Its report goes into the record and the pull request.
-5. The pull request is opened and the person is notified. The person merges (D08, D31).
+5. The pull request is opened and the person is notified. The person merges.
 
 ### 4.4 Scheduled
 
@@ -274,7 +276,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 5. **Nothing is installed by the hub.** Third-party skills, plugins and tools enter through a reviewed work item, with
    every file read, pinned to a commit.
 6. **The host is minimal.** Key-only SSH, a firewall, a dedicated user, automatic security updates, no public service
-   unless the board needs one (D37).
+   unless the board needs one.
 7. **Sessions run with explicit permissions,** not with permission checks disabled.
 
 ---
@@ -291,7 +293,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
   given when a session is started overrides the definition.
 - Each record holds the model and the effort level of the session that did the work, so the choice can be reviewed
   later with data. A hook writes the effort level; the session that finishes the item writes its model identifier
-  (section 8, A7). The policy is revisited with that data, or when usage limits are reached (D20).
+  (section 8, A7). The policy is revisited with that data, or when usage limits are reached.
 
 ---
 
@@ -309,7 +311,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 | A8  | A long-lived hub session stays usable over weeks                                                                                                 | A daily restart, with all state in files           |
 | A9  | Voice notes can be transcribed on the host or through a service chosen on the radar                                                              | Voice notes wait for a later version               |
 
-**Where they are tested (D42).** On a personal computer first: A2, A4, A5, A6, A7, A9, and the functional part of A1 and A3. Only on
+**Where they are tested.** On a personal computer first: A2, A4, A5, A6, A7, A9, and the functional part of A1 and A3. Only on
 the always-on host: keeping A1 alive as a service, and A8. Background sessions are documented for macOS and Linux; on
 Windows A3 is tried as it is, and falls back to WSL2 or waits for the host.
 
@@ -325,7 +327,7 @@ verification commands and gates, and what happens after a compaction.
 | A6  | True. In three runs out of three the worker invoked the pack of the area named in the record before its first change, and applied a rule only the pack states                                                                                             | None. The fallback is not needed                                                                                                             |
 | A7  | True for the effort level, false for the model. The effort level reaches the hook that runs after an edit. The model reaches no hook in such a session: the session-start input carries no model                                                          | The fallback applies to the model only: the session that finishes the item writes its own model identifier. The hook writes the effort level |
 
-A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
+A pack loaded in the A6 test was a throwaway one, kept outside the kit.
 
 ---
 
@@ -334,8 +336,8 @@ A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
 | ID  | Point                                                                 | Direction                                                                                                                                                               |
 | --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives                                                                             |
-| O06 | Board access: a private network, or a public address with a login     | A private network by default (D37); the tool is chosen in each installation's radar                                                                                     |
-| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design (D54); chosen in each installation's radar                                                                                                  |
+| O06 | Board access: a private network, or a public address with a login     | A private network by default; the tool is chosen in each installation's radar                                                                                           |
+| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design; chosen in each installation's radar                                                                                                        |
 | O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once; or, with no version, pin the installation that must wait to a tag or a commit (section 3.1) |
 
 Points that concern one installation only (which host, which provider, when to order it, where personal documents

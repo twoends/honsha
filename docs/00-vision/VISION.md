@@ -1,6 +1,6 @@
 # Vision
 
-**Status:** approved as the starting base on 2026-11-16. Identifiers such as D21 or O02 refer to the author's decision log, which is kept outside this repository.
+**Status:** approved as the starting base on 2026-11-16.
 
 ## Key facts
 

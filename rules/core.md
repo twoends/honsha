@@ -63,6 +63,12 @@ In code and in every other file of the project:
 - No code left commented out. Git keeps it.
 - A TODO names the identifier of the record that will do it: `TODO(<id>): …`. A TODO without one is not written.
 
+## Documents
+
+- A document says what holds now. What a change replaces is deleted, not kept beside the new text with a note; an
+  entry of a list that no longer holds is deleted. Git and the records keep the history. Exceptions: records, which
+  follow their own rules; notes of a past discussion kept as such; documents listed under `legacy` in the profile.
+
 ## Delivery
 
 - The default branch changes only through pull requests, and the person merges them, with a merge commit. A session

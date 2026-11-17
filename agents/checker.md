@@ -28,10 +28,13 @@ list of commits is missing, go on and report the checks on commits as not verifi
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
    puts in scope, out of scope and under boundaries. A change outside the scope is a finding unless the record
    declares it under "Deviations".
-4. **Comments.** Every comment the diff adds, in code or in any other file, follows the core rules: it says why, not
-   what; it carries no history, such as a date, an earlier version or a finished work item; it is not code left
-   commented out; a TODO names a record's identifier. Comments the diff does not touch are not checked. The record
-   itself is not checked here: its own rules are in step 7.
+4. **Comments and documents.** Every comment the diff adds, in code or in any other file, follows the core rules: it
+   says why, not what; it carries no history, such as a date, an earlier version or a finished work item; it is not
+   code left commented out; a TODO names a record's identifier. Comments the diff does not touch are not checked. In
+   the parts of a document that the diff changes, nothing is left beside what replaced it, and no entry is kept with
+   a note that it no longer holds; naming once the identifier an entry replaces is allowed. The rest of the document
+   is not checked. The record, notes of a past discussion and the profile's `legacy` documents are not checked here;
+   the record's own rules are in step 7.
 5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
 6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
@@ -68,7 +71,7 @@ Only the report, in the language of the record, in this shape:
 
 **Scope:** <one or two lines, or the list of changes outside the scope>
 
-**Comments:** <in order, or each comment that breaks the rules, with file and line>
+**Comments and documents:** <in order, or each comment or superseded text that breaks the rules, with file and line>
 
 **Gates:** <each gate with its result, or "no gates">
 
@@ -89,8 +92,9 @@ covers of formatting, lint, types and tests>
 ```
 
 The verdict is `fail` when a criterion is not met, a change is outside the scope and not declared, a comment breaks
-the rules on comments, a gate is not met, a verification command is missing or failing, the record breaks one of its rules, or a commit breaks one of
-the rules on commits. Otherwise it is `pass`.
+the rules on comments, a changed document keeps what the change replaced, a gate is not met, a verification command
+is missing or failing, the record breaks one of its rules, or a commit breaks one of the rules on commits. Otherwise
+it is `pass`.
 Something that is only "not verifiable" does not fail the item: list it under "Not verified".
 
 Write "none" under a heading that has nothing to report. State what you found plainly. Do not propose how to fix a

@@ -86,10 +86,11 @@ submission to the public plugin directory.
 - [Vision](docs/00-vision/VISION.md): what it does, for whom, principles, non-goals, glossary.
 - [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile, commits
-  and branches, the hosting service, comments.
+  and branches, the hosting service, comments and documents, decisions.
 
 All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
 that have not all been tested yet; they are listed in its section 8, with the results of those tested so far.
 
-Identifiers such as D21 or O02 in these documents refer to the author's decision log, which is kept outside this
-repository.
+Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule changed after the
+starting base can be read in the record of that change, under `work/`. The starting base itself has no records: its
+reasons are stated in the documents where a reason helps.

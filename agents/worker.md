@@ -41,7 +41,7 @@ core rules in your context always hold. This is the procedure that goes with the
   the approval gate applies.
 - Update the specifications the change affects as part of the work, before the verification.
 - Write comments by the core rules: why, not what; no history; no code commented out; a TODO with a record's
-  identifier.
+  identifier. In a document, delete what the change replaces instead of keeping it beside the new text.
 - Make as few commits as the core rules allow. The work, with the record and its log, is one commit, made when the
   work is ready for the verification. Split it only where its parts are separate enough to be reviewed one at a
   time. A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their
