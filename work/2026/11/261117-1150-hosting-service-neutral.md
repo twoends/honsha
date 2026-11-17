@@ -53,7 +53,32 @@ rule 3 and in assumption A5. Asked on 2026-11-17, in the chat of a session on th
 - 2026-11-17. Record written on its branch, cut from the default branch after the first item was merged. Every
   mention of a hosting service outside `work/` was listed first: six in `ARCHITECTURE.md`, one in `WORKFLOW.md`,
   none anywhere else.
+- 2026-11-17. `ARCHITECTURE.md` reworded in six places and one key fact added. Reworded: the outputs in the key
+  facts, the component (now "Hosting identity"), the diagram, the reason for folders by year and month, security
+  rule 3 and assumption A5. Added: the key fact "Hosting service", which states the principle.
+- 2026-11-17. The two commands were run before and after the change, with the same result.
 
 ## Verification
+
+### Commands
+
+The kit has no `.hub/profile.yml` yet. The commands are the two its README names.
+
+- `claude plugin validate .`: passed with warnings, exit code 0, before and after the change.
+- `node --test hooks/`: 16 tests, 16 passed, before and after the change.
+
+### Acceptance criteria
+
+1. **Worded for any hosting service:** met. Key facts ("Outputs"), section 2 (component and diagram), section 6
+   (rule 3), section 8 (A5).
+2. **Meaning unchanged:** met. The identity still pushes branches, opens pull requests and cannot merge; default
+   branches are still protected; A5 keeps its fallback.
+3. **The principle, once:** met. Key fact "Hosting service".
+4. **GitHub only as an example or as what was tried:** met. It is still named in four places:
+   - `ARCHITECTURE.md`, key fact "Hosting service": the one service the kit has been tried with;
+   - `ARCHITECTURE.md`, section 3.4: an example of a page that stops listing a large folder;
+   - `ARCHITECTURE.md`, section 8, A5: what the assumption means on that service;
+   - `WORKFLOW.md`, section 9, the indicative profile: `.github/**`, a folder of an example project.
+5. **Same result from the two commands:** met.
 
 ## Outcome
