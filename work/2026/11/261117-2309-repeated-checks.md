@@ -4,14 +4,14 @@ title: Check again only what changed since the last report
 project: honsha
 type: change
 size: small
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 10
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -69,4 +69,54 @@ Asked on 2026-11-18, in the chat of a session on the kit, choosing between this 
 
 ## Verification
 
+On `f2e2efd`, `5213235` and `b79fa29`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all
+six each time — Prettier, oxlint, TypeScript, 58 tests with the budgets, the plugin validator with its known warning,
+and the commit check, last "The 3 commits of the branch follow the rules."
+
+### First checker report: fail, read `f2e2efd`
+
+Findings: (1) after a merge of the default branch, the repeated-check commands would bring in its changes and
+commits, and "with the same format" could drop `--reverse --name-only`; (2) a merge before any check had no commit to
+start a repeated check from; (3) workflow section 5 restated the rule and left out the merge case.
+
+### Second checker report: fail, read `5213235`
+
+Finding: a merge of the default branch between a failed check and its repeated check would bring its changes
+into the repeated check.
+
+### Checker report
+
+**Verdict:** pass
+
+Repeated check on `b79fa29`, reading `git diff 5213235...HEAD`. Last report's finding (a merge of the default branch between a failed check and its repeated check would bring that branch's changes into the repeated check): fixed. `agents/worker.md:49` now says "Never merge between a failed check and its repeated check." The only other merge path into a repeated check (`agents/worker.md:45-47`) reads `git show --cc <merge>` with `<merge>^!` as the range, so it never takes in the default branch's own changes. This agrees with `rules/core.md:53-54` and `docs/01-specs/WORKFLOW.md` 13.5.
+
+**Acceptance criteria**
+
+1. Repeated check after a fail or a merge, earlier report plus diff since the last checked commit: met, `agents/worker.md:45-49` and `:75-78`, `agents/checker.md:26-29`. The fix closes the gap that broke this criterion.
+2. First check and a check the person asks for read the whole branch: met, `agents/worker.md:66-69` and `:77`. The diff does not touch this.
+3. Commands work on any hosting service: met, plain git commands only (`agents/worker.md:46-47`, `:66-69`, `:75-77`).
+4. Core, template, worker and checker within budget: met by the recorded result. The record gives worker at 5,752 of 5,800, and the budget tests pass on `b79fa29`.
+5. Kit's `verify` list passes: met by the recorded result. Verification gives all six passing on `b79fa29`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order. `node checks/verify.mjs` runs the profile's `verify` list (`checks/verify.mjs:39-49`), and its six results are recorded for `b79fa29`. It covers formatting, lint, types and tests.
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Outcome
+
+After a failed check, the checker reads only what changed since the commit it last read; after a merge of the default
+branch, only a merge with conflicts leads to a repeated check, on what the merge itself changed. A full check runs
+once, or again when the person asks. On this item the rule was used on itself: one full check, then two repeated
+checks of one commit each, at about half the cost of a full one. No deferred check.
