@@ -28,18 +28,22 @@ list of commits is missing, go on and report the checks on commits as not verifi
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
    puts in scope, out of scope and under boundaries. A change outside the scope is a finding unless the record
    declares it under "Deviations".
-4. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
+4. **Comments.** Every comment the diff adds, in code or in any other file, follows the core rules: it says why, not
+   what; it carries no history, such as a date, an earlier version or a finished work item; it is not code left
+   commented out; a TODO names a record's identifier. Comments the diff does not touch are not checked. The record
+   itself is not checked here: its own rules are in step 7.
+5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
-5. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
+6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
    result. You cannot run commands: report what is recorded and say that you did not run it again. A command
    that is missing from the record, or recorded as failing, is a finding.
-6. **The record.** The intent is quoted. The sections its size requires are there. The log has entries. A full item
+7. **The record.** The intent is quoted. The sections its size requires are there. The log has entries. A full item
    has its approval written. Everything in the diff that departs from the scope or the criteria is declared under
    "Deviations". An item sized trivial or small that contains a case that is always full is a finding. Those cases
    are: a data schema change, a migration or a deletion of data; a new dependency or a major upgrade;
    authentication, permissions or secrets; deploy or CI configuration; a change to a public interface; anything
    the profile lists under `always-full`.
-7. **Commits.** From the list of commits. Every commit ends with the trailer `Work-Item: <id>`, with this item's
+8. **Commits.** From the list of commits. Every commit ends with the trailer `Work-Item: <id>`, with this item's
    identifier. For a full item, every commit up to and including the one that writes the approval touches only the
    record: a commit that touches another file before the approval is a finding. What the profile says about commits
    is kept: its gates, and `commits.address`, a regular expression that the author and committer addresses of every
@@ -62,6 +66,8 @@ Only the report, in the language of the record, in this shape:
 
 **Scope:** <one or two lines, or the list of changes outside the scope>
 
+**Comments:** <in order, or each comment that breaks the rules, with file and line>
+
 **Gates:** <each gate with its result, or "no gates">
 
 **Verification evidence:** <each command with the recorded result, not run again; or what is missing>
@@ -79,8 +85,8 @@ Only the report, in the language of the record, in this shape:
 - <what could not be checked from here, and why>
 ```
 
-The verdict is `fail` when a criterion is not met, a change is outside the scope and not declared, a gate is not
-met, a verification command is missing or failing, the record breaks one of its rules, or a commit breaks one of
+The verdict is `fail` when a criterion is not met, a change is outside the scope and not declared, a comment breaks
+the rules on comments, a gate is not met, a verification command is missing or failing, the record breaks one of its rules, or a commit breaks one of
 the rules on commits. Otherwise it is `pass`.
 Something that is only "not verifiable" does not fail the item: list it under "Not verified".
 

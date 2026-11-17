@@ -141,9 +141,11 @@ be added if they are broken in practice.
    appends to the log as it goes.
 6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
    with the intent, the acceptance criteria and the profile's gates, from a fresh context and without write access.
-7. **Deliver.** The worker writes the outcome and its own model identifier, sets the state to `done` and opens the
-   pull request. Its description is generated from the record: intent, what changed, verification evidence, checker
-   report, deviations. The checks that are wired to the hosting service run on the pull request (section 14.2).
+7. **Deliver.** The worker opens the pull request. Its description is generated from the record and the checker's
+   report: intent, what changed, verification evidence, checker report, deviations. The worker then writes the
+   outcome, the pull request's number and its own model identifier, sets the state to `done`, and pushes all of it in
+   one closing commit (section 13.3). The checks that are wired to the hosting service run on the pull request
+   (section 14.2).
 8. **Merge.** The person reviews and merges, with a merge commit, and the merged branch is deleted (section 13.4). A
    project whose profile says that merging deploys is deployed by that merge.
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
@@ -266,7 +268,8 @@ legacy:
 ```
 
 - `language` sets the language of the project's documents and records. When it is omitted, they are in English (D44).
-  Code, comments, commit messages and pull requests stay in English in every project.
+  Code, comments, commit messages and pull requests stay in English in every project. How comments are written is in
+  section 15.
 - `stack` lists the technologies whose lessons the project's sessions load (section 8).
 - `parallel` sets how many workers may run in the project at once and which resources cannot be shared (section 5.1).
 - `lessons` names the file that holds the project-level lessons only. The file name is the project's choice.
@@ -372,13 +375,28 @@ The same in every project. A project adds to it only in its own rules.
   never rewritten.
 - A commit that the hosting service writes, such as the merge of a pull request, carries none.
 
-### 13.3 What is fixed in commits
+### 13.3 Which commits an item makes
 
 - For a full item, two commits hold only the record: the record with its strategy and the state `awaiting-approval`, and
   then the approval. No other file changes before the commit of the approval. This is what lets the approval gate be
   read from the history.
-- Everything else is free. Commits follow the work in coherent steps, and the log lines of a step are in the same commit
-  as the step.
+- An item makes as few commits as it can:
+
+  | Size             | Commits                                                                  |
+  | ---------------- | ------------------------------------------------------------------------ |
+  | trivial or small | the work with its record; the closing commit                             |
+  | full             | the record with its strategy; the approval; the work; the closing commit |
+
+- **The work** is one commit, with the record and its log, made when the work is ready for the verification. It is
+  split only where its parts are separate enough to be reviewed one at a time. The specifications the change affects
+  are part of it.
+- **The closing commit** holds the verification, the checker's report, the outcome and the front matter, the pull
+  request's number included. It is made after the pull request is opened, so no commit exists only to write that
+  number.
+- **Commits of their own,** besides these: a stop that sets the state to `blocked`, a merge of the default branch
+  (13.5), and a fix asked by the checker or the person.
+- A pull request is reviewed as a whole. Fewer commits make the history shorter; the record says what happened in
+  between.
 - A work branch only grows: no amend, no rebase, no squash, whether its commits were pushed or not. A mistake is
   corrected by a new commit.
 
@@ -462,3 +480,20 @@ that reads the three variables.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
+
+---
+
+## 15. Comments
+
+The same in every project, in code and in every other file: documents, configuration, scripts. A project adds to it
+only in its own rules.
+
+- **Why, not what.** A comment gives the reason, a constraint or a trap that the code cannot show. What the code does
+  is read from the code.
+- **No history.** No "changed for", no dates, no mention of earlier versions or of finished work items. History is in
+  the records and in git.
+- **No code left commented out.** Git keeps it.
+- **A TODO names its record:** `TODO(<id>): …`, where `<id>` is the identifier of a work item in the home's backlog or
+  in a project. A TODO without one is not written.
+- **Formatting is not set.** The style of Markdown and other files is left to each project for now.
+- The checker reviews the comments a change adds, not those it leaves untouched.
