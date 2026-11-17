@@ -37,10 +37,22 @@ do not cover; the kit lies outside the project, so reading it can need a permiss
   that finishes the item, when it writes the outcome: its own model identifier, exactly as the platform states it.
 - State, lists and history are read from the records' front matter. No index or status file is kept by hand.
 
+## Commits and branches
+
+- A commit message is one plain imperative sentence in English. It gets a body only when the reason is not in the
+  record. A convention of the project's own is stated in the project's rules.
+- Every commit on a work branch ends with the trailer `Work-Item: <id>`.
+- A full item's record with its strategy, and then its approval, are two commits that hold only the record. No other
+  file changes before the commit of the approval.
+- A work branch only grows: no amend, no rebase, no squash. A mistake is corrected by a new commit.
+- A work branch is brought up to date only on a conflict, a need or a request, by merging the default branch into
+  it. The verification commands and the checker then run again.
+
 ## Delivery
 
-- The default branch changes only through pull requests, and the person merges them. A session never merges, never
-  pushes to the default branch and never force-pushes.
+- The default branch changes only through pull requests, and the person merges them, with a merge commit. A session
+  never merges, never pushes to the default branch and never force-pushes; a guard of the kit refuses those commands.
+  A merged branch is deleted, on the hosting service and locally.
 - The record travels in the same pull request as the change. The pull request's description comes from the record:
   intent, what changed, verification evidence, checker report, deviations.
 - Before delivery the profile's verification commands run. For small and full items the checker, `honsha:checker`,

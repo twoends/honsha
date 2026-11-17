@@ -1,0 +1,16 @@
+name: honsha
+description: A workflow for running software projects with AI agents, packaged as a Claude Code plugin.
+language: en
+stack: [node]
+default-branch: main
+merge-deploys: false
+verify:
+  - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"
+  - claude plugin validate .
+  - node checks/commits.mjs
+gates:
+  - the rules name no hosting service
+  - nothing about a user, a user's project or an installation
+  - a script comes with its test
+commits:
+  address: '@users\.noreply\.github\.com$'

@@ -1,5 +1,5 @@
 {
-  "description": "Delivers the core rules and the record template when a session starts, and writes the effort level into work-item records.",
+  "description": "Delivers the core rules and the record template when a session starts, refuses the commands that merge, push to the default branch or force a push, and writes the effort level into work-item records.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +7,19 @@
           {
             "type": "command",
             "command": "cat \"${CLAUDE_PLUGIN_ROOT}/rules/core.md\" && printf '\\nKit directory: %s\\n\\nThe record template, templates/record.md in the kit directory:\\n\\n' \"${CLAUDE_PLUGIN_ROOT}\" && cat \"${CLAUDE_PLUGIN_ROOT}/templates/record.md\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"],
+            "timeout": 10
           }
         ]
       }
