@@ -3,12 +3,12 @@
   "private": true,
   "description": "Development tools for the kit's own checks. The plugin needs none of them to run.",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "devDependencies": {
-    "@types/node": "22.20.5",
-    "oxlint": "1.94.0",
-    "prettier": "3.10.1",
+    "@types/node": "26.6.6",
+    "oxlint": "1.93.0",
+    "prettier": "3.9.10",
     "typescript": "7.0.2"
   }
 }
