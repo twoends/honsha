@@ -60,6 +60,13 @@ ordinary updates from 14 days to 7, and kept Claude Code as an exception to it.
 - Workflow, new section 17 "Dependencies"; section 14.1 lists the alerts among the settings a piece describes. GitHub
   piece: the alerts, the commands, what stays off. README: the workflow's topics.
 - Work committed in one commit.
+- The checker passed the item with three findings, fixed in a commit of their own: section 17 made the hosting
+  service's alerts mandatory, against section 14, which relies on nothing a service gives; the package manager's own
+  vulnerability report is now the check on any service, at every review and in every work item that changes the
+  lockfile, and the alerts are a further stop where a service has them. The reason for leaving automatic pull
+  requests off now cites the work item and the commit check. A bundle with a major upgrade is full; a review that
+  finds nothing moves its date; radar entries cover direct dependencies. The verdict was a pass, so the check is
+  not repeated.
 
 ## Verification
 

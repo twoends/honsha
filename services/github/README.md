@@ -47,7 +47,9 @@ Two things on the site are not used:
 
 For dependencies (WORKFLOW.md, section 17):
 
-- **Dependabot alerts on.** GitHub reports a dependency with a known vulnerability on the repository and by email.
+- **Dependabot alerts on,** as the further stop between reviews. GitHub reports a dependency with a known
+  vulnerability on the repository, and notifies as the account's notification settings say. The package manager's own
+  report, such as `npm audit`, stays the check that works on any service.
 - **Dependabot security updates and version updates off,** and no `.github/dependabot.yml`: their pull requests carry
   no record and no `Work-Item` trailer.
 
