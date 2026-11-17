@@ -315,6 +315,14 @@ lowest version; the work continues in the session that wrote the record, on the 
 - Decided while writing: the contract of a wiring has a point that the strategy did not list, the three environment
   variables. The piece states no price and no figure of a plan, only what a plan gives, and says to check GitHub's own
   pages. Both jobs run the whole list; whether Claude Code installs on the Windows runner is seen at the first run.
+- 2026-11-17. The test of the patterns that need no list is `checks/public.test.mjs`, on `checks/public.mjs`. It reads
+  every tracked file, the records under `work/` included, and reports the file and the line, never the text. It passes
+  on the kit. With a file that held an e-mail address, and then with one that held a path into a user's folder, it
+  failed and named the file and the line; both files were removed.
+- The README names the new folders, says in a section of its own that the rules name no hosting service, asks for
+  Node.js 22 or later and for a client of the hosting service, and gives `node checks/verify.mjs` as the way to check a
+  change.
+- 52 tests pass.
 
 ## Verification
 
