@@ -263,6 +263,19 @@ lowest version; the work continues in the session that wrote the record, on the 
   loaded, so no hook wrote `effort`. The pull request that words the architecture for any hosting service was still
   open.
 - 2026-11-17. Approval written. The work starts with the checks, as the plan says.
+- 2026-11-17. Checks built in `checks/`: `profile.mjs` reads the three keys of a profile that the scripts need,
+  `verify.mjs` runs the `verify` list, `commits.mjs` checks the trailer and the addresses of the branch's commits. The
+  kit has a profile, `.hub/profile.yml`, whose `verify` lists the tests, the validator and the commit check.
+- Found while building: the checkout of a hosting service is often not on the branch itself, so the commit check takes
+  the name of the branch and the two ends of its commits from three environment variables that the wiring sets
+  (`HONSHA_BRANCH`, `HONSHA_BASE`, `HONSHA_HEAD`), and from git when they are not set. They go into the contract of a
+  wiring.
+- Decided while building: the profile lists the tests by pattern (`"hooks/*.test.mjs" "checks/*.test.mjs"`) and not by
+  folder, so that the command does not depend on how a Node.js version reads a folder name. The runner uses the default
+  shell of the platform, which on Windows is not the shell the hooks use; the kit's three commands work in both. The
+  commit check never prints an address.
+- 36 tests pass, 16 from before and 20 new. The list of three commands passes through the runner, and the commit check
+  passes on this branch (Windows 11, Node.js 26, Claude Code 2.1.325).
 
 ## Verification
 
