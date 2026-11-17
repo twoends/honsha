@@ -4,7 +4,7 @@ title: Say each rule once, keep records short, and keep it that way
 project: honsha
 type: change
 size: full
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -157,6 +157,9 @@ One worker, in sequence: every step touches files the next one reads.
    changes nothing.
 
 ## Approval
+
+Approved by the person on 2026-11-17, in the chat of the session that wrote the strategy, with the three decisions as
+recommended.
 
 ## Log
 
