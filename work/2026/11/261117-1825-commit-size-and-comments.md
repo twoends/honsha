@@ -74,6 +74,18 @@ Asked on 2026-11-17, in the chat of a session on the kit, answering the two prop
   of the workflow.
 - Work committed in one commit, ready for the verification.
 
+- First verification passed; the checker failed the item on one finding: the worker's Verification section still
+  said to write the results and then commit the work, which puts them outside the closing commit. Fixed in a commit
+  of its own, as the new rule asks for a fix asked by the checker: the work is committed before the verification,
+  the results stay uncommitted until the closing commit, and a fix commit carries its log lines without them.
+- The results of the first verification and the first report were kept out of the fix commit; they go into the
+  closing commit with the second ones.
+
 ## Verification
+
+## Deviations
+
+- Criterion 5 expected two commits. The branch has three: the work, the fix asked by the checker, the closing
+  commit. The fix commit is one the rule allows; the criterion did not foresee a failed check.
 
 ## Outcome

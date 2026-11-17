@@ -65,11 +65,13 @@ into the branch of a part.
 
 ## Verification
 
+The work is committed before the verification. What the verification writes into the record stays uncommitted until
+the closing commit (Delivery).
+
 1. Run every command listed under `verify` in the profile. Write each command and its result under "Verification".
    A command that fails is fixed or reported; it is never left out.
 2. A trivial item is verified at this point: one line under "Verification" is enough.
 3. For a small or full item, call the checker:
-   - commit the work;
    - write two files in the repository root that are not committed: the difference between the default branch and
      the item's branch, and the list of the branch's commits.
 
@@ -82,7 +84,8 @@ into the branch of a part.
    - delete the two files;
    - copy the checker's report under "Verification", unchanged.
 4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and the check.
-   A finding that cannot be fixed inside the scope is a stop condition.
+   The fix is a commit of its own, with its log lines and without the results of the verification it answers. A
+   finding that cannot be fixed inside the scope is a stop condition.
 
 ## Delivery
 
