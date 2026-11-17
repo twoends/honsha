@@ -4,14 +4,14 @@ title: Say each rule once, keep records short, and keep it that way
 project: honsha
 type: change
 size: full
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 9
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -204,6 +204,95 @@ recommended.
 
 ## Verification
 
+On `a2f9c43`, `356cc68`, `2ea2b91`, `24b479d`, `9877bb0` and `7b2c0a3`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325:
+`node checks/verify.mjs` passed all six each time — Prettier, oxlint, TypeScript, 58 tests with the two budget tests,
+the plugin validator with its known warning, and the commit check, last "The 8 commits of the branch follow the rules."
+
+### First checker report: fail
+
+Findings: (1) the core rules' merge method changed without a deviation; (2) the log named details of this
+installation; (3) the template lost two rules that only the worker then stated; (4) the one-place rule made no
+exception for the checker's file, which must repeat rules; (5) workflow 4.2 repeated the template's sections in a
+table.
+
+### Second checker report: fail
+
+Findings: (1) the GitHub piece said every command in it was tried; only three were; (2) a sentence in Verification
+belonged in the log.
+
+### Third checker report: fail
+
+Finding: workflow 15.2 restated the core rule on naming a deleted identifier as an obligation.
+
+### Fourth checker report: fail
+
+Finding: workflow section 1 stated the merge method without the exception the core rules make.
+
+### Fifth checker report: fail
+
+Finding: the checker's file stated the one-place rule without the exception the core rules make for an agent's
+file.
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Core rules are the only source; the workflow and the worker point to them; the checker keeps what it needs: met. See `docs/01-specs/WORKFLOW.md` sections 2, 3.2, 4, 6, 8, 13 and 15 (pointers plus reasons), `agents/worker.md` line 8, and `agents/checker.md` lines 10 and 36–68.
+2. Shorter checker report: met, `agents/checker.md` lines 12–13 and 77–108.
+3. Only the last report in full; Verification holds commands and reports: met, `rules/core.md` lines 35–36, `agents/worker.md` lines 69–70, `templates/record.md` lines 60–61.
+4. No test dates, measurement tables kept for a past decision, status lines or settled assumptions in the architecture, vision, README and GitHub piece: met. Status lines, the table in 3.4, the results of section 8 and A4/A6/A7 are removed (diff lines 395–578), as are the README and vision status lines and the GitHub piece's dates.
+5. Inconsistencies fixed: met.
+   - Architecture: hosting identity and protection at lines 37, 240–243 and 277; the 9,000/10,000 limit at lines 102–103; "private until published" at line 87.
+   - One always-full wording, in `rules/core.md` lines 21–24 and `agents/checker.md` lines 65–68.
+   - The checker writes out the sections by size and its rules (checker lines 10 and 56–60).
+   - The core rules now allow naming a deleted identifier once (core line 70).
+   - One strategy list, in the template.
+   - The workflow example shows the full report in the new shape (WORKFLOW lines 314–337).
+6. Three mechanisms in place: met.
+   - The rule: `rules/core.md` lines 73–74.
+   - The checker's check: `agents/checker.md` lines 42–43 and 61–63.
+   - The budget test: `checks/budgets.test.mjs`, covered by the `verify` glob `checks/*.test.mjs`.
+   - The review: WORKFLOW section 18.
+7. `verify` passes and the budgets hold: met, as recorded under Verification for all six commits. By line lengths, the checker file is about 7,100 of its 7,600 budget.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+The five earlier checks' findings are all fixed:
+
+- First check:
+  1. The merge-method change is declared under Deviations.
+  2. The log names no installation details.
+  3. The template again says "copied unchanged" (line 61) and asks the log to name the parallel parts (line 56).
+  4. The core one-place rule has the agent's-file exception (core lines 73–74).
+  5. WORKFLOW 4.2 points to the template.
+- Second check: the GitHub piece names only the tried commands (lines 6–8), and Verification holds only commands and reports.
+- Third check: WORKFLOW 15.2 gives the reason and points to the core rules (lines 461–462).
+- Fourth check: WORKFLOW section 1 (line 12) and 14.1 (line 406) point to core Delivery.
+- Fifth check: `agents/checker.md` lines 42–43 match the core rule and its exception.
+
+No rule is lost. Each rule removed from the workflow, the worker, the template, the GitHub piece and the architecture is still stated in the core rules, the worker (parallel-part branches, and the default branch merged only into the item's branch, lines 29–34 and 47–48), the checker (coverage finding, untouched comments) or WORKFLOW 14.3 (the guard's limits). The deleting text points there.
+
+No rule is stated twice with different meanings:
+- The checker's written-out rules agree with the core rules: always-full list, sections by size, Verification and reports, documents, commits.
+- WORKFLOW 13.4, which lets a project keep another merge method, agrees with the core Delivery exception.
+
+**Not verified**
+
+- The scheduled task of decision 3: it belongs to the installation, outside this repository.
+- That `gh pr view --json number,state,mergedAt`, the settings and the alerts were actually tried, as `services/github/README.md` lines 6–8 say. Only the record and the log attest it.
+
 ## Deviations
 
 - The core rules now allow a project to merge with another method than a merge commit when its own rules say so.
@@ -211,3 +300,12 @@ recommended.
 - One log entry was rewritten to remove installation details (see the log).
 
 ## Outcome
+
+Each rule of the kit is stated in one place: the core rules for sessions, the checker's file for what the checker
+must check; the workflow gives reasons and points to them. Records keep one full checker report and short Verification
+sections. The specifications hold no history. Three mechanisms keep it so: the one-place rule, the checker failing a
+restated rule or an oversized record together with the budget test, and the monthly upkeep review. Kit documents went
+from about 100,000 to about 88,500 characters.
+
+Known limit: the core rules and the template are at 8,700 of the 9,000 characters the hooks' test allows. No
+deferred check.
