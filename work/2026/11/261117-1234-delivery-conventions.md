@@ -276,6 +276,18 @@ lowest version; the work continues in the session that wrote the record, on the 
   commit check never prints an address.
 - 36 tests pass, 16 from before and 20 new. The list of three commands passes through the runner, and the commit check
   passes on this branch (Windows 11, Node.js 26, Claude Code 2.1.325).
+- 2026-11-17. The guard built: `hooks/guard.mjs`, a `PreToolUse` hook, and the list of GitHub's merge commands in
+  `services/github/merge-commands.json`.
+- Decided while building the guard: its matcher covers both shell tools of the platform, `Bash` and `PowerShell`,
+  because a command refused in one would pass in the other. The bodies of here-documents and the text inside quotes are
+  not read as commands, so that writing about a command is not refused. Deleting a work branch on the remote is let
+  through, because the clean-up after a merge needs it. A push with no destination is judged by the branch the checkout
+  is on.
+- Live run without a terminal (`claude -p`, the kit loaded with `--plugin-dir`, model `claude-haiku-5-5`, a disposable
+  repository with a local remote): a push to the default branch, a forced push and `gh pr merge` were each refused, and
+  the session reported the guard's reason for each; an ordinary push of the work branch went through; the remote's
+  `main` did not move. The assumption that a plugin's `PreToolUse` hook stops a shell call in such a session holds.
+- 47 tests pass, 11 of them the guard's.
 
 ## Verification
 

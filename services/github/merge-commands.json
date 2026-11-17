@@ -1,0 +1,8 @@
+{
+  "merge": [
+    "^gh( .*)? pr merge( |$)",
+    "^gh( .*)? api .*/pulls/[0-9]+/merge( |$)",
+    "^gh( .*)? api .*mergePullRequest",
+    "api\\.github\\.com/repos/[^ ]+/pulls/[0-9]+/merge( |$)"
+  ]
+}
