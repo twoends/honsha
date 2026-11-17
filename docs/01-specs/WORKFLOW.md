@@ -9,7 +9,7 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 - **One record per work item,** one file, with front matter. Its sections depend on the size of the work.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
-  the change. The person merges, with a merge commit.
+  the change. The person merges (core rules, Delivery).
 - **Everything that is not a change to a project lives in the home:** backlog, inbox and verdicts, reports, check
   outcomes.
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
@@ -403,8 +403,9 @@ no protection at all: what a service adds beyond that is a further stop, never s
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
    merged it.
 2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
-3. **The settings the rules rely on:** pull requests are merged with a merge commit, merged branches are deleted, and,
-   where the service has them, alerts on vulnerable dependencies are on without automatic pull requests (section 17).
+3. **The settings the rules rely on:** pull requests are merged with the method the core rules name (Delivery), merged
+   branches are deleted, and, where the service has them, alerts on vulnerable dependencies are on without automatic
+   pull requests (section 17).
 4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.

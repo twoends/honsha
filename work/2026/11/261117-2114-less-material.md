@@ -194,6 +194,10 @@ recommended.
   a deleted identifier as an obligation, where the core rules allow it; it now gives the reason and points to the
   core rules. Each repeated check reads the whole branch again and finds something the earlier ones did not; whether
   a repeated check should cover only the fixes is a question for the person, not changed here.
+- The fourth check failed on one finding, fixed in a commit of its own: workflow section 1 still said the person merges
+  with a merge commit, without the exception the core rules now make. It now points to the core rules, and so does
+  section 14.1 on the settings a piece describes; every other mention of the method was searched and is either the
+  GitHub piece's default setting or the reason for merge commits.
 
 ## Verification
 
