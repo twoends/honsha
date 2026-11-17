@@ -62,6 +62,10 @@ Asked on 2026-11-18, in the chat of a session on the kit, choosing between this 
   check's commands with the last checked commit in place of the default branch, so the format stays the same. The
   workflow points to the worker instead of restating the rule. The commands were tried on this repository. Worker
   5,694 of 5,800; checker 7,390 of 7,600.
+- The first repeated check, reading only `5213235`, failed on one finding, fixed in a commit of its own: a merge of the
+  default branch between a failed check and its repeated check would bring the default branch's changes into the
+  repeated check. The worker now never merges in that interval; `git show --cc` is described as what the merge itself
+  changed. Worker 5,752 of 5,800.
 
 ## Verification
 

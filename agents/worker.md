@@ -43,8 +43,10 @@ core rules in your context always hold, and this file does not repeat them: it i
    trailer on the merge commit. Do not use a button of the hosting service that updates the branch.
 2. A conflict that cannot be resolved inside the scope is a stop condition.
 3. Run the verification again and say so in the log. If a check has already run and the merge had conflicts, run a
-   repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only how the conflicts
-   were resolved, and the list of commits with `<merge>^!` as the range.
+   repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only what the merge
+   itself changed, and the list of commits with `<merge>^!` as the range.
+
+Never merge between a failed check and its repeated check.
 
 The default branch is merged only into the item's branch, before parts are split or after they are integrated, never
 into the branch of a part.
