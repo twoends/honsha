@@ -42,7 +42,7 @@ core rules in your context always hold, and this file does not repeat them: it i
 1. Merge the default branch into the item's branch: `git fetch`, then `git merge origin/<default-branch>`, with the
    trailer on the merge commit. Do not use a button of the hosting service that updates the branch.
 2. A conflict that cannot be resolved inside the scope is a stop condition.
-3. Run the verification and the checker again, and say so in the log.
+3. Run the verification and a repeated check (Verification, step 4), and say so in the log.
 
 The default branch is merged only into the item's branch, before parts are split or after they are integrated, never
 into the branch of a part.
@@ -66,11 +66,13 @@ the closing commit (Delivery).
 
    - invoke the agent `honsha:checker`, giving it the path of the record and the paths of the two files;
    - delete the two files;
-   - copy the checker's report under "Verification", unchanged, and reduce an earlier report there to its verdict
-     and findings.
-4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and the check.
-   The fix carries its log lines and not the results of the verification it answers. A finding that cannot be fixed
-   inside the scope is a stop condition.
+   - copy the checker's report under "Verification", unchanged, with the commit it read, and reduce an earlier
+     report there to its verdict and findings.
+4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
+   repeated check: the same files, written from the commit the last check read (`<checked>`) instead of the default
+   branch, `git diff <checked>..HEAD` and `git log <checked>..HEAD` with the same format. The checker reads the record
+   for the earlier findings. Only the person can ask for a full check again. The fix carries its log lines and not the
+   results of the verification it answers. A finding that cannot be fixed inside the scope is a stop condition.
 
 ## Delivery
 

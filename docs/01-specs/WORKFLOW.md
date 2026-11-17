@@ -113,6 +113,8 @@ extended instead.
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas.
 6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
    with the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
+   After a failed check it reads only what changed since: a full read of a large branch finds something new each
+   time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
    branches). The checks that are wired to the hosting service run on the pull request (section 14.2).
 8. **Merge.** The person reviews and merges (section 13.4). A project whose profile says that merging deploys is
