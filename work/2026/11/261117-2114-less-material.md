@@ -186,6 +186,10 @@ recommended.
   work commit); the template again says that the checker's report is copied unchanged and that the log names the
   parts that ran in parallel; the core rule on one place makes an exception for an agent's file that checks rules
   its agent does not receive; workflow 4.2 points to the template instead of repeating its sections in a table.
+- The second check failed on two findings, fixed in a commit of their own: the GitHub piece claimed that every command
+  in it was tried, while only `gh pr create`, `gh pr view` for number and state, and `gh pr checks` were; it now names
+  those. The second, a sentence in Verification that belonged in the log, was in the uncommitted part and is removed
+  there. The check is repeated.
 
 ## Verification
 

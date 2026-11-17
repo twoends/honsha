@@ -3,8 +3,9 @@
 This folder is the kit's piece for GitHub: everything that is specific to that hosting service, kept apart from the
 rules. What a piece has to say is in [WORKFLOW.md](../../docs/01-specs/WORKFLOW.md), section 14.
 
-Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation, and
-the commands, the repository settings and the alerts below have been tried on private repositories of a free account.
+Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
+on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
+the repository settings and the alerts below.
 GitHub changes what it offers: check a statement about what it gives or what it costs against GitHub's own pages
 before relying on it.
 
