@@ -288,6 +288,22 @@ lowest version; the work continues in the session that wrote the record, on the 
   the session reported the guard's reason for each; an ordinary push of the work branch went through; the remote's
   `main` did not move. The assumption that a plugin's `PreToolUse` hook stops a shell call in such a session holds.
 - 47 tests pass, 11 of them the guard's.
+- 2026-11-17. Rules written. `rules/core.md` has a block on commits and branches and two more sentences under
+  "Delivery". `agents/worker.md` has the trailer, the two gate commits, the branches of parallel parts, what to do when
+  the default branch moves, the list of commits for the checker and the clean-up after a merge. `agents/checker.md`
+  reads the list and has a seventh check, on commits. The core rules and the record template are 7,304 bytes together.
+- Decided while writing the rules: the worker's two commands for the checker's files sit in a code block, because the
+  second cannot be wrapped. The checker never quotes an address: it says whether it matches. A missing list of commits
+  does not stop the checker: it reports the checks on commits as not verifiable.
+- Live run for criterion 1 (`claude -p`, the kit loaded with `--plugin-dir`, `claude-opus-5-5`, a disposable
+  repository): asked for a short section in a README, the session sized the request trivial, worked on a branch
+  `work/<id>-<slug>` and made one commit with a plain imperative subject that ends with `Work-Item: <id>`. It pushed the
+  work branch and said that merging, with a merge commit, is the person's. One run.
+- Live runs for criterion 2 (`claude -p --agent honsha:checker`, `claude-opus-5-5`, a disposable repository with a
+  finished full-size item and a profile that sets `commits.address`). On the real list of commits the verdict was
+  `pass`, with the trailer, the order of the approval gate and the addresses reported as met. On a list in which the
+  first commit also touched a file other than the record and the third had no trailer, the verdict was `fail` and both
+  commits were named by identifier and subject. Neither report quoted an address.
 
 ## Verification
 
