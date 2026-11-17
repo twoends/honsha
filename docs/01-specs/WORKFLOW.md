@@ -555,7 +555,7 @@ The same in every project that has dependencies. A project adds to it only in it
 - **Ordinary updates wait and come on a cadence.** Each direct dependency of a project is covered by a radar entry of
   the installation, with a review date. At the review, the outdated dependencies are listed with the package manager.
   The updates worth making become one work item, full if it holds a major upgrade and small otherwise. A version is
-  taken only when it was released at least 14 days earlier, so that a release withdrawn or found compromised in its
+  taken only when it was released at least 7 days earlier, so that a release withdrawn or found compromised in its
   first days is not taken.
 - **Who.** The review is started on its date by the scheduler where an installation has one; until then, by the
   person or by a session asked to. An update worth making ends in a work item and a pull request that the person

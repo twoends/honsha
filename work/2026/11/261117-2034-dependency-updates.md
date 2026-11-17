@@ -4,7 +4,7 @@ title: Say who keeps dependencies up to date, and when
 project: honsha
 type: change
 size: small
-state: done
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -67,6 +67,10 @@ ordinary updates from 14 days to 7, and kept Claude Code as an exception to it.
   requests off now cites the work item and the commit check. A bundle with a major upgrade is full; a review that
   finds nothing moves its date; radar entries cover direct dependencies. The verdict was a pass, so the check is
   not repeated.
+
+- After the pull request was opened, the person set the waiting period to 7 days (see the addenda). Section 17 says
+  7 days; criterion 1 is read with 7 in place of 14, which is a deviation. State set back to `in-progress`.
+  Committed as a fix of its own.
 
 ## Verification
 
@@ -141,6 +145,10 @@ All three findings fixed in `4ee5e94`, as the log says. Then, on `4ee5e94`: `nod
 commands ("The 2 commits of the branch follow the rules."). The new rule applied at once: `npm audit` found 0
 vulnerabilities in the kit and in the home; `npm outdated` in the kit lists only `@types/node`, which follows Node.js
 22 on purpose.
+
+## Deviations
+
+- Criterion 1 named a waiting period of 14 days; at the person's request after the pull request was opened, it is 7.
 
 ## Outcome
 
