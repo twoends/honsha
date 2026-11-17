@@ -4,7 +4,7 @@ title: Cite no decision log in the kit, and say what a decision is
 project: honsha
 type: change
 size: small
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -168,6 +168,94 @@ corrects the count with a new entry.
 On `8f8ac9a`, with `node checks/verify.mjs`: all six passed; `node checks/commits.mjs` reported "The 2 commits of the
 branch follow the rules."
 
+### After the addenda: commands
+
+- On `deb4f32`, the person's fix: all six passed; "The 4 commits of the branch follow the rules."
+- On `3c074d8`, the fix of the second check's findings: all six passed, 56 tests; "The 5 commits of the branch follow
+  the rules." The core rules and the template are 8,693 characters; the hooks' test fails above 9,000.
+
+### Second checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. No `D`+number citation outside `work/`, and reasons stated in words: met. A search for `\bD\d+\b` across the repository, excluding `work/`, `node_modules/` and the diff file, finds nothing. Commit `deb4f32` adds no citation. The second part was judged in the first round. It still cannot be fully checked, because the outside log cannot be read from here.
+2. `O02`, `O06`, `O07` and `O10` stay, and the status lines point to section 9: met. ARCHITECTURE lines 338–341 hold all four rows. ARCHITECTURE lines 3–5 and README line 94 say they are the open design points of section 9.
+3. The workflow says what a decision is, where it is recorded "with a state", and that "entries are replaced and not rewritten": not met as written, met as amended.
+   - Not met as written: WORKFLOW section 16 (lines 524–534) now says the opposite. "A later choice rewrites the entry it changes, or deletes it", and there are no states.
+   - Met as amended: the change was asked by the person (Addenda, record lines 28–37) and is declared under "Deviations" (record lines 168–172).
+   - The rest of the criterion still holds. What a decision is: line 524. The record of the work item: line 526. The home's log: line 528. Rules are read from the specifications: line 533.
+4. The architecture lists the decision log among the home's files: met. ARCHITECTURE line 127, `decisions.md`.
+5. The kit's `verify` list passes: not verifiable for the current tip. Passes are recorded for `8162475` (record lines 90–97) and `8f8ac9a` (lines 165–166). No run on `deb4f32` is recorded. I did not run any command.
+
+**Intent:** The first request is done. The addenda are done too: entries that no longer hold are deleted instead of kept with a state, and the rule is generalised in core rules "Documents" (core.md lines 66–70), WORKFLOW 15.2 (lines 507–515) and checker step 4. The record itself says that it read the request as a rule for every project's documents. Whether the person meant that cannot be checked from here.
+
+**Scope:** The diff touches README, VISION, ARCHITECTURE, WORKFLOW, `rules/core.md`, `agents/checker.md` and the record.
+- The growth beyond the original strategy (core rules, workflow 15, checker) is declared under "Deviations".
+- WORKFLOW 15.1 line 504 rewrites the formatting bullet. It replaces "left to each project for now" with a pointer to the `verify` list. The log records this, but "Deviations" does not name it. I count it as the new document rule applied to text of the kit that no longer held, which falls within the declared growth.
+
+**Comments and documents:** The diff adds no comments. The changed documents leave no replaced text beside its replacement in the changed lines. Applying step 4 to the whole of each changed document, one entry is kept with a note that it no longer holds:
+- ARCHITECTURE line 310, A7, "A hook can write model and effort into the record". The results table at line 328 says it is "false for the model". By WORKFLOW 15.2 (line 512), an entry that holds in part is rewritten to what still holds. That text predates this item. It is reported here because step 4 says "a document the diff changes says what holds now" (see Findings 1 and 2).
+
+**Gates:**
+- "The rules name no hosting service": met. The new text names only git.
+- "Nothing about a user, a user's project or an installation": met. The new text in core.md, WORKFLOW 15.2 and 16, and checker step 4 is generic. ARCHITECTURE line 127 says "this installation" generically.
+- "A script comes with its test": met. No script is added or changed.
+
+**Verification evidence:** I did not run any command again.
+- All six `verify` commands appear under "Verification" as passed on `8162475`, with a second run on `8f8ac9a`: prettier, oxlint, tsc, node --test (56 tests), `claude plugin validate .`, and `node checks/commits.mjs` ("The 2 commits…").
+- No run on `deb4f32` is recorded. As stated, results stay out of a fix commit (worker.md line 87), so I treat this as not verifiable rather than missing. The closing commit must add it.
+- Coverage: formatting (prettier), lint (oxlint), types (tsc), tests (node --test).
+- The size claim in the log ("8,650 characters") is guarded by `hooks/hooks.test.mjs` line 29 (`size < 9000`), which is part of the test run.
+
+**Record:**
+- In order:
+  - The intent restates the request, and the person's later request is under "Addenda".
+  - Criteria, strategy and log are present as size small requires.
+  - The log grows by appended entries, and the first-round entries are intact.
+  - "Deviations" declares the change to criterion 3 and to the scope.
+  - `state: in-progress` is expected before the closing commit.
+- Not yet in order, expected for the closing commit: "Outcome" (lines 174–178) is still the first round's text. It says section 16 says "how entries are replaced", which no longer holds, and it must be rewritten.
+- The strategy line "No rule a session follows while working changes, apart from where a decision is written" (line 53) is now false. It is covered by the deviation, since the strategy is fixed.
+- No always-full case from the checker's list: no schema, dependency, authentication, CI or public interface.
+
+**Commits:**
+- Trailer: met. All four commits end with `Work-Item: 261117-1954`:
+  - `8162475` "Cite no decision log in the kit and say what a decision is"
+  - `8f8ac9a` "Say that the starting base has no records"
+  - `b6d8468` "Close the record of the decision references"
+  - `deb4f32` "Delete what no longer holds, in decision logs and every document"
+- Approval-gate order: not applicable (small).
+- Addresses: met. The author and committer of every commit match `commits.address`.
+- `deb4f32` is a commit of its own for a fix asked by the person, as 13.3 allows. The new closing commit is not made yet, which is expected.
+
+**Findings**
+
+1. The checker's verdict rule was not extended to documents. Step 4 is now "Comments and documents" and reports superseded text (checker.md lines 31–35, 72). But the fail list still names only "a comment breaks the rules on comments" (lines 92–93). Superseded text in a document is therefore reported but can never fail an item. That is inconsistent with core.md lines 66–70 and WORKFLOW 15.2, which state the rule as binding. This is not a fail condition under the current text.
+2. Checker step 4 and WORKFLOW 15.2 differ on what is checked.
+   - Step 4 (lines 34–35): "A document the diff changes says what holds now". As written, that covers the whole document.
+   - WORKFLOW 15.2 line 515: "The checker reports text that a change leaves beside what replaced it", which covers only the change.
+   - For comments, both limit the check to what the diff adds (checker line 33, WORKFLOW line 505).
+   - The two readings give different results here. For example, ARCHITECTURE A7 (line 310 against line 328) breaks 15.2 under the first reading and is out of scope under the second.
+3. Core rules and 15.2 say records "are not rewritten" (core.md lines 69–70, WORKFLOW lines 513–514). WORKFLOW 4.3 (lines 119–124) protects only intent, scope and criteria, and the log. The record's other sections (strategy, verification, outcome) and its front matter are written and changed by design. This item's closing commit must rewrite "Outcome" (record lines 174–178) and `state`.
+4. WORKFLOW section 11 (lines 303–305) keeps a project's earlier specifications "unchanged" under `legacy`. Neither exception in core.md line 69 nor WORKFLOW 15.2 line 513 covers them. They name only records and notes of a past discussion. A legacy specification that no longer holds is then both required to be deleted and required to stay unchanged.
+5. WORKFLOW 16 line 531 says a later entry "deletes it and says which identifier it replaces". That is a note naming what was replaced, the mirror of the "replaced by" that 15.2 line 510 forbids. Line 532 gives a reason (records cite identifiers), but 15.2 states no such allowance.
+6. Minor: ARCHITECTURE line 127 describes `decisions.md` as "the choices about this installation that are in force". WORKFLOW 16 line 528 also puts "a standing preference of the person" there.
+7. Minor: `agents/worker.md` line 43 restates the comment rules for the worker but not the new rule on documents. The rule reaches the worker only through the core rules in its context.
+
+**Not verified**
+
+- The six `verify` commands on `deb4f32`: not in the record by design. I did not run them.
+- Whether the person meant the reasoning to hold for every project that uses the kit, as the record reads it, or only for the documents of the Honsha kit and home. The record states its reading, and the request alone does not settle it.
+- Whether a new core rule loaded into every session of every project is a design with more than one reasonable form, which would make the item always full. This case is not on the checker's always-full list, and the person approved the proposal in chat, which is not in the repository.
+- Whether the outside log entries behind the removed citations held a reason the kit now needs: that log is outside the repository.
+
+### After the second check
+
+All seven findings are fixed in `3c074d8`, as the log says. A7 in the architecture's section 8 is left as it is: an
+assumption is stated as it was tested, with its result beside it, and the check now covers only what a change touches.
+
 ## Deviations
 
 - Criterion 3 asked for entries that are replaced, not rewritten, with a state. At the person's request after the
@@ -176,6 +264,10 @@ branch follow the rules."
 
 ## Outcome
 
-The kit's documents cite no entry of an outside decision log, and the workflow's section 16 says what a decision is,
-where it is recorded and how entries are replaced. The home's log is reorganised to match, outside this pull request.
-No deferred check.
+The kit's documents cite no entry of an outside decision log. Every document says what holds now: what a change
+replaces is deleted and git keeps the history, with records, notes of a past discussion and `legacy` documents as the
+exceptions. This is a core rule, workflow 15.2, and part of the checker's verdict. A decision log holds only the
+decisions in force (workflow 16). The home's log is cleaned the same way, outside this pull request.
+
+Known limit: the core rules and the template are at 8,693 of the 9,000 characters the hooks' test allows. No deferred
+check.
