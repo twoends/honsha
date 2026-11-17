@@ -4,7 +4,7 @@ title: Delivery conventions, checks on pull requests and the guard
 project: honsha
 type: change
 size: full
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -328,6 +328,9 @@ lowest version; the work continues in the session that wrote the record, on the 
   stops here, as the strategy says, until that pull request is in the default branch: state set to `blocked`. Still to
   do after it: the architecture, the verification with the checker, the outcome, the pull request and the first run of
   the pipeline.
+- 2026-11-17. The pull request that words the architecture for any hosting service is in the default branch: the person
+  asked the session to merge it, and it was merged with a merge commit. The default branch was then merged into this
+  branch, as section 13.5 of the workflow says, without conflict. State back to `in-progress`.
 
 ## Verification
 
