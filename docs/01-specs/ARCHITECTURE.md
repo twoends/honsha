@@ -1,11 +1,7 @@
 # Architecture
 
-**Status:** approved as the starting base on 2026-11-16. Identifiers such as O02 are the open design points of
-section 9; A1 to A9 are the assumptions of section 8. Terms are defined in the [vision](../00-vision/VISION.md)
-glossary.
-
-Several parts rest on platform features that are research previews or were read from documentation and not yet tried.
-They are listed as assumptions in section 8, and the plan starts by testing them.
+Identifiers such as O02 are the open design points of section 9; identifiers such as A1 are the assumptions of
+section 8. Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
 ## 1. Key facts
 
@@ -17,12 +13,8 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
 - **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own.
   The files are the source of truth, not the query engine: questions go through a derived index (section 3.4).
-- **Outputs:** branches and pull requests, on the service that hosts the repositories. The identity the hub uses
-  there cannot merge.
-- **Hosting service:** each installation chooses the service that hosts its repositories and their pull requests.
-  The kit does not depend on which one it is: its rules name no service, and anything specific to one service is a
-  separate piece that another installation can replace with its own. So far the kit has been tried with GitHub
-  only.
+- **Outputs:** branches and pull requests, on the service that hosts the repositories, which each installation
+  chooses ([WORKFLOW.md](WORKFLOW.md), section 14). Sessions never merge (section 6).
 - **Built from:** native Claude Code features first. Custom code is limited to a scheduler, an index and a board, and to
   replacing a native piece only where it proves inadequate.
 
@@ -42,7 +34,7 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 | Scheduler        | Starts timed runs: checks that are due, radar reviews, proactive research                                                | Timers on the host (custom, small)                               |
 | Board            | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                | Page generated from the index and session state (custom, small)  |
 | Index            | Answers "which records" questions for the hub and the board: metadata of every record and full-text search               | A SQLite file built from the records by a script (custom, small) |
-| Hosting identity | Pushes branches and opens pull requests in the registered repositories; cannot merge                                     | Dedicated account or token, plus protected branches              |
+| Hosting identity | Pushes branches and opens pull requests in the registered repositories; never merges                                     | An account or token on the hosting service                       |
 
 ```mermaid
 flowchart LR
@@ -92,21 +84,12 @@ work/                  the kit's own work records
 .hub/profile.yml       the kit's own profile
 ```
 
-Built so far: the manifests, the core rules, the record template, the worker, the checker, the hooks, the checks,
-the kit's own profile and the piece for GitHub. The rest of the layout is still indicative.
-
-- It is distributed as a Claude Code plugin from a private marketplace repository. The repository is its own
-  marketplace: the plugin is the repository root.
-- The manifests carry no `version`. Claude Code then takes the commit as the version, so an installation that is
-  updated moves to the repository's latest commit. With a `version` in the manifest, an installation stays on the
-  copy it has until that string changes, however many commits follow: every release then has to raise the version,
-  or no installation receives it. This is what the platform's documentation says: an installation from the
-  marketplace has not been tried yet (section 8). Whether and when a version is added is an open point (section 9,
-  O10). The same documentation gives a second way to hold an installation at a point, with no version: pinning it
-  to a tag or a commit of this repository.
-- What is specific to one hosting service sits in `services/<name>/`, apart from the rules; the wiring of the checks
-  sits where that service reads it. `services/github/` is the only piece so far. What a piece holds is in
-  [WORKFLOW.md](WORKFLOW.md), section 14.
+- It is distributed as a Claude Code plugin from the kit's own repository, private until published. The repository
+  is its own marketplace: the plugin is the repository root.
+- The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
+  one, it would stay on its copy until the version changes (O10, section 9).
+- What a piece of `services/<name>/` holds is in [WORKFLOW.md](WORKFLOW.md), section 14; the wiring of the checks
+  sits where its service reads it.
 - The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the
   type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
   from the lockfile without their install scripts. An installation of the plugin does not need them.
@@ -116,7 +99,8 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
   invoked as `honsha:area-<name>`.
 - A session in a project cannot read the kit's files without a permission, because they lie outside the project.
   What every session needs is therefore put into its context when it starts: the core rules and the record
-  template. Together they must stay under 10,000 characters, the platform's limit for what a hook can deliver.
+  template. Together they stay under 9,000 characters, which a test of the kit enforces, below the platform's limit
+  of 10,000 for what a hook can deliver.
 
 ### 3.2 Home (one per user, private)
 
@@ -149,7 +133,7 @@ CLAUDE.md              short; names the profile and anything truly project-speci
 
 The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the
 default branch, while the parts of a work item start from the item's branch ([WORKFLOW.md](WORKFLOW.md), section
-13.6). This is what the platform's documentation says: it has not been tried yet.
+13.6).
 
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 
@@ -170,7 +154,8 @@ are five hundred records or fifty thousand.
 - disposable: not in git, never edited by hand, rebuilt from scratch at any time.
 
 It also feeds the board. It is not needed on the first day: with a thousand records a direct scan of the files takes
-tenths of a second. It is built with the board.
+tenths of a second. At 50,000 records a scan of the front matter takes seconds, while the index answers in
+milliseconds. It is built with the board.
 
 **Two rules that keep the files manageable.**
 
@@ -178,21 +163,6 @@ tenths of a second. It is built with the board.
   listing a large folder: GitHub, for one, lists at most 1,000 entries per folder.
 - No binary files in git. A voice note or a screenshot is stored as its transcript or description in the record. The
   original stays outside the repository, with a retention period.
-
-**Measured** on a Windows PC on 2026-11-16, with 50,000 synthetic records (248 MB of text):
-
-| Operation                                    | Scanning the files | Through the index |
-| -------------------------------------------- | ------------------ | ----------------- |
-| Open items of one project                    | 3.2 s              | 5 ms              |
-| A rare word in the text                      | 3.4 s              | 1.4 ms            |
-| Two common words, ten best matches           | —                  | 13 ms             |
-| Counts by project, month and size            | —                  | 66 ms             |
-| Building the index from scratch              | —                  | 9 s               |
-| Finding the files changed since the last run | 1.6 s              | —                 |
-
-The files had just been written, so the disk cache was warm; a cold first run will be slower. The text was random
-words, not real records. At about 10,000 records a year, a high estimate for one person with several active projects,
-50,000 records is roughly five years of use.
 
 **What this does not cover.**
 
@@ -267,10 +237,10 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 1. **Untrusted content goes through the reader.** Pages, transcripts and third-party repositories are read by an agent
    with read-only tools and no secrets. What it returns is data, never instructions.
 2. **Only allowlisted senders** can talk to the hub.
-3. **The hosting identity cannot merge.** Default branches are protected on the hosting service. Deploy credentials
-   are not on the host. A guard in the kit refuses a merge, a push to the default branch and a forced push in every
-   session, on any service. It stops a mistake; protection on the hosting service, where the service gives it, is
-   what holds against a session that was manipulated.
+3. **Sessions never merge.** The rules and the kit's guard keep every session from merging, from pushing to the
+   default branch and from force-pushing, on any service; what the guard does not stop is in
+   [WORKFLOW.md](WORKFLOW.md), section 14.3. A hosting service may add protection of its own. Deploy credentials are
+   not on the host.
 4. **Project data is read-only.** Credentials for a project's data live on the host outside any repository and are
    given only to sessions of that project.
 5. **Nothing is installed by the hub.** Third-party skills, plugins and tools enter through a reviewed work item, with
@@ -292,42 +262,25 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 - The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table. A model
   given when a session is started overrides the definition.
 - Each record holds the model and the effort level of the session that did the work, so the choice can be reviewed
-  later with data. A hook writes the effort level; the session that finishes the item writes its model identifier
-  (section 8, A7). The policy is revisited with that data, or when usage limits are reached.
+  later with data. Who writes each is in the core rules (The record): the effort level reaches a hook after an edit,
+  the model reaches no hook. The policy is revisited with that data, or when usage limits are reached.
 
 ---
 
 ## 8. Assumptions to verify
 
-| ID  | Assumption                                                                                                                                       | If false                                           |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| A1  | Remote Control server mode runs on the host, starts sessions from the phone, and can be kept alive as a service                                  | App access is limited to attaching by SSH          |
-| A2  | Channels delivers text, links, voice notes and images to the hub session and lets it reply                                                       | A small custom bot replaces it                     |
-| A3  | The hub session can start a background session in another repository and read its state as JSON                                                  | A small launcher script on the host                |
-| A4  | The always-on core can be delivered by the plugin (a session-start hook) rather than copied into each project                                    | A short synced block in each project's `CLAUDE.md` |
-| A5  | An identity on the hosting service can push and open pull requests without merge rights. On GitHub: in a personal account and in an organisation | A different identity per organisation              |
-| A6  | An area pack named in a record is loaded by the worker                                                                                           | The dispatch prompt names the packs explicitly     |
-| A7  | A hook can write model and effort into the record                                                                                                | The worker writes them as its last step            |
-| A8  | A long-lived hub session stays usable over weeks                                                                                                 | A daily restart, with all state in files           |
-| A9  | Voice notes can be transcribed on the host or through a service chosen on the radar                                                              | Voice notes wait for a later version               |
+| ID  | Assumption                                                                                                                 | If false                                                                  |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| A1  | Remote Control server mode runs on the host, starts sessions from the phone, and can be kept alive as a service            | App access is limited to attaching by SSH                                 |
+| A2  | Channels delivers text, links, voice notes and images to the hub session and lets it reply                                 | A small custom bot replaces it                                            |
+| A3  | The hub session can start a background session in another repository and read its state as JSON                            | A small launcher script on the host                                       |
+| A5  | Where a hosting service offers it, the hub's identity can push branches and open pull requests without being able to merge | The rules and the guard remain the only stop against a merge by a session |
+| A8  | A long-lived hub session stays usable over weeks                                                                           | A daily restart, with all state in files                                  |
+| A9  | Voice notes can be transcribed on the host or through a service chosen on the radar                                        | Voice notes wait for a later version                                      |
 
-**Where they are tested.** On a personal computer first: A2, A4, A5, A6, A7, A9, and the functional part of A1 and A3. Only on
+**Where they are tested.** On a personal computer first: A2, A5, A9, and the functional part of A1 and A3. Only on
 the always-on host: keeping A1 alive as a service, and A8. Background sessions are documented for macOS and Linux; on
 Windows A3 is tried as it is, and falls back to WSL2 or waits for the host.
-
-**Results so far.** Tested on 2026-11-16 on Windows 11 with Claude Code 2.1.325, in sessions started without a
-terminal interface and with the kit loaded for one session. Since 2026-11-17 the kit's own checks also run on Linux,
-in its pipeline. Not tested: a session on Linux or macOS, an installation from the marketplace, a session in the
-terminal interface, a session of the desktop application with the kit installed, a project whose profile has
-verification commands and gates, and what happens after a compaction.
-
-| ID  | Result                                                                                                                                                                                                                                                    | Consequence                                                                                                                                  |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| A4  | True. A session-start hook puts the core rules in the session's context, and a session with no `CLAUDE.md` followed them: asked for a change to authentication, it wrote the record on its branch, set it to `awaiting-approval` and changed nothing else | None. The fallback is not needed                                                                                                             |
-| A6  | True. In three runs out of three the worker invoked the pack of the area named in the record before its first change, and applied a rule only the pack states                                                                                             | None. The fallback is not needed                                                                                                             |
-| A7  | True for the effort level, false for the model. The effort level reaches the hook that runs after an edit. The model reaches no hook in such a session: the session-start input carries no model                                                          | The fallback applies to the model only: the session that finishes the item writes its own model identifier. The hook writes the effort level |
-
-A pack loaded in the A6 test was a throwaway one, kept outside the kit.
 
 ---
 

@@ -165,6 +165,22 @@ recommended.
 
 - 2026-11-17: two read-only reviews, one of the kit and one of the home, on Opus; their findings are under "Facts it
   rests on". The strategy is written and the item waits for approval.
+- Approved; state set to `in-progress`.
+- Steps 1 to 5 done by a subagent on Opus, in this checkout, following this record; it committed nothing. Sizes in
+  characters, before and after: core 6,494 to 6,914; template 2,199 to 1,639 (core and template 8,693 to 8,554);
+  workflow 32,176 to 28,478; architecture 26,185 to 20,511; worker 7,718 to 5,252; checker 5,887 to 6,895, larger
+  because it writes out the rules it does not receive; README 6,853 to 6,321; GitHub piece 7,066 to 6,696; vision
+  5,855 to 5,797. Kit documents in all: about 100,000 to about 88,500.
+- Every rule removed from one document is still stated in another; the subagent listed each one with the place that
+  still states it, checked here against the core rules. The rule on Verification and reports is in the core rules,
+  not the workflow, because sessions read the core rules. Workflow section 2 now points to the core rules; new
+  section 18, "Upkeep review".
+- Core rules: merging with a merge commit unless the project's rules name another method, to agree with workflow 13.4.
+- `checks/budgets.test.mjs`: the worker at most 5,800 characters and the checker 7,600, about 10% above their size;
+  core and template keep the 9,000 of the hooks' test.
+- The monthly scheduled task was created on the person's PC, as decided: `honsha-monthly-review`, on the 17th at
+  9:00, read-only, with a report. It is the installation's, not the kit's.
+- Work committed in one commit.
 
 ## Verification
 

@@ -11,20 +11,19 @@ updated: YYYY-MM-DD
 requested-by: person # person | hub | check
 source: null # inbox item or parent work item, when there is one
 pr: null
-model: null # written by the session that finishes the item
-effort: null # written by a hook
+model: null
+effort: null
 checks: [] # each: { due: YYYY-MM-DD, what: "…" }
 ---
 
 <!--
-File: work/<yyyy>/<mm>/<id>-<slug>.md, on the branch work/<id>-<slug>. <id> is the creation time in UTC.
-This is the full-size shape. Each section says which sizes keep it: delete the sections the item's size does not
-keep, and every comment, when the record is created. The rules are in docs/01-specs/WORKFLOW.md, sections 3 and 4.
+The full-size shape. Each section says which sizes keep it: delete the sections the item's size does not keep, and
+every comment, when the record is created.
 -->
 
 ## Intent
 
-<!-- Every size. The person's words, verbatim, as a quote. Never rewritten: later additions go under "Addenda". -->
+<!-- Every size. The person's words, as a quote. -->
 
 > …
 
@@ -33,8 +32,7 @@ keep, and every comment, when the record is created. The rules are in docs/01-sp
 <!--
 trivial: delete this section.
 small: acceptance criteria only; rename the section "Acceptance criteria".
-full: what is in scope, what is out of scope, the criteria, the boundaries.
-Fixed once work starts (small) or once approved (full). A later change is a deviation.
+full: what is in scope, what is out of scope, the boundaries, the criteria.
 -->
 
 ### In scope
@@ -51,18 +49,16 @@ Fixed once work starts (small) or once approved (full). A later change is a devi
 
 ## Approval
 
-<!-- full only: who approved, when, through which channel. Work starts after this is written. -->
+<!-- full only: who approved, when, through which channel. -->
 
 ## Log
 
-<!-- small and full. Append-only, written while the work goes on. Says which parts ran in parallel, if any. -->
+<!-- small and full. -->
 
 ## Verification
 
-<!--
-trivial: one line with the verification commands and their result.
-small and full: each verification command with its result, then the checker's report, copied unchanged.
--->
+<!-- trivial: one line, the commands and their result. small and full: the commands with their results, then the
+checker's report. -->
 
 ## Deviations
 

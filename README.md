@@ -3,10 +3,6 @@
 Honsha (本社, "head office") is one place from which a person runs all their software projects with AI agents: send
 it anything, ask it anything about the projects, tell it what to build.
 
-**Status:** the first version of the kit exists: the core rules of the workflow, the record template, a worker, a
-checker, three hooks and the kit's own checks. The hub, the channels, the board and the rest of the design are not
-built yet.
-
 This repository is the **kit**: the shareable part of the system, packaged as a Claude Code plugin. Everything
 specific to a user, a project or an installation lives in that user's separate home repository, never here.
 
@@ -30,14 +26,16 @@ specific to a user, a project or an installation lives in that user's separate h
 
 ## Hosting service
 
-The kit's rules name no hosting service. What is specific to one service is a separate piece. `services/github/` is
-the only piece so far, because GitHub is the service the kit has been tried with. A user of another service writes
-their own piece from the contract in the workflow, section 14.
+The kit's rules name no hosting service; a user of a service other than GitHub writes its piece from the contract in
+the workflow, section 14.
 
 ## Requirements
 
-- Claude Code 2.1.325 or later. It is the version the kit was tested with, on Windows 11. The kit's checks also run
-  on Linux, in its pipeline; a session on Linux or macOS has not been tried yet.
+- Claude Code 2.1.325 or later, the version the kit was tried with, on Windows 11. Not tried yet: a session on Linux
+  or macOS (the kit's checks do run on Linux, in its pipeline), an installation from the marketplace, a session in the
+  terminal interface, a session of the desktop application with the kit installed, a project other than the kit whose
+  profile has verification commands and gates, what happens after a compaction, and the project setting that starts
+  new worktrees from the current branch.
 - git. On Windows, Git for Windows: the hooks run through Git Bash.
 - Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
@@ -61,9 +59,6 @@ claude --plugin-dir <path to this repository> --agent honsha:worker
 
 The worker runs on Opus unless the session is started with another model (`--model`).
 
-Installing the kit from its marketplace manifest has not been tried yet. It is part of adopting the kit in a first
-project.
-
 ## Checking a change to the kit
 
 ```
@@ -76,21 +71,16 @@ with TypeScript checking the JavaScript files, the tests, `claude plugin validat
 commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and again when
 `package-lock.json` changes.
 
-The validator reports one warning about the manifests: the plugin has no version. That is deliberate, so that an
-installation follows the repository's commits. Whether and when a version is added is an open point in the
-architecture, section 9. The validator also remarks that there is no licence and no icon, which matters only for a
-submission to the public plugin directory.
+The validator warns that the plugin has no version, which is deliberate (architecture, O10). It also remarks that
+there is no licence and no icon, which matters only for a submission to the public plugin directory.
 
 ## Documents
 
 - [Vision](docs/00-vision/VISION.md): what it does, for whom, principles, non-goals, glossary.
 - [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile, commits
-  and branches, the hosting service, comments and documents, decisions, dependencies.
+  and branches, the hosting service, comments and documents, decisions, dependencies, the upkeep review.
 
-All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
-that have not all been tested yet; they are listed in its section 8, with the results of those tested so far.
-
-Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule changed after the
-starting base can be read in the record of that change, under `work/`. The starting base itself has no records: its
-reasons are stated in the documents where a reason helps.
+The rules every session receives are in `rules/core.md`; the workflow points to them and gives their reasons.
+Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule is as it is can be read
+in the document where a reason helps, or in the record of the change that made it, under `work/`.
