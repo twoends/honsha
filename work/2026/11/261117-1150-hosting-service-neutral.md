@@ -10,7 +10,7 @@ created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
-pr: null
+pr: 2
 model: claude-fable-5-2
 effort: null
 checks: []
