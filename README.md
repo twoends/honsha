@@ -39,7 +39,7 @@ their own piece from the contract in the workflow, section 14.
 - Claude Code 2.1.325 or later. It is the version the kit was tested with, on Windows 11. The kit's checks also run
   on Linux, in its pipeline; a session on Linux or macOS has not been tried yet.
 - git. On Windows, Git for Windows: the hooks run through Git Bash.
-- Node.js 22 or later, for the hook scripts and the checks. The plugin installs no packages.
+- Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
   runs no install scripts.
 - A command-line client for the service that hosts the repositories, to open pull requests and to read them. The

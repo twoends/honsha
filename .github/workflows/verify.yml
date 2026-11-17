@@ -26,10 +26,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The lowest Node.js version the kit supports, on the system the host will run.
+          # Node.js 26 is the kit's lowest version; the two systems are the host's and the one the kit is built on.
           - os: ubuntu-latest
-            node: 22
-          # The version and the system the kit was built on.
+            node: 26
           - os: windows-latest
             node: 26
     env:
