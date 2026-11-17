@@ -448,7 +448,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
    merged it.
 2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
-3. **The settings the rules rely on:** pull requests are merged with a merge commit, and merged branches are deleted.
+3. **The settings the rules rely on:** pull requests are merged with a merge commit, merged branches are deleted, and
+   alerts on vulnerable dependencies are on without automatic pull requests (section 17).
 4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.
@@ -534,3 +535,25 @@ know the current rules.
   reused, because records and other history cite them.
 - **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
   log: they state the rule, with its reason in a few words where the reason helps.
+
+---
+
+## 17. Dependencies
+
+The same in every project that has dependencies. A project adds to it only in its own rules.
+
+- **Pinned.** Every dependency is at an exact version, with the lockfile in the repository, and is installed from the
+  lockfile, without install scripts where the package manager can turn them off.
+- **Security alerts are on.** The hosting service's alerts on known vulnerabilities are switched on for the
+  repository, without its automatic pull requests: their commits carry no record and no trailer, so they cannot pass
+  the rules on commits (section 13). The piece of the service says how.
+- **A fix of a known vulnerability goes in at once.** When an alert names a dependency, a work item starts the same
+  day, with the version that fixes it as soon as that version is out. No waiting period applies. Its size follows
+  section 3.2: a major upgrade is full, and its approval is asked the same day.
+- **Ordinary updates wait and come on a cadence.** Each tool a project depends on has a radar entry with a review
+  date. At the review, the outdated dependencies are listed with the package manager, and the updates worth making
+  become one work item. A version is taken only when it was released at least 14 days earlier, so that a release
+  withdrawn or found compromised in its first days is not taken. A patch or minor update is small; a major one is
+  full.
+- **Who.** The review is started on its date by the scheduler where an installation has one; until then, by the
+  person or by a session asked to. Either way it ends in a work item and a pull request that the person merges.

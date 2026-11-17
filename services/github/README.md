@@ -45,6 +45,20 @@ Two things on the site are not used:
   verification again (WORKFLOW.md, section 13.5). "Update with rebase" would also rewrite the branch.
 - **Squash and rebase in the merge menu,** which the first setting removes.
 
+For dependencies (WORKFLOW.md, section 17):
+
+- **Dependabot alerts on.** GitHub reports a dependency with a known vulnerability on the repository and by email.
+- **Dependabot security updates and version updates off,** and no `.github/dependabot.yml`: their pull requests carry
+  no record and no `Work-Item` trailer.
+
+```
+gh api -X PUT repos/<owner>/<repository>/vulnerability-alerts
+gh api -i repos/<owner>/<repository>/vulnerability-alerts
+```
+
+The first command turns the alerts on; the second answers `204` when they are on and `404` when they are off. A free
+account has them on private repositories. Tried on two private repositories of one.
+
 In the account of whoever merges:
 
 - **"Keep my email addresses private".** A merge made on the site is authored with the account's noreply address when it
