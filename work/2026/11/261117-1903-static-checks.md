@@ -4,14 +4,14 @@ title: Static checks for the kit, and a default for projects
 project: honsha
 type: change
 size: full
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 5
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -187,4 +187,107 @@ recommended.
 
 ## Verification
 
+### Commands
+
+Run on `0753128`, Windows 11, Node.js 26, Claude Code 2.1.325, with `node checks/verify.mjs`:
+
+- `npx --no-install prettier --check .`: passed, "All matched files use Prettier code style!"
+- `npx --no-install oxlint`: passed, no findings.
+- `npx --no-install tsc -p .`: passed, no errors.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"`: passed, 56 tests, 0 failed.
+- `claude plugin validate .`: passed, with the known warning that the manifests have no version.
+- `node checks/commits.mjs`: passed, "The 4 commits of the branch follow the rules."
+
+With `node_modules` moved out of the repository, for criterion 3: the tests passed, 56 of 56, and
+`claude plugin validate .` passed; `npx --no-install oxlint` failed at once instead of downloading.
+
+Not run here: the pipeline on Linux with Node.js 22. It runs on the pull request.
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The `verify` list checks formatting, lint and types, and passes on the branch: met. `.hub/profile.yml:8-10` adds `npx --no-install prettier --check .`, `npx --no-install oxlint` and `npx --no-install tsc -p .`. The working-tree record (Verification) shows all six commands passing on `0753128`. I did not run them again.
+2. The pipeline installs from the lockfile without scripts and runs the same list on both systems: met. `.github/workflows/verify.yml:46-47` runs `npm ci --ignore-scripts` before `node checks/verify.mjs` (line 51), in the one job that both matrix entries share (ubuntu with Node 22, windows with Node 26, lines 28-34). The run itself happens on the pull request, so this is not verified here.
+3. The plugin works with nothing installed: met on the recorded evidence. Every import under `hooks/`, `checks/` and `services/` is either `node:` or relative; `verify.mjs:20` has only a type import, inside a JSDoc comment. The record says that with `node_modules` moved out, 56 of 56 tests passed and `claude plugin validate .` passed. I did not run this again.
+4. Records under `work/` are untouched and the formatter skips them: met. The only `work/` file in the diff is this item's new record. `.prettierignore:2` lists `work/`.
+5. The workflow states the expected coverage and the checker reports it: met. `docs/01-specs/WORKFLOW.md:280-283` and `agents/checker.md` step 6, plus the line about the report shape (diff lines 124-126 and 135-136).
+6. README and architecture state the runtime and development needs: met. README diff lines 83 and 91-94 (the line before 94 is "The plugin installs no packages."), and lines 102 and 108-111. `ARCHITECTURE.md` diff lines 1119-1121.
+
+**Intent:** The kit's part of settling the question of static checks on the kit and the home is done. The home's part is explicitly out of scope and described under "The home's part", to land after the merge in the other repository. So the intent is fully met only once that follow-up is made.
+
+**Scope:** Every change belongs to the item: the configuration files, the profile, the pipeline, the README, `ARCHITECTURE.md`, the `WORKFLOW.md` rule, the checker wording (plan step 4), the formatting of the scripts and of three documents (decision 3), and the type and lint fixes. No change is outside the scope.
+
+**Comments:** In order. The diff adds only these:
+- `.prettierignore:1` says why `work/` is skipped.
+- The rest are JSDoc type annotations (`@param`, `@returns`, `@type`, `@typedef Profile`) in `checks/*.mjs`, `hooks/*.mjs` and their tests.
+
+The prose lines inside the reflowed JSDoc blocks keep their earlier text unchanged. There is no history, no code commented out, and no TODO. The YAML step, `package.json` and `tsconfig.json` add no comments.
+
+**Gates:**
+- "The rules name no hosting service": met. `rules/` is unchanged, and the added text in `WORKFLOW.md` and `checker.md` names no service.
+- "Nothing about a user, a user's project or an installation": met. No names, addresses or user paths are added. The first project is never named. The commits check reports no address, and `public.test.mjs` passed as part of the recorded tests.
+- "A script comes with its test": met. No new script is added, and every changed script has its existing test file, also changed.
+
+**Verification evidence:** All six commands appear in the working-tree record as passing, on `0753128` (Windows 11, Node.js 26):
+- `prettier --check .`: passed.
+- `oxlint`: passed, no findings.
+- `tsc -p .`: passed, no errors.
+- `node --test …`: 56 passed, 0 failed.
+- `claude plugin validate .`: passed, with the known warning that the manifests have no version.
+- `node checks/commits.mjs`: passed, 4 commits.
+
+I did not run any of them again. The list covers formatting (Prettier), lint (oxlint), types (TypeScript checking the `.mjs` files) and tests (`node --test`). Nothing is left out.
+
+**Record:** In order:
+- The intent restates the request, which matches the earlier records.
+- All sections of a full item are present: scope in and out, boundaries, criteria, strategy with plan, assumptions and risks, approval, log, verification, deviations, outcome.
+- The approval is written and the log has entries.
+- Two deviations are declared: parallel parts in one checkout instead of worktrees (against `WORKFLOW.md:173`), and the work split into two commits.
+- The empty Outcome and the unset `pr`, `model` and `state: done` are expected before the closing commit.
+
+One observation, not a finding: the strategy's design says the checker reports missing coverage "under the gates", but the change puts it under "Verification evidence" (checker step 6). This differs from the strategy, not from the scope or the criteria.
+
+**Commits:**
+- Trailer: met. All four commits (f8781b9, bb17385, 37ede57, 0753128) carry `Work-Item: 261117-1903`.
+- Approval gate: met. f8781b9 "Add the record for static checks of the kit" and bb17385 "Record the approval of the static checks" touch only the record.
+- Addresses: met. The author and committer addresses of all four commits match `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- That commit 37ede57 "Add the formatter, linter and type checker, and format the kit" changed only layout. The diff covers the whole branch, and the scripts and the two specs are touched by both 37ede57 and 0753128, so their changes cannot be split by commit. What I could check:
+  - `services/github/merge-commands.test.mjs` and `docs/00-vision/VISION.md` are touched only by 37ede57, and they show layout changes only.
+  - Every change to the scripts that is more than layout is one the log assigns to the type and lint fixes: `RegExp` without `new`, `instanceof Error`, the null check in `record-effort.mjs`, the `program()` split in `guard.mjs`, `strip` moved, the `?? ""` and `assert.ok` additions in the tests.
+- The pipeline on Linux with Node 22, including `npx --no-install` on Linux. The record says this runs on the pull request.
+- Installing the plugin with `package.json` at its root. The log confirms the strategy's assumption for validation only, not for installation.
+- A small inaccuracy in the record: it says the three tools accept Node.js 22, but oxlint 1.94.0 declares `^20.19.0 || >=22.12.0`. Node 22 releases before 22.12 are outside that range, although the README and `package.json` say Node 22 or later. The pipeline uses the latest 22.x, so it is not affected.
+
+### After the check
+
+- The coverage of the `verify` list is reported under "Verification evidence", not under the gates as the design said: a gate is a project's own rule, and the coverage is about the verification commands. Declared below.
+- The development tools need Node.js 22.12 or later, because of oxlint; the plugin itself still runs on any Node.js 22. Left as it is in `package.json` and the README, and written in the outcome.
+
+## Deviations
+
+- Two parts ran in parallel in the same checkout, not in worktrees on local branches as the workflow's section 5.1
+  asks: a subagent of a session cannot be given a branch. The parts touched no common file, which the log lists.
+  Whether the workflow should allow this for subagents is a question for the person, not changed here.
+- The work went into two commits, the configuration with the formatting and then the fixes, as the strategy foresaw.
+- The checker reports the coverage of the `verify` list under "Verification evidence", not under the gates as the
+  strategy's design said.
+
 ## Outcome
+
+The kit checks its own formatting, lint and types on every change, locally and on every pull request, with exact
+versions of Prettier, oxlint and TypeScript installed only for development. The scripts are typed in strict mode and
+the plugin still runs with nothing installed. The workflow now says what a project's `verify` list is expected to
+cover, and the checker reports it.
+
+Known limits: the development tools need Node.js 22.12 or later; installing the plugin with `package.json` at its
+root is tried with the first project. The home's part follows in the home. No deferred check.
