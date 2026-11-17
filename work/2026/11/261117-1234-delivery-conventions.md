@@ -304,6 +304,17 @@ lowest version; the work continues in the session that wrote the record, on the 
   `pass`, with the trailer, the order of the approval gate and the addresses reported as met. On a list in which the
   first commit also touched a file other than the record and the third had no trailer, the verdict was `fail` and both
   commits were named by identifier and subject. Neither report quoted an address.
+- 2026-11-17. The workflow has two new sections after the existing ones: 13, "Commits and branches", and 14, "The
+  hosting service", with what the piece of a service says, the contract of a wiring in six points and the guard.
+  Sections 1, 5, 5.1 and 9 were touched where they speak of merging, of the two gate commits, of the branches of parts
+  and of the profile's new key.
+- The GitHub piece is `services/github/`: `README.md` answers the two contracts for GitHub and `merge-commands.json` is
+  the list the guard reads. The wiring is `.github/workflows/verify.yml`: two jobs, Linux with Node.js 22 and Windows
+  with Node.js 26, each installing Claude Code 2.1.325 and running `node checks/verify.mjs`; the token can only read and
+  the two actions are pinned to a commit.
+- Decided while writing: the contract of a wiring has a point that the strategy did not list, the three environment
+  variables. The piece states no price and no figure of a plan, only what a plan gives, and says to check GitHub's own
+  pages. Both jobs run the whole list; whether Claude Code installs on the Windows runner is seen at the first run.
 
 ## Verification
 

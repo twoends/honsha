@@ -10,7 +10,7 @@ outside this repository. Terms are defined in the [vision](../00-vision/VISION.m
 - **One record per work item,** one file, with front matter. Its sections depend on the size of the work.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
-  the change. The person merges.
+  the change. The person merges, with a merge commit.
 - **Everything that is not a change to a project lives in the home:** backlog, inbox and verdicts, reports, check
   outcomes.
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
@@ -136,15 +136,16 @@ be added if they are broken in practice.
 3. **Start.** A branch is created in the project and the record moves into it.
 4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written, the state becomes
    `awaiting-approval`, and the person is asked. Work continues only after approval, which is written into the record.
+   The record with its strategy, and then the approval, are each committed alone (section 13.3).
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas. It
    appends to the log as it goes.
 6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
    with the intent, the acceptance criteria and the profile's gates, from a fresh context and without write access.
 7. **Deliver.** The worker writes the outcome and its own model identifier, sets the state to `done` and opens the
    pull request. Its description is generated from the record: intent, what changed, verification evidence, checker
-   report, deviations.
-8. **Merge.** The person reviews and merges. A project whose profile says that merging deploys is deployed by that
-   merge.
+   report, deviations. The checks that are wired to the hosting service run on the pull request (section 14.2).
+8. **Merge.** The person reviews and merges, with a merge commit, and the merged branch is deleted (section 13.4). A
+   project whose profile says that merging deploys is deployed by that merge.
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
 
 A trivial item goes from step 3 to step 5.
@@ -165,11 +166,11 @@ sharing one piece of work do worse than a single agent, so the gain exists only 
 
 **Where it applies.**
 
-| Case                                                  | What happens                                                                                                                                                  |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parts of one request                                  | One request is one work item and one pull request, even when its parts could land separately (D47). The worker runs the independent parts in separate worktrees and integrates them on the item's branch. Verification and the checker run once, on the integrated result |
-| Separate requests                                     | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits |
-| Reading                                               | Searching, exploring, researching and reviewing always fan out                                                                                                |
+| Case                 | What happens                                                                                                                                                                                                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parts of one request | One request is one work item and one pull request, even when its parts could land separately (D47). The worker runs the independent parts in separate worktrees, on local branches cut from the item's branch, and merges them into it (section 13.6). Verification and the checker run once, on the integrated result |
+| Separate requests    | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits                                                                                                                                   |
+| Reading              | Searching, exploring, researching and reviewing always fan out                                                                                                                                                                                                                                                         |
 
 **Approval.** For full-size work the split into parts is part of the strategy and is approved with it.
 
@@ -250,6 +251,8 @@ gates:
   - no breaking change without approval
 always-full:
   - "db/migrations/**"
+commits:
+  address: '@example\.org$' # the author and committer addresses of every commit must match
 parallel:
   max: 2 # workers at once in this project
   exclusive: [integration-db] # resources only one worker may use at a time
@@ -269,6 +272,10 @@ legacy:
 - `lessons` names the file that holds the project-level lessons only. The file name is the project's choice.
 - `legacy` lists folders with documents from before the project adopted this workflow (section 11).
 - `secret` is the name of a secret on the host, never its value.
+- `verify` is written as a list with one command on each line: the kit's scripts read no other form. Each command
+  runs in the default shell of the machine.
+- `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
+  must match. A profile without it sets no rule on addresses.
 
 Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
 record format are not customised.
@@ -343,3 +350,112 @@ empty result.
 
 Orders can be downloaded as CSV with the active filter. One deferred check on a full month of real data.
 ```
+
+---
+
+## 13. Commits and branches
+
+The same in every project. A project adds to it only in its own rules.
+
+### 13.1 Commit messages
+
+- One plain imperative sentence in English, short enough to be read as a title. A body follows only when the reason is
+  not in the record.
+- A project that has its own convention for messages states it in its own rules. The engine has none beyond this.
+
+### 13.2 The trailer
+
+- Every commit a session makes on a work branch ends with the trailer `Work-Item: <id>`, in the last block of the
+  message. Other trailers, such as the one the platform adds for its co-author, can share the block.
+- It ties each commit to its record without walking the history:
+  `git log --format='%(trailers:key=Work-Item,valueonly)'` prints it. It cannot be added later, because commits are
+  never rewritten.
+- A commit that the hosting service writes, such as the merge of a pull request, carries none.
+
+### 13.3 What is fixed in commits
+
+- For a full item, two commits hold only the record: the record with its strategy and the state `awaiting-approval`, and
+  then the approval. No other file changes before the commit of the approval. This is what lets the approval gate be
+  read from the history.
+- Everything else is free. Commits follow the work in coherent steps, and the log lines of a step are in the same commit
+  as the step.
+- A work branch only grows: no amend, no rebase, no squash, whether its commits were pushed or not. A mistake is
+  corrected by a new commit.
+
+### 13.4 Merging
+
+- A pull request is merged with a merge commit. Every commit of the item then reaches the default branch as it was made,
+  and the default branch shows one entry for each item (`git log --first-parent`).
+- After the merge the branch is deleted, on the hosting service and locally, with its worktrees. A merged branch left
+  behind shows a finished item among the open ones (section 10).
+- A project that already merges in another way can keep it. The record still arrives whole and the trailer still ties
+  the commits to it; the order of the approval gate is then visible only where the hosting service keeps the pull
+  request.
+
+### 13.5 Keeping a work branch up to date
+
+- A work branch does not need to hold the latest default branch. It is brought up to date only when its pull request
+  shows a conflict, when the item needs something that was merged after it started, or when the person asks.
+- It is done by merging the default branch into the work branch, never by a rebase. The verification commands and the
+  checker then run again, and the log says so.
+- A conflict that cannot be resolved inside the scope is a stop condition.
+
+### 13.6 Branches of parallel parts
+
+- Each part of an item (section 5.1) works in its own worktree, on a local branch that is cut from the tip of the item's
+  branch and is never pushed. Git refuses a branch named below an existing one, so the name takes a suffix:
+  `work/<id>-<slug>.<part>`.
+- The parts are merged into the item's branch. Their branches and worktrees are then removed.
+- The default branch is merged only into the item's branch, before the split or after the integration, never into a
+  part.
+
+---
+
+## 14. The hosting service
+
+The kit does not depend on the service that hosts a project's repository and its pull requests, and its rules name no
+service. What is specific to one service is a separate piece of the kit, `services/<name>/`, which a user of another
+service replaces with their own. This section says what such a piece holds. The piece for the one service the kit has
+been tried with is the worked example.
+
+### 14.1 What the piece of a service says
+
+1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
+   merged it.
+2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
+3. **The settings the rules rely on:** pull requests are merged with a merge commit, and merged branches are deleted.
+4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
+   forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
+   cannot merge.
+5. **The wiring of the checks** (14.2), and what it costs on that service.
+
+### 14.2 Checks on a pull request
+
+The checks of a project are the `verify` commands of its profile: commands that run anywhere, a person's computer
+included. The wiring of a service makes them run on a pull request. It meets this contract.
+
+1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch.
+2. **What it runs.** The `verify` commands, as the profile writes them, in a clean checkout that holds the history of
+   the branch. Nothing the profile does not list. On the merge of the branch with the default branch where the service
+   offers that, on the tip of the branch otherwise; the piece says which.
+3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
+   itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
+   branch and its last one.
+4. **What it reports.** For each command whether it passed, with its output, shown on the pull request and readable from
+   the service's command line or interface, so that the hub can pass it on.
+5. **What can block.** The piece says whether a failed check can stop a merge on that service, and under which
+   conditions. The rules never rely on it: the worker has already run the same commands, and the person merges after
+   seeing the result.
+6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
+
+In the kit, `node checks/verify.mjs` runs the `verify` list of a profile, and `node checks/commits.mjs` is the check
+that reads the three variables.
+
+### 14.3 The guard
+
+- A hook of the kit refuses three kinds of shell command in a session: a push to the default branch, a forced push, and
+  a command that merges a pull request. The first two are plain git and hold on any service. The third comes from the
+  `merge-commands.json` of each service's piece.
+- It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
+  a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
+  service gives it.

@@ -1,0 +1,49 @@
+# Runs the kit's verification commands on every pull request to the default branch.
+#
+# This file is the GitHub wiring of the checks: what it has to do is in docs/01-specs/WORKFLOW.md,
+# section 14.2, and how it does it on GitHub is in services/github/README.md. The commands are
+# the `verify` list of .hub/profile.yml; they are not repeated here.
+
+name: verify
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (${{ matrix.os }}, Node.js ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The lowest Node.js version the kit supports, on the system the host will run.
+          - os: ubuntu-latest
+            node: 22
+          # The version and the system the kit was built on.
+          - os: windows-latest
+            node: 26
+    env:
+      HONSHA_BRANCH: ${{ github.head_ref }}
+      HONSHA_BASE: ${{ github.event.pull_request.base.sha }}
+      HONSHA_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install Claude Code, for the plugin validator
+        run: npm install --global @anthropic-ai/claude-code@2.1.325
+      - name: Run the verification commands of the profile
+        run: node checks/verify.mjs
