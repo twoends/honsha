@@ -63,6 +63,10 @@ rules; the home is cleaned the same way, outside this pull request.
 - Workflow, new section 16, "Decisions". Architecture, section 3.2: `decisions.md` in the home's layout. README: the
   workflow's topics include decisions.
 - Work committed in one commit.
+- The count in the first entry was wrong: the diff removes 27 occurrences, 23 tags and 4 notes, not 30.
+- The checker passed the item with one finding: the README said that the reason for every rule is in the records
+  under `work/`, which is not true for the starting base, approved before any record existed. Fixed in a commit of
+  its own: the README now says so. The verdict was a pass, so the check is not repeated; the verification is.
 
 ## Verification
 

@@ -91,5 +91,6 @@ submission to the public plugin directory.
 All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
 that have not all been tested yet; they are listed in its section 8, with the results of those tested so far.
 
-Identifiers such as O02 are the open design points of the architecture, section 9. Why each rule is as it is can be
-read in the records under `work/` of the change that made it, and in the workflow where a reason helps.
+Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule changed after the
+starting base can be read in the record of that change, under `work/`. The starting base itself has no records: its
+reasons are stated in the documents where a reason helps.
