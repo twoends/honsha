@@ -190,6 +190,10 @@ recommended.
   in it was tried, while only `gh pr create`, `gh pr view` for number and state, and `gh pr checks` were; it now names
   those. The second, a sentence in Verification that belonged in the log, was in the uncommitted part and is removed
   there. The check is repeated.
+- The third check failed on one finding, fixed in a commit of its own: workflow 15.2 restated the core rule on naming
+  a deleted identifier as an obligation, where the core rules allow it; it now gives the reason and points to the
+  core rules. Each repeated check reads the whole branch again and finds something the earlier ones did not; whether
+  a repeated check should cover only the fixes is a question for the person, not changed here.
 
 ## Verification
 

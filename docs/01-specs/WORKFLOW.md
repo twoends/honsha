@@ -457,8 +457,8 @@ its own rules. What the checker reviews of them is in `agents/checker.md`.
 
 - A document that keeps what was replaced beside the new text has to be read with its history to know what holds.
   Git keeps the earlier wording, and the record of the change says why.
-- The entry that deletes another names it once so that a citation in a record can still be followed. An identifier is
-  never reused for the same reason.
+- Naming once the identifier an entry deletes, as the core rules allow, keeps a citation in a record traceable; an
+  identifier is never reused for the same reason.
 - A rule stated twice drifts: one copy is changed and the other is not. The second document points to the first. A
   record that copies another document grows with every item and says nothing new.
 - The records' own rules are in section 4; a project's earlier documents are in section 11.
