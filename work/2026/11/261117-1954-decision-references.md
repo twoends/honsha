@@ -79,6 +79,12 @@ rules; the home is cleaned the same way, outside this pull request.
 - Architecture 3.2: `decisions.md` holds the choices in force. Checker, step 4: "Comments and documents", reporting
   text left beside what replaced it. README: the workflow's topics.
 - Committed as a fix of its own.
+- The second check passed with seven findings, all inconsistencies between the new rules, fixed in a commit of
+  their own: the checker can now fail a changed document that keeps what the change replaced; it checks only the
+  parts a change touches, as the workflow says; the exceptions name records by their own rules (section 4.3) and add
+  the profile's `legacy` documents; naming once the identifier an entry replaces is allowed where records cite it;
+  the architecture adds standing preferences to `decisions.md`; the worker states the rule on documents. The verdict
+  was a pass, so the check is not repeated.
 
 ## Verification
 

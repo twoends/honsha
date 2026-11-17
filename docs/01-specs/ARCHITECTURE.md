@@ -124,7 +124,7 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
 registry.yml           projects: name, repository, path on each host, state
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
-decisions.md           the choices about this installation that are in force (workflow, section 16)
+decisions.md           choices about this installation and standing preferences, those in force (workflow, section 16)
 inbox/                 one file per item received, with its verdict
 backlog/               work items not yet started, per project
 radar/                 one file per tool

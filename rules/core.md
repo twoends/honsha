@@ -66,8 +66,8 @@ In code and in every other file of the project:
 ## Documents
 
 - A document says what holds now. What a change replaces is deleted, not kept beside the new text with a note; an
-  entry of a list that no longer holds is deleted. Git and the records keep the history. Records, and notes of a
-  past discussion kept as such, are the exception: they are not rewritten.
+  entry of a list that no longer holds is deleted. Git and the records keep the history. Exceptions: records, which
+  follow their own rules; notes of a past discussion kept as such; documents listed under `legacy` in the profile.
 
 ## Delivery
 

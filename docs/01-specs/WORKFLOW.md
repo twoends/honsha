@@ -510,9 +510,11 @@ only in its own rules.
   such as "previously" or "replaced by". Git keeps the earlier wording, and the record of the change says why.
 - **The same holds for lists that grow:** a log of decisions, open points, a plan. An entry that no longer holds is
   deleted; one that holds in part is rewritten to what still holds. An identifier is never given to anything else.
-- **Files that are history by nature are the exception:** the records, and notes of a past discussion kept as such.
-  They are not rewritten.
-- The checker reports text that a change leaves beside what replaced it.
+  Where records cite identifiers, the entry that deletes another may name it once, so that a citation can be followed.
+- **Exceptions:** records, which follow their own rules (section 4.3); notes of a past discussion kept as such; and a
+  project's earlier documents listed under `legacy` (section 11). They are not rewritten to the current state.
+- The checker reports text that a change leaves beside what replaced it, in the parts of a document the change
+  touches; the rest of the document is not checked.
 
 ---
 
@@ -528,7 +530,7 @@ know the current rules.
 - **Taken outside any work item:** a choice about one installation, or a standing preference of the person. It goes
   into the decision log of the home, one entry each.
 - **The log holds only decisions in force,** as section 15.2 says for every document. A later choice rewrites the
-  entry it changes, or deletes it and says which identifier it replaces. Git keeps the earlier wording. Identifiers
-  are never reused, because records and other history cite them.
+  entry it changes, or deletes it and names it once (15.2). Git keeps the earlier wording. Identifiers are never
+  reused, because records and other history cite them.
 - **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
   log: they state the rule, with its reason in a few words where the reason helps.
