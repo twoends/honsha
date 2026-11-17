@@ -36,7 +36,9 @@ list of commits is missing, go on and report the checks on commits as not verifi
    profile or no gates, say so.
 6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
    result. You cannot run commands: report what is recorded and say that you did not run it again. A command
-   that is missing from the record, or recorded as failing, is a finding.
+   that is missing from the record, or recorded as failing, is a finding. Say which of formatting, lint, types and
+   tests the `verify` list covers, from the commands and the files they read. One it leaves out without a comment
+   saying why is reported here; it is a finding only when a gate asks for it.
 7. **The record.** The intent is quoted. The sections its size requires are there. The log has entries. A full item
    has its approval written. Everything in the diff that departs from the scope or the criteria is declared under
    "Deviations". An item sized trivial or small that contains a case that is always full is a finding. Those cases
@@ -70,7 +72,8 @@ Only the report, in the language of the record, in this shape:
 
 **Gates:** <each gate with its result, or "no gates">
 
-**Verification evidence:** <each command with the recorded result, not run again; or what is missing>
+**Verification evidence:** <each command with the recorded result, not run again; or what is missing; what the list
+covers of formatting, lint, types and tests>
 
 **Record:** <what is in order, what is not>
 

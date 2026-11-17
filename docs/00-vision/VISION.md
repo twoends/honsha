@@ -79,19 +79,19 @@
 
 ## Glossary
 
-| Term      | Meaning                                                                                              |
-| --------- | ---------------------------------------------------------------------------------------------------- |
-| Hub       | The running system on the host: the agent a person talks to, with its channel and board              |
-| Kit       | The template repository: workflow, rules, skills, agent definitions, hooks, templates, board         |
-| Home      | A user's private repository: project registry, settings, inbox with verdicts, radar, reports         |
-| Project   | A registered repository                                                                              |
-| Profile   | A project's configuration for the kit: areas, verification commands, quality gates, data sources     |
-| Work item | One unit of work in a project, with one record                                                       |
-| Record    | The file that holds a work item's intent, plan, log, verification and outcome                        |
-| Area      | A kind of work (deploy, backend, content, …) with its rule pack                                      |
-| Verdict   | The outcome of evaluating an inbox item                                                              |
-| Radar     | The list of tools in use, each with choice, alternatives, evidence and review date                   |
-| Host      | A machine where sessions run                                                                         |
-| Worker    | A session that executes one work item                                                                |
-| Reader    | A restricted agent that reads untrusted content and returns a summary                                |
-| Checker   | A read-only agent that verifies a result against its record                                          |
+| Term      | Meaning                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------ |
+| Hub       | The running system on the host: the agent a person talks to, with its channel and board          |
+| Kit       | The template repository: workflow, rules, skills, agent definitions, hooks, templates, board     |
+| Home      | A user's private repository: project registry, settings, inbox with verdicts, radar, reports     |
+| Project   | A registered repository                                                                          |
+| Profile   | A project's configuration for the kit: areas, verification commands, quality gates, data sources |
+| Work item | One unit of work in a project, with one record                                                   |
+| Record    | The file that holds a work item's intent, plan, log, verification and outcome                    |
+| Area      | A kind of work (deploy, backend, content, …) with its rule pack                                  |
+| Verdict   | The outcome of evaluating an inbox item                                                          |
+| Radar     | The list of tools in use, each with choice, alternatives, evidence and review date               |
+| Host      | A machine where sessions run                                                                     |
+| Worker    | A session that executes one work item                                                            |
+| Reader    | A restricted agent that reads untrusted content and returns a summary                            |
+| Checker   | A read-only agent that verifies a result against its record                                      |

@@ -29,19 +29,19 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 
 ## 2. Components
 
-| Component       | Role                                                                                                                  | Built from                                              |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Host            | Runs everything; reachable without any personal device                                                                | Linux VPS                                               |
-| Hub session     | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself     | Claude Code session with the kit loaded                 |
-| Messaging       | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only       | Claude Code Channels (research preview)                 |
-| App access      | Full conversations with the hub and with any worker, from phone or browser                                            | Remote Control in server mode                           |
-| Worker          | Executes one work item in a worktree of its project and opens the pull request                                        | Background session (research preview)                   |
-| Reader          | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access | Subagent defined in the kit                             |
-| Checker         | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only             | Subagent defined in the kit                             |
-| Scheduler       | Starts timed runs: checks that are due, radar reviews, proactive research                                             | Timers on the host (custom, small)                      |
-| Board           | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation             | Page generated from the index and session state (custom, small) |
-| Index           | Answers "which records" questions for the hub and the board: metadata of every record and full-text search            | A SQLite file built from the records by a script (custom, small) |
-| Hosting identity | Pushes branches and opens pull requests in the registered repositories; cannot merge                                 | Dedicated account or token, plus protected branches     |
+| Component        | Role                                                                                                                     | Built from                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Host             | Runs everything; reachable without any personal device                                                                   | Linux VPS                                                        |
+| Hub session      | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself        | Claude Code session with the kit loaded                          |
+| Messaging        | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only          | Claude Code Channels (research preview)                          |
+| App access       | Full conversations with the hub and with any worker, from phone or browser                                               | Remote Control in server mode                                    |
+| Worker           | Executes one work item in a worktree of its project and opens the pull request                                           | Background session (research preview)                            |
+| Reader           | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access | Subagent defined in the kit                                      |
+| Checker          | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only                | Subagent defined in the kit                                      |
+| Scheduler        | Starts timed runs: checks that are due, radar reviews, proactive research                                                | Timers on the host (custom, small)                               |
+| Board            | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                | Page generated from the index and session state (custom, small)  |
+| Index            | Answers "which records" questions for the hub and the board: metadata of every record and full-text search               | A SQLite file built from the records by a script (custom, small) |
+| Hosting identity | Pushes branches and opens pull requests in the registered repositories; cannot merge                                     | Dedicated account or token, plus protected branches              |
 
 ```mermaid
 flowchart LR
@@ -106,6 +106,9 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
 - What is specific to one hosting service sits in `services/<name>/`, apart from the rules; the wiring of the checks
   sits where that service reads it. `services/github/` is the only piece so far. What a piece holds is in
   [WORKFLOW.md](WORKFLOW.md), section 14.
+- The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the
+  type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
+  from the lockfile without their install scripts. An installation of the plugin does not need them.
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
 - An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,
@@ -244,14 +247,14 @@ reviews of radar entries; proactive research. All of them go through the hub and
 
 ## 5. Native first
 
-| Need                                   | First version                                   | Replaced by custom code if                                         |
-| -------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------ |
-| Messaging in and out                   | Channels with the Telegram plugin               | Voice notes or images do not arrive, or approvals need buttons     |
-| Conversation from phone and web        | Remote Control server mode                      | It does not survive reboots or disconnections reliably             |
-| Running work items                     | Background sessions                             | State cannot be read reliably by the board                         |
-| Timed runs                             | Host timers that message the hub                | —                                                                  |
-| Board                                  | A generated page                                | —                                                                  |
-| Isolation of untrusted content         | A restricted subagent                           | Tool restrictions prove insufficient; then a separate process      |
+| Need                            | First version                     | Replaced by custom code if                                     |
+| ------------------------------- | --------------------------------- | -------------------------------------------------------------- |
+| Messaging in and out            | Channels with the Telegram plugin | Voice notes or images do not arrive, or approvals need buttons |
+| Conversation from phone and web | Remote Control server mode        | It does not survive reboots or disconnections reliably         |
+| Running work items              | Background sessions               | State cannot be read reliably by the board                     |
+| Timed runs                      | Host timers that message the hub  | —                                                              |
+| Board                           | A generated page                  | —                                                              |
+| Isolation of untrusted content  | A restricted subagent             | Tool restrictions prove insufficient; then a separate process  |
 
 The hub must not depend on a conversation's memory: a session can be restarted at any time and resume from the files.
 
@@ -294,17 +297,17 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ## 8. Assumptions to verify
 
-| ID  | Assumption                                                                                                     | If false                                                |
-| --- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| A1  | Remote Control server mode runs on the host, starts sessions from the phone, and can be kept alive as a service | App access is limited to attaching by SSH               |
-| A2  | Channels delivers text, links, voice notes and images to the hub session and lets it reply                     | A small custom bot replaces it                          |
-| A3  | The hub session can start a background session in another repository and read its state as JSON                | A small launcher script on the host                     |
-| A4  | The always-on core can be delivered by the plugin (a session-start hook) rather than copied into each project  | A short synced block in each project's `CLAUDE.md`      |
-| A5  | An identity on the hosting service can push and open pull requests without merge rights. On GitHub: in a personal account and in an organisation | A different identity per organisation                   |
-| A6  | An area pack named in a record is loaded by the worker                                                         | The dispatch prompt names the packs explicitly          |
-| A7  | A hook can write model and effort into the record                                                              | The worker writes them as its last step                 |
-| A8  | A long-lived hub session stays usable over weeks                                                               | A daily restart, with all state in files                |
-| A9  | Voice notes can be transcribed on the host or through a service chosen on the radar                            | Voice notes wait for a later version                    |
+| ID  | Assumption                                                                                                                                       | If false                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| A1  | Remote Control server mode runs on the host, starts sessions from the phone, and can be kept alive as a service                                  | App access is limited to attaching by SSH          |
+| A2  | Channels delivers text, links, voice notes and images to the hub session and lets it reply                                                       | A small custom bot replaces it                     |
+| A3  | The hub session can start a background session in another repository and read its state as JSON                                                  | A small launcher script on the host                |
+| A4  | The always-on core can be delivered by the plugin (a session-start hook) rather than copied into each project                                    | A short synced block in each project's `CLAUDE.md` |
+| A5  | An identity on the hosting service can push and open pull requests without merge rights. On GitHub: in a personal account and in an organisation | A different identity per organisation              |
+| A6  | An area pack named in a record is loaded by the worker                                                                                           | The dispatch prompt names the packs explicitly     |
+| A7  | A hook can write model and effort into the record                                                                                                | The worker writes them as its last step            |
+| A8  | A long-lived hub session stays usable over weeks                                                                                                 | A daily restart, with all state in files           |
+| A9  | Voice notes can be transcribed on the host or through a service chosen on the radar                                                              | Voice notes wait for a later version               |
 
 **Where they are tested (D42).** On a personal computer first: A2, A4, A5, A6, A7, A9, and the functional part of A1 and A3. Only on
 the always-on host: keeping A1 alive as a service, and A8. Background sessions are documented for macOS and Linux; on
@@ -316,11 +319,11 @@ in its pipeline. Not tested: a session on Linux or macOS, an installation from t
 terminal interface, a session of the desktop application with the kit installed, a project whose profile has
 verification commands and gates, and what happens after a compaction.
 
-| ID  | Result                                                                                                                              | Consequence                                                                              |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| A4  | True. A session-start hook puts the core rules in the session's context, and a session with no `CLAUDE.md` followed them: asked for a change to authentication, it wrote the record on its branch, set it to `awaiting-approval` and changed nothing else | None. The fallback is not needed                                                         |
-| A6  | True. In three runs out of three the worker invoked the pack of the area named in the record before its first change, and applied a rule only the pack states | None. The fallback is not needed                                                         |
-| A7  | True for the effort level, false for the model. The effort level reaches the hook that runs after an edit. The model reaches no hook in such a session: the session-start input carries no model | The fallback applies to the model only: the session that finishes the item writes its own model identifier. The hook writes the effort level |
+| ID  | Result                                                                                                                                                                                                                                                    | Consequence                                                                                                                                  |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| A4  | True. A session-start hook puts the core rules in the session's context, and a session with no `CLAUDE.md` followed them: asked for a change to authentication, it wrote the record on its branch, set it to `awaiting-approval` and changed nothing else | None. The fallback is not needed                                                                                                             |
+| A6  | True. In three runs out of three the worker invoked the pack of the area named in the record before its first change, and applied a rule only the pack states                                                                                             | None. The fallback is not needed                                                                                                             |
+| A7  | True for the effort level, false for the model. The effort level reaches the hook that runs after an edit. The model reaches no hook in such a session: the session-start input carries no model                                                          | The fallback applies to the model only: the session that finishes the item writes its own model identifier. The hook writes the effort level |
 
 A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
 

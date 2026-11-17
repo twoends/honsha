@@ -10,9 +10,9 @@
 //
 // The script never gets in a session's way: on any error it exits 0 and changes nothing.
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const RECORD_PATH = /(^|\/)work\/\d{4}\/\d{2}\/\d{6}-\d{4}-[^/]+\.md$/;
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
@@ -20,34 +20,41 @@ const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 /**
  * Returns the record's text with `effort` set to the level (null when the model has none),
  * or null when the text is not a record: no front matter, or front matter without the key.
+ * @param {string} text
+ * @param {string | null | undefined} level
+ * @returns {string | null}
  */
 export function stamp(text, level) {
   const match = FRONT_MATTER.exec(text);
   if (!match) return null;
   const before = match[1];
   if (!/^effort:/m.test(before)) return null;
-  const value = /^[a-z]+$/.test(level || '') ? level : 'null';
+  const value = /^[a-z]+$/.test(level || "") ? level : "null";
   const after = before.replace(/^effort:.*?(\r?)$/m, (_, cr) => `effort: ${value}${cr}`);
   const start = match[0].indexOf(before);
   return text.slice(0, start) + after + text.slice(start + before.length);
 }
 
 function main() {
-  const input = JSON.parse(fs.readFileSync(0, 'utf8'));
-  if (input.hook_event_name !== 'PostToolUse' || input.agent_id) return;
+  const input = JSON.parse(fs.readFileSync(0, "utf8"));
+  if (input.hook_event_name !== "PostToolUse" || input.agent_id) return;
   if (!input.tool_input?.file_path) return;
-  const file = path.resolve(input.cwd || '.', input.tool_input.file_path);
-  if (!RECORD_PATH.test(file.replace(/\\/g, '/'))) return;
-  const text = fs.readFileSync(file, 'utf8');
+  const file = path.resolve(input.cwd || ".", input.tool_input.file_path);
+  if (!RECORD_PATH.test(file.replace(/\\/g, "/"))) return;
+  const text = fs.readFileSync(file, "utf8");
   const next = stamp(text, input.effort?.level || process.env.CLAUDE_EFFORT);
   if (next === null || next === text) return;
   fs.writeFileSync(file, next);
-  const line = /^effort:.*$/m.exec(next)[0].trim();
+  const written = /^effort:.*$/m.exec(next);
+  if (!written) return;
+  const line = written[0].trim();
   const note = `A hook wrote \`${line}\` into the front matter of ${file}. The file on disk is newer than the last read of it.`;
-  process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: note } }));
+  process.stdout.write(
+    JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: note } }),
+  );
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
     main();
   } catch {
