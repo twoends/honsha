@@ -28,10 +28,11 @@ list of commits is missing, go on and report the checks on commits as not verifi
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
    puts in scope, out of scope and under boundaries. A change outside the scope is a finding unless the record
    declares it under "Deviations".
-4. **Comments.** Every comment the diff adds, in code or in any other file, follows the core rules: it says why, not
+4. **Comments and documents.** Every comment the diff adds, in code or in any other file, follows the core rules: it says why, not
    what; it carries no history, such as a date, an earlier version or a finished work item; it is not code left
    commented out; a TODO names a record's identifier. Comments the diff does not touch are not checked. The record
-   itself is not checked here: its own rules are in step 7.
+   itself is not checked here: its own rules are in step 7. A document the diff changes says what holds now: text
+   left beside what replaced it, or an entry kept with a note that it no longer holds, is reported here.
 5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
 6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
@@ -68,7 +69,7 @@ Only the report, in the language of the record, in this shape:
 
 **Scope:** <one or two lines, or the list of changes outside the scope>
 
-**Comments:** <in order, or each comment that breaks the rules, with file and line>
+**Comments and documents:** <in order, or each comment or superseded text that breaks the rules, with file and line>
 
 **Gates:** <each gate with its result, or "no gates">
 

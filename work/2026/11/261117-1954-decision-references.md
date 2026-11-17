@@ -4,7 +4,7 @@ title: Cite no decision log in the kit, and say what a decision is
 project: honsha
 type: change
 size: small
-state: done
+state: in-progress
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -67,6 +67,18 @@ rules; the home is cleaned the same way, outside this pull request.
 - The checker passed the item with one finding: the README said that the reason for every rule is in the records
   under `work/`, which is not true for the starting base, approved before any record existed. Fixed in a commit of
   its own: the README now says so. The verdict was a pass, so the check is not repeated; the verification is.
+- After the pull request was opened, the person asked for the change in the addenda. State set back to
+  `in-progress`.
+- Core rules: a new section "Documents": a document says what holds now; replaced text and entries that no longer
+  hold are deleted; records and notes of a past discussion are the exception. The core rules and the template are
+  now 8,650 characters, under the 10,000 a hook can deliver.
+- Workflow, section 15 becomes "Comments and documents": 15.1 is the former text, with formatting now pointing to
+  the profile's `verify` list instead of "left to each project for now"; 15.2 states the rule on documents. Section
+  16: the log holds only decisions in force; an entry is rewritten or deleted, and identifiers are never reused. The
+  states `active` and `replaced by` are gone.
+- Architecture 3.2: `decisions.md` holds the choices in force. Checker, step 4: "Comments and documents", reporting
+  text left beside what replaced it. README: the workflow's topics.
+- Committed as a fix of its own.
 
 ## Verification
 
@@ -149,6 +161,12 @@ corrects the count with a new entry.
 
 On `8f8ac9a`, with `node checks/verify.mjs`: all six passed; `node checks/commits.mjs` reported "The 2 commits of the
 branch follow the rules."
+
+## Deviations
+
+- Criterion 3 asked for entries that are replaced, not rewritten, with a state. At the person's request after the
+  pull request was opened, entries are now rewritten or deleted and the states are gone. The scope grew to a rule for
+  every document, in the core rules, the workflow and the checker.
 
 ## Outcome
 
