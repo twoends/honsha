@@ -20,7 +20,7 @@ With `gh`, GitHub's command-line client.
 | Delete a merged branch that is still there | `git push origin --delete <branch>`                                         |
 
 The person merges, on the site or with `gh pr merge --merge`. A session never does: the guard refuses the commands that
-match the patterns in [merge-commands.json](merge-commands.json). Tried: `gh pr view` and `gh pr checks`.
+match the patterns in [merge-commands.json](merge-commands.json). Tried: `gh pr create`, `gh pr view` and `gh pr checks`.
 
 ## Settings the rules rely on
 

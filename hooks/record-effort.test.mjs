@@ -112,13 +112,20 @@ test('ignores other hook events', () => {
   assert.equal(key(record, 'effort'), key(template, 'effort'));
 });
 
-test('accepts Windows paths and keeps Windows line endings', () => {
+test('keeps Windows line endings', () => {
   const { record } = sandbox();
   fs.writeFileSync(record, fs.readFileSync(record, 'utf8').replace(/\r?\n/g, '\r\n'));
-  hook(edited(record.replace(/\//g, '\\')));
+  hook(edited(record));
   const text = fs.readFileSync(record, 'utf8');
   assert.match(text, /\r\neffort: high\r\n/);
   assert.equal(text.replace(/\r\n/g, '').includes('\n'), false);
+});
+
+// A path written with backslashes is a path only on Windows.
+test('accepts a Windows path', { skip: process.platform !== 'win32' }, () => {
+  const { record } = sandbox();
+  hook(edited(record.replace(/\//g, '\\')));
+  assert.equal(key(record, 'effort'), 'high');
 });
 
 test('resolves a relative path against the working directory of the session', () => {

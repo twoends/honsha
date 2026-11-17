@@ -10,7 +10,7 @@ created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
-pr: null
+pr: 3
 model: claude-fable-5-2
 effort: null
 checks: []
@@ -343,6 +343,11 @@ lowest version; the work continues in the session that wrote the record, on the 
   kit. 55 tests pass, and the list of three commands passes again.
 - 2026-11-17. Second check by `honsha:checker`: verdict `pass`, no finding. Outcome written, state `done`, model
   `claude-fable-5-2`. `effort` stays null: the session ran without the kit loaded.
+- 2026-11-17. Pull request 3 opened with `gh pr create`; its number is in the front matter.
+- The pipeline's first run. The Windows job passed: Claude Code installed on the runner and the three commands passed.
+  The Linux job failed on one test of the effort hook, which existed before this item and gave the hook a Windows path;
+  the other 54 tests passed there, on Node.js 22, the first time the kit's tests ran on Linux. The test was split: the
+  line endings on every system, the Windows path only on Windows. Declared as deviation 9. 56 tests pass on Windows.
 
 ## Verification
 
@@ -350,7 +355,7 @@ On Windows 11, with Node.js 26.13, git 2.53 and Claude Code 2.1.325, on 2026-11-
 
 The commands of the kit's profile, run through `node checks/verify.mjs`, which ended with exit code 0:
 
-- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"`: passed, 55 tests.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"`: passed, 56 tests.
 - `claude plugin validate .`: passed with warnings, exit code 0. The warnings are the ones the README names: no version
   in the manifests, and no licence and no icon for the public plugin directory.
 - `node checks/commits.mjs`: passed. Every commit of the branch ends with this item's trailer, and its author and
@@ -543,6 +548,19 @@ none
 - The scope and the acceptance criteria were not changed after the approval, and the log was only appended to: the
   commits of the record show it to anyone who reads them.
 
+### The pipeline
+
+The first run started when the pull request was opened, on the commit that closes this record.
+
+- **Windows Server 2025, Node.js 26:** passed. Claude Code installed on the runner, and the three commands of the
+  profile passed: the 55 tests of that commit, the validator with its warnings, the commit check.
+- **Ubuntu 26.04, Node.js 22:** failed. 54 of the 55 tests passed. The one that failed existed before this item: it gave
+  the effort hook a path written with backslashes, which is a path only on Windows. The list stops at the first command
+  that fails, so the validator and the commit check did not run there.
+
+The test was split in two: the line endings are tested on every system, the Windows path only on Windows. The second run
+is the one on the commit that makes this correction.
+
 ## Deviations
 
 1. **The contract of a wiring has one more point than the strategy described:** the three environment variables through
@@ -563,6 +581,9 @@ none
 8. **The README and the architecture name GitHub where they list what is in the kit:** the folders `services/github/`
    and `.github/workflows/`, and the piece that is built. The second boundary named neither document for this, and a
    reader of the kit has to be told what is in it. The checker's first report found it.
+9. **A test from before this item was changed.** `hooks/record-effort.test.mjs` had one test for a Windows path and for
+   Windows line endings together, which cannot pass on Linux. It is now two tests, and the one on the Windows path is
+   skipped on other systems. The pipeline's first run found it.
 
 ## Outcome
 
