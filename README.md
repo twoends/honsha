@@ -86,10 +86,10 @@ submission to the public plugin directory.
 - [Vision](docs/00-vision/VISION.md): what it does, for whom, principles, non-goals, glossary.
 - [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile, commits
-  and branches, the hosting service, comments.
+  and branches, the hosting service, comments, decisions.
 
 All three were approved as the starting base on 2026-11-16. Several parts of the architecture rest on assumptions
 that have not all been tested yet; they are listed in its section 8, with the results of those tested so far.
 
-Identifiers such as D21 or O02 in these documents refer to the author's decision log, which is kept outside this
-repository.
+Identifiers such as O02 are the open design points of the architecture, section 9. Why each rule is as it is can be
+read in the records under `work/` of the change that made it, and in the workflow where a reason helps.

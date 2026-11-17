@@ -1,7 +1,7 @@
 # Workflow
 
-**Status:** approved as the starting base on 2026-11-16. Identifiers such as D21 refer to the author's decision log, which is kept
-outside this repository. Terms are defined in the [vision](../00-vision/VISION.md) glossary.
+**Status:** approved as the starting base on 2026-11-16. Terms are defined in the [vision](../00-vision/VISION.md)
+glossary.
 
 ## 1. Key facts
 
@@ -80,7 +80,7 @@ in the home.
 
 ## 4. The record
 
-One Markdown file: `work/<yyyy>/<mm>/<id>-<slug>.md`, in folders by year and month (D48). The identifier is the creation time in UTC, `YYMMDD-HHMM`, so two branches
+One Markdown file: `work/<yyyy>/<mm>/<id>-<slug>.md`, in folders by year and month. The identifier is the creation time in UTC, `YYMMDD-HHMM`, so two branches
 cannot produce the same one. The branch is named `work/<id>-<slug>`.
 
 ### 4.1 Front matter
@@ -154,7 +154,7 @@ A trivial item goes from step 3 to step 5.
 
 ### 5.1 Parallel work
 
-Work is split and run in parallel whenever its parts are independent. Nobody has to ask for it (D46).
+Work is split and run in parallel whenever its parts are independent. Nobody has to ask for it.
 
 **The test.** Parts are independent when all of these hold:
 
@@ -168,11 +168,11 @@ sharing one piece of work do worse than a single agent, so the gain exists only 
 
 **Where it applies.**
 
-| Case                 | What happens                                                                                                                                                                                                                                                                                                           |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parts of one request | One request is one work item and one pull request, even when its parts could land separately (D47). The worker runs the independent parts in separate worktrees, on local branches cut from the item's branch, and merges them into it (section 13.6). Verification and the checker run once, on the integrated result |
-| Separate requests    | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits                                                                                                                                   |
-| Reading              | Searching, exploring, researching and reviewing always fan out                                                                                                                                                                                                                                                         |
+| Case                 | What happens                                                                                                                                                                                                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parts of one request | One request is one work item and one pull request, even when its parts could land separately. The worker runs the independent parts in separate worktrees, on local branches cut from the item's branch, and merges them into it (section 13.6). Verification and the checker run once, on the integrated result |
+| Separate requests    | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits                                                                                                                             |
+| Reading              | Searching, exploring, researching and reviewing always fan out                                                                                                                                                                                                                                                   |
 
 **Approval.** For full-size work the split into parts is part of the strategy and is approved with it.
 
@@ -267,7 +267,7 @@ legacy:
   - docs/old-worklogs
 ```
 
-- `language` sets the language of the project's documents and records. When it is omitted, they are in English (D44).
+- `language` sets the language of the project's documents and records. When it is omitted, they are in English.
   Code, comments, commit messages and pull requests stay in English in every project. How comments are written is in
   section 15.
 - `stack` lists the technologies whose lessons the project's sessions load (section 8).
@@ -501,3 +501,20 @@ only in its own rules.
   in a project. A TODO without one is not written.
 - **Formatting is not set.** The style of Markdown and other files is left to each project for now.
 - The checker reviews the comments a change adds, not those it leaves untouched.
+
+---
+
+## 16. Decisions
+
+A record of decisions keeps its value only if it holds decisions, says which still hold, and is never needed to know
+the current rules.
+
+- **What a decision is:** a choice between alternatives, with its reason. Something that happened, such as a
+  repository created or a phase closed, is not a decision: it goes into the plan or into a record.
+- **Taken in a work item:** it is written in that item's record, in the strategy, the approval or the deviations, and
+  nowhere else. A log may point to the record; it does not copy it.
+- **Taken outside any work item:** a choice about one installation, or a standing preference of the person. It goes
+  into the decision log of the home, one entry each, with a state: `active`, or `replaced by <id>`.
+- **Entries are never rewritten.** A later choice is a new entry, and the earlier one's state names it.
+- **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
+  log: they state the rule, with its reason in a few words where the reason helps.
