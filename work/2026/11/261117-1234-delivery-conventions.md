@@ -4,14 +4,14 @@ title: Delivery conventions, checks on pull requests and the guard
 project: honsha
 type: change
 size: full
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
 requested-by: person
 source: null
 pr: null
-model: null
+model: claude-fable-5-2
 effort: null
 checks: []
 ---
@@ -341,6 +341,8 @@ lowest version; the work continues in the session that wrote the record, on the 
   `services/github/merge-commands.test.mjs`; the profile lists the tests of the pieces as well; the README's requirement
   names no service. Declared as deviation 8: the README and the architecture name GitHub where they list what is in the
   kit. 55 tests pass, and the list of three commands passes again.
+- 2026-11-17. Second check by `honsha:checker`: verdict `pass`, no finding. Outcome written, state `done`, model
+  `claude-fable-5-2`. `effort` stays null: the session ran without the kit loaded.
 
 ## Verification
 
@@ -473,6 +475,74 @@ made before the corrections listed after it: the 52 tests and the line numbers i
   checker read the approved design as allowing it and left the judgement to the person. It is left as it is.
 - The verification commands ran again after the corrections: the results at the top of this section are those.
 
+### Second check
+
+The checker ran again after the corrections, on `claude-fable-5-2`. Its reply again began with one line before its report; the
+report is copied from its heading on, unchanged.
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Rules stated, no service named, live run: met in the files; the live run is not verifiable. The five rules are in the diff of `rules/core.md` ("Commits and branches", "Delivery"), of `agents/worker.md` (start step 3, "When the default branch moves", "After the merge") and in `docs/01-specs/WORKFLOW.md` section 13. A search of `rules/`, `agents/`, `templates/`, `hooks/` and `checks/` for the service's name finds nothing. `rules/core.md` does not carry the clause on the branches of parallel parts; the approved design (point 1) places it in the worker and in 13.6, where it is.
+2. Checker fails on a bad list, passes on a clean one: not verifiable. `agents/checker.md` holds check 7 and the "Commits" line. The two runs exist only as log entries, and the failing run combined both defects in one list.
+3. Commit check: met, with declared deviation 6. `checks/commits.test.mjs` covers the missing trailer, another identifier, and an author and a committer outside the pattern, and asserts the commit is named and no address is printed. The pass on this branch is recorded, not run again.
+4. One list: met. `.hub/profile.yml` lines 7-10 hold `verify`. `checks/verify.mjs` prints `$ <command>`, then `passed:` or `failed (exit code …)`, and exits with 1 at the first failure. The Verification section is that list.
+5. Contracts: met. `WORKFLOW.md` 14.1 (five points) and 14.2 (six points) name no service. The only service name in the document is the `.github/**` path at line 245, which is not in the diff.
+6. GitHub piece: met in the files; the run is not verifiable. `services/github/README.md` answers each point of 14.1 and 14.2. `.github/workflows/verify.yml` sets `permissions: contents: read`, pins both actions to a 40-character commit, and has a Linux and a Windows job running `node checks/verify.mjs`. No pipeline run is in the record (`pr: null`).
+7. Guard: met in the files; the live run is not verifiable. `hooks/hooks.json` wires `hooks/guard.mjs` on `PreToolUse` for `Bash|PowerShell`. `hooks/guard.test.mjs` has 11 tests, with 26 command lines that must be let through.
+8. Patterns: met as far as it can be read. `checks/public.test.mjs` reads every tracked file. A search of the repository with the two patterns of `checks/public.mjs` finds only placeholder addresses (`checks/commits.test.mjs` lines 15, 16, 62; `hooks/guard.test.mjs` lines 35, 37). The two failing trials exist only as log entries.
+9. Documents: partly met; the rest is not verifiable yet. `ARCHITECTURE.md` 3.1, 3.3, section 6 rule 3 and O10 match what was built, and O10 names the second route. `README.md` lines 38-39 still say the kit has not been tried on Linux; the record says the pipeline's first run settles that line.
+10. Budget: not verifiable beyond the record. `hooks/hooks.test.mjs` line 21 holds the limit test (under 9,000 characters). The 7,304 bytes and the pass are recorded. The test count is consistent: 16 from before plus 8 + 7 + 5 + 5 + 11 + 3 new make 55.
+11. Public from the first commit: met for the trailer and the addresses (see Commits). No personal address or user path is in the tracked files. The content of each single commit cannot be read from here.
+12. Delivery: not verifiable yet. `pr: null`, state `in-progress`, "Outcome" empty.
+
+**Intent:** The result does what was asked. The commit and branch rules are in the kit for every user, the GitHub version is built as a separate piece, and `WORKFLOW.md` section 14 gives a user of another service the contract to write their own.
+
+**Scope:** Every file in the diff belongs to the item. Departures are declared as deviations 1 to 6 and 8. GitHub is now named only in its piece, the profile, the workflow file, the README's "tried with" sentence (lines 32-33), and the places deviation 8 declares (`README.md` lines 23 and 25, `ARCHITECTURE.md` lines 95 and 107). `services/github/merge-commands.test.mjs` is not named in the design; it is a test of the guard inside the piece, which I read as covered by scope 6.
+
+**Gates:**
+- "the rules name no hosting service": met. `rules/core.md`, `agents/worker.md`, `agents/checker.md` and `templates/record.md` name none.
+- "nothing about a user, a user's project or an installation": met as far as it can be read. No name, personal address or user path is in the diff.
+- "a script comes with its test": met. `commits.mjs`, `profile.mjs`, `public.mjs`, `verify.mjs` and `guard.mjs` each have a `.test.mjs`; `merge-commands.json` has `merge-commands.test.mjs`.
+
+**Verification evidence:** Recorded, not run again.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"`: passed, 55 tests. The command matches the profile word for word.
+- `claude plugin validate .`: passed with warnings, exit code 0.
+- `node checks/commits.mjs`: passed.
+
+**Record:** In order: the intent restates the request; scope, strategy, approval (who, when, channel), log, verification and deviations are present; the size is full, as CI configuration and a hook require; the first checker report is copied with what was done after it. "Outcome", `model`, `pr` and `effort` are empty and the state is `in-progress`, which fits a check made before delivery. Deviation 7 declares that the session merged another item's pull request at the person's request, against the rule that a session never merges; it is not a change of this diff and is the person's to accept.
+
+**Commits:** met.
+- Trailer: all 12 commits carry `Work-Item: 261117-1234`, together with the platform's co-author trailer.
+- Approval gate: `d8a84d5` "Add the record for the delivery conventions" and `1ff95ef` "Record the approval of the delivery conventions" touch only the record. The first other file appears in `243f251` "Add the kit's checks as one list of commands".
+- Addresses: the author and committer of every commit match `commits.address`.
+- `ARCHITECTURE.md` changes in `e66cbdb` "Say in the architecture where the new pieces sit", after `af153ff` "Merge the default branch into the delivery conventions", as the boundary requires.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The live runs for criteria 1, 2 and 7 and the two failing trials of criterion 8: they ran in disposable repositories and exist only as log entries.
+- Whether "one run of each kind" in criterion 2 means two runs or three. The record shows one clean run and one failing run with both defects.
+- The three verification commands and the 7,304-byte figure: I cannot run commands.
+- Criteria 6 (the pipeline's run), 9 (the Linux line), 12 (the pull request) and the "Outcome": they come after this check. The item does not meet them until the record holds them.
+- Whether the two pinned commits in `verify.yml` are the releases v7.0.1 and v7.1.0: no network access. The record says they were read from GitHub.
+- Whether the first boundary ("an account, a plan or a price") covers `services/github/README.md`. It names GitHub's plans, an account setting and which runner minutes cost more, without figures. I read it as allowed, because scope 4 and design point 8 ask for the conditions and the cost and say nothing about any user's account. The record leaves it as it is without a deviation; the person decides.
+- Whether the first commit held the state `awaiting-approval`, whether the scope and criteria are unchanged since the approval, and whether the log was only appended to: the list of commits shows files, not content.
+- That the person asked for the merge in deviation 7: it is stated only in the record.
+
+### After the second check
+
+- Nothing to correct. What it lists as not verified stays so: the live runs exist only as log entries, and criteria 6, 9
+  and 12 are completed by the delivery that follows.
+- The scope and the acceptance criteria were not changed after the approval, and the log was only appended to: the
+  commits of the record show it to anyone who reads them.
+
 ## Deviations
 
 1. **The contract of a wiring has one more point than the strategy described:** the three environment variables through
@@ -495,3 +565,24 @@ made before the corrections listed after it: the 52 tests and the line numbers i
    reader of the kit has to be told what is in it. The checker's first report found it.
 
 ## Outcome
+
+The kit now says how work is delivered, in words that name no hosting service.
+
+- **Rules every user gets.** A commit message is a plain imperative sentence that ends with the trailer
+  `Work-Item: <id>`. The record of a full item and then its approval are two commits that hold only the record. A work
+  branch only grows. A pull request is merged with a merge commit and its branch is then deleted. A branch is brought up
+  to date only when there is a reason, by merging the default branch into it. They are in `rules/core.md`, in the worker
+  and in section 13 of the workflow, and the checker reads the commits of a branch to check them.
+- **Checks as commands.** The kit has a profile of its own. One command runs the `verify` list of any profile; a second
+  checks the commits of a work branch; a test looks for personal content that needs no list.
+- **The guard.** A hook refuses merging, a push to the default branch and a forced push in every session.
+- **The hosting service.** Section 14 of the workflow says what the piece of a service holds. The piece for GitHub is
+  the first: its commands, its settings, what it can enforce, and the workflow file that runs the checks on pull
+  requests.
+
+Left out by the scope: the settings on the hosting service, the hook with the word list, a pipeline template for
+projects.
+
+Not verified here: Linux and Node.js 22, which the pipeline's first run on this item's pull request shows; the guard
+under the `PowerShell` tool in a live session, where only the reading of commands is tested; the setting
+`worktree.baseRef`; macOS.
