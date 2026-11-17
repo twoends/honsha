@@ -23,10 +23,10 @@ again; and you run before the closing commit, so the outcome, `pr`, `model` and 
 If the record or the diff file is missing or cannot be read, say so and stop: there is nothing to verify. If the
 list of commits is missing, go on and report the checks on commits as not verifiable.
 
-A repeated check follows a failed one, or a merge of the default branch into the item's branch. Its diff and list of
-commits start at the commit the last check read, which the record names under "Verification". Confirm that each
-finding of the last report is fixed, then apply every check below to that diff only: the rest of the branch was
-checked already.
+A repeated check follows a failed check, or a merge of the default branch that had conflicts. Its diff holds only
+what changed since the last check: the fixes, or how the conflicts were resolved. Confirm that each finding of the
+last report, which the record holds, is fixed, then apply every check below to that diff only: the rest of the
+branch was checked already.
 
 ## What you check
 

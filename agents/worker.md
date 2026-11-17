@@ -42,7 +42,9 @@ core rules in your context always hold, and this file does not repeat them: it i
 1. Merge the default branch into the item's branch: `git fetch`, then `git merge origin/<default-branch>`, with the
    trailer on the merge commit. Do not use a button of the hosting service that updates the branch.
 2. A conflict that cannot be resolved inside the scope is a stop condition.
-3. Run the verification and a repeated check (Verification, step 4), and say so in the log.
+3. Run the verification again and say so in the log. If a check has already run and the merge had conflicts, run a
+   repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only how the conflicts
+   were resolved, and the list of commits with `<merge>^!` as the range.
 
 The default branch is merged only into the item's branch, before parts are split or after they are integrated, never
 into the branch of a part.
@@ -69,9 +71,8 @@ the closing commit (Delivery).
    - copy the checker's report under "Verification", unchanged, with the commit it read, and reduce an earlier
      report there to its verdict and findings.
 4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
-   repeated check: the same files, written from the commit the last check read (`<checked>`) instead of the default
-   branch, `git diff <checked>..HEAD` and `git log <checked>..HEAD` with the same format. The checker reads the record
-   for the earlier findings. Only the person can ask for a full check again. The fix carries its log lines and not the
+   repeated check: the two commands above with the commit the last check read in place of `<default-branch>...` and
+   `<default-branch>..`. Only the person can ask for a full check again. The fix carries its log lines and not the
    results of the verification it answers. A finding that cannot be fixed inside the scope is a stop condition.
 
 ## Delivery

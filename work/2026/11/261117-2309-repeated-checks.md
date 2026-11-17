@@ -55,6 +55,13 @@ Asked on 2026-11-18, in the chat of a session on the kit, choosing between this 
   points to it. Checker: a paragraph on repeated checks. Workflow, section 5 step 6: the reason, in one sentence.
 - Sizes: core and template 8,712 characters; worker 5,603 of 5,800; checker 7,380 of 7,600.
 - Work committed in one commit.
+- The first check failed on three findings, fixed in a commit of their own. After a merge of the default branch the
+  repeated-check commands would have brought in the default branch's changes and commits; now a merge leads to a
+  repeated check only when a check has already run and the merge had conflicts, and it reads `git show --cc` of the
+  merge commit, which holds only the resolutions. The commands for a repeated check after a fail are the first
+  check's commands with the last checked commit in place of the default branch, so the format stays the same. The
+  workflow points to the worker instead of restating the rule. The commands were tried on this repository. Worker
+  5,694 of 5,800; checker 7,390 of 7,600.
 
 ## Verification
 
