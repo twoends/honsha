@@ -4,7 +4,7 @@ title: Say who keeps dependencies up to date, and when
 project: honsha
 type: change
 size: small
-state: in-progress
+state: done
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -146,6 +146,11 @@ commands ("The 2 commits of the branch follow the rules."). The new rule applied
 vulnerabilities in the kit and in the home; `npm outdated` in the kit lists only `@types/node`, which follows Node.js
 22 on purpose.
 
+### After the addenda
+
+On the fix that sets 7 days: `node checks/verify.mjs` passed all six commands ("The 4 commits of the branch follow
+the rules."). The change is one number in section 17; the check is not repeated.
+
 ## Deviations
 
 - Criterion 1 named a waiting period of 14 days; at the person's request after the pull request was opened, it is 7.
@@ -154,5 +159,5 @@ vulnerabilities in the kit and in the home; `npm outdated` in the kit lists only
 
 The workflow's section 17 says how dependencies are kept up to date on any hosting service: the package manager's
 vulnerability report at every review and lockfile change, a vulnerability fix the same day, ordinary updates at the
-radar review after 14 days. The GitHub piece turns on Dependabot alerts as a further stop, without its automatic pull
+radar review after 7 days. The GitHub piece turns on Dependabot alerts as a further stop, without its automatic pull
 requests. The radar entries for the kit's tools are in the home, with a review on 2026-12-17. No deferred check.
