@@ -338,6 +338,70 @@ lowest version; the work continues in the session that wrote the record, on the 
 
 ## Verification
 
+On Windows 11, with Node.js 26.13, git 2.53 and Claude Code 2.1.325, on 2026-11-17.
+
+The commands of the kit's profile, run through `node checks/verify.mjs`, which ended with exit code 0:
+
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs"`: passed, 52 tests.
+- `claude plugin validate .`: passed with warnings, exit code 0. The warnings are the ones the README names: no version
+  in the manifests, and no licence and no icon for the public plugin directory.
+- `node checks/commits.mjs`: passed. Every commit of the branch ends with this item's trailer, and its author and
+  committer addresses match the pattern of the profile.
+
+The criteria, one by one:
+
+1. **Rules:** met. The five rules are in `rules/core.md` ("Commits and branches" and "Delivery"), in `agents/worker.md`
+   and in section 13 of the workflow; a search of those three files and of the record template for the name of a hosting
+   service finds none. Live run: `claude -p` with the kit loaded by `--plugin-dir`, on `claude-opus-5-5`, in a
+   disposable repository, asked for a short section in a README. It made one commit, on a branch `work/<id>-<slug>`,
+   with a plain imperative subject and the trailer `Work-Item: <id>`. One run.
+2. **Checker:** met. Two runs of `honsha:checker` on `claude-opus-5-5`, in a disposable repository that held a finished
+   full-size item. With the real list of commits: `pass`, with the trailer, the order of the approval gate and the
+   addresses reported as met. With a list in which the first commit also touched a file other than the record and the
+   third had no trailer: `fail`, with both commits named by identifier and subject.
+3. **Commit check:** met. It passes on this branch. The failing cases are automated, in `checks/commits.test.mjs`, each
+   in a throwaway repository: a commit without the trailer, a trailer with another identifier, an author address and a
+   committer address outside the pattern; each test asserts that the commit is named.
+4. **One list:** met. The kit has `.hub/profile.yml`; `checks/verify.mjs` prints each command with its result and exits
+   with 1 at the first failure (`checks/verify.test.mjs`); the verification above is that list.
+5. **Contracts:** met. Section 14 of the workflow holds what the piece of a service says (14.1) and the contract of a
+   wiring (14.2). The only mention of a service in the whole document is the `.github/**` path of the indicative
+   profile, which was there before.
+6. **GitHub piece:** met in the files, not yet in a run. `services/github/README.md` answers the five points of 14.1 and
+   the six of 14.2. `.github/workflows/verify.yml` sets `permissions: contents: read` and pins its two actions to a
+   commit. Its first run needs this item's pull request: the result is written below once it has run.
+7. **Guard:** met. Live run: `claude -p` with the kit loaded, on `claude-haiku-5-5`, in a disposable repository with a
+   local remote. A push to the default branch, a forced push and `gh pr merge` were each refused, and the session
+   reported the guard's reason; an ordinary push of the work branch went through; the remote's default branch did not
+   move. `hooks/guard.test.mjs` has 11 tests, with 26 command lines that must be let through.
+8. **Patterns:** met. `checks/public.test.mjs` passes on the kit. With a file that held an e-mail address, and then with
+   one that held a path into a user's folder, it failed and named the file and the line.
+9. **Documents:** met, but for one line. `ARCHITECTURE.md` (3.1, 3.3, section 6 rule 3, O10) and `README.md` match what
+   was built. The README still says that the kit has not been tried on Linux: that line is settled by the pipeline's
+   first run.
+10. **Budget:** met. The core rules and the record template are 7,304 bytes; the test that sets the limit passes, and so
+    do the other 15 tests that existed before this item.
+11. **Public from the first commit:** met as far as the checks reach. The commit check and the patterns test pass.
+    GitHub is named in the GitHub piece, in the kit's profile and workflow file, in the README's sections on the layout
+    and on the hosting service, and where the architecture says what the kit was tried with; the rules name no service.
+12. **Delivery:** follows this section.
+
 ## Deviations
+
+1. **The contract of a wiring has one more point than the strategy described:** the three environment variables through
+   which the wiring gives the commands the branch and the two ends of its commits. Without them the commit check cannot
+   run in the checkout of a hosting service, which is often not on the branch.
+2. **Two modules that the design did not name:** `checks/profile.mjs`, the one reader of a profile that the runner, the
+   commit check and the guard share, and `checks/public.mjs`, which the patterns test uses.
+3. **The guard's hook covers both shell tools of the platform,** `Bash` and `PowerShell`. The design spoke of the shell
+   tool.
+4. **The patterns test reads every tracked file,** the records under `work/` included. The design left `work/` out; a
+   record is as public as the rest.
+5. **Existing sections of the workflow were touched,** beyond the two new ones: 1 and 5 where they speak of merging and
+   of the two gate commits, 5.1 for the branches of parts, 9 for the profile's new key and the form of `verify`.
+6. **Criterion 3 is shown by automated tests** in throwaway repositories, not by hand on a throwaway branch.
+7. **The session merged the pull request of another work item,** the one that words the architecture for any hosting
+   service, because the person asked it to. The rules say that the person merges and a session never does. It was merged
+   with a merge commit, authored with the noreply address the kit's commits use. Nothing of this item was merged.
 
 ## Outcome
