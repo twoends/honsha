@@ -10,12 +10,12 @@ const FOLDER = /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9._-]+|\/home\/[A-Za-z0-9._-]+|
 
 /** An address nobody receives mail at: a reserved domain, a noreply address, or the user of a git URL. */
 function placeholder(address) {
-  const [local, domain] = address.toLowerCase().split('@');
+  const [local, domain] = address.toLowerCase().split("@");
   return (
     /(^|\.)example\.(com|org|net)$/.test(domain) ||
     /\.(example|invalid|test|localhost)$/.test(domain) ||
-    address.toLowerCase().includes('noreply') ||
-    local === 'git'
+    address.toLowerCase().includes("noreply") ||
+    local === "git"
   );
 }
 
@@ -24,7 +24,7 @@ export function personal(text) {
   const found = [];
   text.split(/\r?\n/).forEach((content, index) => {
     if ((content.match(ADDRESS) ?? []).some((address) => !placeholder(address))) {
-      found.push({ line: index + 1, kind: 'an e-mail address' });
+      found.push({ line: index + 1, kind: "an e-mail address" });
     }
     if (FOLDER.test(content)) found.push({ line: index + 1, kind: "a path into a user's folder" });
   });

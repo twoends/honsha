@@ -1,0 +1,3 @@
+# Records are history: their intent is verbatim and their log is append-only.
+work/
+package-lock.json

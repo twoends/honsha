@@ -154,6 +154,17 @@ recommended.
 - 2026-11-17: measurements taken on copies of the kit and the home, with the three tools installed in a scratch
   folder outside both repositories; results under "Facts it rests on". The strategy is written and the item waits
   for approval.
+- Approved; state set to `in-progress`.
+- Configuration added: `package.json` with the four development packages at exact versions, `package-lock.json`,
+  `.npmrc` that turns off install scripts and saves exact versions, `.gitignore` for `node_modules/`,
+  `.prettierrc.json`, `.prettierignore` with `work/`, `.oxlintrc.json`, `tsconfig.json`. The type definitions of
+  Node.js are those of version 22, the lowest the kit supports, so that a script cannot use a later API unnoticed.
+- `claude plugin validate .` passes with `package.json` at the root, with the same warnings as before: the
+  assumption holds for validation.
+- `npx --no-install` found the three tools on Windows.
+- Formatted with Prettier: 17 files, 652 lines added and 574 removed, scripts and three documents. The tests still
+  pass, 56 of 56. Committed alone with the configuration, so that the fixes are reviewed apart from the whitespace.
+- After formatting: oxlint reports the two findings measured before; TypeScript reports 98 errors.
 
 ## Verification
 

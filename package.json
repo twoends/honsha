@@ -1,0 +1,14 @@
+{
+  "name": "honsha",
+  "private": true,
+  "description": "Development tools for the kit's own checks. The plugin needs none of them to run.",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "oxlint": "1.94.0",
+    "prettier": "3.10.1",
+    "typescript": "7.0.2"
+  }
+}

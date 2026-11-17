@@ -41,11 +41,11 @@ outside this repository. Terms are defined in the [vision](../00-vision/VISION.m
 
 ### 3.2 Sizes
 
-| Size    | When                                                                                 | Before work           | Evidence                              |
-| ------- | ------------------------------------------------------------------------------------ | --------------------- | ------------------------------------- |
-| trivial | One obvious change of a few lines, with no effect beyond what the intent states      | Nothing               | The profile's verification commands   |
-| small   | One concern, a few files, clear acceptance                                           | A short strategy      | Verification commands and the checker |
-| full    | Everything else                                                                      | Strategy and approval | Verification commands and the checker |
+| Size    | When                                                                            | Before work           | Evidence                              |
+| ------- | ------------------------------------------------------------------------------- | --------------------- | ------------------------------------- |
+| trivial | One obvious change of a few lines, with no effect beyond what the intent states | Nothing               | The profile's verification commands   |
+| small   | One concern, a few files, clear acceptance                                      | A short strategy      | Verification commands and the checker |
+| full    | Everything else                                                                 | Strategy and approval | Verification commands and the checker |
 
 Always full, whatever the number of lines:
 
@@ -62,15 +62,15 @@ than its size stops, raises the size and records a deviation. Raising to full tr
 
 ### 3.3 States
 
-| State               | Meaning                                                    | Where the record is        |
-| ------------------- | ---------------------------------------------------------- | -------------------------- |
-| `idea`              | Captured, not yet decided                                  | Home, `backlog/`           |
-| `ready`             | Intent clear, size set, can start                          | Home, `backlog/`           |
-| `awaiting-approval` | Full item with its strategy written, waiting for the person | Branch of the project      |
-| `in-progress`       | A worker is on it                                          | Branch of the project      |
-| `blocked`           | A stop condition was met; waiting for the person           | Branch of the project      |
-| `done`              | Work finished and verified                                 | Branch, then default branch |
-| `dropped`           | Abandoned                                                  | Home, `backlog/`           |
+| State               | Meaning                                                     | Where the record is         |
+| ------------------- | ----------------------------------------------------------- | --------------------------- |
+| `idea`              | Captured, not yet decided                                   | Home, `backlog/`            |
+| `ready`             | Intent clear, size set, can start                           | Home, `backlog/`            |
+| `awaiting-approval` | Full item with its strategy written, waiting for the person | Branch of the project       |
+| `in-progress`       | A worker is on it                                           | Branch of the project       |
+| `blocked`           | A stop condition was met; waiting for the person            | Branch of the project       |
+| `done`              | Work finished and verified                                  | Branch, then default branch |
+| `dropped`           | Abandoned                                                   | Home, `backlog/`            |
 
 "In review" is not a state: it is a `done` record on a branch whose pull request is open. Starting an item moves its
 record from the home's backlog into a new branch of the project. A report record goes through `in-progress` and `done`
@@ -105,16 +105,16 @@ checks: [] # each: { due: 2026-11-20, what: "…" }
 
 ### 4.2 Sections by size
 
-| Section                       | trivial | small                 | full                                     |
-| ----------------------------- | ------- | --------------------- | ---------------------------------------- |
-| Intent                        | yes     | yes                   | yes                                      |
-| Scope and acceptance criteria | —       | acceptance criteria   | scope in and out, criteria, boundaries   |
-| Strategy                      | —       | a few lines           | plan, assumptions, risks                 |
-| Approval                      | —       | —                     | who, when, through which channel         |
-| Log                           | —       | yes                   | yes                                      |
-| Verification                  | one line | commands and checker | commands and checker                     |
-| Deviations                    | if any  | if any                | if any                                   |
-| Outcome                       | yes     | yes                   | yes                                      |
+| Section                       | trivial  | small                | full                                   |
+| ----------------------------- | -------- | -------------------- | -------------------------------------- |
+| Intent                        | yes      | yes                  | yes                                    |
+| Scope and acceptance criteria | —        | acceptance criteria  | scope in and out, criteria, boundaries |
+| Strategy                      | —        | a few lines          | plan, assumptions, risks               |
+| Approval                      | —        | —                    | who, when, through which channel       |
+| Log                           | —        | yes                  | yes                                    |
+| Verification                  | one line | commands and checker | commands and checker                   |
+| Deviations                    | if any   | if any               | if any                                 |
+| Outcome                       | yes      | yes                  | yes                                    |
 
 ### 4.3 What may not be rewritten
 
@@ -210,12 +210,12 @@ the item. A failed check creates a new work item.
 When a tool is misused or the person corrects an approach, the correct action is written down as a short preventive
 rule, with no history. It goes to the level where it applies, so that it is learned once:
 
-| Level      | Applies to                              | Example                                                        | Where                                        | How it enters                |
-| ---------- | --------------------------------------- | -------------------------------------------------------------- | -------------------------------------------- | ---------------------------- |
-| Project    | This repository only                    | "The `fixtures/` folder is generated: change the generator"    | The file named by `lessons` in the profile   | In the same pull request     |
-| Technology | Every project that uses that technology | "A pushed database migration takes one to two minutes to apply" | Home, `lessons/tech/<technology>.md`         | Written by the hub, reported |
-| Host       | Every session on that machine           | "This shell converts arguments that start with `/`"            | Home, `lessons/host/<host>.md`               | Written by the hub, reported |
-| Kit        | Every user of the kit                   | "Never batch a restart with the edit of the file it loads"     | The kit's rules                              | A work item on the kit       |
+| Level      | Applies to                              | Example                                                         | Where                                      | How it enters                |
+| ---------- | --------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
+| Project    | This repository only                    | "The `fixtures/` folder is generated: change the generator"     | The file named by `lessons` in the profile | In the same pull request     |
+| Technology | Every project that uses that technology | "A pushed database migration takes one to two minutes to apply" | Home, `lessons/tech/<technology>.md`       | Written by the hub, reported |
+| Host       | Every session on that machine           | "This shell converts arguments that start with `/`"             | Home, `lessons/host/<host>.md`             | Written by the hub, reported |
+| Kit        | Every user of the kit                   | "Never batch a restart with the edit of the file it loads"      | The kit's rules                            | A work item on the kit       |
 
 - **Loading.** A session receives the project's lessons, the lessons of each technology in the profile's `stack`, and
   the lessons of the host it runs on. Nothing else is loaded, so a project never carries lessons for tools it does not

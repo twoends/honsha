@@ -13,7 +13,7 @@
 // A value can be bare or in quotes. A regular expression is best written in single quotes, where
 // YAML keeps a backslash as it is.
 
-import fs from 'node:fs';
+import fs from "node:fs";
 
 const BLANK = /^\s*(#.*)?$/;
 
@@ -23,8 +23,8 @@ function scalar(raw) {
   const single = /^'((?:[^']|'')*)'(?:\s+#.*)?$/.exec(text);
   if (single) return single[1].replace(/''/g, "'");
   const double = /^"((?:[^"\\]|\\.)*)"(?:\s+#.*)?$/.exec(text);
-  if (double) return double[1].replace(/\\(["\\])/g, '$1');
-  return text.replace(/(^|\s+)#.*$/, '');
+  if (double) return double[1].replace(/\\(["\\])/g, "$1");
+  return text.replace(/(^|\s+)#.*$/, "");
 }
 
 /** The lines that follow `start` and belong to its block: blank lines, comments and `test` matches. */
@@ -51,26 +51,26 @@ export function parseProfile(text) {
     if (!top) return;
     const [, key, rest] = top;
     const value = scalar(rest);
-    if (key === 'default-branch') profile.defaultBranch = value || null;
-    if (key === 'verify') {
-      if (value === '') {
+    if (key === "default-branch") profile.defaultBranch = value || null;
+    if (key === "verify") {
+      if (value === "") {
         profile.verify = block(lines, index, /^\s*-\s+(.*)$/).map((match) => scalar(match[1]));
-      } else if (value !== '[]') {
-        throw new Error('profile: `verify` must be a list with one command on each line');
+      } else if (value !== "[]") {
+        throw new Error("profile: `verify` must be a list with one command on each line");
       }
-      if (profile.verify.some((command) => command === '')) {
-        throw new Error('profile: `verify` holds an empty command');
+      if (profile.verify.some((command) => command === "")) {
+        throw new Error("profile: `verify` holds an empty command");
       }
     }
-    if (key === 'commits') {
+    if (key === "commits") {
       const inline = /^\{\s*address:\s*(.+?)\s*\}$/.exec(value);
       if (inline) {
         profile.commitsAddress = scalar(inline[1]);
-      } else if (value === '') {
-        const address = block(lines, index, /^\s+([\w-]+):(.*)$/).find((match) => match[1] === 'address');
+      } else if (value === "") {
+        const address = block(lines, index, /^\s+([\w-]+):(.*)$/).find((match) => match[1] === "address");
         if (address) profile.commitsAddress = scalar(address[2]);
-      } else if (value !== '{}') {
-        throw new Error('profile: `commits` must be a map with the key `address`');
+      } else if (value !== "{}") {
+        throw new Error("profile: `commits` must be a map with the key `address`");
       }
     }
   });
@@ -78,14 +78,14 @@ export function parseProfile(text) {
     try {
       new RegExp(profile.commitsAddress);
     } catch {
-      throw new Error('profile: `commits.address` is not a regular expression');
+      throw new Error("profile: `commits.address` is not a regular expression");
     }
   }
   return profile;
 }
 
 /** The profile at `file`, or null when there is no such file. */
-export function readProfile(file = '.hub/profile.yml') {
+export function readProfile(file = ".hub/profile.yml") {
   if (!fs.existsSync(file)) return null;
-  return parseProfile(fs.readFileSync(file, 'utf8'));
+  return parseProfile(fs.readFileSync(file, "utf8"));
 }

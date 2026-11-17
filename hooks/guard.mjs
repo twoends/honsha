@@ -15,27 +15,27 @@
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
 // failing: a command it cannot read is let through.
 
-import { execFileSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { readProfile } from '../checks/profile.mjs';
+import { readProfile } from "../checks/profile.mjs";
 
-const SERVICES = fileURLToPath(new URL('../services/', import.meta.url));
-const WRAPPERS = new Set(['command', 'env', 'exec', 'nice', 'nohup', 'sudo', 'time']);
-const GIT_OPTIONS_WITH_VALUE = new Set(['-C', '-c', '--git-dir', '--work-tree', '--namespace', '--config-env']);
-const PUSH_OPTIONS_WITH_VALUE = new Set(['-o', '--push-option', '--receive-pack', '--exec', '--repo']);
+const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
+const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
+const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
+const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
 const REASONS = {
   default: (branch) =>
     `Honsha guard: this push would update the default branch \`${branch}\`. The default branch changes only through pull requests, and the person merges them.`,
   every: () =>
-    'Honsha guard: this push sends every branch, the default branch among them. The default branch changes only through pull requests, and the person merges them.',
+    "Honsha guard: this push sends every branch, the default branch among them. The default branch changes only through pull requests, and the person merges them.",
   force: () =>
-    'Honsha guard: this push is forced. A session never force-pushes: a work branch only grows, and a mistake is corrected by a new commit.',
+    "Honsha guard: this push is forced. A session never force-pushes: a work branch only grows, and a mistake is corrected by a new commit.",
   merge: () =>
-    'Honsha guard: this command merges a pull request. The person merges; a session stops once the pull request is open.',
+    "Honsha guard: this command merges a pull request. The person merges; a session stops once the pull request is open.",
 };
 
 /** The text of a command line without the bodies of its here-documents. */
@@ -48,10 +48,10 @@ function withoutHereDocuments(line) {
       continue;
     }
     kept.push(text);
-    const start = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/.exec(text.replace(/<<</g, ''));
+    const start = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/.exec(text.replace(/<<</g, ""));
     if (start) until = start[2];
   }
-  return kept.join('\n');
+  return kept.join("\n");
 }
 
 /**
@@ -77,19 +77,19 @@ export function simpleCommands(line) {
     const char = text[index];
     if (quote) {
       if (char === quote) quote = null;
-      else if (char === '\\' && quote === '"' && '"\\$`'.includes(text[index + 1])) word += text[(index += 1)];
+      else if (char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1])) word += text[(index += 1)];
       else word += char;
     } else if (char === "'" || char === '"') {
       quote = char;
-      word ??= '';
-    } else if (char === '\\' && index + 1 < text.length) {
-      word = (word ?? '') + text[(index += 1)];
-    } else if (char === '\n' || ';|&()`'.includes(char)) {
+      word ??= "";
+    } else if (char === "\\" && index + 1 < text.length) {
+      word = (word ?? "") + text[(index += 1)];
+    } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
     } else if (/\s/.test(char)) {
       endWord();
     } else {
-      word = (word ?? '') + char;
+      word = (word ?? "") + char;
     }
   }
   endCommand();
@@ -103,7 +103,12 @@ function program(words) {
     start += 1;
   }
   if (start >= words.length) return [];
-  const name = words[start].replace(/\\/g, '/').split('/').pop().replace(/\.exe$/i, '').toLowerCase();
+  const name = words[start]
+    .replace(/\\/g, "/")
+    .split("/")
+    .pop()
+    .replace(/\.exe$/i, "")
+    .toLowerCase();
   const rest = [];
   for (let index = start + 1; index < words.length; index += 1) {
     // A redirection is not an argument: `2>`, `>file`, and `>` with the file as the next word.
@@ -115,63 +120,63 @@ function program(words) {
 
 function git(cwd, args) {
   try {
-    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
-    return '';
+    return "";
   }
 }
 
 /** The names the default branch of the repository in `cwd` can have. */
 function defaultBranches(cwd) {
-  const top = git(cwd, ['rev-parse', '--show-toplevel']);
+  const top = git(cwd, ["rev-parse", "--show-toplevel"]);
   let named = null;
   try {
-    named = readProfile(path.join(top || cwd, '.hub', 'profile.yml'))?.defaultBranch ?? null;
+    named = readProfile(path.join(top || cwd, ".hub", "profile.yml"))?.defaultBranch ?? null;
   } catch {
     // A profile the reader refuses names no branch.
   }
-  return named ? [named] : ['main', 'master'];
+  return named ? [named] : ["main", "master"];
 }
 
 /** The reason to refuse a `git` command, or null. `args` are the words after `git`. */
 function judgeGit(args, cwd) {
   let dir = cwd;
   let index = 0;
-  while (index < args.length && args[index].startsWith('-')) {
-    if (args[index] === '-C' && index + 1 < args.length) dir = path.resolve(dir, args[index + 1]);
+  while (index < args.length && args[index].startsWith("-")) {
+    if (args[index] === "-C" && index + 1 < args.length) dir = path.resolve(dir, args[index + 1]);
     index += GIT_OPTIONS_WITH_VALUE.has(args[index]) ? 2 : 1;
   }
-  if (args[index] !== 'push') return null;
+  if (args[index] !== "push") return null;
 
   const positional = [];
   let every = false;
   let tagsOnly = false;
   for (index += 1; index < args.length; index += 1) {
     const arg = args[index];
-    if (arg === '--') {
+    if (arg === "--") {
       positional.push(...args.slice(index + 1));
       break;
     }
-    if (!arg.startsWith('-')) positional.push(arg);
+    if (!arg.startsWith("-")) positional.push(arg);
     else if (/^--force($|-with-lease|-if-includes)/.test(arg) || /^-[A-Za-z]*f/.test(arg)) return REASONS.force();
-    else if (arg === '--all' || arg === '--branches' || arg === '--mirror') every = true;
-    else if (arg === '--tags') tagsOnly = true;
+    else if (arg === "--all" || arg === "--branches" || arg === "--mirror") every = true;
+    else if (arg === "--tags") tagsOnly = true;
     else if (PUSH_OPTIONS_WITH_VALUE.has(arg)) index += 1;
   }
   if (every) return REASONS.every();
 
   const refspecs = positional.slice(1);
-  if (refspecs.some((refspec) => refspec.startsWith('+'))) return REASONS.force();
+  if (refspecs.some((refspec) => refspec.startsWith("+"))) return REASONS.force();
   const defaults = defaultBranches(dir);
-  const current = () => git(dir, ['symbolic-ref', '--short', '-q', 'HEAD']);
+  const current = () => git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
   const destinations =
     refspecs.length > 0
-      ? refspecs.map((refspec) => (refspec.includes(':') ? refspec.slice(refspec.indexOf(':') + 1) : refspec))
+      ? refspecs.map((refspec) => (refspec.includes(":") ? refspec.slice(refspec.indexOf(":") + 1) : refspec))
       : tagsOnly
         ? []
-        : ['HEAD'];
+        : ["HEAD"];
   for (const destination of destinations) {
-    const branch = (destination === 'HEAD' ? current() : destination).replace(/^refs\/heads\//, '');
+    const branch = (destination === "HEAD" ? current() : destination).replace(/^refs\/heads\//, "");
     if (defaults.includes(branch)) return REASONS.default(branch);
   }
   return null;
@@ -183,7 +188,7 @@ function mergePatterns(services = SERVICES) {
   if (!fs.existsSync(services)) return patterns;
   for (const name of fs.readdirSync(services)) {
     try {
-      const list = JSON.parse(fs.readFileSync(path.join(services, name, 'merge-commands.json'), 'utf8')).merge;
+      const list = JSON.parse(fs.readFileSync(path.join(services, name, "merge-commands.json"), "utf8")).merge;
       for (const pattern of list) patterns.push(new RegExp(pattern));
     } catch {
       // A piece without the file, or with one that cannot be read, lists no command.
@@ -193,31 +198,31 @@ function mergePatterns(services = SERVICES) {
 }
 
 /** The reason to refuse the command line, or null when the guard lets it through. */
-export function judge(line, { cwd = '.', services } = {}) {
+export function judge(line, { cwd = ".", services } = {}) {
   const patterns = mergePatterns(services);
   for (const words of simpleCommands(line)) {
     const [name, ...args] = program(words);
     if (!name) continue;
-    if (name === 'git') {
+    if (name === "git") {
       const reason = judgeGit(args, cwd);
       if (reason) return reason;
     }
-    const text = [name, ...args].join(' ');
+    const text = [name, ...args].join(" ");
     if (patterns.some((pattern) => pattern.test(text))) return REASONS.merge();
   }
   return null;
 }
 
 function main() {
-  const input = JSON.parse(fs.readFileSync(0, 'utf8'));
-  if (input.hook_event_name !== 'PreToolUse' || typeof input.tool_input?.command !== 'string') return 0;
-  const reason = judge(input.tool_input.command, { cwd: input.cwd || '.' });
+  const input = JSON.parse(fs.readFileSync(0, "utf8"));
+  if (input.hook_event_name !== "PreToolUse" || typeof input.tool_input?.command !== "string") return 0;
+  const reason = judge(input.tool_input.command, { cwd: input.cwd || "." });
   if (!reason) return 0;
   process.stderr.write(`${reason}\n`);
   return 2;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
     process.exitCode = main();
   } catch {
