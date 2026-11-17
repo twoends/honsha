@@ -291,6 +291,10 @@ section 7 and the vision's principle on models are reworded in this pull request
 - 2026-11-17. At review, the person asked whether a version would make sense later. It would, once a change to the
   kit must not reach every installation at once. The architecture's section 3.1 now says so, with what the
   platform's documentation says about versions and updates, and the README points to it. Deviation 1 is unchanged.
+- 2026-11-17. The person asked whether section 3.1 was the right place for that note. It was not: what is still to
+  be decided is an open design point, and the architecture keeps those in section 9. Section 3.1 now says only what
+  leaving the version out means. Whether and when a version is added is point O10 in section 9, and the README
+  points there.
 
 ## Verification
 

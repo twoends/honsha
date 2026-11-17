@@ -90,11 +90,10 @@ of the layout is still indicative.
   marketplace: the plugin is the repository root.
 - The manifests carry no `version`. Claude Code then takes the commit as the version, so an installation that is
   updated moves to the repository's latest commit. With a `version` in the manifest, an installation stays on the
-  copy it has until that string changes, however many commits follow. A version is to be added when a change to the
-  kit must not reach every installation at once: when someone other than the kit's author installs it, or when
-  several projects depend on it and need a known copy. From then on every release has to raise the version, or no
-  installation receives it. This is what the platform's documentation says: an installation from the marketplace
-  has not been tried yet (section 8).
+  copy it has until that string changes, however many commits follow: every release then has to raise the version,
+  or no installation receives it. This is what the platform's documentation says: an installation from the
+  marketplace has not been tried yet (section 8). Whether and when a version is added is an open point (section 9,
+  O10).
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
 - An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,
@@ -314,6 +313,7 @@ A pack loaded in the A6 test was a throwaway one, kept outside the kit (D52).
 | O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives |
 | O06 | Board access: a private network, or a public address with a login     | A private network by default (D37); the tool is chosen in each installation's radar         |
 | O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design (D54); chosen in each installation's radar                      |
+| O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once (section 3.1)    |
 
 Points that concern one installation only (which host, which provider, when to order it, where personal documents
 live) are not recorded here. They belong in that installation's home.
