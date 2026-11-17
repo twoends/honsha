@@ -4,7 +4,7 @@ title: Delivery conventions, checks on pull requests and the guard
 project: honsha
 type: change
 size: full
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-17
 updated: 2026-11-17
@@ -323,6 +323,11 @@ lowest version; the work continues in the session that wrote the record, on the 
   Node.js 22 or later and for a client of the hosting service, and gives `node checks/verify.mjs` as the way to check a
   change.
 - 52 tests pass.
+- 2026-11-17. Steps 1 to 5 of the plan are done and the list of three commands passes. Step 6 changes
+  `docs/01-specs/ARCHITECTURE.md`, and the pull request that words it for any hosting service is still open. The item
+  stops here, as the strategy says, until that pull request is in the default branch: state set to `blocked`. Still to
+  do after it: the architecture, the verification with the checker, the outcome, the pull request and the first run of
+  the pipeline.
 
 ## Verification
 
