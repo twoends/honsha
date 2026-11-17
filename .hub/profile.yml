@@ -5,6 +5,9 @@ stack: [node]
 default-branch: main
 merge-deploys: false
 verify:
+  - npx --no-install prettier --check .
+  - npx --no-install oxlint
+  - npx --no-install tsc -p .
   - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"
   - claude plugin validate .
   - node checks/commits.mjs

@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+/** @param {string} file */
 const read = (file) => fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 const hooks = JSON.parse(read("hooks/hooks.json")).hooks;
 const handlers = Object.values(hooks)

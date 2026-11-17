@@ -106,6 +106,9 @@ the kit's own profile and the piece for GitHub. The rest of the layout is still 
 - What is specific to one hosting service sits in `services/<name>/`, apart from the rules; the wiring of the checks
   sits where that service reads it. `services/github/` is the only piece so far. What a piece holds is in
   [WORKFLOW.md](WORKFLOW.md), section 14.
+- The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the
+  type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
+  from the lockfile without their install scripts. An installation of the plugin does not need them.
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
 - An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,

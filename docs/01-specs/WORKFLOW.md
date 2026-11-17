@@ -277,6 +277,10 @@ legacy:
 - `secret` is the name of a secret on the host, never its value.
 - `verify` is written as a list with one command on each line: the kit's scripts read no other form. Each command
   runs in the default shell of the machine.
+- `verify` is expected to cover four things, with the tools of the project's own stack: formatting, lint, types where
+  the language has them, and tests. One command may cover several, as `npm run check` does in the example. A project
+  that leaves one out says why in a comment beside the list. The checker reports what the list does not cover; it
+  is a finding only when the profile lists that coverage among its gates.
 - `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
   must match. A profile without it sets no rule on addresses.
 

@@ -20,6 +20,9 @@ const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 /**
  * Returns the record's text with `effort` set to the level (null when the model has none),
  * or null when the text is not a record: no front matter, or front matter without the key.
+ * @param {string} text
+ * @param {string | null | undefined} level
+ * @returns {string | null}
  */
 export function stamp(text, level) {
   const match = FRONT_MATTER.exec(text);
@@ -42,7 +45,9 @@ function main() {
   const next = stamp(text, input.effort?.level || process.env.CLAUDE_EFFORT);
   if (next === null || next === text) return;
   fs.writeFileSync(file, next);
-  const line = /^effort:.*$/m.exec(next)[0].trim();
+  const written = /^effort:.*$/m.exec(next);
+  if (!written) return;
+  const line = written[0].trim();
   const note = `A hook wrote \`${line}\` into the front matter of ${file}. The file on disk is newer than the last read of it.`;
   process.stdout.write(
     JSON.stringify({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: note } }),

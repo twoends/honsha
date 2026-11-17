@@ -25,10 +25,18 @@ const FIELD = "\x1f";
 const RECORD = "\x1d";
 const VALUE = "\x1e";
 
+/**
+ * @param {string} cwd
+ * @param {string[]} args
+ */
 function git(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 }
 
+/**
+ * @param {string} cwd
+ * @param {string[]} args
+ */
 function attempt(cwd, args) {
   try {
     return git(cwd, args);
@@ -40,6 +48,8 @@ function attempt(cwd, args) {
 /**
  * Returns `{ commits, problems, note }` for the repository in `cwd`: how many commits were read,
  * one line for each rule a commit breaks, and a remark when there was nothing to check.
+ * @param {{ cwd?: string, env?: NodeJS.ProcessEnv }} [options]
+ * @returns {{ commits: number, problems: string[], note?: string }}
  */
 export function check({ cwd = ".", env = process.env } = {}) {
   const profile = readProfile(path.join(cwd, ".hub", "profile.yml"));
@@ -73,6 +83,7 @@ export function check({ cwd = ".", env = process.env } = {}) {
   if (!id) problems.push(`the branch \`${branch || "(none)"}\` is not named work/<id>-<slug>`);
   const address = profile?.commitsAddress ? new RegExp(profile.commitsAddress) : null;
   for (const commit of commits) {
+    /** @param {string} problem */
     const say = (problem) => problems.push(`${commit.hash.slice(0, 7)} ${commit.subject}: ${problem}`);
     if (commit.items.length === 0) say("no `Work-Item` trailer");
     else if (id && commit.items.some((item) => item !== id)) say(`\`Work-Item\` is not ${id}, the one of the branch`);
@@ -97,7 +108,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
     process.exitCode = main();
   } catch (error) {
-    console.error(error.message);
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   }
 }

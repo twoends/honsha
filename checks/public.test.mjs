@@ -11,6 +11,10 @@ import { personal } from "./public.mjs";
 const root = fileURLToPath(new URL("..", import.meta.url));
 
 // The samples are put together here, so that this file holds none of what it looks for.
+/**
+ * @param {string} local
+ * @param {string} domain
+ */
 const at = (local, domain) => `${local}@${domain}`;
 const windows = ["C:", "Users", "someone", "project"].join("\\");
 const linux = ["", "home", "someone", "project"].join("/");

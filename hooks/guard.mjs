@@ -28,6 +28,7 @@ const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", 
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
 const REASONS = {
+  /** @param {string} branch */
   default: (branch) =>
     `Honsha guard: this push would update the default branch \`${branch}\`. The default branch changes only through pull requests, and the person merges them.`,
   every: () =>
@@ -38,9 +39,13 @@ const REASONS = {
     "Honsha guard: this command merges a pull request. The person merges; a session stops once the pull request is open.",
 };
 
-/** The text of a command line without the bodies of its here-documents. */
+/**
+ * The text of a command line without the bodies of its here-documents.
+ * @param {string} line
+ */
 function withoutHereDocuments(line) {
   const kept = [];
+  /** @type {string | null} */
   let until = null;
   for (const text of line.split(/\r?\n/)) {
     if (until !== null) {
@@ -57,11 +62,17 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
+ * @param {string} line
+ * @returns {string[][]}
  */
 export function simpleCommands(line) {
+  /** @type {string[][]} */
   const commands = [];
+  /** @type {string[]} */
   let words = [];
+  /** @type {string | null} */
   let word = null;
+  /** @type {string | null} */
   let quote = null;
   const endWord = () => {
     if (word !== null) words.push(word);
@@ -96,19 +107,19 @@ export function simpleCommands(line) {
   return commands;
 }
 
-/** The words of a simple command from its program on, with the program reduced to its name. */
+/**
+ * The words of a simple command from its program on, with the program reduced to its name.
+ * @param {string[]} words
+ * @returns {string[]}
+ */
 function program(words) {
   let start = 0;
   while (start < words.length && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(words[start]) || WRAPPERS.has(words[start]))) {
     start += 1;
   }
   if (start >= words.length) return [];
-  const name = words[start]
-    .replace(/\\/g, "/")
-    .split("/")
-    .pop()
-    .replace(/\.exe$/i, "")
-    .toLowerCase();
+  const file = words[start].replace(/\\/g, "/").split("/").pop() ?? "";
+  const name = file.replace(/\.exe$/i, "").toLowerCase();
   const rest = [];
   for (let index = start + 1; index < words.length; index += 1) {
     // A redirection is not an argument: `2>`, `>file`, and `>` with the file as the next word.
@@ -118,6 +129,10 @@ function program(words) {
   return [name, ...rest];
 }
 
+/**
+ * @param {string} cwd
+ * @param {string[]} args
+ */
 function git(cwd, args) {
   try {
     return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
@@ -126,7 +141,10 @@ function git(cwd, args) {
   }
 }
 
-/** The names the default branch of the repository in `cwd` can have. */
+/**
+ * The names the default branch of the repository in `cwd` can have.
+ * @param {string} cwd
+ */
 function defaultBranches(cwd) {
   const top = git(cwd, ["rev-parse", "--show-toplevel"]);
   let named = null;
@@ -138,7 +156,12 @@ function defaultBranches(cwd) {
   return named ? [named] : ["main", "master"];
 }
 
-/** The reason to refuse a `git` command, or null. `args` are the words after `git`. */
+/**
+ * The reason to refuse a `git` command, or null. `args` are the words after `git`.
+ * @param {string[]} args
+ * @param {string} cwd
+ * @returns {string | null}
+ */
 function judgeGit(args, cwd) {
   let dir = cwd;
   let index = 0;
@@ -182,8 +205,12 @@ function judgeGit(args, cwd) {
   return null;
 }
 
-/** The patterns of the commands that merge a pull request, from the piece of every hosting service. */
+/**
+ * The patterns of the commands that merge a pull request, from the piece of every hosting service.
+ * @param {string} [services]
+ */
 function mergePatterns(services = SERVICES) {
+  /** @type {RegExp[]} */
   const patterns = [];
   if (!fs.existsSync(services)) return patterns;
   for (const name of fs.readdirSync(services)) {
@@ -197,7 +224,12 @@ function mergePatterns(services = SERVICES) {
   return patterns;
 }
 
-/** The reason to refuse the command line, or null when the guard lets it through. */
+/**
+ * The reason to refuse the command line, or null when the guard lets it through.
+ * @param {string} line
+ * @param {{ cwd?: string, services?: string }} [options]
+ * @returns {string | null}
+ */
 export function judge(line, { cwd = ".", services } = {}) {
   const patterns = mergePatterns(services);
   for (const words of simpleCommands(line)) {

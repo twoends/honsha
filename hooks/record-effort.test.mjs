@@ -20,6 +20,10 @@ function sandbox() {
   return { root, record };
 }
 
+/**
+ * @param {unknown} input
+ * @param {NodeJS.ProcessEnv} [env]
+ */
 function hook(input, env = {}) {
   const result = spawnSync(process.execPath, [script], {
     input: typeof input === "string" ? input : JSON.stringify(input),
@@ -30,6 +34,10 @@ function hook(input, env = {}) {
   return result.stdout;
 }
 
+/**
+ * @param {string} file
+ * @param {Record<string, unknown>} [extra]
+ */
 const edited = (file, extra = {}) => ({
   hook_event_name: "PostToolUse",
   session_id: "s1",
@@ -39,13 +47,25 @@ const edited = (file, extra = {}) => ({
   ...extra,
 });
 
+/**
+ * @param {string} file
+ * @param {string} name
+ */
 function key(file, name) {
   const line = fs
     .readFileSync(file, "utf8")
     .split(/\r?\n/)
     .find((l) => l.startsWith(`${name}:`));
+  assert.ok(line, `${file} has no \`${name}\` key`);
   return line.slice(name.length + 2);
 }
+
+/** @param {string} text */
+const strip = (text) =>
+  text
+    .split("\n")
+    .filter((line) => !line.startsWith("effort:"))
+    .join("\n");
 
 test("writes the effort level of the edit into the record", () => {
   const { record } = sandbox();
@@ -56,11 +76,6 @@ test("writes the effort level of the edit into the record", () => {
 
 test("changes nothing else in the record", () => {
   const { record } = sandbox();
-  const strip = (text) =>
-    text
-      .split("\n")
-      .filter((line) => !line.startsWith("effort:"))
-      .join("\n");
   const before = fs.readFileSync(record, "utf8");
   hook(edited(record));
   assert.equal(strip(fs.readFileSync(record, "utf8")), strip(before));

@@ -13,7 +13,15 @@ import { pathToFileURL } from "node:url";
 
 import { readProfile } from "./profile.mjs";
 
-/** Runs the commands in order. Returns true when all pass, false at the first that fails. */
+/**
+ * Runs the commands in order. Returns true when all pass, false at the first that fails.
+ * @param {string[]} commands
+ * @param {{
+ *   spawn?: (command: string, options: import("node:child_process").SpawnSyncOptions) => { status: number | null },
+ *   log?: (line: string) => void,
+ * }} [options]
+ * @returns {boolean}
+ */
 export function run(commands, { spawn = spawnSync, log = console.log } = {}) {
   for (const command of commands) {
     log(`\n$ ${command}`);
@@ -47,7 +55,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
     process.exitCode = main();
   } catch (error) {
-    console.error(error.message);
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
   }
 }

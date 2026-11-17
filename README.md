@@ -24,6 +24,7 @@ specific to a user, a project or an installation lives in that user's separate h
 | `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                           |
 | `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                   |
 | `.claude-plugin/`     | The plugin manifest and the marketplace manifest                                                                                                                         |
+| `package.json`        | The development tools of the kit's own checks, with their configuration files beside it. The plugin needs none of them to run                                            |
 | `docs/`               | Vision and specifications                                                                                                                                                |
 | `work/`               | The kit's own work records                                                                                                                                               |
 
@@ -38,7 +39,9 @@ their own piece from the contract in the workflow, section 14.
 - Claude Code 2.1.325 or later. It is the version the kit was tested with, on Windows 11. The kit's checks also run
   on Linux, in its pipeline; a session on Linux or macOS has not been tried yet.
 - git. On Windows, Git for Windows: the hooks run through Git Bash.
-- Node.js 22 or later, for the hook scripts and the checks. No packages are installed.
+- Node.js 22 or later, for the hook scripts and the checks. The plugin installs no packages.
+- For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
+  runs no install scripts.
 - A command-line client for the service that hosts the repositories, to open pull requests and to read them. The
   piece of that service names it.
 
@@ -64,11 +67,14 @@ project.
 ## Checking a change to the kit
 
 ```
+npm ci
 node checks/verify.mjs
 ```
 
-It runs the verification commands that `.hub/profile.yml` lists: the tests, `claude plugin validate .` and the check
-of the branch's commits. The same list runs on every pull request, on Linux and on Windows.
+It runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types
+with TypeScript checking the JavaScript files, the tests, `claude plugin validate .` and the check of the branch's
+commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and again when
+`package-lock.json` changes.
 
 The validator reports one warning about the manifests: the plugin has no version. That is deliberate, so that an
 installation follows the repository's commits. Whether and when a version is added is an open point in the

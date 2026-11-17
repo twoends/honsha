@@ -14,18 +14,23 @@ const ID = "261116-1432";
 const BRANCH = `work/${ID}-export-orders`;
 const INSIDE = "worker@example.org";
 const OUTSIDE = "someone@elsewhere.example";
+/** @type {string[]} */
 const made = [];
 
 after(() => {
   for (const dir of made) fs.rmSync(dir, { recursive: true, force: true });
 });
 
-/** A repository with one commit on `main`, on a new work branch, that reads no configuration but its own. */
+/**
+ * A repository with one commit on `main`, on a new work branch, that reads no configuration but its own.
+ * @param {{ profile?: string | null, branch?: string }} [options]
+ */
 function repository({ profile = "default-branch: main\n", branch = BRANCH } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-commits-"));
   made.push(dir);
   const empty = path.join(dir, "no-config");
   fs.writeFileSync(empty, "");
+  /** @param {string[]} args */
   const git = (args, address = INSIDE, committer = address) =>
     execFileSync("git", args, {
       cwd: dir,
@@ -40,6 +45,12 @@ function repository({ profile = "default-branch: main\n", branch = BRANCH } = {}
         GIT_COMMITTER_EMAIL: committer,
       },
     }).trim();
+  /**
+   * @param {string} subject
+   * @param {string} [trailer]
+   * @param {string} [address]
+   * @param {string} [committer]
+   */
   const commit = (subject, trailer, address, committer) =>
     git(["commit", "-q", "--allow-empty", "-m", subject, ...(trailer ? ["-m", trailer] : [])], address, committer);
   git(["init", "-q", "-b", "main", "."]);
@@ -54,6 +65,10 @@ function repository({ profile = "default-branch: main\n", branch = BRANCH } = {}
 }
 
 const quiet = { ...process.env, HONSHA_BRANCH: "", HONSHA_BASE: "", HONSHA_HEAD: "" };
+/**
+ * @param {string} dir
+ * @param {NodeJS.ProcessEnv} [env]
+ */
 const run = (dir, env = {}) => check({ cwd: dir, env: { ...quiet, ...env } });
 
 test("passes when every commit of the branch carries the trailer of the branch", () => {
@@ -80,7 +95,7 @@ test("names the commit that has no trailer, and the one with the trailer of anot
 test("a branch that is not a work branch fails as soon as it adds a commit", () => {
   const { dir, commit } = repository({ branch: "patch-1" });
   assert.deepEqual(run(dir).problems, []);
-  assert.match(run(dir).note, /no commit/);
+  assert.match(run(dir).note ?? "", /no commit/);
   commit("Add the export", `Work-Item: ${ID}`);
   assert.match(run(dir).problems[0], /`patch-1` is not named work\/<id>-<slug>/);
 });
@@ -123,7 +138,7 @@ test("reads the branch and the range from the environment when the checkout is n
   const base = git(["rev-parse", "main"]);
   const head = git(["rev-parse", "HEAD~1"]);
   git(["checkout", "-q", "--detach", "main"]);
-  assert.match(run(dir).note, /no commit/);
+  assert.match(run(dir).note ?? "", /no commit/);
   assert.deepEqual(run(dir, { HONSHA_BRANCH: BRANCH, HONSHA_BASE: base, HONSHA_HEAD: head }), {
     commits: 1,
     problems: [],

@@ -11,18 +11,24 @@ import { judge, simpleCommands } from "./guard.mjs";
 
 const script = fileURLToPath(new URL("./guard.mjs", import.meta.url));
 const WORK = "work/261116-1432-export-orders";
+/** @type {string[]} */
 const made = [];
 
 after(() => {
   for (const dir of made) fs.rmSync(dir, { recursive: true, force: true });
 });
 
-/** A repository with one commit, checked out on `branch`, with a profile when one is given. */
+/**
+ * A repository with one commit, checked out on `branch`, with a profile when one is given.
+ * @param {string} [branch]
+ * @param {string | null} [profile]
+ */
 function repository(branch = WORK, profile = null) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-guard-"));
   made.push(dir);
   const empty = path.join(dir, "no-config");
   fs.writeFileSync(empty, "");
+  /** @param {...string} args */
   const git = (...args) =>
     execFileSync("git", args, {
       cwd: dir,
@@ -60,11 +66,19 @@ fs.writeFileSync(
   JSON.stringify({ merge: ["^forge( .*)? merge( |$)"] }),
 );
 
+/**
+ * @param {string} line
+ * @param {string} [cwd]
+ */
 const refused = (line, cwd = onWork) => {
   const reason = judge(line, { cwd, services: pieces });
   assert.ok(reason, `let through: ${line}`);
   return reason;
 };
+/**
+ * @param {string} line
+ * @param {string} [cwd]
+ */
 const allowed = (line, cwd = onWork) => assert.equal(judge(line, { cwd, services: pieces }), null, `refused: ${line}`);
 
 test("splits a command line into simple commands and keeps quoted text as one word", () => {
@@ -206,11 +220,12 @@ test("reads the merge commands of every piece, and none when there is no piece",
   );
   fs.mkdirSync(path.join(services, "broken"));
   fs.writeFileSync(path.join(services, "broken", "merge-commands.json"), "not JSON");
-  assert.match(judge("tracker merge 12", { cwd: onWork, services }), /merges a pull request/);
+  assert.match(judge("tracker merge 12", { cwd: onWork, services }) ?? "", /merges a pull request/);
   assert.equal(judge("tracker view 12", { cwd: onWork, services }), null);
   assert.equal(judge("tracker merge 12", { cwd: onWork, services: path.join(services, "missing") }), null);
 });
 
+/** @param {unknown} input */
 function hook(input) {
   return spawnSync(process.execPath, [script], {
     input: typeof input === "string" ? input : JSON.stringify(input),
@@ -218,6 +233,10 @@ function hook(input) {
   });
 }
 
+/**
+ * @param {string | undefined} command
+ * @param {Record<string, unknown>} [extra]
+ */
 const call = (command, extra = {}) => ({
   hook_event_name: "PreToolUse",
   tool_name: "Bash",

@@ -17,7 +17,12 @@ import fs from "node:fs";
 
 const BLANK = /^\s*(#.*)?$/;
 
-/** The value of a scalar: without its quotes, or without a trailing comment when it is bare. */
+/** @typedef {{ defaultBranch: string | null, verify: string[], commitsAddress: string | null }} Profile */
+
+/**
+ * The value of a scalar: without its quotes, or without a trailing comment when it is bare.
+ * @param {string} raw
+ */
 function scalar(raw) {
   const text = raw.trim();
   const single = /^'((?:[^']|'')*)'(?:\s+#.*)?$/.exec(text);
@@ -27,7 +32,12 @@ function scalar(raw) {
   return text.replace(/(^|\s+)#.*$/, "");
 }
 
-/** The lines that follow `start` and belong to its block: blank lines, comments and `test` matches. */
+/**
+ * The lines that follow `start` and belong to its block: blank lines, comments and `test` matches.
+ * @param {string[]} lines
+ * @param {number} start
+ * @param {RegExp} test
+ */
 function block(lines, start, test) {
   const found = [];
   for (let index = start + 1; index < lines.length; index += 1) {
@@ -42,9 +52,12 @@ function block(lines, start, test) {
 /**
  * Returns `{ defaultBranch, verify, commitsAddress }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
+ * @param {string} text
+ * @returns {Profile}
  */
 export function parseProfile(text) {
   const lines = text.split(/\r?\n/);
+  /** @type {Profile} */
   const profile = { defaultBranch: null, verify: [], commitsAddress: null };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
@@ -76,7 +89,7 @@ export function parseProfile(text) {
   });
   if (profile.commitsAddress !== null) {
     try {
-      new RegExp(profile.commitsAddress);
+      RegExp(profile.commitsAddress);
     } catch {
       throw new Error("profile: `commits.address` is not a regular expression");
     }
@@ -84,7 +97,11 @@ export function parseProfile(text) {
   return profile;
 }
 
-/** The profile at `file`, or null when there is no such file. */
+/**
+ * The profile at `file`, or null when there is no such file.
+ * @param {string | URL} [file]
+ * @returns {Profile | null}
+ */
 export function readProfile(file = ".hub/profile.yml") {
   if (!fs.existsSync(file)) return null;
   return parseProfile(fs.readFileSync(file, "utf8"));

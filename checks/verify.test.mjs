@@ -11,6 +11,7 @@ import { run } from "./verify.mjs";
 
 const script = fileURLToPath(new URL("./verify.mjs", import.meta.url));
 
+/** @param {string | null} profile */
 function runner(profile) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-verify-"));
   const file = path.join(dir, "profile.yml");
@@ -21,7 +22,9 @@ function runner(profile) {
 }
 
 test("runs the commands in order and stops at the first that fails", () => {
+  /** @type {string[]} */
   const seen = [];
+  /** @param {string} command */
   const spawn = (command) => {
     seen.push(command);
     return { status: command === "two" ? 3 : 0 };
@@ -32,6 +35,7 @@ test("runs the commands in order and stops at the first that fails", () => {
 });
 
 test("says for each command whether it passed", () => {
+  /** @type {string[]} */
   const lines = [];
   run(["one", "two"], { spawn: (command) => ({ status: command === "two" ? 3 : 0 }), log: (line) => lines.push(line) });
   assert.ok(lines.includes("passed: one"));

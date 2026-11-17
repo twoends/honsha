@@ -165,6 +165,25 @@ recommended.
 - Formatted with Prettier: 17 files, 652 lines added and 574 removed, scripts and three documents. The tests still
   pass, 56 of 56. Committed alone with the configuration, so that the fixes are reviewed apart from the whitespace.
 - After formatting: oxlint reports the two findings measured before; TypeScript reports 98 errors.
+- Two parts ran at the same time, in the same checkout: a subagent fixed types and lint in the scripts under
+  `checks/` and `hooks/`, while this session wrote the profile, the pipeline, the README, the architecture, the
+  workflow's rule and the checker. The parts touched no common file. The workflow asks for parallel parts in
+  worktrees on local branches; that was not used, because a subagent of a session cannot be given a branch name.
+  Recorded as a deviation.
+- Types: annotations in comments on parameters and exported functions, a `Profile` type for the profile reader, caught
+  errors narrowed with `instanceof Error`, and a possibly-null match in `hooks/record-effort.mjs` now checked before
+  use, which keeps the earlier behaviour: nothing is written. The `services` mismatch was a gap in the documented
+  type of `judge` in `hooks/guard.mjs`, not a bug: the tests use the option to point the guard at invented service
+  folders. It is now declared.
+- Lint: the profile reader validates `commits.address` by calling `RegExp` without `new`, which throws the same way;
+  the test helper `strip` moved to the module's scope.
+- Behaviour that changed: a thrown value that is not an `Error` is now printed as text by `checks/commits.mjs` and
+  `checks/verify.mjs`, where it printed `undefined`; exit codes are the same.
+- Profile: three commands added before the tests, through `npx --no-install`. Pipeline: `npm ci --ignore-scripts`
+  before the verification. README and architecture: what the plugin needs at runtime and what a change to the kit
+  needs. Workflow, section 9: what a project's `verify` list is expected to cover. Checker: step 6 reports that
+  coverage.
+- The core rules and the record template together are 8,333 characters, under the 10,000 that a hook can deliver.
 
 ## Verification
 

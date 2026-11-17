@@ -56,12 +56,13 @@ test("a missing file is no profile", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-profile-"));
   assert.equal(readProfile(path.join(dir, "profile.yml")), null);
   fs.writeFileSync(path.join(dir, "profile.yml"), "default-branch: main\n");
-  assert.equal(readProfile(path.join(dir, "profile.yml")).defaultBranch, "main");
+  assert.equal(readProfile(path.join(dir, "profile.yml"))?.defaultBranch, "main");
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test("the kit's own profile is one the reader accepts", () => {
   const profile = readProfile(new URL("../.hub/profile.yml", import.meta.url));
+  assert.ok(profile);
   assert.equal(profile.defaultBranch, "main");
   assert.ok(profile.verify.length > 0);
   assert.ok(profile.commitsAddress);
