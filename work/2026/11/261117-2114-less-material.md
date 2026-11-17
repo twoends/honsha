@@ -198,6 +198,9 @@ recommended.
   with a merge commit, without the exception the core rules now make. It now points to the core rules, and so does
   section 14.1 on the settings a piece describes; every other mention of the method was searched and is either the
   GitHub piece's default setting or the reason for merge commits.
+- The fifth check failed on one finding, fixed in a commit of its own: the checker's file stated the one-place rule
+  without the exception for an agent's file, so it would fail its own restatements. Every statement of the rule was
+  searched: the core rules and the checker now agree, and the workflow only points to them.
 
 ## Verification
 

@@ -39,7 +39,8 @@ Each check below reports a finding for anything it finds wrong.
    parts of a document that the diff changes:
    - nothing is left beside what replaced it, and no entry is kept with a note that it no longer holds; the entry
      that deletes another may name its identifier once;
-   - no rule is restated that another document of the project already states; a pointer to it is fine.
+   - no rule is restated that another document of the project already states; a pointer to it is fine, and so is an
+     agent's file, such as this one, that writes out a rule its agent must check and does not otherwise receive.
 
    The rest of the document is not checked. The record, notes of a past discussion and the profile's `legacy`
    documents are not checked here; the record is step 7.
