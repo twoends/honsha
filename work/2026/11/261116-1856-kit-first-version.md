@@ -7,7 +7,7 @@ size: full
 state: done
 areas: []
 created: 2026-11-16
-updated: 2026-11-16
+updated: 2026-11-17
 requested-by: person
 source: null
 pr: 1
@@ -288,6 +288,9 @@ section 7 and the vision's principle on models are reworded in this pull request
 - Core rules reworded after the live runs: sessions tried to open the workflow document in the kit directory and
   were refused. The rules now say that they and the template are enough for ordinary work, and that reading the kit
   can need a permission.
+- 2026-11-17. At review, the person asked whether a version would make sense later. It would, once a change to the
+  kit must not reach every installation at once. The architecture's section 3.1 now says so, with what the
+  platform's documentation says about versions and updates, and the README points to it. Deviation 1 is unchanged.
 
 ## Verification
 

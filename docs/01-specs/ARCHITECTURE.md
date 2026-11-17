@@ -88,6 +88,13 @@ of the layout is still indicative.
 
 - It is distributed as a Claude Code plugin from a private marketplace repository. The repository is its own
   marketplace: the plugin is the repository root.
+- The manifests carry no `version`. Claude Code then takes the commit as the version, so an installation that is
+  updated moves to the repository's latest commit. With a `version` in the manifest, an installation stays on the
+  copy it has until that string changes, however many commits follow. A version is to be added when a change to the
+  kit must not reach every installation at once: when someone other than the kit's author installs it, or when
+  several projects depend on it and need a known copy. From then on every release has to raise the version, or no
+  installation receives it. This is what the platform's documentation says: an installation from the marketplace
+  has not been tried yet (section 8).
 - It contains nothing about any user or project.
 - It is itself a registered project (D12): changes to it are work items like any other.
 - An area pack is written only when a real work item needs it (D52). A pack is the skill `area-<name>` of the kit,

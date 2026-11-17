@@ -56,8 +56,9 @@ node --test hooks/
 ```
 
 The validator reports one warning about the manifests: the plugin has no version. That is deliberate, so that an
-installation follows the repository's commits. It also remarks that there is no licence and no icon, which matters
-only for a submission to the public plugin directory.
+installation follows the repository's commits; the architecture's section 3.1 says when a version is to be added.
+It also remarks that there is no licence and no icon, which matters only for a submission to the public plugin
+directory.
 
 ## Documents
 
