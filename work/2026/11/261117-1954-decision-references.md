@@ -86,6 +86,10 @@ rules; the home is cleaned the same way, outside this pull request.
   the architecture adds standing preferences to `decisions.md`; the worker states the rule on documents. The verdict
   was a pass, so the check is not repeated.
 
+- Mistake: the two files written for the checker, `.honsha-checker.diff` and `.honsha-checker.commits`, were
+  committed in `3c074d8` by `git add -A`, and removed in `d865dbf`. They hold the branch's diff and its commits,
+  with no-reply addresses only. Prevention, in a commit of its own: `.gitignore` lists `.honsha-checker.*`.
+
 ## Verification
 
 ### Commands
