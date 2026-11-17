@@ -448,7 +448,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
    merged it.
 2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
-3. **The settings the rules rely on:** pull requests are merged with a merge commit, and merged branches are deleted.
+3. **The settings the rules rely on:** pull requests are merged with a merge commit, merged branches are deleted, and,
+   where the service has them, alerts on vulnerable dependencies are on without automatic pull requests (section 17).
 4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.
@@ -534,3 +535,28 @@ know the current rules.
   reused, because records and other history cite them.
 - **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
   log: they state the rule, with its reason in a few words where the reason helps.
+
+---
+
+## 17. Dependencies
+
+The same in every project that has dependencies. A project adds to it only in its own rules.
+
+- **Pinned.** Every dependency is at an exact version, with the lockfile in the repository, and is installed from the
+  lockfile, without install scripts where the package manager can turn them off.
+- **Known vulnerabilities are looked for on any service.** At every review below, and in every work item that changes
+  the lockfile, the package manager's own vulnerability report runs. Where the hosting service offers alerts on
+  vulnerable dependencies, they are switched on as a further stop between reviews; the piece of the service says how.
+  Its automatic pull requests stay off: a change that is not a work item has no record, and its commits fail the check
+  of a work branch.
+- **A fix of a known vulnerability goes in at once.** When a report or an alert names a dependency, a work item starts
+  the same day, with the version that fixes it as soon as that version is out. No waiting period applies. Its size
+  follows section 3.2: a major upgrade is full, and its approval is asked the same day.
+- **Ordinary updates wait and come on a cadence.** Each direct dependency of a project is covered by a radar entry of
+  the installation, with a review date. At the review, the outdated dependencies are listed with the package manager.
+  The updates worth making become one work item, full if it holds a major upgrade and small otherwise. A version is
+  taken only when it was released at least 7 days earlier, so that a release withdrawn or found compromised in its
+  first days is not taken.
+- **Who.** The review is started on its date by the scheduler where an installation has one; until then, by the
+  person or by a session asked to. An update worth making ends in a work item and a pull request that the person
+  merges; a review that finds none moves the review date.
