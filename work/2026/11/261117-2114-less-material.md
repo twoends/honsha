@@ -178,10 +178,21 @@ recommended.
 - Core rules: merging with a merge commit unless the project's rules name another method, to agree with workflow 13.4.
 - `checks/budgets.test.mjs`: the worker at most 5,800 characters and the checker 7,600, about 10% above their size;
   core and template keep the 9,000 of the hooks' test.
-- The monthly scheduled task was created on the person's PC, as decided: `honsha-monthly-review`, on the 17th at
-  9:00, read-only, with a report. It is the installation's, not the kit's.
+- The scheduled task of decision 3 was created in the installation, outside the kit.
 - Work committed in one commit.
+- The checker failed the item with five findings, fixed in a commit of their own: the change to the merge rule is
+  declared under Deviations; the log no longer names details of the installation (rewritten in place, against the
+  log's append-only rule, because the kit's gate on personal content comes first; the earlier wording stays in the
+  work commit); the template again says that the checker's report is copied unchanged and that the log names the
+  parts that ran in parallel; the core rule on one place makes an exception for an agent's file that checks rules
+  its agent does not receive; workflow 4.2 points to the template instead of repeating its sections in a table.
 
 ## Verification
+
+## Deviations
+
+- The core rules now allow a project to merge with another method than a merge commit when its own rules say so.
+  Not in the strategy's list: it removes a contradiction with workflow 13.4 found while working.
+- One log entry was rewritten to remove installation details (see the log).
 
 ## Outcome

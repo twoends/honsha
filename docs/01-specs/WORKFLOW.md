@@ -89,18 +89,8 @@ Who writes `model` and `effort` is in the core rules (The record).
 
 ### 4.2 Sections by size
 
-| Section                       | trivial  | small                       | full                                                               |
-| ----------------------------- | -------- | --------------------------- | ------------------------------------------------------------------ |
-| Intent                        | yes      | yes                         | yes                                                                |
-| Scope and acceptance criteria | —        | acceptance criteria         | scope in and out, boundaries, criteria                             |
-| Strategy                      | —        | a few lines                 | plan, assumptions, risks, and the split into parallel parts if any |
-| Approval                      | —        | —                           | who, when, through which channel                                   |
-| Log                           | —        | yes                         | yes                                                                |
-| Verification                  | one line | commands and checker report | commands and checker report                                        |
-| Deviations                    | if any   | if any                      | if any                                                             |
-| Outcome                       | yes      | yes                         | yes                                                                |
-
-What Verification holds, and how much of each checker report a record keeps, is in the core rules (The record): only
+The record template (`templates/record.md`) says, section by section, which sizes keep it and what it holds. What
+Verification holds, and how much of each checker report a record keeps, is in the core rules (The record): only
 the last report in full, because an earlier one matters only for what it found. A record is as long as its size calls
 for, and copies nothing another document holds (core rules, Documents); the checker fails an item whose record is
 longer.

@@ -53,12 +53,12 @@ full: what is in scope, what is out of scope, the boundaries, the criteria.
 
 ## Log
 
-<!-- small and full. -->
+<!-- small and full. Says which parts ran in parallel, if any. -->
 
 ## Verification
 
 <!-- trivial: one line, the commands and their result. small and full: the commands with their results, then the
-checker's report. -->
+checker's report, copied unchanged. -->
 
 ## Deviations
 
