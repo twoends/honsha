@@ -42,7 +42,11 @@ core rules in your context always hold, and this file does not repeat them: it i
 1. Merge the default branch into the item's branch: `git fetch`, then `git merge origin/<default-branch>`, with the
    trailer on the merge commit. Do not use a button of the hosting service that updates the branch.
 2. A conflict that cannot be resolved inside the scope is a stop condition.
-3. Run the verification and the checker again, and say so in the log.
+3. Run the verification again and say so in the log. If a check has already run and the merge had conflicts, run a
+   repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only what the merge
+   itself changed, and the list of commits with `<merge>^!` as the range.
+
+Never merge between a failed check and its repeated check.
 
 The default branch is merged only into the item's branch, before parts are split or after they are integrated, never
 into the branch of a part.
@@ -66,11 +70,12 @@ the closing commit (Delivery).
 
    - invoke the agent `honsha:checker`, giving it the path of the record and the paths of the two files;
    - delete the two files;
-   - copy the checker's report under "Verification", unchanged, and reduce an earlier report there to its verdict
-     and findings.
-4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and the check.
-   The fix carries its log lines and not the results of the verification it answers. A finding that cannot be fixed
-   inside the scope is a stop condition.
+   - copy the checker's report under "Verification", unchanged, with the commit it read, and reduce an earlier
+     report there to its verdict and findings.
+4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
+   repeated check: the two commands above with the commit the last check read in place of `<default-branch>...` and
+   `<default-branch>..`. Only the person can ask for a full check again. The fix carries its log lines and not the
+   results of the verification it answers. A finding that cannot be fixed inside the scope is a stop condition.
 
 ## Delivery
 

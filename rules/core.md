@@ -51,7 +51,7 @@ do not cover; the kit lies outside the project, so reading it can need a permiss
   A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their own.
 - A work branch only grows: no amend, no rebase, no squash. A mistake is corrected by a new commit.
 - A work branch is brought up to date only on a conflict, a need or a request, by merging the default branch into
-  it. The verification commands and the checker then run again.
+  it. The verification commands run again, and the checker on what changed.
 
 ## Comments
 
