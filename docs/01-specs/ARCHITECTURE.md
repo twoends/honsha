@@ -16,7 +16,12 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
 - **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own.
   The files are the source of truth, not the query engine: questions go through a derived index (section 3.4).
-- **Outputs:** branches and pull requests. The hub's GitHub identity cannot merge.
+- **Outputs:** branches and pull requests, on the service that hosts the repositories. The identity the hub uses
+  there cannot merge.
+- **Hosting service:** each installation chooses the service that hosts its repositories and their pull requests.
+  The kit does not depend on which one it is: its rules name no service, and anything specific to one service is a
+  separate piece that another installation can replace with its own. So far the kit has been tried with GitHub
+  only.
 - **Built from:** native Claude Code features first. Custom code is limited to a scheduler, an index and a board, and to
   replacing a native piece only where it proves inadequate.
 
@@ -36,7 +41,7 @@ They are listed as assumptions in section 8, and the plan starts by testing them
 | Scheduler       | Starts timed runs: checks that are due, radar reviews, proactive research                                             | Timers on the host (custom, small)                      |
 | Board           | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation             | Page generated from the index and session state (custom, small) |
 | Index           | Answers "which records" questions for the hub and the board: metadata of every record and full-text search            | A SQLite file built from the records by a script (custom, small) |
-| GitHub identity | Pushes branches and opens pull requests in the registered repositories; cannot merge                                  | Dedicated account or token, plus branch protection      |
+| Hosting identity | Pushes branches and opens pull requests in the registered repositories; cannot merge                                 | Dedicated account or token, plus protected branches     |
 
 ```mermaid
 flowchart LR
@@ -51,7 +56,7 @@ flowchart LR
   H -- dispatch --> W[Worker per work item]
   W -- record, branch --> PRJ[(Project repo)]
   W --> C[Checker]
-  W -- pull request --> GH[GitHub]
+  W -- pull request --> GH[Hosting service]
   P -- merge --> GH
   S[Scheduler] --> H
   HOME -. indexed .-> X[(Index)]
@@ -153,8 +158,8 @@ tenths of a second. It is built with the board.
 
 **Two rules that keep the files manageable.**
 
-- Records sit in folders by year and month (`inbox/2026/11/`, `work/2026/11/`). GitHub lists at most 1,000 entries per
-  folder.
+- Records sit in folders by year and month (`inbox/2026/11/`, `work/2026/11/`). A hosting service's pages can stop
+  listing a large folder: GitHub, for one, lists at most 1,000 entries per folder.
 - No binary files in git. A voice note or a screenshot is stored as its transcript or description in the record. The
   original stays outside the repository, with a retention period.
 
@@ -246,7 +251,8 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 1. **Untrusted content goes through the reader.** Pages, transcripts and third-party repositories are read by an agent
    with read-only tools and no secrets. What it returns is data, never instructions.
 2. **Only allowlisted senders** can talk to the hub.
-3. **The GitHub identity cannot merge.** Default branches are protected. Deploy credentials are not on the host.
+3. **The hosting identity cannot merge.** Default branches are protected on the hosting service. Deploy credentials
+   are not on the host.
 4. **Project data is read-only.** Credentials for a project's data live on the host outside any repository and are
    given only to sessions of that project.
 5. **Nothing is installed by the hub.** Third-party skills, plugins and tools enter through a reviewed work item, with
@@ -281,7 +287,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 | A2  | Channels delivers text, links, voice notes and images to the hub session and lets it reply                     | A small custom bot replaces it                          |
 | A3  | The hub session can start a background session in another repository and read its state as JSON                | A small launcher script on the host                     |
 | A4  | The always-on core can be delivered by the plugin (a session-start hook) rather than copied into each project  | A short synced block in each project's `CLAUDE.md`      |
-| A5  | A GitHub identity can push and open pull requests without merge rights, in a personal account and in an organisation | A different identity per organisation                   |
+| A5  | An identity on the hosting service can push and open pull requests without merge rights. On GitHub: in a personal account and in an organisation | A different identity per organisation                   |
 | A6  | An area pack named in a record is loaded by the worker                                                         | The dispatch prompt names the packs explicitly          |
 | A7  | A hook can write model and effort into the record                                                              | The worker writes them as its last step                 |
 | A8  | A long-lived hub session stays usable over weeks                                                               | A daily restart, with all state in files                |
