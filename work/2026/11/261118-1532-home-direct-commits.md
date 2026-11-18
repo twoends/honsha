@@ -95,6 +95,12 @@ started this item.
 4. The home's profile, committed and pushed; a forced push tried in a throwaway form (`git push --force-with-lease
    --dry-run`) to show it is still refused by the guard before git runs.
 
+### Assumptions to confirm while building
+
+- `scalar` already strips quotes and trailing comments, so the new key needs no parsing of its own.
+- No existing guard test relies on a profile with the new key, so every current refusal keeps its reason.
+- The home's Prettier check accepts the new YAML file as written.
+
 ### Risks
 
 - A marketplace added from a clone of the kit runs the guard checked out there, this branch's while the item is open.
@@ -127,6 +133,10 @@ Approved by the person on 2026-11-18, in the session's chat.
   the shell's `/c/…` form, which Node.js on Windows does not resolve, so the guard found no repository and fell back
   to `main`; the same push with the path in Windows form went through, `71a8526..1fb5de2`. The guard failing toward a
   refusal on such a path is outside this item.
+- The checker's first run failed on three findings: the Verification section empty, the Strategy without
+  assumptions, the lesson restating the workflow's 13.2. The lesson is dropped, since 13.2 already states the rule
+  for every project; the assumptions the design rested on are written under the Strategy, each confirmed while
+  building; the verification is rerun and written. A line of 14.3 is wrapped to the document's width.
 
 ## Verification
 
