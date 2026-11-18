@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 13
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -132,9 +132,55 @@ decisions as recommended.
 
 ## Verification
 
+On `c929564` and `8c5a9f3`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all six
+each time — Prettier, oxlint, TypeScript, 66 tests, the plugin validator with its known warning, and the commit check,
+last "The 4 commits of the branch follow the rules."
+
+### First checker report: fail, read `c929564`
+
+Findings: (1) the `.gitignore` entry was outside the scope and not declared; (2) the strategy named two ways to
+recover a broken session as being in the README, which gave one.
+
+### Checker report
+
+**Verdict:** pass
+
+Repeated check, reading the diff `c929564...HEAD` (commit `8c5a9f3`). Both findings from the first check are fixed:
+- (1) `.gitignore` entry outside scope and undeclared: fixed. The record's "Deviations" section now declares `.gitignore` gaining `.claude/settings.local.json`, with the reason (record lines 145-148). The entry is in `.gitignore` line 3.
+- (2) The README gave only one of the two recovery ways the strategy names: fixed. `README.md` lines 68-70 now give both: the local switch `"honsha@honsha": false` in `.claude/settings.local.json`, and `claude --plugin-dir <a clone of a working commit>`. This matches strategy Risks, record lines 98-99.
+
+**Acceptance criteria**
+
+1. A new session in the kit gets the rules, template, guard and effort hook from the branch's files: met in the first check. The diff does not touch it.
+2. Committed in the kit, or described in the README: met in the first check. The README addition at `README.md` lines 69-70 is consistent with it.
+3. `worktree.baseRef` is `"head"`: met in the first check. The diff does not touch it.
+4. Trial recorded: met in the first check, record Log lines 119-126. The diff does not touch it.
+5. The kit's `verify` list passes: met. Record Verification line 136 shows all six passed on `c929564` and on `8c5a9f3`.
+
+- **Intent:** in order
+- **Scope:** in order. The README change is in scope ("The README: how a session on the kit gets the kit"), and the record changes are the record's own.
+- **Comments and documents:** in order
+- **Gates:** in order. The README names no hosting service, the diff has nothing about a user or installation, and it adds no script.
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Deviations
 
 - `.gitignore` gains `.claude/settings.local.json`, outside the scope listed: the README names that file as the
   place to switch the plugin off, and it was ignored on this PC only by a global setting.
 
 ## Outcome
+
+A session opened in a trusted clone of the kit runs under the kit as the clone holds it: the core rules at start, the
+guard and the effort hook, declared in the committed `.claude/settings.json` with no path specific to a machine. On a
+new clone the plugin is active from the second session. The kit's next records will have their effort written. No
+deferred check.
