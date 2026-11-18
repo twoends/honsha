@@ -34,11 +34,21 @@ test("reads the three keys in their plain forms", () => {
 test("a profile without the keys gives nothing to run and nothing to match", () => {
   assert.deepEqual(parseProfile("name: example-project\n"), {
     defaultBranch: null,
+    directCommits: false,
     verify: [],
     commitsAddress: null,
     kinds: null,
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
+});
+
+test("reads whether the default branch takes direct commits, and refuses any other value", () => {
+  assert.equal(parseProfile("direct-commits: true\n").directCommits, true);
+  assert.equal(parseProfile("direct-commits: false # a project\n").directCommits, false);
+  assert.equal(parseProfile("direct-commits: 'true'\n").directCommits, true);
+  for (const value of ["yes", "True", "1", ""]) {
+    assert.throws(() => parseProfile(`direct-commits: ${value}\n`), /direct-commits/);
+  }
 });
 
 test("reads a list that is not indented, and Windows line endings", () => {

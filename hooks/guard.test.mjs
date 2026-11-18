@@ -209,6 +209,37 @@ test("takes the default branch from the profile when it names one", () => {
   allowed("git push origin trunk", repository(WORK, "verify: [unreadable]\n"));
 });
 
+test("lets a plain push to the default branch through where the profile declares direct commits", () => {
+  const profile = "default-branch: main\ndirect-commits: true\n";
+  const direct = repository("main", profile);
+  for (const line of [
+    "git push",
+    "git push origin",
+    "git push origin main",
+    "git push -u origin main",
+    "git push origin HEAD:main",
+    "git push origin refs/heads/main",
+    'git add decisions.md && git commit -m "Record a decision" && git push',
+  ]) {
+    allowed(line, direct);
+  }
+  allowed(`git -C "${direct}" push origin main`, onWork);
+  assert.match(refused("git push origin main", repository("main", "direct-commits: false\n")), /default branch/);
+  assert.match(refused("git push origin main", repository("main", "direct-commits: yes\n")), /default branch/);
+});
+
+test("refuses the rest where the profile declares direct commits", () => {
+  const direct = repository("main", "default-branch: main\ndirect-commits: true\n");
+  for (const line of ["git push --force origin main", "git push -f", "git push origin +main"]) {
+    assert.match(refused(line, direct), /is forced/);
+  }
+  assert.match(refused("git push --all origin", direct), /every branch/);
+  for (const line of ["git push origin :main", "git push origin --delete main", "git push -d origin main"]) {
+    assert.match(refused(line, direct), /delete the default branch `main`/);
+  }
+  assert.match(refused("forge merge 12", direct), /merges a pull request/);
+});
+
 test("reads the merge commands of every piece, and none when there is no piece", () => {
   const services = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-services-"));
   made.push(services);
