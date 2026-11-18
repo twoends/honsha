@@ -66,10 +66,14 @@ folder's name can differ between the form the system gives and the one git print
   `node checks/commits.mjs` found no `Work-Item` trailer. It had reached no remote; with the approval of the session
   that started this one, it was undone with `git reset --soft main` and made again with the trailers in one block.
   The lesson on trailers in `LESSONS.md` now also says to run `node checks/commits.mjs` before a branch's first push.
+- The checker failed the item on `fe78bf3`: the record had no Verification yet, and the lesson repeated what workflow
+  section 13.2 says about the trailer. The lesson keeps only the blank line and the run of the commit check, and
+  points to 13.2.
 
 ## Deviations
 
 - The branch did not only grow: its one unpushed commit was replaced, against "a work branch only grows". Git reads a
   trailer only in a message's last block, and no later commit can supply one for an earlier commit, so the commit
-  check would have failed on the branch for good. Approved by the session that started this one.
+  check would have failed on the branch for good. Approved by the session that started this one, then
+  by the person in this session.
 - `LESSONS.md` was not in the plan: the lesson on trailers is extended with the check before the first push.
