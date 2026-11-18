@@ -245,6 +245,10 @@ legacy:
   (`agents/checker.md`).
 - `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
   must match. A profile without it sets no rule on addresses.
+- `direct-commits: true` declares that the default branch takes direct commits: the guard (section 14.3) lets a plain
+  push to it through, and still refuses a forced push, a push of every branch, a deletion of the default branch and a
+  merge of a pull request. Only the home sets it (architecture, 3.2); a project never does, so the example leaves it
+  out. Any value but `true` or `false` is an error, and grants nothing.
 
 Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
 record format are not customised.
@@ -439,8 +443,8 @@ that reads the three variables.
 
 ### 14.3 The guard
 
-- A hook of the kit refuses three kinds of shell command in a session: a push to the default branch, a forced push, and
-  a command that merges a pull request. The first two are plain git and hold on any service. The third comes from the
+- A hook of the kit refuses three kinds of shell command in a session: a push to the default branch, unless the
+  profile declares direct commits (section 9), a forced push, and a command that merges a pull request. The first two are plain git and hold on any service. The third comes from the
   `merge-commands.json` of each service's piece.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the

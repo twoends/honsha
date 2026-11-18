@@ -113,6 +113,13 @@ Approved by the person on 2026-11-18, in the session's chat.
 - The first commit of the record had a blank line between `Work-Item` and the next trailer, so the commit
   check found no trailer. The branch, one commit old and without a pull request, was deleted and created again with
   the commit corrected; see Deviations.
+- Approved; work started. The reader gives `directCommits` and throws on any value but `true` or `false`, quoted or
+  bare. The guard takes the default branch and `directCommits` from one read of the profile; with the key, a push
+  to the default branch passes unless it deletes it, by `:main`, `--delete` or `-d`. The forced and every-branch
+  checks come first and are unchanged. Without the key, a deletion keeps the reason about the default branch, so the
+  existing tests hold as they are.
+- Section 9 states the key; 14.3 points to it; architecture 3.2 lists the home's profile.
+- A lesson in `LESSONS.md` about the trailer paragraph, from the mistake in the record's first commit.
 
 ## Verification
 
