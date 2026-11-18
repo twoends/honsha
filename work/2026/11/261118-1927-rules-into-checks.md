@@ -149,8 +149,14 @@ it once merged.
 
 Two to four times a full item at the kit's medians: 20 to 60 minutes of agent time, 150,000 to 300,000 output tokens.
 
+## Approval
+
+Approved by the person on 2026-11-18, in the chat of the session that wrote the strategy.
+
 ## Log
 
 - 2026-11-18: branch cut from `main` at `c23bb4b`, before pull request 20 is merged. Facts on the platform read in
   Claude Code's documentation by a subagent on Sonnet. The work runs in a new session, where the kit's plugin is
   active, so that its agents and hooks are those of the clone.
+- Pull request 20 had been merged at 19:25 UTC, before the branch was cut; the local `main` had not fetched it.
+  Step 1 of the plan merges it.
