@@ -165,6 +165,23 @@ function defaultBranches(cwd) {
 }
 
 /**
+ * The directory that `git -C dir` works in, from `base`. Git Bash rewrites `/c/rest` to `C:/rest` before `git` runs,
+ * but the guard sees the command as written; PowerShell rewrites nothing, and there `/c/rest` is a folder `c` at the
+ * root of the current drive. So the Git Bash reading is taken only when the plain one does not exist.
+ * @param {string} base
+ * @param {string} dir
+ * @param {string} [platform]
+ * @param {(file: string) => boolean} [exists]
+ */
+export function gitDirectory(base, dir, platform = process.platform, exists = fs.existsSync) {
+  const paths = platform === "win32" ? path.win32 : path.posix;
+  const plain = paths.resolve(base, dir);
+  const drive = /^\/([A-Za-z])(?:\/(.*))?$/.exec(dir);
+  if (platform !== "win32" || !drive || exists(plain)) return plain;
+  return paths.resolve(`${drive[1].toUpperCase()}:/`, drive[2] ?? "");
+}
+
+/**
  * The reason to refuse a `git` command, or null. `args` are the words after `git`.
  * @param {string[]} args
  * @param {string} cwd
@@ -174,7 +191,7 @@ function judgeGit(args, cwd) {
   let dir = cwd;
   let index = 0;
   while (index < args.length && args[index].startsWith("-")) {
-    if (args[index] === "-C" && index + 1 < args.length) dir = path.resolve(dir, args[index + 1]);
+    if (args[index] === "-C" && index + 1 < args.length) dir = gitDirectory(dir, args[index + 1]);
     index += GIT_OPTIONS_WITH_VALUE.has(args[index]) ? 2 : 1;
   }
   if (args[index] !== "push") return null;
