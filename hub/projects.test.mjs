@@ -96,6 +96,7 @@ test("add writes the entry as assessing and an assessment's record in the shape 
   const folder = project();
   const added = run(["add", "example-shop", "example-owner/example-shop", folder], { home, host, now });
   assert.equal(added.code, 0, added.out.join("\n"));
+  assert.match(added.out[0], /the next step is to run it/);
   const [entry] = parseRegistry(fs.readFileSync(path.join(home, REGISTRY), "utf8"));
   assert.deepEqual(entry, {
     name: "example-shop",
@@ -119,12 +120,18 @@ test("add writes the entry as assessing and an assessment's record in the shape 
 
 test("add with an existing report takes it as the assessment and writes no new record", () => {
   const home = temporary("honsha-home-");
-  record(path.join(home, "reports", "2026", "11", "261130-1200-example-assessment.md"), { id: "261130-1200" });
+  record(path.join(home, "reports", "2026", "11", "261130-1200-example-assessment.md"), {
+    id: "261130-1200",
+    state: "done",
+  });
   const folder = project();
-  assert.equal(
-    run(["add", "example", "example-owner/example", folder, "--assessment", "261130-1200"], { home, host, now }).code,
-    0,
-  );
+  const added = run(["add", "example", "example-owner/example", folder, "--assessment", "261130-1200"], {
+    home,
+    host,
+    now,
+  });
+  assert.equal(added.code, 0);
+  assert.match(added.out[0], /it is done, so the next step is `choose`/);
   assert.equal(parseRegistry(fs.readFileSync(path.join(home, REGISTRY), "utf8"))[0].assessment, "261130-1200");
   assert.equal(findReport(home, "261201-0930"), null);
   assert.equal(
