@@ -24,6 +24,19 @@ project receives when it starts, together with the record template. This documen
 them, and keeps what they do not say: the reasons, the profile, the derived views, the contract of a hosting service,
 decisions, dependencies and the upkeep review.
 
+A new rule goes where it costs least to hold:
+
+- **a script,** when a script can check it: `checks/` in the kit, run by the worker in every project, or a command of
+  the project's `verify` list. A script checks every time and costs no context;
+- **a skill** of the kit, `skills/<name>/SKILL.md`, when only some situations need it: the worker's file names the
+  skill and when to invoke it, and the skill's text enters the context only then;
+- **the core rules,** when every session needs it while it works. The checker receives them too, when it starts;
+- **an agent's file,** for that agent's own procedure.
+
+A document that reaches its budget (`checks/budgets.test.mjs`; the core rules' limit in `hooks/hooks.test.mjs`)
+is answered by such a move, not by shortening its sentences: a shortened rule can lose a condition, and nothing shows
+it.
+
 ---
 
 ## 3. Work items
@@ -112,8 +125,9 @@ extended instead.
 4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written and the item stops for the
    approval, as the core rules say (Sizes; Commits and branches).
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas.
-6. **Verify.** The profile's verification commands run. For small and full items the checker then compares the result
-   with the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
+6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
+   verification commands. For small and full items the checker then compares the result with the record and the
+   profile's gates, from a fresh context and without write access (`agents/checker.md`).
    A repeated check reads only what changed (`agents/worker.md`, Verification): a full read of a large branch finds
    something new each time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
@@ -317,6 +331,8 @@ empty result.
 
 ## Verification
 
+- `node <kit directory>/checks/record.mjs`: passed.
+- `node <kit directory>/checks/commits.mjs`: passed.
 - `npm run check`: passed.
 
 ### Checker report
@@ -393,7 +409,8 @@ conflict that cannot be resolved inside the scope stops the work, as any work be
 ### 13.6 Branches of parallel parts
 
 How the parts of an item (section 5.1) get their worktrees and branches, and how they are merged back, is in the
-worker (`agents/worker.md`, "While working" and "When the default branch moves").
+kit's skills `honsha:parallel-parts` and `honsha:branch-update`, which the worker invokes when it splits the work and
+when it merges the default branch.
 
 ---
 
@@ -438,8 +455,8 @@ included. The wiring of a service makes them run on a pull request. It meets thi
    seeing the result.
 6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
 
-In the kit, `node checks/verify.mjs` runs the `verify` list of a profile, and `node checks/commits.mjs` is the check
-that reads the three variables.
+In the kit, `node checks/verify.mjs` runs the `verify` list of a profile; `node checks/commits.mjs` reads the three
+variables, and `node checks/record.mjs` reads `HONSHA_BRANCH`.
 
 ### 14.3 The guard
 
@@ -526,8 +543,8 @@ working, so a review on a date looks for it.
 
 - **When.** On the same date as the radar review of section 17.
 - **What.** The documents and logs of the kit, of the home and of each project are read for duplication, stale text
-  and size; and the measures of section 19 are read for items that touched more existing files than their kind
-  expects.
+  and size; the core rules and the agents' files for rules that could move to a script or a skill (section 2); and the
+  measures of section 19 for items that touched more existing files than their kind expects.
 - **Result.** The findings become one work item.
 - **Who.** The review is started by the scheduler where an installation has one; until then, by a scheduled task of
   the installation, which reports its findings and changes nothing.

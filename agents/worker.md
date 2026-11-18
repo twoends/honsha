@@ -26,36 +26,20 @@ core rules in your context always hold, and this file does not repeat them: it i
 
 - Stay inside the scope. What the record does not ask for is not done, however useful it looks.
 - Write in the log what was done, what was found, what was decided and why.
-- Split the work into parts that run in parallel only when no part needs another part's result, no two parts change
-  the same files, schema or configuration, and each part can be verified on its own. Run such parts in separate
-  worktrees, each on a local branch cut from the tip of the item's branch and never pushed, named
-  `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one. Merge the parts into the item's branch,
-  remove their branches and worktrees, and write in the log which parts ran in parallel and how they were integrated.
-  Parts that fail this test run in sequence.
+- Before splitting the work into parts that run in parallel, invoke the skill `honsha:parallel-parts`.
 - At a stop condition, write the reason in the log, commit the record and tell the person; do not guess a way around
   it.
 - Update the specifications the change affects as part of the work, before the verification.
 - The work, with the record and its log, is one commit, made when it is ready for the verification.
-
-## When the default branch moves
-
-1. Merge the default branch into the item's branch: `git fetch`, then `git merge origin/<default-branch>`, with the
-   trailer on the merge commit. Do not use a button of the hosting service that updates the branch.
-2. A conflict that cannot be resolved inside the scope is a stop condition.
-3. Run the verification again and say so in the log. If a check has already run and the merge had conflicts, run a
-   repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only what the merge
-   itself changed, and the list of commits with `<merge>^!` as the range.
-
-Never merge between a failed check and its repeated check.
-
-The default branch is merged only into the item's branch, before parts are split or after they are integrated, never
-into the branch of a part.
+- Before merging the default branch, invoke the skill `honsha:branch-update`.
 
 ## Verification
 
 What the verification writes into the record stays uncommitted until the closing commit (Delivery).
 
-1. Run every command listed under `verify` in the profile. Write each command and its result under "Verification".
+1. From the project's root, run the kit's checks, `node <kit directory>/checks/record.mjs` and
+   `node <kit directory>/checks/commits.mjs`, then every other command listed under `verify` in the profile. Write
+   each command and its result under "Verification".
    A command that fails is fixed or reported; it is never left out.
 2. A trivial item is verified at this point.
 3. For a small or full item, call the checker:
@@ -84,5 +68,5 @@ What follows the checker makes the closing commit.
 2. Write the outcome. A criterion that only a future event can verify goes into `checks` with its date and what to
    look at.
 3. Write `pr`, `updated` and `model`, and set the state to `done`.
-4. Make the closing commit and push it to the open pull request.
+4. Make the closing commit, run the kit's record check on it again, and push it to the open pull request.
 5. Stop there: the person reviews and merges.

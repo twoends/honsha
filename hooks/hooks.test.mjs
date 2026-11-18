@@ -1,5 +1,6 @@
 // Run with: node --test hooks/
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -59,4 +60,20 @@ test("the template has the front matter keys of the workflow, in order", () => {
     .filter((line) => /^[a-z-]+:/.test(line))
     .map((line) => line.split(":")[0]);
   assert.deepEqual(keys, specKeys);
+});
+
+// A SubagentStart hook adds context only from JSON, and the platform cuts what is over 10,000 characters to a file
+// path and a preview, which would leave the checker without the rules it checks against.
+test("the checker alone receives the core rules and the template when it starts, under the limit", () => {
+  const groups = hooks.SubagentStart;
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].matcher, "^honsha:checker$");
+  const [handler] = groups[0].hooks;
+  assert.deepEqual(handler.args, ["${CLAUDE_PLUGIN_ROOT}/hooks/checker-rules.mjs"]);
+  const output = execFileSync(process.execPath, [`${root}/hooks/checker-rules.mjs`], { encoding: "utf8" });
+  const { hookEventName, additionalContext } = JSON.parse(output).hookSpecificOutput;
+  assert.equal(hookEventName, "SubagentStart");
+  assert.ok(additionalContext.includes(read("rules/core.md")));
+  assert.ok(additionalContext.includes(read("templates/record.md")));
+  assert.ok(additionalContext.length < 10000, `${additionalContext.length} characters`);
 });

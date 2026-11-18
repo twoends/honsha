@@ -8,22 +8,23 @@ specific to a user, a project or an installation lives in that user's separate h
 
 ## What is in the kit
 
-| Path                  | What it is                                                                                                                                                               |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `rules/core.md`       | The rules every session of a project receives when it starts                                                                                                             |
-| `templates/record.md` | The work-item record. Sessions receive it together with the rules                                                                                                        |
-| `agents/worker.md`    | `honsha:worker`: executes one work item, from its record to an open pull request                                                                                         |
-| `agents/checker.md`   | `honsha:checker`: verifies a finished item against its record, with read-only tools                                                                                      |
-| `hooks/`              | The hook definitions; the script that writes the effort level into a record; the guard that refuses merging, a push to the default branch and a forced push; their tests |
-| `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, the measures of merged items with their sessions, and their tests                 |
-| `services/github/`    | What is specific to GitHub, apart from the rules: commands, settings, what it can enforce, the wiring of the checks                                                      |
-| `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                           |
-| `LESSONS.md`          | The lessons about this repository, named by the profile                                                                                                                  |
-| `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                   |
-| `.claude-plugin/`     | The plugin manifest and the marketplace manifest                                                                                                                         |
-| `package.json`        | The development tools of the kit's own checks, with their configuration files beside it. The plugin needs none of them to run                                            |
-| `docs/`               | Vision and specifications                                                                                                                                                |
-| `work/`               | The kit's own work records                                                                                                                                               |
+| Path                  | What it is                                                                                                                                                                                                                 |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rules/core.md`       | The rules every session of a project, and the checker, receives when it starts                                                                                                                                             |
+| `templates/record.md` | The work-item record. Sessions receive it together with the rules                                                                                                                                                          |
+| `agents/worker.md`    | `honsha:worker`: executes one work item, from its record to an open pull request                                                                                                                                           |
+| `agents/checker.md`   | `honsha:checker`: verifies a finished item against its record, with read-only tools                                                                                                                                        |
+| `skills/`             | The procedures the worker needs only in some situations: parallel parts, a merge of the default branch                                                                                                                     |
+| `hooks/`              | The hook definitions; the script that gives the checker the core rules; the script that writes the effort level into a record; the guard that refuses merging, a push to the default branch and a forced push; their tests |
+| `checks/`             | The runner of a profile's verification commands, the checks of a work branch's record and commits, the measures of merged items with their sessions, and their tests                                                       |
+| `services/github/`    | What is specific to GitHub, apart from the rules: commands, settings, what it can enforce, the wiring of the checks                                                                                                        |
+| `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                                                                             |
+| `LESSONS.md`          | The lessons about this repository, named by the profile                                                                                                                                                                    |
+| `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                                                                     |
+| `.claude-plugin/`     | The plugin manifest and the marketplace manifest                                                                                                                                                                           |
+| `package.json`        | The development tools of the kit's own checks, with their configuration files beside it. The plugin needs none of them to run                                                                                              |
+| `docs/`               | Vision and specifications                                                                                                                                                                                                  |
+| `work/`               | The kit's own work records                                                                                                                                                                                                 |
 
 ## Hosting service
 
@@ -64,8 +65,8 @@ The worker runs on Opus unless the session is started with another model (`--mod
 
 The repository declares itself as a marketplace and enables its own plugin, in `.claude/settings.json`, so that a
 session opened in a clone runs under the kit as the clone holds it: the core rules at start, the guard, the effort
-hook. The platform reads that file only in a folder you trust. The first session in a new clone adds the
-marketplace; the plugin is active from the next one. An edit to a hook or the rules takes effect in the next session.
+hook, the core rules given to the checker when it starts, and the skills. The platform reads that file only in a
+folder you trust. The first session in a new clone adds the marketplace; the plugin is active from the next one. An edit to a hook or the rules takes effect in the next session.
 If an edit breaks a session, set `"honsha@honsha": false` under `enabledPlugins` in `.claude/settings.local.json`,
 which git does not track, until it is fixed; or start the session with `claude --plugin-dir <a clone of a working
 commit>`, which takes the place of the declared plugin.
@@ -85,9 +86,9 @@ node checks/verify.mjs
 ```
 
 It runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types
-with TypeScript checking the JavaScript files, the tests, `claude plugin validate .` and the check of the branch's
-commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and again when
-`package-lock.json` changes.
+with TypeScript checking the JavaScript files, the tests, `claude plugin validate .`, and the checks of the branch's
+record and commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and
+again when `package-lock.json` changes.
 
 The validator warns that the plugin has no version, which is deliberate (architecture, O10). It also remarks that
 there is no licence and no icon, which matters only for a submission to the public plugin directory.

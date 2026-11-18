@@ -10,6 +10,7 @@ verify:
   - npx --no-install tsc -p .
   - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"
   - claude plugin validate .
+  - node checks/record.mjs
   - node checks/commits.mjs
 gates:
   - the rules name no hosting service
