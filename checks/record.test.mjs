@@ -116,8 +116,8 @@ test("the template's comments say which sizes keep each section", () => {
   assert.deepEqual(template.keys.get("size"), ["trivial", "small", "full"]);
 });
 
-// The records written since the template took its present keys are the cases that must pass. Older ones follow the
-// template of their time, which had no `kind`.
+// A script that fails a correct record blocks every item, so the kit's own done records are its cases. A record that
+// lacks a key the template has is not one: it would fail for that key alone.
 test("the records of the kit's merged items pass", () => {
   const profile = readProfile(path.join(root, ".hub", "profile.yml"));
   const kinds = profile?.kinds ?? DEFAULT_KINDS;

@@ -331,6 +331,8 @@ empty result.
 
 ## Verification
 
+- `node <kit directory>/checks/record.mjs`: passed.
+- `node <kit directory>/checks/commits.mjs`: passed.
 - `npm run check`: passed.
 
 ### Checker report

@@ -194,3 +194,15 @@ Approved by the person on 2026-11-18, in the chat of the session that wrote the 
   record check again on the closing commit, where it checks the `done` state. The kit's profile lists
   `node checks/record.mjs`. Specifications: workflow sections 2, 5, 13.6, 14.2 and 18, architecture 3.1, README.
 - Sizes: `agents/checker.md` 4,993 characters, `agents/worker.md` 4,376. The budgets' values are unchanged.
+- The second assumption, tried on `1eee829` in a temporary clone, on a throwaway checkout of the branch, with the
+  clone's plugin (`--plugin-dir`): asked as `honsha:worker` on Opus to bring the branch up to date, the worker
+  invoked `honsha:branch-update` as its first action, then fetched and found nothing to merge. The clone was deleted.
+
+- The check on `1eee829` ran as `honsha:checker`, invoked by a new headless session on Opus started in this folder,
+  where the kit's plugin is declared and read from the folder itself. In the checker's own transcript, before its
+  first prompt, the platform recorded a `hook_success` for `SubagentStart:honsha:checker` and a
+  `hook_additional_context` of 8,815 characters, from "# Honsha core rules" to the template's last comment: the
+  whole output of `hooks/checker-rules.mjs`. Its report also names the rules' sections (Comments, Documents) in its
+  findings. Verdict `fail`, two findings, both inside the scope.
+- Fixes: the comment above the test of the kit's records in `checks/record.test.mjs` gives the reason without
+  history; the example of section 12 of the workflow lists the kit's two checks in its Verification.
