@@ -552,3 +552,48 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
   nothing is stored. An installation that wants a documented source can use the platform's OpenTelemetry metrics.
 - **Use.** For estimates, and for finding coupling. They are not a judgement of a session or a person.
 - **Limit.** An item is found from its merge commit; a project that merges in another way gets no measures.
+
+---
+
+## 20. Assessing a project
+
+Before a project adopts the kit, or when the person asks for one, an assessment reads the project against the kit's
+rules and proposes the work that would close each gap. It changes nothing: it is a small report item in the home
+(section 3.1), and the person chooses which of its proposed items start.
+
+### 20.1 What is read
+
+In this order. A step that finds the project in order says so in a line; a gap is a finding. The commands that are
+specific to the hosting service are in its piece (section 14).
+
+1. **Profile:** present, or what it would hold; `verify` covering formatting, lint, types and tests (section 9);
+   gates, kinds, the lessons file.
+2. **Checks on pull requests:** a pipeline that runs the `verify` commands on every pull request (section 14.2).
+3. **The settings of the hosting service** that the rules rely on: the merge method, merged branches deleted, alerts
+   on vulnerable dependencies (section 14.1).
+4. **Dependencies** (section 17): pinned with a lockfile and installed without install scripts; the package manager's
+   vulnerability report and its list of outdated dependencies.
+5. **The kit declared in the repository** (architecture, section 3.3), so that sessions get the core rules, the guard
+   and the effort hook.
+6. **The project's own rules,** such as `CLAUDE.md`, for anything that conflicts with the core rules; earlier
+   documents to list under `legacy` (section 11); an existing lessons file, for entries that belong at another level
+   (section 8).
+7. **Records,** where there are any: complete front matter, sizes and kinds.
+8. **Measures** (section 19), where items have been merged: items over their kind's expectation; size budgets the
+   project sets on its documents, close to their limit.
+9. **Documents:** their size. Duplication and text that no longer holds are the upkeep review's (section 18).
+10. **Open points:** the project's open questions, and the assumptions the adoption rests on that nobody has tried.
+
+### 20.2 The report
+
+- **Log:** the commit read in each repository, and the date the settings were read.
+- **Strategy:** the costs the estimates use, the median agent time and output tokens of a small and of a full item,
+  and the items they come from.
+- **Findings,** one table: number, finding, proposed item, size and kind, estimated cost. A finding with no item says
+  why: a decision only the person can take, or nothing to do now and the review that watches it.
+- **Size and kind** of a proposed item follow the core rules (Sizes) and the project's `kinds`, or the default ones
+  (section 19). **The cost** is a multiple of a typical item of that size, from `node checks/measures.mjs` run on the
+  project; while the project has no merged items, on another project of the installation, the kit included. An item
+  that rests on something untried is estimated higher, and says why.
+- After the table, one paragraph lists what was read and found in order.
+- **Outcome:** the state in a few lines, the proposed order of the items, and the decisions waiting for the person.
