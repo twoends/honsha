@@ -269,6 +269,7 @@ test(
     assert.match(refused(`git -C ${bash(onMain)} push`), /default branch `main`/);
     const dir = repository(WORK, "default-branch: trunk\n");
     assert.match(refused(`git -C ${bash(dir)} push origin trunk`), /default branch `trunk`/);
+    allowed(`git -C ${bash(repository("main", "direct-commits: true\n"))} push origin main`);
   },
 );
 

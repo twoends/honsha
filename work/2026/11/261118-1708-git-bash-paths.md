@@ -65,6 +65,12 @@ same only when the plain path is missing.
   a folder of this installation and its home's configuration. Those parts of the quote are elided with "[…]".
 - The checker's reports below are copied unchanged except where they quote the folder names the first report found:
   those words are replaced by a description, so the record does not bring them back.
+- The closing commit also set `requested-by` to `person`: the request came through the session that ran 261118-1532,
+  on the person's behalf, not from a hub.
+- PR 16 merged into `main` left PR 17 in conflict in `hooks/guard.test.mjs`, where both added tests after the same
+  one. `main` merged into the branch, keeping both sets of tests; `hooks/guard.mjs` merged without conflict.
+- With `direct-commits` now on `main`, the end-to-end test on Windows also checks the case the intent starts from: a
+  plain push to `main` of a repository whose profile declares direct commits, named in the Git Bash form, passes.
 
 ## Verification
 
