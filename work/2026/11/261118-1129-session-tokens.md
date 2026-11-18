@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 12
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -149,4 +149,54 @@ recommended.
 
 ## Verification
 
+On `8cd326e` and `0cbc3bd`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all
+six each time — Prettier, oxlint, TypeScript, 66 tests with the sessions test, the plugin validator with its known
+warning, and the commit check, last "The 4 commits of the branch follow the rules."
+
+### First checker report: fail, read `8cd326e`
+
+Findings: (1) tokens by model held only output tokens; (2) `usage: null` stopped the report, a line that did not
+parse was counted only if it held "assistant", and `--json` did not report unreadable lines; (3) the module's comment
+said only sums leave it; (4) an observation sat under Verification.
+
+### Checker report
+
+**Verdict:** pass
+
+Repeated check on the diff `8cd326e...HEAD` (commit `0cbc3bd`). The four earlier findings are fixed:
+1. Tokens by model held only output tokens: fixed. Each model now carries every class (`checks/sessions.mjs:21-22`, `:136-137`), the report prints them per model (`:146-160`), and the test asserts it (`checks/sessions.test.mjs:91-94`, `:100-104`).
+2. `usage: null` stopped the report, and a line that did not parse was counted only if it held "assistant": fixed. A null `usage` is now skipped and counted (`checks/sessions.mjs:74-78`). Any non-empty line that does not parse is counted (`:62-70`). `--json` reports `unreadableSessionLines` (`checks/measures.mjs:171`). The test adds both cases and expects 4 skipped lines (`checks/sessions.test.mjs:49-50`, `:78`).
+3. The module's comment overstated what leaves the module: fixed. It now says the report prints only sums and model names (`checks/sessions.mjs:8-10`). That matches what `describeUsage` and the `--json` output contain.
+4. An observation sat under Verification: fixed. It is now in the Log (record lines 143-144). Verification holds only the commands and the earlier report's verdict and findings.
+
+**Acceptance criteria**
+
+1. Tokens by class and by model, active minutes, or "no session data": met, `checks/sessions.mjs:146-160`, `checks/measures.mjs:175-179`.
+2. Attribution by branch, then by the one window: met, unchanged by this diff (`checks/sessions.mjs:118-144`).
+3. Workflow section 19 covers the source, the attribution and the format caveat: met, unchanged by this diff. `docs/01-specs/WORKFLOW.md:547-552` is now accurate on "tokens by class and by model".
+4. The test covers attribution, classes, models, subagents, repeated lines and an unknown format: met, `checks/sessions.test.mjs:36-57`, `:74-115`. The classes per model are now asserted.
+5. The `verify` list passes and budgets hold: met as recorded. Verification reports all six passing on `8cd326e` and on `0cbc3bd`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting (Prettier), lint (oxlint), types (tsc) and tests (`node --test`), plus the plugin validator and the commit check, all through `node checks/verify.mjs`.
+- **Record:** in order
+- **Commits:** in order. `0cbc3bd` "Count tokens by class for each model, and never stop on an unreadable line" carries `Work-Item: 261118-1129`. Its author and committer addresses match `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The top level of `node checks/measures.mjs --json` changed from an array to an object `{ items, unreadableSessionLines }` (`checks/measures.mjs:171`). Nothing in this repository reads it. Whether a consumer outside the repository reads it, such as the home's monthly task, cannot be seen from here.
+
 ## Outcome
+
+Each merged item now shows, beside its git measures, the tokens by class for each model and the active minutes of
+the sessions and subagents that worked on it, read from the platform's session files when the report runs and
+attributed by branch, then by the one window that holds them. Nothing is stored and only sums are printed. The
+format of those files is the platform's: what cannot be read is counted, and the git measures stand alone. The
+monthly task reads the text output, not `--json`. No deferred check.
