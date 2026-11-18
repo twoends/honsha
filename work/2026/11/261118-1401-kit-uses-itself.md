@@ -126,7 +126,15 @@ decisions as recommended.
 - README: a section "Working on the kit". `.gitignore`: `.claude/settings.local.json`, which the README names as the
   place to switch the plugin off, and which was ignored on this PC only by a global setting.
 - Work committed in one commit.
+- The first check failed on two findings, fixed in a commit of their own: the `.gitignore` entry is declared under
+  Deviations; the README now gives both ways to recover a broken session that the strategy names, the local switch
+  and `claude --plugin-dir` of a clone of a working commit.
 
 ## Verification
+
+## Deviations
+
+- `.gitignore` gains `.claude/settings.local.json`, outside the scope listed: the README names that file as the
+  place to switch the plugin off, and it was ignored on this PC only by a global setting.
 
 ## Outcome
