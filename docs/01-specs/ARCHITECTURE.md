@@ -76,6 +76,7 @@ skills/                workflow, triage, radar, status, one pack per area, the w
 agents/                worker, reader, checker
 hooks/                 session and checker start; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits
+hub/                   the hub's code: the registry of projects and the moves between their states
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
 templates/             record, inbox item, radar entry, profile
 board/                 the board generator
@@ -106,7 +107,7 @@ work/                  the kit's own work records
 ### 3.2 Home (one per user, private)
 
 ```
-registry.yml           projects: name, repository, path on each host, state
+registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, section 20)
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, section 16)

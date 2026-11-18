@@ -1,0 +1,217 @@
+---
+id: 261118-2039
+title: Make the assessment the way every project enters, with the entry done by code
+project: honsha
+type: change
+size: full
+kind: capability
+state: done
+areas: []
+created: 2026-11-18
+updated: 2026-11-18
+requested-by: person
+source: null
+pr: 22
+model: claude-opus-5-5
+effort: null
+checks: []
+---
+
+## Intent
+
+The person asked that, whenever it is decided to bring a new project into the ecosystem, its assessment be
+mandatory. The person then made clear that adding a project is not necessarily a request to Claude: it may be, but
+in the future there may be an interface with a button to add a project, which starts the assessment. The part
+described is code, with no agent behind it doing that mechanical work. Asked on 2026-11-18; the clarification came
+while a first, smaller version of this item was under way.
+
+## Scope and acceptance criteria
+
+### In scope
+
+- The rule: every project that joins an installation is assessed first, and its entry in the home's registry says
+  what work may start in it.
+- The registry's format, in the architecture.
+- A script of the kit that does the mechanical part: adding a project, moving it between states, and answering
+  whether a work item may start in it.
+
+### Out of scope
+
+- The interface with a button to add a project, and the scheduler.
+- The hub's instructions in the home, and the registry file itself: the home's own commits, after this item.
+- The entry of any particular project.
+- Starting an agent from the script, unless the person chooses it (decision 1).
+
+### Boundaries
+
+- The script reads and writes only the home's registry and the home's report records, and reads the projects'
+  repositories through git; it never starts work in a project and never writes there.
+- No agent is needed for any step the script does.
+- Nothing about this installation enters the kit: examples use invented names.
+
+### Acceptance criteria
+
+1. The workflow, section 20, says that every project joining an installation is assessed first; names the states
+   `assessing`, `adopting` and `active`, what work each allows and what moves a project from one to the next; says
+   that code, not an agent, does the entry and the moves; and that a project not in the registry gets no work item.
+2. The architecture, section 3.2, gives the registry's format and points to section 20.
+3. `hub/projects.mjs`, run from the home's folder:
+   - `add <name> <repository> <folder>` refuses a name already present, writes the entry as `assessing`, and writes
+     the assessment's record into the home's `reports/`, from the template, ready to start;
+   - `choose <name>` moves a project from `assessing` to `adopting`, and refuses while its assessment's record is not
+     `done`;
+   - `refresh` moves each `adopting` project whose default branch declares the kit's plugin to `active`;
+   - `may-start <name> <record>` answers, by its exit code and one line, whether that work item may start: in an
+     `assessing` project only its assessment; in an `adopting` one only items whose `source` is the assessment;
+     anything in an `active` one; nothing in a project that is not in the registry.
+4. Each command has tests on a home and a project repository built by the test.
+5. The kit's `verify` list passes, the record and commit checks included.
+
+## Strategy
+
+### Design
+
+- **States and their moves.** `assessing` when the project is added; `adopting` when the person has taken the
+  report's decisions and chosen its items, which the person says through `choose`, from a command now and from an
+  interface later; `active` when the kit's plugin is found enabled in `.claude/settings.json` on the project's default
+  branch. Each move is a fact a script can check, so none needs an agent.
+- **Which items an adopting project takes.** The items chosen from the assessment carry its identifier as their
+  `source`, which the record template already has; `may-start` reads it. No list of chosen items is kept elsewhere.
+- **The registry**, `registry.yml` in the home:
+
+  ```yaml
+  projects:
+    - name: example-shop
+      repository: example-owner/example-shop
+      paths: { example-host: /srv/projects/example-shop } # the folder on each host, by the host's name
+      state: assessing
+      assessment: 261201-0930 # the identifier of its assessment's record
+  ```
+
+  The host's name is the one the system gives, so the script finds its own folder without a setting.
+- **Where the script lives.** `hub/` in the kit, a new folder: it is the hub's code, not a check of a work branch. It
+  reads YAML with the profile's reader (`checks/profile.mjs`), extended only if the list of projects needs it, and
+  records with `checks/record.mjs`.
+- **The rule is stated once,** in section 20; the architecture gives the format and points there.
+
+### Plan
+
+1. Section 20 and the architecture.
+2. `hub/projects.mjs` with its tests, command by command: `add`, `may-start`, `choose`, `refresh`.
+3. The verification and the checker, then the pull request.
+
+No parallel parts: the four commands share one file and the registry's reader.
+
+### Assumptions to confirm while building
+
+- The profile's YAML reader handles a list of mappings; if not, it is extended with a test, or the script gets a
+  reader of its own for the registry.
+- `git fetch` and `git show origin/<branch>:.claude/settings.json` in the project's folder read the default branch
+  without changing the working tree.
+
+### Risks
+
+- A registry edited by hand into a shape the script cannot read: the script stops with the line it could not read,
+  and changes nothing.
+- `refresh` on a project whose folder is missing on this host: it says so and leaves the state.
+
+### Measure
+
+One to two times a full item at the kit's medians: 10 to 40 minutes of agent time, 60,000 to 200,000 output tokens.
+
+### Decisions for the person
+
+1. **Who starts the assessment after `add`.** Recommended: the script writes the record ready and prints the next
+   step; the hub, or the person, starts the session. The alternative, the script starting a read-only session of
+   Claude Code itself, fits the future interface better, but runs an agent with the permissions the assessment
+   needs (git, the hosting service's client, the package manager's audit) from a script, and is better decided with
+   the interface.
+2. **The kit in the registry.** Recommended: the kit is entered as `active` directly, since it declares itself and
+   was assessed in report `261118-1348` of the home; this one entry skips `add`.
+3. **The pilot's assessment already written** (home report `261118-1900`): enter the pilot with `add` and a new
+   assessment, or let `add` take an existing report's identifier. Recommended: a new assessment, since the kit has
+   changed since that report; the earlier one stays as history.
+
+## Approval
+
+Approved by the person on 2026-11-18, in the chat of the session that wrote the strategy, with the three
+recommended decisions.
+
+## Log
+
+- 2026-11-18: a first version of this item, sized small, wrote the rule in section 20; its check, by the new checker,
+  failed it as a full item: it defines the values of the registry's `state` and chooses what moves each one. Its
+  branch was never pushed and was deleted; its text is the starting point of step 1. Branch cut from `main` at
+  `0b7ad63`.
+- Step 1: section 20 takes the first version's text, with the script's commands named and an adopting project's
+  items recognised by their `source`; the architecture lists `hub/` in the kit and the registry's fields in the home.
+- First assumption: the profile's reader reads only the keys of a profile, by name, not a list of mappings. The
+  script has a reader of its own for the registry, strict on the one shape it writes; the folders on each host are a
+  block under `paths`, with the folder in single quotes, since a folder can hold a colon.
+- Step 2: `hub/projects.mjs` with `add`, `choose`, `refresh`, `may-start`, and six tests on homes and project clones
+  built in temporary folders. `add` refuses a second report with the same identifier, made in the same minute. The
+  record written by `add` passes `checkRecord` as a `ready` small report. The kit's profile runs `hub/*.test.mjs`.
+- Second assumption: `git fetch` and `git show` in the project's clone leave its working tree clean; a test checks it.
+- The check on `2398336` failed: `add --assessment` was not declared, and the state was still
+  `awaiting-approval`. The option is declared and section 20 names it; the state is `in-progress`.
+
+## Deviations
+
+- The registry's folders on each host are a block under `paths`, not the inline map of the strategy's example: a
+  folder can hold a colon, which the inline form would make ambiguous for the strict reader.
+- `add --assessment <id>` takes a report already in the home as the assessment. Decision 2 enters the kit as `active`
+  without `add`; the option lets the script do it instead of a hand edit of the registry: `add` with the kit's
+  report `261118-1348`, then `choose` and `refresh`. Decision 3 still holds: the pilot gets a new assessment.
+
+## Verification
+
+On `2e91711`, Windows 11: `node checks/verify.mjs` passed all seven commands of the profile — Prettier, oxlint,
+TypeScript, 113 tests (the six of `hub/projects.test.mjs` among them), the plugin validator with its known warnings,
+`node checks/record.mjs` and `node checks/commits.mjs` ("The 5 commits of the branch follow the rules.").
+
+### Checker report, on `2398336`
+
+**Verdict:** fail
+
+**Findings**
+
+1. Scope: `hub/projects.mjs` adds `add ... --assessment <id>`, which reuses an existing report. This goes against
+   approved decision 3 ("Recommended: a new assessment"), and the record does not declare it under "Deviations". Fix:
+   remove the option, or declare it as a deviation and document it in section 20.
+2. Record: `work/2026/11/261118-2039-project-entry.md` line 8 has `state: awaiting-approval` after the approval
+   (`c904b9d`) and the work (`f627fea`, `2398336`). The record should say `in-progress` until it closes.
+
+### Checker report, on `2e91711`, repeated check of the changes since `2398336`
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Section 20 states the mandatory assessment, the three states, the moves, that code does them, and that a project outside the registry gets no work item: met, `docs/01-specs/WORKFLOW.md` lines 585-604. The diff only adds the `--assessment <id>` sentence, at line 597.
+2. Architecture section 3.2 gives the registry's format and points to section 20: met. The diff does not touch it, and it was not a finding in the last check.
+3. `hub/projects.mjs` commands `add`, `choose`, `refresh`, `may-start`: met. `hub/projects.mjs` lines 228-297. When `add` gets `--assessment` it skips writing a new record (lines 233-245). This is now declared under "Deviations".
+4. Tests for each command: met. `hub/projects.test.mjs` lines 94-171. The new option has its own test at line 120, which also covers refusing a report that is missing (line 131).
+5. The `verify` list passes, the record and commit checks included: met, as recorded under "Verification" for `2e91711`.
+
+- **Intent:** in order
+- **Scope:** in order. The `--assessment` option is now declared under "Deviations", together with how it relates to decisions 2 and 3.
+- **Comments and documents:** in order. The changed paragraph in `docs/01-specs/WORKFLOW.md` (lines 595-601) describes what holds now and carries no history.
+- **Gates:** in order. No hosting service is named, nothing is specific to an installation, and the new option has a test.
+- **Verification evidence:** in order; covers formatting (Prettier), lint (oxlint), types (`tsc -p .`) and tests (`node --test`, `hub/*.test.mjs` included).
+- **Record:** in order. Both findings from the last report are fixed. Finding 1: the option is declared under "Deviations" (record lines 165-167) and described in section 20. Finding 2: `state: in-progress` at line 8. The earlier report keeps only its verdict and findings.
+- **Commits:** in order. `2e91711` "Declare the option that takes an existing assessment, and set the record in progress" is one imperative sentence and carries `Work-Item: 261118-2039`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
+## Outcome
+
+Section 20 makes an assessment the way every project enters an installation, with three states in the home's
+registry and the work each allows. `hub/projects.mjs` does the entry and the moves, so no agent does them: `add`,
+`choose`, `refresh`, and `may-start` before any work starts. The registry itself and the hub's instructions are the
+home's, next.
