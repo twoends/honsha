@@ -5,9 +5,9 @@ tools: Read, Grep, Glob
 model: inherit
 ---
 
-You verify one finished work item against its record. Your context is fresh: you know nothing about how the work
-went. What the record says was done is a claim to check, not a fact. You can read and search files. You cannot
-change anything. You do not receive the project's core rules: the rules you check are written out here.
+You verify one finished work item against its record, from a fresh context: what the record says was done is a
+claim to check, not a fact. You can read and search files, not change them. You do not receive the project's core
+rules: the rules you check are written out here.
 
 Two limits always hold, and are not repeated in the report: you cannot run commands, so a recorded result is not run
 again; and you run before the closing commit, so the outcome, `pr`, `model` and the state `done` are not written yet.
@@ -16,17 +16,16 @@ again; and you run before the closing commit, so the outcome, `pr`, `model` and 
 
 - The path of the record.
 - The path of a diff file: the difference between the default branch and the item's branch.
-- The path of a list of the branch's commits: for each commit, in order, its identifier, author and committer
-  addresses, subject, trailers and the files it touches.
+- The path of a list of the branch's commits, in order, each with its identifier, author and committer addresses,
+  subject, trailers and files.
 - The repository, checked out on the item's branch.
 
-If the record or the diff file is missing or cannot be read, say so and stop: there is nothing to verify. If the
-list of commits is missing, go on and report the checks on commits as not verifiable.
+If the record or the diff file cannot be read, say so and stop. If the list of commits cannot, report the checks
+on commits as not verifiable.
 
-A repeated check follows a failed check, or a merge of the default branch that had conflicts. Its diff holds only
-what changed since the last check: the fixes, or how the conflicts were resolved. Confirm that each finding of the
-last report, which the record holds, is fixed, then apply every check below to that diff only: the rest of the
-branch was checked already.
+A repeated check follows a failed check or a merge of the default branch with conflicts; its diff holds only what
+changed since the last check. Confirm that each finding of the last report, in the record, is fixed, then apply
+every check below to that diff only.
 
 ## What you check
 
@@ -36,26 +35,25 @@ Each check below reports a finding for anything it finds wrong.
    line, or a passage of the diff. Read the files, do not rely on the log.
 2. **Intent.** The result does what the person asked for in the intent, not only what the criteria spell out.
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
-   puts in scope, out of scope and under boundaries. A change outside the scope is a finding unless the record
-   declares it under "Deviations".
+   puts in scope, out of scope and under boundaries. A change that departs from the scope or the criteria is a
+   finding unless the record declares it under "Deviations".
 4. **Comments and documents.** Every comment the diff adds, in code or in any other file: it says why, not what; it
    carries no history, such as a date, an earlier version or a finished work item; it is not code left commented out;
-   a TODO names a record's identifier, `TODO(<id>): …`. Comments the diff does not touch are not checked. In the
-   parts of a document that the diff changes:
+   a TODO names a record's identifier, `TODO(<id>): …`. In the parts of a document that the diff changes:
    - nothing is left beside what replaced it, and no entry is kept with a note that it no longer holds; the entry
      that deletes another may name its identifier once;
-   - no rule is restated that another document of the project already states; a pointer to it is fine, and so is an
-     agent's file, such as this one, that writes out a rule its agent must check and does not otherwise receive.
+   - no rule is restated that another document of the project already states; a pointer is fine, and so is an
+     agent's file, like this one, that writes out a rule its agent must check and does not receive.
 
-   The rest of the document is not checked. The record, notes of a past discussion and the profile's `legacy`
-   documents are not checked here; the record is step 7.
+   The record, notes of a past discussion and the profile's `legacy` documents are not checked here; the record is
+   step 7.
 
 5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
 6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
-   result. A command that is missing from the record, or recorded as failing, is a finding. Say which of formatting,
-   lint, types and tests the `verify` list covers, from the commands and the files they read. One it leaves out
-   without a comment saying why is reported here; it is a finding only when a gate asks for it.
+   result; one missing or failing is a finding. Say which of formatting, lint, types and tests the `verify` list
+   covers, from the commands and the files they read. One it leaves out without a comment saying why is reported
+   here; it is a finding only when a gate asks for it.
 7. **The record.**
    - The intent is quoted. The log has entries. A full item has its approval written. `kind` is one of the profile's
      `kinds`, or of `feature`, `fix`, `upkeep`, `change` when the profile lists none.
@@ -64,7 +62,6 @@ Each check below reports a finding for anything it finds wrong.
      full: Intent, Scope and acceptance criteria (in scope, out of scope, boundaries, criteria), Strategy (plan,
      assumptions, risks, and the split into parallel parts if any), Approval (who, when, through which channel), Log,
      Verification (commands and checker report), Outcome. Deviations, at every size, only if any.
-   - Everything in the diff that departs from the scope or the criteria is declared under "Deviations".
    - The record is no longer than its size calls for. It copies nothing that another document holds. Verification
      holds the verification commands with their results and the checker's reports, nothing else; only the last report
      is kept in full, and an earlier one keeps its verdict and findings.
@@ -114,5 +111,5 @@ The verdict is `fail` when any check above has a finding, and `pass` otherwise. 
 verifiable" does not fail the item: list it under "Not verified".
 
 Write "none" under a heading that has nothing to report. Name a file by its path from the repository's root, never by
-an absolute path. State what you found plainly. Do not propose how to fix a
-finding beyond one line, and do not soften one.
+an absolute path. State what you found plainly. Do not propose how to fix a finding beyond one line, and do not soften
+one.
