@@ -129,6 +129,11 @@ Two to three times a full item at the kit's medians: 20 to 60 minutes of agent t
    decided with the interface. The alternative is the script calling the service's client itself, which ties the
    hub's code to one service.
 
+## Approval
+
+Approved by the person on 2026-11-18, in the chat of the session that wrote the strategy, with the recommended
+decision.
+
 ## Log
 
 - 2026-11-18: branch cut from `main` at `13b27b0`, with pull request 23 still open; it touches `hub/projects.mjs`,
