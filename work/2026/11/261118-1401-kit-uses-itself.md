@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -104,6 +104,9 @@ From the platform's documentation, read on 2026-11-18:
 2. **The trial runs a nested session in the kit's folder** on a small model, which may ask you to allow it. Recommended.
 
 ## Approval
+
+Approved by the person on 2026-11-18, in the conversation with the session that wrote the strategy, the two
+decisions as recommended.
 
 ## Log
 
