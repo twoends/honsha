@@ -15,7 +15,7 @@ specific to a user, a project or an installation lives in that user's separate h
 | `agents/worker.md`    | `honsha:worker`: executes one work item, from its record to an open pull request                                                                                         |
 | `agents/checker.md`   | `honsha:checker`: verifies a finished item against its record, with read-only tools                                                                                      |
 | `hooks/`              | The hook definitions; the script that writes the effort level into a record; the guard that refuses merging, a push to the default branch and a forced push; their tests |
-| `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, the measures of merged items, and their tests                                     |
+| `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, the measures of merged items with their sessions, and their tests                 |
 | `services/github/`    | What is specific to GitHub, apart from the rules: commands, settings, what it can enforce, the wiring of the checks                                                      |
 | `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                           |
 | `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                   |
