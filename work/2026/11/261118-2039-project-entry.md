@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -152,8 +152,13 @@ recommended decisions.
   built in temporary folders. `add` refuses a second report with the same identifier, made in the same minute. The
   record written by `add` passes `checkRecord` as a `ready` small report. The kit's profile runs `hub/*.test.mjs`.
 - Second assumption: `git fetch` and `git show` in the project's clone leave its working tree clean; a test checks it.
+- The check on `2398336` failed: `add --assessment` was not declared, and the state was still
+  `awaiting-approval`. The option is declared and section 20 names it; the state is `in-progress`.
 
 ## Deviations
 
 - The registry's folders on each host are a block under `paths`, not the inline map of the strategy's example: a
   folder can hold a colon, which the inline form would make ambiguous for the strict reader.
+- `add --assessment <id>` takes a report already in the home as the assessment. Decision 2 enters the kit as `active`
+  without `add`; the option lets the script do it instead of a hand edit of the registry: `add` with the kit's
+  report `261118-1348`, then `choose` and `refresh`. Decision 3 still holds: the pilot gets a new assessment.

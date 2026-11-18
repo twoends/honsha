@@ -592,12 +592,13 @@ Every project that joins an installation is assessed first. Its entry in the hom
 - **`active`:** the kit is declared on the project's default branch, so its sessions run under the core rules. Any
   work item may start; the chosen items left go on as ordinary items.
 
-Entering a project and moving it between states are mechanical, so code does them, not an agent: `hub/projects.mjs`
-in the kit, run from the home's folder by the person, the hub or an interface. `add` writes the entry as `assessing`
-and the assessment's record, ready to start. `choose`, once the assessment is done and the person has chosen its
-items, moves the project to `adopting`. `refresh` moves it to `active` when its default branch declares the kit.
-`may-start` answers whether a work item may start in a project, and is asked before one starts. An agent does only
-the assessment and the items.
+Entering a project and moving it between states are mechanical, so code does them, not an agent: `hub/projects.mjs` in
+the kit, run from the home's folder by the person, the hub or an interface. `add` writes the entry as `assessing` and
+the assessment's record, ready to start. With `--assessment <id>` it takes a report already in the home instead, for a
+project assessed before it was added. `choose`, once the assessment is done and the person has chosen its items, moves
+the project to `adopting`. `refresh` moves it to `active` when its default branch declares the kit. `may-start` answers
+whether a work item may start in a project, and is asked before one starts. An agent does only the assessment and the
+items.
 
 A project that is not in the registry gets no work item. An active project can be assessed again when the person
 asks; its state does not change.
