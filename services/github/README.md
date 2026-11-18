@@ -35,9 +35,11 @@ In the repository:
 
 ```
 gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false --delete-branch-on-merge
+gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge
 ```
 
-A free account has these settings.
+The first command sets them; the second reads them, as an assessment does (WORKFLOW.md, section 20). A free account
+has these settings.
 
 Two things on the site are not used:
 
@@ -83,7 +85,7 @@ In the account of whoever merges:
 
 The wiring is a workflow file. GitHub reads workflow files only from `.github/workflows/` in the repository, so the
 kit's own is [verify.yml](../../.github/workflows/verify.yml): this piece applied to the kit's repository. It answers
-the contract of WORKFLOW.md, section 14.2, in this way.
+the contract of WORKFLOW.md, section 14.2, in this way. `gh workflow list` lists the workflows a repository has.
 
 1. **When.** On the `pull_request` event for the default branch: when a pull request is opened and at every push to its
    branch. A newer run cancels an older one of the same pull request.
