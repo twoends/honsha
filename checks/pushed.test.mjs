@@ -123,10 +123,14 @@ test("checks the message, the identities and the names of files", () => {
   const message = commit(dir, { "a.md": "a\n" }, `Add a\n\nAsked by ${address}`);
   const identity = commit(dir, { "b.md": "b\n" }, "Add b", [`--author=Someone <${address}>`]);
   const name = commit(dir, { [`notes-for-${address}.md`]: "c\n" }, "Add c");
+  const empty = commit(dir, { [`empty-for-${address}.txt`]: "", [`image-for-${address}.png`]: "\0\x01" }, "Add d");
+  commit(dir, { [`notes-for-${address}.md`]: null }, "Remove c");
   assert.deepEqual(check(input(dir), dir), [
     `${short(message)} its message holds an e-mail address`,
     `${short(identity)} its author or committer holds an e-mail address`,
     `${short(name)} the name of a file holds an e-mail address`,
+    `${short(empty)} the name of a file holds an e-mail address`,
+    `${short(empty)} the name of a file holds an e-mail address`,
   ]);
 });
 

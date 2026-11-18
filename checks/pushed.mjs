@@ -95,6 +95,12 @@ export function commitFindings(commit, cwd, words) {
     found.push({ where: "its author or committer", kind });
   for (const { kind } of personal(meta.slice(4).join("\n"), words)) found.push({ where: "its message", kind });
 
+  // The names come from their own list: the patch names no file that is binary or empty.
+  const names = git(cwd, ["show", "--format=", "--name-only", "--no-renames", "--diff-filter=d", "-z", "--cc", commit]);
+  for (const name of names.split("\0").filter(Boolean)) {
+    for (const { kind } of personal(name, words)) found.push({ where: "the name of a file", kind });
+  }
+
   // `--cc` keeps of a merge only what differs from every parent: the resolution of its conflicts.
   const patch = git(cwd, [
     "show",
@@ -123,7 +129,6 @@ export function commitFindings(commit, cwd, words) {
     if (text.startsWith("+++ ") && after.startsWith("--- ")) {
       const name = text.slice(4).replace(/^"(.*)"$/, "$1");
       file = name === "/dev/null" ? null : name.replace(/^b\//, "");
-      if (file) for (const { kind } of personal(file, words)) found.push({ where: "the name of a file", kind });
       continue;
     }
     const hunk = /^(@@+) .*?\+(\d+)(?:,\d+)? @@+/.exec(text);
