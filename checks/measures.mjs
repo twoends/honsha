@@ -168,7 +168,8 @@ function main() {
   const usage = read ? attribute(read.responses, items, git(".", ["rev-parse", "--show-toplevel"]).trim()) : null;
   if (process.argv.includes("--json")) {
     const withUsage = items.map((item) => ({ ...item, usage: usage?.get(item.id) ?? null }));
-    process.stdout.write(`${JSON.stringify(withUsage, null, 2)}\n`);
+    const report = { items: withUsage, unreadableSessionLines: read?.skipped ?? null };
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return;
   }
   for (const item of items) {

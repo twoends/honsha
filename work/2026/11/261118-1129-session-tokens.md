@@ -138,6 +138,14 @@ recommended.
   250,629 output tokens on Opus, 42 active minutes against 89 minutes of agent time.
 - The capability is in a new file; the existing files changed are the measures script, the workflow and the README.
 - Work committed in one commit.
+- On the kit, `261117-1150` has no session data and `261117-1234` only 8 responses: their sessions ran in other
+  folders on no work branch, which the attribution leaves out by design.
+- The first check failed on four findings, fixed in a commit of their own: tokens by model held only output tokens,
+  so the cost of an item on two models could not be computed; each model now has every class, and the report prints
+  them per model. A response with `usage: null` would have stopped the whole report; it is now skipped and counted,
+  and so is every line that does not parse, whatever it holds. `--json` reports the unreadable lines. The module's
+  comment says what holds: the report prints only sums and model names. An observation that had gone under
+  Verification is in this log.
 
 ## Verification
 

@@ -46,6 +46,8 @@ function sessions() {
       line({ id: "r5", at: "2026-11-18T12:31:00Z", cwd: "C:\\Projects\\other" }),
       '{"type":"assistant", not json',
       JSON.stringify({ type: "assistant", timestamp: "2026-11-18T10:07:00Z", message: { content: "no id, no usage" } }),
+      JSON.stringify({ type: "assistant", timestamp: "2026-11-18T10:08:00Z", message: { id: "r9", usage: null } }),
+      "not json, and no word the reader looks for",
     ].join("\n"),
   );
   // A subagent on the full item's branch, in another folder: the branch is enough.
@@ -73,7 +75,7 @@ test("reads one response per message, skips what it cannot read, and attributes 
   const read = readResponses(sessions());
   assert.ok(read);
   assert.equal(read.responses.length, 6);
-  assert.equal(read.skipped, 2);
+  assert.equal(read.skipped, 4);
 
   const usage = attribute(read.responses, WINDOWS, "c:/projects/example/");
   const small = usage.get("261118-1000");
@@ -81,17 +83,25 @@ test("reads one response per message, skips what it cannot read, and attributes 
   assert.ok(small && full);
 
   assert.equal(small.responses, 2);
-  assert.equal(small.output, 7 + 20, "the streamed response counts once, with its last line");
-  assert.equal(small.input, 2);
-  assert.equal(small.cacheRead, 200);
-  assert.equal(small.cacheWrite, 10);
-  assert.deepEqual(small.models, { "model-a": 7, "model-b": 20 });
+  assert.deepEqual(
+    small.total,
+    { input: 2, output: 7 + 20, cacheRead: 200, cacheWrite: 10 },
+    "the streamed response counts once, with its last line",
+  );
+  assert.deepEqual(small.models, {
+    "model-a": { input: 1, output: 7, cacheRead: 100, cacheWrite: 5 },
+    "model-b": { input: 1, output: 20, cacheRead: 100, cacheWrite: 5 },
+  });
   assert.equal(small.activeMinutes, 2);
 
   assert.equal(full.responses, 2, "the subagent by its branch, r3 by the window; r4 and r5 are left out");
-  assert.equal(full.output, 10 + 50);
+  assert.equal(full.total.output, 10 + 50);
   assert.equal(usage.size, 2);
-  assert.match(describeUsage(small), /^2 responses, 27 output and 2 input tokens, .*model-b, model-a; active 2 min$/u);
+  assert.equal(
+    describeUsage(small),
+    "2 responses, active 2 min; model-b: 20 out, 1 in, 100 cache read, 5 cache written; " +
+      "model-a: 7 out, 1 in, 100 cache read, 5 cache written",
+  );
 });
 
 test("a response on the default branch that two windows hold is left out", () => {

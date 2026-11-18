@@ -6,7 +6,8 @@
 // response can span several lines with the same `message.id`; the last one counts.
 //
 // The format is the platform's and is not documented as stable: a line that cannot be read is
-// skipped and counted, never guessed. Only sums leave this module.
+// skipped and counted, never guessed. The report prints only sums and model names, never a
+// message, a prompt or a path.
 
 import fs from "node:fs";
 import os from "node:os";
@@ -17,8 +18,8 @@ const WORK_BRANCH = /^work\/(\d{6}-\d{4})-/;
 /**
  * @typedef {{ id: string, model: string, time: number, branch: string, cwd: string, input: number, output: number,
  *   cacheRead: number, cacheWrite: number }} Response
- * @typedef {{ responses: number, input: number, output: number, cacheRead: number, cacheWrite: number,
- *   models: Record<string, number>, activeMinutes: number }} Usage
+ * @typedef {{ input: number, output: number, cacheRead: number, cacheWrite: number }} Tokens
+ * @typedef {{ responses: number, total: Tokens, models: Record<string, Tokens>, activeMinutes: number }} Usage
  * @typedef {{ id: string, created: number, delivered: number }} Window
  */
 
@@ -58,7 +59,7 @@ export function readResponses(dir) {
   let skipped = 0;
   for (const file of files(dir)) {
     for (const text of fs.readFileSync(file, "utf8").split("\n")) {
-      if (!text.includes('"assistant"')) continue;
+      if (text.trim() === "") continue;
       /** @type {any} */
       let line;
       try {
@@ -70,7 +71,8 @@ export function readResponses(dir) {
       if (line?.type !== "assistant") continue;
       const message = line.message;
       const time = Date.parse(line.timestamp);
-      if (typeof message?.id !== "string" || typeof message.usage !== "object" || Number.isNaN(time)) {
+      const usage = message?.usage;
+      if (typeof message?.id !== "string" || usage === null || typeof usage !== "object" || Number.isNaN(time)) {
         skipped += 1;
         continue;
       }
@@ -80,14 +82,25 @@ export function readResponses(dir) {
         time,
         branch: typeof line.gitBranch === "string" ? line.gitBranch : "",
         cwd: typeof line.cwd === "string" ? line.cwd : "",
-        input: count(message.usage.input_tokens),
-        output: count(message.usage.output_tokens),
-        cacheRead: count(message.usage.cache_read_input_tokens),
-        cacheWrite: count(message.usage.cache_creation_input_tokens),
+        input: count(usage.input_tokens),
+        output: count(usage.output_tokens),
+        cacheRead: count(usage.cache_read_input_tokens),
+        cacheWrite: count(usage.cache_creation_input_tokens),
       });
     }
   }
   return { responses: [...byId.values()], skipped };
+}
+
+/** @returns {Tokens} */
+const tokens = () => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
+
+/** @param {Tokens} sum @param {Tokens} response */
+function add(sum, response) {
+  sum.input += response.input;
+  sum.output += response.output;
+  sum.cacheRead += response.cacheRead;
+  sum.cacheWrite += response.cacheWrite;
 }
 
 /** @param {string} folder */
@@ -116,24 +129,12 @@ export function attribute(responses, windows, root) {
     if (!id) continue;
     let sum = usage.get(id);
     if (!sum) {
-      sum = {
-        responses: 0,
-        input: 0,
-        output: 0,
-        cacheRead: 0,
-        cacheWrite: 0,
-        models: {},
-        activeMinutes: 0,
-        minutes: new Set(),
-      };
+      sum = { responses: 0, total: tokens(), models: {}, activeMinutes: 0, minutes: new Set() };
       usage.set(id, sum);
     }
     sum.responses += 1;
-    sum.input += response.input;
-    sum.output += response.output;
-    sum.cacheRead += response.cacheRead;
-    sum.cacheWrite += response.cacheWrite;
-    sum.models[response.model] = (sum.models[response.model] ?? 0) + response.output;
+    add(sum.total, response);
+    add((sum.models[response.model] ??= tokens()), response);
     sum.minutes.add(Math.floor(response.time / 60000));
   }
   /** @type {Map<string, Usage>} */
@@ -142,17 +143,18 @@ export function attribute(responses, windows, root) {
   return result;
 }
 
+/** @param {Tokens} counted */
+const classes = (counted) =>
+  `${counted.output} out, ${counted.input} in, ${counted.cacheRead} cache read, ${counted.cacheWrite} cache written`;
+
 /**
- * One line: output and input tokens, the cache, the models by output tokens, the active minutes.
+ * One line: the responses and active minutes, then the tokens by class for each model, most output first.
  * @param {Usage} usage
  */
 export function describeUsage(usage) {
   const models = Object.entries(usage.models)
-    .toSorted((a, b) => b[1] - a[1])
-    .map(([model]) => model)
-    .join(", ");
-  return (
-    `${usage.responses} responses, ${usage.output} output and ${usage.input} input tokens, ` +
-    `cache ${usage.cacheRead} read and ${usage.cacheWrite} written; ${models}; active ${usage.activeMinutes} min`
-  );
+    .toSorted((a, b) => b[1].output - a[1].output)
+    .map(([model, counted]) => `${model}: ${classes(counted)}`)
+    .join("; ");
+  return `${usage.responses} responses, active ${usage.activeMinutes} min; ${models}`;
 }
