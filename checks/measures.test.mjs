@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { createdAt, describe, measure } from "./measures.mjs";
 
@@ -50,7 +51,11 @@ function commit(dir, id, subject, when) {
   git(dir, ["commit", "-q", "--allow-empty", "-m", `${subject}\n\nWork-Item: ${id}`], when);
 }
 
-function repository() {
+/**
+ * A repository on `main` with two merged items whose records have the kind `kind`.
+ * @param {string} [kind]
+ */
+function repository(kind = "gate") {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-measures-"));
   git(dir, ["init", "-q", "-b", "main"]);
   git(dir, ["config", "user.name", "Test"]);
@@ -62,7 +67,7 @@ function repository() {
 
   // A small item: created 10:00, delivered 10:30, merged 11:00; changes one existing file, adds one.
   git(dir, ["switch", "-q", "-c", "work/261118-1000-small"]);
-  write(dir, "work/2026/11/261118-1000-small.md", record("261118-1000", "small", "gate"));
+  write(dir, "work/2026/11/261118-1000-small.md", record("261118-1000", "small", kind));
   write(dir, "a.md", "a, changed\n");
   write(dir, "c.md", "new\n");
   commit(dir, "261118-1000", "Do the small item", "2026-11-18T10:20:00Z");
@@ -77,13 +82,13 @@ function repository() {
   // A full item: created 12:00, strategy 12:10, approval 13:10, delivered 13:40, merged 14:00; changes two existing
   // files, which is over the one a gate is expected to touch.
   git(dir, ["switch", "-q", "-c", "work/261118-1200-full"]);
-  write(dir, "work/2026/11/261118-1200-full.md", record("261118-1200", "full", "gate"));
+  write(dir, "work/2026/11/261118-1200-full.md", record("261118-1200", "full", kind));
   commit(dir, "261118-1200", "Add the record", "2026-11-18T12:10:00Z");
-  write(dir, "work/2026/11/261118-1200-full.md", `${record("261118-1200", "full", "gate")}approved\n`);
+  write(dir, "work/2026/11/261118-1200-full.md", `${record("261118-1200", "full", kind)}approved\n`);
   commit(dir, "261118-1200", "Record the approval", "2026-11-18T13:10:00Z");
   write(dir, "a.md", "a, changed again\n");
   write(dir, "b.md", "b, changed\n");
-  write(dir, "work/2026/11/261118-1000-small.md", `${record("261118-1000", "small", "gate")}touched later\n`);
+  write(dir, "work/2026/11/261118-1000-small.md", `${record("261118-1000", "small", kind)}touched later\n`);
   commit(dir, "261118-1200", "Do the full item", "2026-11-18T13:30:00Z");
   commit(dir, "261118-1200", "Close it", "2026-11-18T13:40:00Z");
   git(dir, ["switch", "-q", "main"]);
@@ -123,4 +128,92 @@ test("measures every merged item from git, and marks the one over its kind's exp
   assert.equal(full.newFiles, 0);
   assert.equal(full.over, true);
   assert.match(describe(full), /2 existing files \(expected at most 1\) OVER, 0 new$/u);
+});
+
+const SCRIPT = fileURLToPath(new URL("measures.mjs", import.meta.url));
+
+/**
+ * Runs the script as a command in `dir`. `--sessions` is always given, so the machine's own session files are never read.
+ * @param {string} dir
+ * @param {string[]} args
+ */
+const run = (dir, args) => execFileSync(process.execPath, [SCRIPT, ...args], { cwd: dir, encoding: "utf8" });
+
+/**
+ * A session folder with one response on the small item's branch and one line that cannot be read.
+ * @param {string} dir
+ */
+function sessionFolder(dir) {
+  const folder = path.join(dir, "sessions");
+  const response = {
+    type: "assistant",
+    timestamp: "2026-11-18T10:05:00Z",
+    gitBranch: "work/261118-1000-small",
+    cwd: "elsewhere",
+    message: {
+      id: "r1",
+      model: "model-a",
+      usage: { input_tokens: 1, output_tokens: 7, cache_read_input_tokens: 100, cache_creation_input_tokens: 5 },
+    },
+  };
+  write(folder, "project/session-1.jsonl", `${JSON.stringify(response)}\nnot json\n`);
+  return folder;
+}
+
+test("the command reads the profile's default branch and kinds, and the session folder it is given", () => {
+  const dir = repository("fix");
+  // On the first commit, HEAD holds no merge: the items come only from the profile's default branch.
+  git(dir, ["switch", "-q", "--detach", "main~2"]);
+  const sessions = sessionFolder(fs.mkdtempSync(path.join(os.tmpdir(), "honsha-measures-sessions-")));
+  write(dir, ".hub/profile.yml", "default-branch: main\nkinds:\n  fix: 1\n");
+
+  assert.deepEqual(run(dir, ["--sessions", sessions]).split("\n"), [
+    "261118-1000 small fix: agent 30 min, review 30 min; 2 commits, +9 -1; 1 existing files (expected at most 1), " +
+      "1 new; 1 responses, active 1 min; model-a: 7 out, 1 in, 100 cache read, 5 cache written",
+    "261118-1200 full fix: agent 40 min, approval 60 min, review 20 min; 4 commits, +11 -2; " +
+      "2 existing files (expected at most 1) OVER, 0 new; no session data",
+    "1 lines of the session files could not be read",
+    "",
+  ]);
+
+  const report = JSON.parse(run(dir, ["--json", "--sessions", sessions]));
+  assert.deepEqual(Object.keys(report), ["items", "unreadableSessionLines"]);
+  assert.equal(report.unreadableSessionLines, 1);
+  const [small, full] = report.items;
+  assert.equal(report.items.length, 2);
+  assert.deepEqual(small.usage, {
+    responses: 1,
+    total: { input: 1, output: 7, cacheRead: 100, cacheWrite: 5 },
+    models: { "model-a": { input: 1, output: 7, cacheRead: 100, cacheWrite: 5 } },
+    activeMinutes: 1,
+  });
+  assert.equal(full.usage, null);
+  assert.equal(full.expected, 1);
+  assert.equal(full.over, true);
+});
+
+test("the command falls back to the default kinds on an empty map, and reports no session data without the folder", () => {
+  const dir = repository("fix");
+  write(dir, ".hub/profile.yml", "default-branch: main\nkinds: {}\n");
+  const missing = path.join(dir, "no-such-folder");
+
+  const lines = run(dir, ["--sessions", missing]).split("\n");
+  assert.equal(lines.length, 3, "two items, and no line on unreadable session lines");
+  assert.match(lines[0], /1 existing files \(expected at most 5\), 1 new; no session data$/u);
+  assert.match(lines[1], /2 existing files \(expected at most 5\), 0 new; no session data$/u);
+  assert.equal(lines[2], "");
+
+  const report = JSON.parse(run(dir, ["--json", "--sessions", missing]));
+  assert.equal(report.unreadableSessionLines, null);
+  assert.deepEqual(
+    report.items.map((/** @type {{ expected: number, over: boolean, usage: unknown }} */ item) => [
+      item.expected,
+      item.over,
+      item.usage,
+    ]),
+    [
+      [5, false, null],
+      [5, false, null],
+    ],
+  );
 });
