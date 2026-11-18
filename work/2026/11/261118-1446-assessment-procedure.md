@@ -10,7 +10,7 @@ areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
-source: null
+source: 261118-1348
 pr: null
 model: null
 effort: high
@@ -51,3 +51,8 @@ existing files, within the three of `flow`.
   already send a case they do not cover to the workflow, so they are unchanged.
 - GitHub piece: `gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge`
   and `gh workflow list`, both tried on the kit's repository.
+- The first check failed on two findings, fixed in a commit of their own: section 20.2 now places each part of an
+  assessment in a section of the template, the findings table in the outcome; `source` names the report
+  `261118-1348` of the home, finding 4, whose "Procedure used" section 20 generalises, and the paragraph that said so
+  under the intent, which holds only the words given, is removed. Those words are the task given by the session that
+  runs, for the person, the items of that report.

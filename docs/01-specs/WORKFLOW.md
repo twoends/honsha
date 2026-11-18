@@ -586,14 +586,19 @@ specific to the hosting service are in its piece (section 14).
 
 ### 20.2 The report
 
-- **Log:** the commit read in each repository, and the date the settings were read.
+The record of an assessment has the sections of a small item, from the template.
+
+- **Acceptance criteria:** every step of 20.1 read, and every gap given a proposed item or the reason it has none.
 - **Strategy:** the costs the estimates use, the median agent time and output tokens of a small and of a full item,
   and the items they come from.
-- **Findings,** one table: number, finding, proposed item, size and kind, estimated cost. A finding with no item says
-  why: a decision only the person can take, or nothing to do now and the review that watches it.
-- **Size and kind** of a proposed item follow the core rules (Sizes) and the project's `kinds`, or the default ones
-  (section 19). **The cost** is a multiple of a typical item of that size, from `node checks/measures.mjs` run on the
-  project; while the project has no merged items, on another project of the installation, the kit included. An item
-  that rests on something untried is estimated higher, and says why.
-- After the table, one paragraph lists what was read and found in order.
-- **Outcome:** the state in a few lines, the proposed order of the items, and the decisions waiting for the person.
+- **Log:** the commit read in each repository, and the date the settings were read.
+- **Verification:** the project's `verify` commands, where they ran, with their results.
+- **Outcome:** the findings, in one table: number, finding, proposed item, size and kind, estimated cost. A finding
+  with no item says why: a decision only the person can take, or nothing to do now and the review that watches it.
+  After the table, one paragraph lists what was read and found in order; then the state in a few lines, the proposed
+  order of the items, and the decisions waiting for the person.
+
+The size and kind of a proposed item follow the core rules (Sizes) and the project's `kinds`, or the default ones
+(section 19). Its cost is a multiple of a typical item of that size, from `node checks/measures.mjs` run on the
+project; while the project has no merged items, on another project of the installation, the kit included. An item
+that rests on something untried is estimated higher, and says why.
