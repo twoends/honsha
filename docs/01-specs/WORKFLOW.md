@@ -10,8 +10,9 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
   the change. The person merges (core rules, Delivery).
-- **Everything that is not a change to a project lives in the home:** backlog, inbox and verdicts, reports, check
-  outcomes.
+- **The home is a project like any other.** What is not a change to another project lives there: backlog, inbox and
+  verdicts, reports, check outcomes. It reaches the home's default branch as any change does, through a work item and
+  a pull request, the writes the hub and its scripts make included.
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
 - **Parallel by default.** Work is split and run in parallel whenever its parts are independent, without being asked.
 
@@ -44,8 +45,8 @@ it.
 ### 3.1 Types
 
 - **change** — modifies a repository. Lives in the project, arrives as a pull request.
-- **report** — answers a question (a status recap, an audit, a performance analysis). Lives in the home. No pull
-  request.
+- **report** — answers a question (a status recap, an audit, a performance analysis). A work item of the home: its
+  record holds the answer, and arrives with it in a pull request of the home.
 
 ### 3.2 Sizes
 
@@ -67,8 +68,8 @@ one.
 | `dropped`           | Abandoned                                                   | Home, `backlog/`            |
 
 "In review" is not a state: it is a `done` record on a branch whose pull request is open. Starting an item moves its
-record from the home's backlog into a new branch of the project. A report record goes through `in-progress` and `done`
-in the home.
+record from the home's backlog into a new branch of the project. A report's project is the home: its record follows
+the same states on a branch of the home.
 
 ---
 
@@ -188,12 +189,12 @@ the item. A failed check creates a new work item.
 When a lesson is written is in the core rules (Lessons). It goes to the level where it applies, so that it is learned
 once:
 
-| Level      | Applies to                              | Example                                                         | Where                                      | How it enters                |
-| ---------- | --------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ | ---------------------------- |
-| Project    | This repository only                    | "The `fixtures/` folder is generated: change the generator"     | The file named by `lessons` in the profile | In the same pull request     |
-| Technology | Every project that uses that technology | "A pushed database migration takes one to two minutes to apply" | Home, `lessons/tech/<technology>.md`       | Written by the hub, reported |
-| Host       | Every session on that machine           | "This shell converts arguments that start with `/`"             | Home, `lessons/host/<host>.md`             | Written by the hub, reported |
-| Kit        | Every user of the kit                   | "Never batch a restart with the edit of the file it loads"      | The kit's rules                            | A work item on the kit       |
+| Level      | Applies to                              | Example                                                         | Where                                      | How it enters            |
+| ---------- | --------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ | ------------------------ |
+| Project    | This repository only                    | "The `fixtures/` folder is generated: change the generator"     | The file named by `lessons` in the profile | In the same pull request |
+| Technology | Every project that uses that technology | "A pushed database migration takes one to two minutes to apply" | Home, `lessons/tech/<technology>.md`       | A work item of the home  |
+| Host       | Every session on that machine           | "This shell converts arguments that start with `/`"             | Home, `lessons/host/<host>.md`             | A work item of the home  |
+| Kit        | Every user of the kit                   | "Never batch a restart with the edit of the file it loads"      | The kit's rules                            | A work item on the kit   |
 
 - **Loading.** A session receives the project's lessons, the lessons of each technology in the profile's `stack`, and
   the lessons of the host it runs on. Nothing else is loaded, so a project never carries lessons for tools it does not
@@ -259,10 +260,6 @@ legacy:
   (`agents/checker.md`).
 - `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
   must match. A profile without it sets no rule on addresses.
-- `direct-commits: true` declares that the default branch takes direct commits: the guard (section 14.3) lets a plain
-  push to it through, and still refuses a forced push, a push of every branch, a deletion of the default branch and a
-  merge of a pull request. Only the home sets it (architecture, 3.2); a project never does, so the example leaves it
-  out. Any value but `true` or `false` is an error, and grants nothing.
 
 Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
 record format are not customised.
@@ -460,10 +457,9 @@ variables, and `node checks/record.mjs` reads `HONSHA_BRANCH`.
 
 ### 14.3 The guard
 
-- A hook of the kit refuses four kinds of shell command in a session: a push to the default branch, unless the profile
-  declares direct commits (section 9), a forced push, a push that skips the repository's hooks (`--no-verify`), and a
-  command that merges a pull request. The first three are plain git and hold on any service. The fourth comes from the
-  `merge-commands.json` of each service's piece.
+- A hook of the kit refuses four kinds of shell command in a session: a push to the default branch, a forced push, a
+  push that skips the repository's hooks (`--no-verify`), and a command that merges a pull request. The first three
+  are plain git and hold on any service. The fourth comes from the `merge-commands.json` of each service's piece.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
@@ -580,7 +576,8 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
 ## 20. Assessing a project
 
 An assessment reads a project against the kit's rules and proposes the work that would close each gap. It changes
-nothing: it is a small report item in the home (section 3.1), and the person chooses which of its proposed items start.
+nothing in the project: it is a small report item of the home (section 3.1), and the person chooses which of its
+proposed items start.
 
 Every project that joins an installation is assessed first. Its entry in the home's registry (architecture, section
 3.2) says where it stands, and so what work may start in it:
@@ -593,12 +590,27 @@ Every project that joins an installation is assessed first. Its entry in the hom
   work item may start; the chosen items left go on as ordinary items.
 
 Entering a project and moving it between states are mechanical, so code does them, not an agent: `hub/projects.mjs` in
-the kit, run from the home's folder by the person, the hub or an interface. `add` writes the entry as `assessing` and
-the assessment's record, ready to start. With `--assessment <id>` it takes a report already in the home instead, for a
-project assessed before it was added. `choose`, once the assessment is done and the person has chosen its items, moves
-the project to `adopting`. `refresh` moves it to `active` when its default branch declares the kit. `may-start` answers
-whether a work item may start in a project, and is asked before one starts. An agent does only the assessment and the
-items.
+the kit, run from the home's folder by the person, the hub or an interface. Each move is a work item of the home made by
+code: the script reads the registry from the home's default branch, creates a work branch from it, and commits the
+registry's change there with the item's record, leaving the home's working tree as it is. It never pushes and never
+opens a pull request; the hub does, with the commands of the hosting service's piece (section 14). A move holds once
+the person merges its pull request: a project's state is the one on the home's default branch.
+
+- `add` creates the assessment's branch, with its record, ready to start, and the entry as `assessing`. The assessment
+  runs on that branch, and its pull request carries the entry, so that merging it registers the project. With
+  `--assessment <id>` it takes a report already on the home's default branch instead, for a project assessed before it
+  was added, in a trivial item of its own.
+- `choose`, once the assessment is merged as done and the person has chosen its items, moves the project to
+  `adopting`; `refresh` moves it to `active` when its default branch declares the kit. Each makes a trivial item whose
+  record the script writes whole, verification and outcome included; the closing commit adds what the pull request
+  gives.
+- `check` reads the registry of a branch of the home, and fails on an entry it cannot read, an assessment with no
+  record, or a project past `assessing` whose assessment is not done. The worker runs it in the home with the kit's
+  other checks (`agents/worker.md`).
+- `may-start` answers, from the home's default branch, whether a work item may start in a project, and is asked
+  before one starts.
+
+An agent does only the assessment and the items.
 
 A project that is not in the registry gets no work item. An active project can be assessed again when the person
 asks; its state does not change.

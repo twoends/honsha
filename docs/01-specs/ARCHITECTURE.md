@@ -114,14 +114,15 @@ decisions.md           choices about this installation and standing preferences,
 inbox/                 one file per item received, with its verdict
 backlog/               work items not yet started, per project
 radar/                 one file per tool
-reports/               answers to questions, and outcomes of deferred checks
+work/                  the home's work items: reports with their answers, outcomes of deferred checks, moves in the registry
 lessons/tech/          one file per technology, shared by every project that uses it
 lessons/host/          one file per host
-.hub/profile.yml       the default branch, and `direct-commits: true` (workflow, section 9)
+.hub/profile.yml       the home's profile, as a project's (section 3.3)
 ```
 
-The hub writes to the home directly. It is the only repository where it does, and the only one whose profile
-declares direct commits, so that the kit's guard lets its pushes to `main` through.
+The home is a project like any other: the kit is declared in it, and its default branch changes only through pull
+requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
+scripts included; a report is one of them, and its record holds the answer.
 
 ### 3.3 Project (each registered repository)
 

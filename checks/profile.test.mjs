@@ -34,7 +34,6 @@ test("reads the three keys in their plain forms", () => {
 test("a profile without the keys gives nothing to run and nothing to match", () => {
   assert.deepEqual(parseProfile("name: example-project\n"), {
     defaultBranch: null,
-    directCommits: false,
     verify: [],
     commitsAddress: null,
     kinds: null,
@@ -42,12 +41,12 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
 });
 
-test("reads whether the default branch takes direct commits, and refuses any other value", () => {
-  assert.equal(parseProfile("direct-commits: true\n").directCommits, true);
-  assert.equal(parseProfile("direct-commits: false # a project\n").directCommits, false);
-  assert.equal(parseProfile("direct-commits: 'true'\n").directCommits, true);
-  for (const value of ["yes", "True", "1", ""]) {
-    assert.throws(() => parseProfile(`direct-commits: ${value}\n`), /direct-commits/);
+test("refuses a profile that declares direct commits, whatever their value", () => {
+  for (const value of ["true", "false # a project", "'true'", '"false"', "yes", ""]) {
+    assert.throws(
+      () => parseProfile(`default-branch: main\ndirect-commits: ${value}\n`),
+      /`direct-commits` no longer exists: the default branch changes only through pull requests/,
+    );
   }
 });
 
