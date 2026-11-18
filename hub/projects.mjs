@@ -246,10 +246,10 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
     }
     projects.push({ name, repository, paths: { [host]: path.resolve(folder) }, state: "assessing", assessment });
     save(home, projects);
-    return {
-      code: 0,
-      out: [`\`${name}\` added as assessing. Its assessment is the report ${assessment}: the next step is to run it.`],
-    };
+    const report = findReport(home, assessment);
+    const done = report !== null && field(fs.readFileSync(report, "utf8"), "state") === "done";
+    const next = done ? "it is done, so the next step is `choose`" : "the next step is to run it";
+    return { code: 0, out: [`\`${name}\` added as assessing. Its assessment is the report ${assessment}: ${next}.`] };
   }
   if (command === "choose") {
     if (!project) return { code: 1, out: [`\`${name ?? ""}\` is not in the registry.`] };
