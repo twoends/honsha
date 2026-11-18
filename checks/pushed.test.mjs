@@ -7,13 +7,13 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { check, install } from "./pushed.mjs";
+import { check, install, personalNames } from "./pushed.mjs";
 
 const kit = fileURLToPath(new URL("..", import.meta.url));
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-pushed-"));
 after(() => fs.rmSync(scratch, { recursive: true, force: true }));
 
-// The repositories of the tests see none of the machine's git configuration: neither a hooks folder nor a word list.
+// The repositories of the tests see none of the machine's git configuration: no hooks folder.
 const emptyConfig = path.join(scratch, "empty.gitconfig");
 fs.writeFileSync(emptyConfig, "");
 process.env.GIT_CONFIG_GLOBAL = emptyConfig;
@@ -88,13 +88,13 @@ const short = (sha) => sha.slice(0, 7);
 test("lets a push through when its commits add nothing personal", () => {
   const dir = clone();
   commit(dir, { "notes.md": "plain text\n" }, "Add notes");
-  assert.deepEqual(check(input(dir), dir), []);
+  assert.deepEqual(check(input(dir), dir, []), []);
 });
 
 test("refuses a line that holds a path into a user's folder, naming commit, file and line but not the text", () => {
   const dir = clone();
   const added = commit(dir, { "docs/notes.md": `first\nsee ${folder}\n` }, "Add notes");
-  const report = check(input(dir), dir);
+  const report = check(input(dir), dir, []);
   assert.deepEqual(report, [`${short(added)} docs/notes.md:2 holds a path into a user's folder`]);
   assert.ok(!report.join("\n").includes("someone"));
 });
@@ -108,14 +108,14 @@ test("refuses the case of a closing commit whose record quotes such a path", () 
     { [record]: `## Verification\n\nThe checker read ${folder}\\.honsha-checker.diff\n` },
     "Close the record",
   );
-  assert.deepEqual(check(input(dir), dir), [`${short(closing)} ${record}:3 holds a path into a user's folder`]);
+  assert.deepEqual(check(input(dir), dir, []), [`${short(closing)} ${record}:3 holds a path into a user's folder`]);
 });
 
 test("refuses what one commit adds and a later one of the same push removes", () => {
   const dir = clone();
   const added = commit(dir, { "notes.md": `${address}\n` }, "Add notes");
   commit(dir, { "notes.md": "nothing\n" }, "Take the address out");
-  assert.deepEqual(check(input(dir), dir), [`${short(added)} notes.md:1 holds an e-mail address`]);
+  assert.deepEqual(check(input(dir), dir, []), [`${short(added)} notes.md:1 holds an e-mail address`]);
 });
 
 test("checks the message, the identities and the names of files", () => {
@@ -125,7 +125,7 @@ test("checks the message, the identities and the names of files", () => {
   const name = commit(dir, { [`notes-for-${address}.md`]: "c\n" }, "Add c");
   const empty = commit(dir, { [`empty-for-${address}.txt`]: "", [`image-for-${address}.png`]: "\0\x01" }, "Add d");
   commit(dir, { [`notes-for-${address}.md`]: null }, "Remove c");
-  assert.deepEqual(check(input(dir), dir), [
+  assert.deepEqual(check(input(dir), dir, []), [
     `${short(message)} its message holds an e-mail address`,
     `${short(identity)} its author or committer holds an e-mail address`,
     `${short(name)} the name of a file holds an e-mail address`,
@@ -139,8 +139,8 @@ test("does not check again what a remote already holds, nor a deleted branch", (
   commit(dir, { "old.md": `${folder}\n` }, "Published before the hook");
   git(dir, ["push", "-q", "origin", "work/item"]);
   commit(dir, { "new.md": "plain\n" }, "Add new");
-  assert.deepEqual(check(input(dir), dir), []);
-  assert.deepEqual(check(`(delete) ${NONE} refs/heads/work/item ${git(dir, ["rev-parse", "HEAD"])}\n`, dir), []);
+  assert.deepEqual(check(input(dir), dir, []), []);
+  assert.deepEqual(check(`(delete) ${NONE} refs/heads/work/item ${git(dir, ["rev-parse", "HEAD"])}\n`, dir, []), []);
 });
 
 test("checks of a merge only the resolution of its conflicts", () => {
@@ -159,22 +159,19 @@ test("checks of a merge only the resolution of its conflicts", () => {
   git(dir, ["add", "f.md", "g.md"]);
   git(dir, ["commit", "-q", "--no-edit"]);
   const merge = git(dir, ["rev-parse", "HEAD"]);
-  assert.deepEqual(check(input(dir), dir), [`${short(merge)} f.md:2 holds an e-mail address`]);
+  assert.deepEqual(check(input(dir), dir, []), [`${short(merge)} f.md:2 holds an e-mail address`]);
 });
 
-test("matches the word list the clone names, and refuses a list that cannot be read without naming it", () => {
+test("looks for the machine's user by name, unless the name is short or one that systems create", () => {
   const dir = clone();
   const added = commit(dir, { "notes.md": "made for Zorblat\n" }, "Add notes");
-  assert.deepEqual(check(input(dir), dir), [], "no list set");
-  const list = path.join(scratch, `words-${count}.txt`);
-  fs.writeFileSync(list, "# names\n\n  zorblat  \n");
-  git(dir, ["config", "honsha.words", list]);
-  assert.deepEqual(check(input(dir), dir), [`${short(added)} notes.md:1 holds a word from the personal list`]);
-  git(dir, ["config", "honsha.words", path.join(scratch, "missing.txt")]);
-  assert.throws(
-    () => check(input(dir), dir),
-    (error) => error instanceof Error && error.message.includes("honsha.words") && !error.message.includes(scratch),
-  );
+  assert.deepEqual(check(input(dir), dir, []), [], "no names");
+  assert.deepEqual(check(input(dir), dir, personalNames("zorblat")), [
+    `${short(added)} notes.md:1 holds a personal name`,
+  ]);
+  for (const user of ["runner", "Administrator", "root", "al", ""]) assert.deepEqual(personalNames(user), [], user);
+  const own = personalNames();
+  assert.ok(own.length <= 1);
 });
 
 test("install names the kit's hooks once, and leaves a hooks folder already set", () => {

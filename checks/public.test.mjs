@@ -56,13 +56,13 @@ test("finds a path into a user's folder on Windows, Linux and macOS", () => {
   assert.deepEqual(personal("see /home/<name>/project and C:\\Users\\<name>"), []);
 });
 
-test("finds the words of a list as whole words, ignoring case, and only when given", () => {
+test("finds the names it is given as whole words, ignoring case, and only when given", () => {
   const words = ["Zorblat", "Quix Corp", "a.b+c"];
   assert.deepEqual(personal("made for zorblat\nby QUIX CORP.\nfor a.b+c"), [], "no list");
   assert.deepEqual(personal("made for zorblat\nby QUIX CORP.\nfor a.b+c", words), [
-    { line: 1, kind: "a word from the personal list" },
-    { line: 2, kind: "a word from the personal list" },
-    { line: 3, kind: "a word from the personal list" },
+    { line: 1, kind: "a personal name" },
+    { line: 2, kind: "a personal name" },
+    { line: 3, kind: "a personal name" },
   ]);
   for (const text of ["zorblatted", "superzorblat", "zorblat2", "Quix Corporation", "aXb+c"]) {
     assert.deepEqual(personal(text, words), [], text);

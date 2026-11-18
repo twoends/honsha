@@ -6,8 +6,8 @@
 // is checked on its own, because a push publishes the history, not only the last tree: what one
 // commit adds and a later one removes is published all the same.
 //
-// The word list is personal and lives outside the repository; the clone's configuration names it,
-// `git config honsha.words <file>`. Without it only the patterns are checked, and no file is read.
+// Besides the patterns, it looks for the name of the machine's user, read from the system at each
+// push: a list kept by hand would fall behind. Names that many machines share are left out.
 //
 // The report names the commit, the file and the line, never what was found: a report gets copied
 // into records, and would carry it on.
@@ -18,11 +18,14 @@
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { personal } from "./public.mjs";
 
 const NONE = /^0+$/;
+// Users that systems and pipelines create on their own: words of any text, not the name of a person.
+const GENERIC = new Set(["admin", "administrator", "dev", "guest", "node", "root", "runner", "test", "ubuntu", "user"]);
 
 /**
  * @param {string} cwd
@@ -38,29 +41,18 @@ function git(cwd, args) {
 }
 
 /**
- * The entries of the word list the clone's configuration names: `[]` when it names none.
- * @param {string} cwd
+ * The names the check looks for besides the patterns: the machine's user, unless it is short or generic.
+ * @param {string} [user] the user, read from the system when not given
  * @returns {string[]}
- * @throws {Error} when the setting names a file that cannot be read
  */
-export function wordList(cwd) {
-  let file = "";
+export function personalNames(user) {
+  let name = user;
   try {
-    file = git(cwd, ["config", "--type=path", "--get", "honsha.words"]).trim();
+    name ??= os.userInfo().username;
   } catch {
     return [];
   }
-  if (!file) return [];
-  let text;
-  try {
-    text = fs.readFileSync(file, "utf8");
-  } catch {
-    throw new Error("`honsha.words` names a file that cannot be read: correct the setting, or unset it.");
-  }
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#"));
+  return name.length >= 3 && !GENERIC.has(name.toLowerCase()) ? [name] : [];
 }
 
 /**
@@ -152,9 +144,9 @@ export function commitFindings(commit, cwd, words) {
  * The lines of the report on a push: empty when the push may go.
  * @param {string} input what git gives the hook
  * @param {string} cwd
+ * @param {string[]} [words] the names to look for; `personalNames()` when not given
  */
-export function check(input, cwd) {
-  const words = wordList(cwd);
+export function check(input, cwd, words = personalNames()) {
   const lines = [];
   for (const commit of pushedCommits(input, cwd)) {
     const short = commit.slice(0, 7);
@@ -196,10 +188,9 @@ function main() {
   let lines;
   try {
     lines = check(fs.readFileSync(0, "utf8"), process.cwd());
-  } catch (error) {
-    // A git error can quote paths of the machine: only the reasons of this script are shown.
-    const reason = error instanceof Error && error.message.startsWith("`honsha.words`") ? error.message : "git failed.";
-    process.stderr.write(`Honsha pre-push: the check could not run: ${reason}\n`);
+  } catch {
+    // A git error can quote paths of the machine, so it is not shown.
+    process.stderr.write("Honsha pre-push: the check could not run: git failed.\n");
     return 1;
   }
   if (lines.length === 0) return 0;
