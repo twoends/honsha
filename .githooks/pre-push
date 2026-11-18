@@ -1,0 +1,3 @@
+#!/bin/sh
+# The kit's check of what a push publishes: checks/pushed.mjs. Git runs it from the root of the worktree.
+exec node checks/pushed.mjs "$@"

@@ -9,5 +9,17 @@
   },
   "worktree": {
     "baseRef": "head"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f \"$CLAUDE_PROJECT_DIR/checks/pushed.mjs\" && node \"$CLAUDE_PROJECT_DIR/checks/pushed.mjs\" --install || true"
+          }
+        ]
+      }
+    ]
   }
 }

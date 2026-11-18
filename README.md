@@ -70,6 +70,15 @@ If an edit breaks a session, set `"honsha@honsha": false` under `enabledPlugins`
 which git does not track, until it is fixed; or start the session with `claude --plugin-dir <a clone of a working
 commit>`, which takes the place of the declared plugin.
 
+The kit is public from its first commit, so a push from a clone is checked by the hook `.githooks/pre-push`: it
+refuses a push when any commit it sends, and that no remote holds yet, adds an e-mail address, a path into a user's
+folder or a word of a personal list, in a line, a file's name, the message or the author. It names the commit, the
+file and the line, never what it found. A session that opens in the clone points git at the hook; a clone used
+without sessions does it with `node checks/pushed.mjs --install`. Neither changes a hooks folder that git's
+configuration already names. The word list stays outside the repository, one entry per line, `#` for a comment; a
+clone that has one names it with `git config honsha.words <absolute path>`. Without it, only the patterns are
+checked.
+
 ## Checking a change to the kit
 
 ```
