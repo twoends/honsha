@@ -83,6 +83,7 @@ function repository() {
   commit(dir, "261118-1200", "Record the approval", "2026-11-18T13:10:00Z");
   write(dir, "a.md", "a, changed again\n");
   write(dir, "b.md", "b, changed\n");
+  write(dir, "work/2026/11/261118-1000-small.md", `${record("261118-1000", "small", "gate")}touched later\n`);
   commit(dir, "261118-1200", "Do the full item", "2026-11-18T13:30:00Z");
   commit(dir, "261118-1200", "Close it", "2026-11-18T13:40:00Z");
   git(dir, ["switch", "-q", "main"]);
@@ -108,6 +109,9 @@ test("measures every merged item from git, and marks the one over its kind's exp
   assert.equal(small.approvalMinutes, null);
   assert.equal(small.reviewMinutes, 30);
   assert.equal(small.existing, 1);
+  assert.equal(small.newFiles, 1);
+  assert.equal(small.added, 9);
+  assert.equal(small.removed, 1);
   assert.equal(small.over, false);
 
   assert.equal(full.id, "261118-1200");
@@ -115,7 +119,8 @@ test("measures every merged item from git, and marks the one over its kind's exp
   assert.equal(full.agentMinutes, 10 + 30);
   assert.equal(full.approvalMinutes, 60);
   assert.equal(full.reviewMinutes, 20);
-  assert.equal(full.existing, 2);
+  assert.equal(full.existing, 2, "the earlier record it touched is left out");
+  assert.equal(full.newFiles, 0);
   assert.equal(full.over, true);
-  assert.match(describe(full), /2 existing files \(expected at most 1\) OVER$/u);
+  assert.match(describe(full), /2 existing files \(expected at most 1\) OVER, 0 new$/u);
 });

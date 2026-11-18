@@ -12,7 +12,8 @@
 // The size of the change is its diff from the merge base: lines, and files counted apart as
 // existing (changed, deleted or renamed) or new. Records under `work/` are left out of the files.
 // An item is over its expectation when it changed more existing files than the profile's
-// `kinds` allow for its kind. Nothing here fails: it is a report.
+// `kinds` allow for its kind; a profile with no kinds, or an empty map, gets the default ones.
+// Only items merged with a merge commit are found. Nothing here fails: it is a report.
 
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -28,7 +29,7 @@ const TRAILER = /^Work-Item:\s*(\d{6}-\d{4})\s*$/m;
 
 /**
  * @typedef {{ id: string, size: string | null, kind: string | null, commits: number, added: number, removed: number,
- *   existing: number, created: number, agentMinutes: number, approvalMinutes: number | null, reviewMinutes: number,
+ *   existing: number, newFiles: number, created: number, agentMinutes: number, approvalMinutes: number | null, reviewMinutes: number,
  *   expected: number | null, over: boolean }} Measure
  */
 
@@ -105,11 +106,13 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
       added += Number(plus) || 0;
       removed += Number(minus) || 0;
     }
-    const existing = git(cwd, ["diff", "--name-status", base, `${merge}^2`])
+    const files = git(cwd, ["diff", "--name-status", base, `${merge}^2`])
       .split("\n")
       .filter(Boolean)
       .map((row) => row.split("\t"))
-      .filter(([status, file]) => !status.startsWith("A") && !(file ?? "").startsWith("work/")).length;
+      .filter(([, file]) => !(file ?? "").startsWith("work/"));
+    const newFiles = files.filter(([status]) => status.startsWith("A")).length;
+    const existing = files.length - newFiles;
 
     const created = createdAt(id);
     const delivered = commits[commits.length - 1].time;
@@ -127,6 +130,7 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
       added,
       removed,
       existing,
+      newFiles,
       created,
       agentMinutes,
       approvalMinutes: approval === null ? null : minutes(strategy, approval),
@@ -145,13 +149,14 @@ export function describe(item) {
   return (
     `${item.id} ${item.size ?? "-"} ${item.kind ?? "-"}: agent ${item.agentMinutes} min${approval}, ` +
     `review ${item.reviewMinutes} min; ${item.commits} commits, +${item.added} -${item.removed}; ` +
-    `${item.existing} existing files${expectation}${item.over ? " OVER" : ""}`
+    `${item.existing} existing files${expectation}${item.over ? " OVER" : ""}, ${item.newFiles} new`
   );
 }
 
 function main() {
   const profile = readProfile();
-  const kinds = profile?.kinds ?? DEFAULT_KINDS;
+  const listed = profile?.kinds;
+  const kinds = listed && Object.keys(listed).length > 0 ? listed : DEFAULT_KINDS;
   const ref = profile?.defaultBranch ?? "HEAD";
   const items = measure({ ref, kinds });
   if (process.argv.includes("--json")) {

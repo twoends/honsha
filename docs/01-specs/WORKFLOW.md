@@ -545,3 +545,4 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
   `change: 10`. New files are not counted: a capability added in its own files is the shape that stays easy to
   change.
 - **Use.** For estimates, and for finding coupling. They are not a judgement of a session or a person.
+- **Limit.** An item is found from its merge commit; a project that merges in another way gets no measures.
