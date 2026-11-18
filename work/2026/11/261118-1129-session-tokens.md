@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -115,6 +115,9 @@ Checked on 2026-11-18 on this PC and in the platform's documentation:
 3. **Tokens, not money.** Recommended.
 
 ## Approval
+
+Approved by the person on 2026-11-18, in the chat of the session that wrote the strategy, with the three decisions as
+recommended.
 
 ## Log
 
