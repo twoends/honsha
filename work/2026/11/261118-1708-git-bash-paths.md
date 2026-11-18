@@ -74,8 +74,9 @@ same only when the plain path is missing.
 
 ## Verification
 
-On `3e40189`, Windows 11, Node.js 26.13.0: `node checks/verify.mjs` passed all six — Prettier, oxlint, TypeScript, 68
-tests, the plugin validator, and the commit check, "The 2 commits of the branch follow the rules."
+On `670dd61`, after the merge of `main`, Windows 11, Node.js 26.13.0: `node checks/verify.mjs` passed all six —
+Prettier, oxlint, TypeScript, 71 tests, the plugin validator, and the commit check, "The 5 commits of the branch follow
+the rules."
 
 ### Checker report, on `9d5ab20`
 
@@ -92,31 +93,59 @@ tests, the plugin validator, and the commit check, "The 2 commits of the branch 
 
 **Verdict:** pass
 
-This is a repeated check of the diff from 9d5ab20 to 3e40189. It touches only the record.
+**Findings**
+
+none
+
+### Checker report, on `670dd61`
+
+**Verdict:** pass
+
+This is a repeated check after the merge of `main`, which had conflicts. Since my last report on `3e40189`, the branch
+has three new commits: the closing commit `e5b18b8`, the merge `3f8637d`, and `670dd61`. The diff file is the whole PR
+against the new `origin/main`, and I read it again in full.
 
 **Acceptance criteria**
 
-1. On Windows, a Git Bash form `/<drive>/<rest>` is read as `<DRIVE>:/<rest>` when the plain path does not exist: met
-   in the last check (`hooks/guard.mjs:168-174`, `:186`). Not changed by 3e40189.
-2. A path that exists, and every path on other platforms, resolves as before: met in the last check
-   (`hooks/guard.mjs:172`). Not changed.
-3. Tests in `hooks/guard.test.mjs` pass the platform and the existence check in: met in the last check
-   (`hooks/guard.test.mjs:219-232`). Not changed.
-4. The kit's `verify` list passes: met according to the coordinator's report on 3e40189 (68 tests, "The 2 commits of
-   the branch follow the rules."). This result is not in the record yet; it goes in with the closing commit.
+1. On Windows, a Git Bash form `/<drive>/<rest>` is read as `<DRIVE>:/<rest>` when the plain path does not exist: met.
+   See `hooks/guard.mjs:176-182`, called at `:194`. The result flows into `defaultBranches(dir)` and `current()`
+   (`:220-221`). The end-to-end test is at `hooks/guard.test.mjs:265-274`.
+2. A path that exists, and every path on other platforms, resolves as before: met, `hooks/guard.mjs:180`.
+3. Tests with the platform and the existence check passed in: met, `hooks/guard.test.mjs:250-263`.
+4. The kit's `verify` list passes: met according to the coordinator's report of the run on `670dd61` (all six, 71
+   tests, "The 5 commits of the branch follow the rules."). See Verification evidence.
 
-- **Intent:** in order
-- **Scope:** in order. The diff changes only `work/2026/11/261118-1708-git-bash-paths.md`.
+- **Intent:** in order. The new assertion at `hooks/guard.test.mjs:272` covers the case the intent starts from: a plain
+  push to `main` passes for a repository whose profile has `direct-commits: true`, when that repository is named in
+  Git Bash form.
+- **Scope:** in order. Against the new `main`, the diff changes only `hooks/guard.mjs`, `hooks/guard.test.mjs` and the
+  record. The merge brings in nothing beyond what `main` already holds.
+- **Merge resolution:** in order.
+  - Both sets of tests are kept. The direct-commits tests of PR 16 are at `hooks/guard.test.mjs:212-241`, and this
+    item's tests are at `:243-274`.
+  - `hooks/guard.mjs` now has both changes: `defaultBranches` returns `{ names, direct }`, and `judgeGit` uses it at
+    `:234-236`. `gitDirectory` is unchanged.
+  - `checks/profile.mjs:74-77` accepts `direct-commits: true`, which the new assertion depends on.
 - **Comments and documents:** in order
-- **Gates:** in order. Finding 1 of the last report is fixed: lines 22-26 of the record now elide the user-folder
-  path, the home folder's name and the home's configuration with "[…]". No tracked file of the kit now contains the
-  home folder's name or a path into a user's folder. "the rules name no hosting service": in order. "a script comes
-  with its test": in order, as no script changed.
-- **Verification evidence:** in order, according to the coordinator's report on 3e40189; it is to be written into
-  Verification in the closing commit. The list covers formatting, lint, types and tests.
-- **Record:** in order. The Log records the fix at lines 63-64.
-- **Commits:** in order. `3e40189` "Elide the installation's folder and home from the record's quoted intent" carries
-  `Work-Item: 261118-1708` in its closing trailer block. Author and committer addresses match `commits.address`.
+- **Gates:**
+  - "nothing about a user, a user's project or an installation": in order. No tracked file contains the home folder's
+    name or a path into a user's folder. The checker reports copied into the record describe them without naming them
+    (record lines 85-88, 110-112).
+  - "the rules name no hosting service": in order.
+  - "a script comes with its test": in order.
+- **Verification evidence:** in order according to the coordinator's report. The record's Verification (lines 76-77)
+  still shows only the run on `3e40189`, which is before the merge and before `670dd61`. The run on `670dd61` has to be
+  written there in the final record commit. The list covers formatting, lint, types and tests.
+- **Record:** in order.
+  - The sections fit a small item.
+  - The Log records the merge and how its conflict was resolved (lines 69-70), the new assertion (71-72), the change
+    of `requested-by` (67-68), and how the copied reports were edited (65-66).
+  - Of the earlier reports, the one on `9d5ab20` keeps only its verdict and findings. When this report goes in, the
+    one on `3e40189` must be cut down the same way.
+- **Commits:** in order. `e5b18b8` "Close the record of the guard's reading of Git Bash paths", `3f8637d` "Merge the
+  default branch into the work branch" and `670dd61` "Test a direct push through a Git Bash path to a repository that
+  declares direct commits" each carry `Work-Item: 261118-1708`. All author and committer addresses match
+  `commits.address`.
 
 **Findings**
 
@@ -124,10 +153,12 @@ none
 
 **Not verified**
 
-- Whether the end-to-end test that runs only on Windows passes on the CI Windows runner
-  (`.github/workflows/verify.yml:32`). It was recorded as passing only on the local Windows machine.
-- Whether the quoted intent matches the hub's request (source 261118-1532), apart from the parts now elided. That
-  item is not in this repository.
+- Whether the end-to-end test that runs only on Windows (`hooks/guard.test.mjs:265-274`), now with its third
+  assertion, passes on the CI Windows runner (`.github/workflows/verify.yml:32`). It was reported as passing only on
+  the local Windows machine.
+- The run of `verify` on `670dd61` is not in the record yet. Only the coordinator reported it.
+- Whether the quoted intent matches the original request of 261118-1532, apart from the parts now elided. That item
+  is not in this repository.
 
 ## Outcome
 
