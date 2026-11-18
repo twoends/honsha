@@ -61,3 +61,5 @@ same only when the plain path is missing.
   a temporary repository named in the Git Bash form, run only on Windows, since only there does that form name a
   drive (the CI matrix has a Windows runner). The test paths avoid users' folders, which `checks/public.test.mjs`
   refuses.
+- The checker failed the gate "nothing about a user, a user's project or an installation": the quoted intent named
+  a folder of this installation and its home's configuration. Those parts of the quote are elided with "[…]".
