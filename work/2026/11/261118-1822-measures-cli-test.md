@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 19
+model: claude-opus-5-5
 effort: high
 checks: []
 ---
@@ -70,6 +70,77 @@ folder's name can differ between the form the system gives and the one git print
   section 13.2 says about the trailer. The lesson keeps only the blank line and the run of the commit check, and
   points to 13.2.
 
+## Verification
+
+On `652db9e`, Windows 11, after `npm ci`: `node checks/verify.mjs` passed all six — Prettier, oxlint, TypeScript, 85
+tests (85 pass, 0 fail), the plugin validator, and the commit check, "The 2 commits of the branch follow the rules."
+
+### Checker report, on `fe78bf3`
+
+**Verdict:** fail
+
+**Findings**
+
+1. The record `work/2026/11/261118-1822-measures-cli-test.md` has no "Verification" section, so none of the six
+   `verify` commands appears with its result. `agents/worker.md:59` says to write them there before calling the
+   checker. That section is also one a small item keeps. The run the caller reported (on `fe78bf3`, all six passed)
+   has to be written into the record.
+2. `LESSONS.md:7-9` restates WORKFLOW section 13.2 (`docs/01-specs/WORKFLOW.md:365-369`) instead of only pointing to
+   it:
+   - "Keep every trailer, `Work-Item` and the co-author line, in one last block" repeats "The trailer goes in the last
+     block … Other trailers … can share the block".
+   - "no later commit can supply it" repeats "It cannot be added later".
+
+   This puts back the restatement that the checker on item 261118-1714 had cut. Only the blank-line rule and the new
+   sentence on running `node checks/commits.mjs` are new. Fix: keep those two and point to 13.2 for the rest.
+
+### Checker report, on `652db9e`
+
+**Verdict:** pass
+
+This is a repeated check on `652db9e`. The diff file covers the whole branch (main...HEAD), so I checked only what
+changed since `fe78bf3`: `LESSONS.md`, the record's new log line, Verification and Deviation 1.
+`checks/measures.test.mjs` is unchanged; its blob is still `25925d1`, as in the last check.
+
+Both findings of the last report are fixed:
+
+1. **Missing Verification:** fixed. The record in the working tree has a Verification section
+   (`work/2026/11/261118-1822-measures-cli-test.md:72-75`). It holds the run on `652db9e`: all six `verify` commands
+   passed. The report on `fe78bf3` is cut down to its verdict and findings (lines 77-94).
+2. **`LESSONS.md` restating section 13.2:** fixed. `LESSONS.md:7-8` now keeps only the blank-line rule, which points
+   to "workflow section 13.2", and the new instruction to run `node checks/commits.mjs`. The text that repeated the
+   last-block rule and "It cannot be added later" is gone.
+
+**Acceptance criteria**
+
+1. Command run on a built repository and session folder, text output checked: met, `checks/measures.test.mjs:163-177`
+   (unchanged since the last check).
+2. `--json` object with `usage` or `null`: met, `checks/measures.test.mjs:179-192`, `:206-218`.
+3. Profile `kinds` set the expectation; `kinds: {}` falls back to the defaults: met, `checks/measures.test.mjs:171-174`,
+   `:191`, `:202-203`, `:215-216`.
+4. Missing `--sessions` folder: met, `checks/measures.test.mjs:198-207`.
+5. Script unchanged: met. `checks/measures.mjs` is not in the diff.
+6. `verify` list passes: met. Recorded at `work/2026/11/261118-1822-measures-cli-test.md:74-75`, on `652db9e`.
+
+- **Intent:** in order
+- **Scope:** in order. `652db9e` touches only `LESSONS.md` and the record, as the commit list shows.
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order. The new log line (68-70) adds to the log without rewriting it. Deviation 1 (lines 98-101) now
+  records the person's approval of the replaced commit.
+- **Commits:** in order. `fe78bf3` "Test the command line of the measures script on a repository and a session folder
+  built by the test." and `652db9e` "Point the lesson on trailers to the workflow instead of repeating it." both carry
+  `Work-Item: 261118-1822`. Their author and committer addresses match `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Deviations
 
 - The branch did not only grow: its one unpushed commit was replaced, against "a work branch only grows". Git reads a
@@ -77,3 +148,11 @@ folder's name can differ between the form the system gives and the one git print
   check would have failed on the branch for good. Approved by the session that started this one, then
   by the person in this session.
 - `LESSONS.md` was not in the plan: the lesson on trailers is extended with the check before the first push.
+
+## Outcome
+
+`checks/measures.mjs` is tested as a command: two tests in `checks/measures.test.mjs` run it on a repository and a
+session folder they build, and check its text output and `--json`, the profile's `default-branch` and `kinds`, the
+fallback of `kinds: {}` to the default kinds, a missing session folder, and the line on unreadable session lines. The
+script is unchanged. The lesson on trailers also says to run the commit check before a branch's first push. No
+deferred check.
