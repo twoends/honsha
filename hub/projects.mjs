@@ -67,16 +67,16 @@ export function parseRegistry(text) {
       throw new Error(`${REGISTRY}, line ${index + 1}: not in the shape this script writes: ${line}`);
     };
     const first = /^ {2}- name: (.+)$/.exec(line);
-    const field = /^ {4}([a-z]+):(?: (.+))?$/.exec(line);
+    const key = /^ {4}([a-z]+):(?: (.+))?$/.exec(line);
     const host = /^ {6}([^:\s]+): (.+)$/.exec(line);
     if (first) {
       current = { name: unquote(first[1]), paths: {} };
       projects.push(/** @type {Project} */ (current));
       inPaths = false;
-    } else if (current && field) {
-      inPaths = field[1] === "paths" && field[2] === undefined;
-      if (!inPaths && field[2] === undefined) fail();
-      if (!inPaths) current[field[1]] = unquote(field[2] ?? "");
+    } else if (current && key) {
+      inPaths = key[1] === "paths" && key[2] === undefined;
+      if (!inPaths && key[2] === undefined) fail();
+      if (!inPaths) current[key[1]] = unquote(key[2] ?? "");
     } else if (current && inPaths && host) {
       current.paths[host[1]] = unquote(host[2]);
     } else fail();
