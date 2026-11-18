@@ -1,11 +1,12 @@
-// Refuses the shell commands by which a session would merge, push to the default branch or
-// force a push.
+// Refuses the shell commands by which a session would merge, push to the default branch, force a
+// push or skip the hooks of a push.
 //
 // Runs as a PreToolUse hook on the shell tools (see hooks.json). It reads the command the session
 // is about to run and exits with code 2, and one line of reason, when the command:
 //   - pushes to the default branch of the project, or pushes every branch;
 //   - deletes the default branch;
 //   - forces a push;
+//   - skips the hooks of a push, which may check what it publishes;
 //   - merges a pull request, by one of the commands that the piece of a hosting service lists
 //     (`services/<name>/merge-commands.json`).
 //
@@ -41,6 +42,8 @@ const REASONS = {
     "Honsha guard: this push sends every branch, the default branch among them. The default branch changes only through pull requests, and the person merges them.",
   force: () =>
     "Honsha guard: this push is forced. A session never force-pushes: a work branch only grows, and a mistake is corrected by a new commit.",
+  hooks: () =>
+    "Honsha guard: this push skips the repository's hooks (`--no-verify`). A session never skips them: a hook that refuses a push says what to correct first.",
   merge: () =>
     "Honsha guard: this command merges a pull request. The person merges; a session stops once the pull request is open.",
 };
@@ -208,6 +211,7 @@ function judgeGit(args, cwd) {
     }
     if (!arg.startsWith("-")) positional.push(arg);
     else if (/^--force($|-with-lease|-if-includes)/.test(arg) || /^-[A-Za-z]*f/.test(arg)) return REASONS.force();
+    else if (arg === "--no-verify") return REASONS.hooks();
     else if (arg === "--all" || arg === "--branches" || arg === "--mirror") every = true;
     else if (arg === "--tags") tagsOnly = true;
     else if (arg === "--delete" || /^-[A-Za-z]*d/.test(arg)) deletes = true;

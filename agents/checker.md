@@ -113,5 +113,6 @@ is wrong, not met or not verifiable is argued.
 The verdict is `fail` when any check above has a finding, and `pass` otherwise. Something that is only "not
 verifiable" does not fail the item: list it under "Not verified".
 
-Write "none" under a heading that has nothing to report. State what you found plainly. Do not propose how to fix a
+Write "none" under a heading that has nothing to report. Name a file by its path from the repository's root, never by
+an absolute path. State what you found plainly. Do not propose how to fix a
 finding beyond one line, and do not soften one.

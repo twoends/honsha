@@ -443,9 +443,10 @@ that reads the three variables.
 
 ### 14.3 The guard
 
-- A hook of the kit refuses three kinds of shell command in a session: a push to the default branch, unless the
-  profile declares direct commits (section 9), a forced push, and a command that merges a pull request. The first two
-  are plain git and hold on any service. The third comes from the `merge-commands.json` of each service's piece.
+- A hook of the kit refuses four kinds of shell command in a session: a push to the default branch, unless the profile
+  declares direct commits (section 9), a forced push, a push that skips the repository's hooks (`--no-verify`), and a
+  command that merges a pull request. The first three are plain git and hold on any service. The fourth comes from the
+  `merge-commands.json` of each service's piece.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
