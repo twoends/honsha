@@ -18,6 +18,7 @@ specific to a user, a project or an installation lives in that user's separate h
 | `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, the measures of merged items with their sessions, and their tests                 |
 | `services/github/`    | What is specific to GitHub, apart from the rules: commands, settings, what it can enforce, the wiring of the checks                                                      |
 | `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                           |
+| `LESSONS.md`          | The lessons about this repository, named by the profile                                                                                                                  |
 | `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                   |
 | `.claude-plugin/`     | The plugin manifest and the marketplace manifest                                                                                                                         |
 | `package.json`        | The development tools of the kit's own checks, with their configuration files beside it. The plugin needs none of them to run                                            |
