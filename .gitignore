@@ -1,2 +1,3 @@
 node_modules/
 .honsha-checker.*
+.claude/settings.local.json

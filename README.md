@@ -59,6 +59,16 @@ claude --plugin-dir <path to this repository> --agent honsha:worker
 
 The worker runs on Opus unless the session is started with another model (`--model`).
 
+## Working on the kit
+
+The repository declares itself as a marketplace and enables its own plugin, in `.claude/settings.json`, so that a
+session opened in a clone runs under the kit as the clone holds it: the core rules at start, the guard, the effort
+hook. The platform reads that file only in a folder you trust. The first session in a new clone adds the
+marketplace; the plugin is active from the next one. An edit to a hook or the rules takes effect in the next session.
+If an edit breaks a session, set `"honsha@honsha": false` under `enabledPlugins` in `.claude/settings.local.json`,
+which git does not track, until it is fixed; or start the session with `claude --plugin-dir <a clone of a working
+commit>`, which takes the place of the declared plugin.
+
 ## Checking a change to the kit
 
 ```
