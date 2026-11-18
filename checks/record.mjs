@@ -6,12 +6,13 @@
 // `work/<id>-<slug>`; the profile gives the kinds. What is checked:
 //   - the front matter has the keys of the record template, with the values its comments allow,
 //     a `kind` among the profile's kinds or the default ones, and the identifier of the branch;
-//   - every section is one the item's size keeps, and appears once;
-//   - the intent is quoted, and a full item past approval has its approval written;
+//   - every section is one the item's size keeps, and appears once; the intent is quoted;
+//   - at `in-progress`: every section the size keeps before Verification is written, the approval
+//     of a full item and the headings of its scope among them;
 //   - at `done`: every section the size keeps is written, `pr` (for a change) and `model` are set,
 //     and a small or full item ends with a checker report whose verdict is `pass`.
 // What a size keeps is read from the template's comments, so that it is written in one place;
-// the template is the kit's, found beside this script.
+// the template is the one in the kit directory, beside this script's folder.
 //
 // The branch comes from HONSHA_BRANCH when a hosting service checks out something else. A branch
 // that is not a work branch has no record to check. The exit code is 1 when the record breaks a
@@ -212,16 +213,23 @@ export function checkRecord(text, { file, id, kinds, template = readTemplate(fs.
     for (const { name } of found) {
       if (!names.has(name)) say(`section "${name}" is not one a ${size} item keeps`);
       else if (seen.has(name)) say(`section "${name}" appears twice`);
+      else if (
+        allowed.some((section) => section.optional && section.names[size] === name) &&
+        !written(named.get(name))
+      ) {
+        say(`section "${name}" is empty, and is kept only when there is something to say`);
+      }
       seen.add(name);
     }
-    if (state === "done") {
-      for (const section of allowed) {
-        const name = section.names[size];
-        if (!section.optional && !written(named.get(name))) say(`section "${name}" is not written`);
-        const below = named.get(name)?.subsections ?? [];
-        if (size === "full" && named.has(name)) {
-          for (const sub of section.subsections) if (!below.includes(sub)) say(`"${name}" has no "${sub}"`);
-        }
+    // Once work has started, what comes before the verification is written; at `done`, everything is.
+    const verification = allowed.findIndex((section) => section.name === "Verification");
+    const due = state === "done" ? allowed : state === "in-progress" ? allowed.slice(0, verification) : [];
+    for (const section of due) {
+      const name = section.names[size];
+      if (!section.optional && !written(named.get(name))) say(`section "${name}" is not written`);
+      const below = named.get(name)?.subsections ?? [];
+      if (size === "full" && named.has(name)) {
+        for (const sub of section.subsections) if (!below.includes(sub)) say(`"${name}" has no "${sub}"`);
       }
     }
   }
@@ -230,9 +238,6 @@ export function checkRecord(text, { file, id, kinds, template = readTemplate(fs.
   if (!intent) say('section "Intent" is missing');
   else if (!intent.text.split(/\r?\n/).some((line) => /^>\s*\S/.test(line) && !/^>\s*…\s*$/.test(line))) {
     say("the intent is not quoted");
-  }
-  if (size === "full" && (state === "in-progress" || state === "done") && !written(named.get("Approval"))) {
-    say("a full item past approval has no approval written");
   }
   if (state === "done") {
     if (value("type") === "change" && !/^[1-9]\d*$/.test(value("pr"))) say("a done change has no `pr`");

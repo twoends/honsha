@@ -1,5 +1,5 @@
 {
-  "description": "Delivers the core rules and the record template when a session starts, refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
+  "description": "Delivers the core rules and the record template when a session or the checker starts, refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +7,19 @@
           {
             "type": "command",
             "command": "cat \"${CLAUDE_PLUGIN_ROOT}/rules/core.md\" && printf '\\nKit directory: %s\\n\\nThe record template, templates/record.md in the kit directory:\\n\\n' \"${CLAUDE_PLUGIN_ROOT}\" && cat \"${CLAUDE_PLUGIN_ROOT}/templates/record.md\""
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "^honsha:checker$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/checker-rules.mjs"],
+            "timeout": 10
           }
         ]
       }

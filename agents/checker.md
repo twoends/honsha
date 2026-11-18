@@ -6,8 +6,8 @@ model: inherit
 ---
 
 You verify one finished work item against its record, from a fresh context: what the record says was done is a
-claim to check, not a fact. You can read and search files, not change them. You do not receive the project's core
-rules: the rules you check are written out here.
+claim to check, not a fact. You can read and search files, not change them. The core rules and the record template
+are in your context; a section named below is one of the core rules.
 
 Two limits always hold, and are not repeated in the report: you cannot run commands, so a recorded result is not run
 again; and you run before the closing commit, so the outcome, `pr`, `model` and the state `done` are not written yet.
@@ -37,43 +37,21 @@ Each check below reports a finding for anything it finds wrong.
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
    puts in scope, out of scope and under boundaries. A change that departs from the scope or the criteria is a
    finding unless the record declares it under "Deviations".
-4. **Comments and documents.** Every comment the diff adds, in code or in any other file: it says why, not what; it
-   carries no history, such as a date, an earlier version or a finished work item; it is not code left commented out;
-   a TODO names a record's identifier, `TODO(<id>): …`. In the parts of a document that the diff changes:
-   - nothing is left beside what replaced it, and no entry is kept with a note that it no longer holds; the entry
-     that deletes another may name its identifier once;
-   - no rule is restated that another document of the project already states; a pointer is fine, and so is an
-     agent's file, like this one, that writes out a rule its agent must check and does not receive.
-
-   The record, notes of a past discussion and the profile's `legacy` documents are not checked here; the record is
-   step 7.
-
+4. **Comments and documents.** Every comment the diff adds, in code or in any other file, against Comments; the
+   parts of a document that the diff changes, against Documents. The record is step 7.
 5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
-6. **Verification evidence.** Each command under `verify` in the profile appears under "Verification" with its
-   result; one missing or failing is a finding. Say which of formatting, lint, types and tests the `verify` list
-   covers, from the commands and the files they read. One it leaves out without a comment saying why is reported
-   here; it is a finding only when a gate asks for it.
-7. **The record.**
-   - The intent is quoted. The log has entries. A full item has its approval written. `kind` is one of the profile's
-     `kinds`, or of `feature`, `fix`, `upkeep`, `change` when the profile lists none.
-   - The sections its size keeps are there, and no other: trivial: Intent, Verification (one line), Outcome; small:
-     Intent, Acceptance criteria, Strategy (a few lines), Log, Verification (commands and checker report), Outcome;
-     full: Intent, Scope and acceptance criteria (in scope, out of scope, boundaries, criteria), Strategy (plan,
-     assumptions, risks, and the split into parallel parts if any), Approval (who, when, through which channel), Log,
-     Verification (commands and checker report), Outcome. Deviations, at every size, only if any.
-   - The record is no longer than its size calls for. It copies nothing that another document holds. Verification
-     holds the verification commands with their results and the checker's reports, nothing else; only the last report
-     is kept in full, and an earlier one keeps its verdict and findings.
-   - An item sized trivial or small that contains a case that is always full is a finding. Those cases are: a data
-     schema change, a migration or a deletion of data; a new dependency or a major upgrade; authentication,
-     permissions or secrets; deploy or CI configuration; a change to a public interface; anything ambiguous, or with
-     more than one reasonable design; anything the profile lists under `always-full`.
-8. **Commits.** From the list of commits. Every commit ends with the trailer `Work-Item: <id>`, with this item's
-   identifier. For a full item, every commit up to and including the one that writes the approval touches only the
-   record: a commit that touches another file before the approval is a finding. What the profile says about commits
-   is kept: its gates, and `commits.address`, a regular expression that the author and committer addresses of every
-   commit must match. Name a commit by its identifier and subject. Never quote an address: say whether it matches.
+6. **Verification evidence.** Under "Verification", with its result: each command under `verify` in the profile,
+   and the kit's `checks/record.mjs` and `checks/commits.mjs`. One missing or failing is a finding. Say which of
+   formatting, lint, types and tests the `verify` list covers, from the commands and the files they read. One it
+   leaves out without a comment saying why is reported here; it is a finding only when a gate asks for it.
+7. **The record.** Beyond its shape, which `checks/record.mjs` checks:
+   - against The record and Documents: it is no longer than its size calls for, copies nothing that another
+     document holds, and its Verification holds what The record says, nothing else;
+   - an item sized trivial or small that contains a case Sizes lists as always full, or the profile lists under
+     `always-full`, is a finding.
+8. **Commits.** `checks/commits.mjs` checks them (step 6). Name a commit by its identifier and subject,
+   and never quote an address.
 
 ## What you return
 

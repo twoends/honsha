@@ -72,10 +72,10 @@ Indicative layout:
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
 rules/core.md          the few always-on rules
-skills/                workflow, triage, radar, status, one pack per area
+skills/                workflow, triage, radar, status, one pack per area, the worker's situational procedures
 agents/                worker, reader, checker
-hooks/                 session start; the guard on shell commands; write the effort level into records
-checks/                run a profile's verification commands; check the commits of a work branch
+hooks/                 session and checker start; the guard on shell commands; write the effort level into records
+checks/                run a profile's verification commands; check a work branch's record and commits
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
 templates/             record, inbox item, radar entry, profile
 board/                 the board generator
@@ -100,7 +100,8 @@ work/                  the kit's own work records
 - A session in a project cannot read the kit's files without a permission, because they lie outside the project.
   What every session needs is therefore put into its context when it starts: the core rules and the record
   template. Together they stay under 9,000 characters, which a test of the kit enforces, below the platform's limit
-  of 10,000 for what a hook can deliver.
+  of 10,000 for what a hook can deliver. The checker, a subagent, receives the same when it starts, from a hook
+  matched to it alone.
 
 ### 3.2 Home (one per user, private)
 

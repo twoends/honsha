@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -160,3 +160,37 @@ Approved by the person on 2026-11-18, in the chat of the session that wrote the 
   active, so that its agents and hooks are those of the clone.
 - Pull request 20 had been merged at 19:25 UTC, before the branch was cut; the local `main` had not fetched it.
   Step 1 of the plan merges it.
+- Step 1: `origin/main` merged into the branch with the trailer, no conflict; `node checks/verify.mjs` passed all six
+  commands on the merge commit.
+- Step 2 ran in two parts in parallel, each in its own worktree on a local branch cut from the merge commit:
+  `.scripts` (part A, by this session) and `.skills` (part B, by a subagent on Opus). Each made one commit; both were
+  merged into the item's branch with the trailer, and their branches and worktrees removed.
+- Part A: `checks/record.mjs` reads what each size keeps from the template's comments, without changing their
+  wording, so the third assumption holds. The kit's records written since the template has `kind` (from
+  `261118-1103`) are its passing cases; the ten older ones lack `kind`, which the template did not have then.
+  `checks/commits.mjs` reads the size from the record at the branch's tip and, for a full item, the files of every
+  commit up to the first whose record holds an approval, skipping merges.
+- Part B moved, word for word, the worker's split into parts to `skills/parallel-parts/SKILL.md`, and the section
+  "When the default branch moves", with the rule that the default branch is merged only into the item's branch, to
+  `skills/branch-update/SKILL.md`. The worker keeps one line for each.
+- Step 3: a `SubagentStart` hook needs JSON output to add context, by the hooks documentation read by a subagent on
+  Sonnet; `hooks/checker-rules.mjs` prints the core rules and the template as a session receives them, 8,815
+  characters here.
+- Where each check that left `agents/checker.md` went:
+  - "you do not receive the core rules": replaced; the hook gives them, with the template.
+  - Comments (why not what, no history, no code commented out, a TODO's identifier): core rules, Comments.
+  - Documents (nothing beside what replaced it, the entry that deletes another, no restated rule, the agent's file
+    exception, the documents not checked): core rules, Documents.
+  - The record's intent quoted, approval written, `kind`, the sections by size and Deviations only if any:
+    `checks/record.mjs`. To take "the log has entries" and the sections present before the verification out of the
+    checker, the script also checks, at `in-progress`, that every section the size keeps before Verification is
+    written, and flags an optional section left empty.
+  - The cases that are always full: core rules, Sizes, with the profile's `always-full` still named.
+  - What Verification holds and the last report kept in full: core rules, The record, pointed to.
+  - The trailer, the record-only commits up to the approval and `commits.address`: `checks/commits.mjs`, whose result
+    the checker now asks to see recorded and passing, with that of `checks/record.mjs`. The profile's gates on commits
+    are step 5, Gates.
+- Step 4: the worker runs both kit checks from the project's root before the profile's other commands, and the
+  record check again on the closing commit, where it checks the `done` state. The kit's profile lists
+  `node checks/record.mjs`. Specifications: workflow sections 2, 5, 13.6, 14.2 and 18, architecture 3.1, README.
+- Sizes: `agents/checker.md` 4,993 characters, `agents/worker.md` 4,376. The budgets' values are unchanged.

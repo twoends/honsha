@@ -204,7 +204,7 @@ test("before done, sections still to write are not missing; after it, they are",
   ]);
 });
 
-test("a full item past approval has its approval written, and its scope's headings when done", () => {
+test("once a full item has started, its approval and its scope's headings are written", () => {
   const full = record({ size: "full", state: "in-progress" }, (t) =>
     t
       .replace(
@@ -213,13 +213,24 @@ test("a full item past approval has its approval written, and its scope's headin
       )
       .replace("## Log", "## Approval\n\n## Log"),
   );
-  assert.deepEqual(problems(full), [`${FILE}: a full item past approval has no approval written`]);
-  assert.deepEqual(problems(full.replace("state: in-progress", "state: awaiting-approval")), []);
-  const done = full.replace("state: in-progress", "state: done").replace("## Approval\n", "## Approval\n\nApproved.\n");
-  assert.deepEqual(problems(done), [
+  assert.deepEqual(problems(full), [
     `${FILE}: "Scope and acceptance criteria" has no "Out of scope"`,
     `${FILE}: "Scope and acceptance criteria" has no "Boundaries"`,
+    `${FILE}: section "Approval" is not written`,
   ]);
+  assert.deepEqual(problems(full.replace("state: in-progress", "state: awaiting-approval")), []);
+  const scoped = full.replace(
+    "### Acceptance criteria",
+    "### Out of scope\n\nNone.\n\n### Boundaries\n\nNone.\n\n### Acceptance criteria",
+  );
+  assert.deepEqual(problems(scoped.replace("## Approval\n", "## Approval\n\nApproved.\n")), []);
+});
+
+test("once a small item has started, what comes before the verification is written", () => {
+  const started = record({ state: "in-progress", pr: "null", model: "null" }, (t) =>
+    t.slice(0, t.indexOf("## Verification")).replace("A route and a button.", ""),
+  );
+  assert.deepEqual(problems(started), [`${FILE}: section "Strategy" is not written`]);
 });
 
 test("the report kept in full decides, wherever earlier reports stand", () => {
@@ -290,4 +301,10 @@ test("the exit code is 1 with each break named, and 0 when the record is in shap
   const failed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
   assert.equal(failed.status, 1);
   assert.match(failed.stderr, /a done change has no `pr`/);
+});
+
+test("a section kept only if there is something to say is not left empty", () => {
+  assert.deepEqual(problems(record({}, (t) => t.replace("## Outcome", "## Deviations\n\n## Outcome"))), [
+    `${FILE}: section "Deviations" is empty, and is kept only when there is something to say`,
+  ]);
 });

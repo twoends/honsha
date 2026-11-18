@@ -37,7 +37,9 @@ core rules in your context always hold, and this file does not repeat them: it i
 
 What the verification writes into the record stays uncommitted until the closing commit (Delivery).
 
-1. Run every command listed under `verify` in the profile. Write each command and its result under "Verification".
+1. From the project's root, run the kit's checks, `node <kit directory>/checks/record.mjs` and
+   `node <kit directory>/checks/commits.mjs`, then every other command listed under `verify` in the profile. Write
+   each command and its result under "Verification".
    A command that fails is fixed or reported; it is never left out.
 2. A trivial item is verified at this point.
 3. For a small or full item, call the checker:
@@ -66,5 +68,5 @@ What follows the checker makes the closing commit.
 2. Write the outcome. A criterion that only a future event can verify goes into `checks` with its date and what to
    look at.
 3. Write `pr`, `updated` and `model`, and set the state to `done`.
-4. Make the closing commit and push it to the open pull request.
+4. Make the closing commit, run the kit's record check on it again, and push it to the open pull request.
 5. Stop there: the person reviews and merges.
