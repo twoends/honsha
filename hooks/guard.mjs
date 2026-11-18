@@ -4,12 +4,15 @@
 // Runs as a PreToolUse hook on the shell tools (see hooks.json). It reads the command the session
 // is about to run and exits with code 2, and one line of reason, when the command:
 //   - pushes to the default branch of the project, or pushes every branch;
+//   - deletes the default branch;
 //   - forces a push;
 //   - merges a pull request, by one of the commands that the piece of a hosting service lists
 //     (`services/<name>/merge-commands.json`).
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
-// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say.
+// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
+// profile with `direct-commits: true` lets a plain push to the default branch through; the other
+// refusals hold there too.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -31,6 +34,9 @@ const REASONS = {
   /** @param {string} branch */
   default: (branch) =>
     `Honsha guard: this push would update the default branch \`${branch}\`. The default branch changes only through pull requests, and the person merges them.`,
+  /** @param {string} branch */
+  delete: (branch) =>
+    `Honsha guard: this push would delete the default branch \`${branch}\`. Direct commits on it, where the profile declares them, never extend to deleting it.`,
   every: () =>
     "Honsha guard: this push sends every branch, the default branch among them. The default branch changes only through pull requests, and the person merges them.",
   force: () =>
@@ -142,18 +148,20 @@ function git(cwd, args) {
 }
 
 /**
- * The names the default branch of the repository in `cwd` can have.
+ * The names the default branch of the repository in `cwd` can have, and whether its profile
+ * declares that the default branch takes direct commits.
  * @param {string} cwd
  */
 function defaultBranches(cwd) {
   const top = git(cwd, ["rev-parse", "--show-toplevel"]);
-  let named = null;
+  let profile = null;
   try {
-    named = readProfile(path.join(top || cwd, ".hub", "profile.yml"))?.defaultBranch ?? null;
+    profile = readProfile(path.join(top || cwd, ".hub", "profile.yml"));
   } catch {
-    // A profile the reader refuses names no branch.
+    // A profile the reader refuses names no branch and grants nothing.
   }
-  return named ? [named] : ["main", "master"];
+  const named = profile?.defaultBranch ?? null;
+  return { names: named ? [named] : ["main", "master"], direct: profile?.directCommits === true };
 }
 
 /**
@@ -190,6 +198,7 @@ function judgeGit(args, cwd) {
 
   const positional = [];
   let every = false;
+  let deletes = false;
   let tagsOnly = false;
   for (index += 1; index < args.length; index += 1) {
     const arg = args[index];
@@ -201,6 +210,7 @@ function judgeGit(args, cwd) {
     else if (/^--force($|-with-lease|-if-includes)/.test(arg) || /^-[A-Za-z]*f/.test(arg)) return REASONS.force();
     else if (arg === "--all" || arg === "--branches" || arg === "--mirror") every = true;
     else if (arg === "--tags") tagsOnly = true;
+    else if (arg === "--delete" || /^-[A-Za-z]*d/.test(arg)) deletes = true;
     else if (PUSH_OPTIONS_WITH_VALUE.has(arg)) index += 1;
   }
   if (every) return REASONS.every();
@@ -209,15 +219,21 @@ function judgeGit(args, cwd) {
   if (refspecs.some((refspec) => refspec.startsWith("+"))) return REASONS.force();
   const defaults = defaultBranches(dir);
   const current = () => git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
-  const destinations =
+  // A refspec with an empty source, `:main`, deletes its destination.
+  const targets =
     refspecs.length > 0
-      ? refspecs.map((refspec) => (refspec.includes(":") ? refspec.slice(refspec.indexOf(":") + 1) : refspec))
+      ? refspecs.map((refspec) => {
+          const colon = refspec.indexOf(":");
+          return { destination: refspec.slice(colon + 1), deletion: deletes || colon === 0 };
+        })
       : tagsOnly
         ? []
-        : ["HEAD"];
-  for (const destination of destinations) {
+        : [{ destination: "HEAD", deletion: false }];
+  for (const { destination, deletion } of targets) {
     const branch = (destination === "HEAD" ? current() : destination).replace(/^refs\/heads\//, "");
-    if (defaults.includes(branch)) return REASONS.default(branch);
+    if (!defaults.names.includes(branch)) continue;
+    if (!defaults.direct) return REASONS.default(branch);
+    if (deletion) return REASONS.delete(branch);
   }
   return null;
 }
