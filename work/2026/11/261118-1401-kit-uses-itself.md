@@ -112,6 +112,20 @@ decisions as recommended.
 
 - 2026-11-18: the platform's documentation on plugins, marketplaces and settings read; the strategy is written and
   the item waits for approval.
+- Approved; state set to `in-progress`.
+- `.claude/settings.json`: the marketplace `honsha` from the directory `"."`, the plugin `honsha@honsha` enabled,
+  `worktree.baseRef: "head"`.
+- Trial in the kit's folder with nested sessions on Haiku:
+  - first session: the platform added the marketplace, resolving `"."` to the kit's folder; the plugin was not loaded
+    yet: no rules received, `effort` left `null` in a throwaway record;
+  - second session: it received `# Honsha core rules` and the `Kit directory:` line, and the effort hook wrote
+    `effort: medium` into the throwaway record, which was then deleted;
+  - third session: the guard refused `git push --force origin no-such-branch-honsha-trial`, naming the kit's hook.
+- Both assumptions hold: the relative path resolves against the project, and a nested run in a trusted folder loads
+  the declared plugin from its second session on, with no install step. No fallback needed.
+- README: a section "Working on the kit". `.gitignore`: `.claude/settings.local.json`, which the README names as the
+  place to switch the plugin off, and which was ignored on this PC only by a global setting.
+- Work committed in one commit.
 
 ## Verification
 

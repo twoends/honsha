@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "honsha": {
+      "source": { "source": "directory", "path": "." }
+    }
+  },
+  "enabledPlugins": {
+    "honsha@honsha": true
+  },
+  "worktree": {
+    "baseRef": "head"
+  }
+}
