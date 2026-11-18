@@ -115,9 +115,11 @@ radar/                 one file per tool
 reports/               answers to questions, and outcomes of deferred checks
 lessons/tech/          one file per technology, shared by every project that uses it
 lessons/host/          one file per host
+.hub/profile.yml       the default branch, and `direct-commits: true` (workflow, section 9)
 ```
 
-The hub writes to the home directly. It is the only repository where it does.
+The hub writes to the home directly. It is the only repository where it does, and the only one whose profile
+declares direct commits, so that the kit's guard lets its pushes to `main` through.
 
 ### 3.3 Project (each registered repository)
 

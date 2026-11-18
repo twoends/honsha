@@ -5,6 +5,7 @@
 // silent pass.
 //
 //   default-branch: main
+//   direct-commits: true
 //   verify:
 //     - npm run check
 //   commits:
@@ -20,8 +21,8 @@ import fs from "node:fs";
 const BLANK = /^\s*(#.*)?$/;
 
 /**
- * @typedef {{ defaultBranch: string | null, verify: string[], commitsAddress: string | null,
- *   kinds: Record<string, number> | null }} Profile
+ * @typedef {{ defaultBranch: string | null, directCommits: boolean, verify: string[],
+ *   commitsAddress: string | null, kinds: Record<string, number> | null }} Profile
  */
 
 /**
@@ -55,7 +56,7 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, commitsAddress, kinds }` from the text of a profile.
+ * Returns `{ defaultBranch, directCommits, verify, commitsAddress, kinds }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -63,13 +64,18 @@ function block(lines, start, test) {
 export function parseProfile(text) {
   const lines = text.split(/\r?\n/);
   /** @type {Profile} */
-  const profile = { defaultBranch: null, verify: [], commitsAddress: null, kinds: null };
+  const profile = { defaultBranch: null, directCommits: false, verify: [], commitsAddress: null, kinds: null };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
     if (!top) return;
     const [, key, rest] = top;
     const value = scalar(rest);
     if (key === "default-branch") profile.defaultBranch = value || null;
+    if (key === "direct-commits") {
+      // Only the two words grant or deny: anything else would leave a typo to decide what the guard allows.
+      if (value !== "true" && value !== "false") throw new Error("profile: `direct-commits` must be true or false");
+      profile.directCommits = value === "true";
+    }
     if (key === "verify") {
       if (value === "") {
         profile.verify = block(lines, index, /^\s*-\s+(.*)$/).map((match) => scalar(match[1]));

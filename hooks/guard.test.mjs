@@ -7,7 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { judge, simpleCommands } from "./guard.mjs";
+import { gitDirectory, judge, simpleCommands } from "./guard.mjs";
 
 const script = fileURLToPath(new URL("./guard.mjs", import.meta.url));
 const WORK = "work/261116-1432-export-orders";
@@ -215,6 +215,70 @@ test("takes the default branch from the profile when it names one", () => {
   allowed("git push origin main", dir);
   allowed("git push origin trunk", repository(WORK, "verify: [unreadable]\n"));
 });
+
+test("lets a plain push to the default branch through where the profile declares direct commits", () => {
+  const profile = "default-branch: main\ndirect-commits: true\n";
+  const direct = repository("main", profile);
+  for (const line of [
+    "git push",
+    "git push origin",
+    "git push origin main",
+    "git push -u origin main",
+    "git push origin HEAD:main",
+    "git push origin refs/heads/main",
+    'git add decisions.md && git commit -m "Record a decision" && git push',
+  ]) {
+    allowed(line, direct);
+  }
+  allowed(`git -C "${direct}" push origin main`, onWork);
+  assert.match(refused("git push origin main", repository("main", "direct-commits: false\n")), /default branch/);
+  assert.match(refused("git push origin main", repository("main", "direct-commits: yes\n")), /default branch/);
+});
+
+test("refuses the rest where the profile declares direct commits", () => {
+  const direct = repository("main", "default-branch: main\ndirect-commits: true\n");
+  for (const line of ["git push --force origin main", "git push -f", "git push origin +main"]) {
+    assert.match(refused(line, direct), /is forced/);
+  }
+  assert.match(refused("git push --all origin", direct), /every branch/);
+  for (const line of ["git push origin :main", "git push origin --delete main", "git push -d origin main"]) {
+    assert.match(refused(line, direct), /delete the default branch `main`/);
+  }
+  assert.match(refused("forge merge 12", direct), /merges a pull request/);
+});
+
+const none = () => false;
+/**
+ * A Windows path as Git Bash writes it: `C:\x` as `/c/x`.
+ * @param {string} dir
+ */
+const bash = (dir) => dir.replace(/\\/g, "/").replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+
+test("reads a Git Bash path given to git -C as a drive on Windows, only when the plain path does not exist", () => {
+  assert.equal(gitDirectory("D:\\work", "/c/src/repo", "win32", none), "C:\\src\\repo");
+  assert.equal(gitDirectory("D:\\work", "/c", "win32", none), "C:\\");
+  assert.equal(gitDirectory("D:\\work", "/c/", "win32", none), "C:\\");
+  assert.equal(
+    gitDirectory("D:\\work", "/c/src/repo", "win32", () => true),
+    "D:\\c\\src\\repo",
+  );
+  assert.equal(gitDirectory("D:\\work", "/cc/repo", "win32", none), "D:\\cc\\repo");
+  assert.equal(gitDirectory("D:\\work", "C:/src/repo", "win32", none), "C:\\src\\repo");
+  assert.equal(gitDirectory("D:\\work", "repo", "win32", none), "D:\\work\\repo");
+  assert.equal(gitDirectory("/srv", "/c/repo", "linux", none), "/c/repo");
+  assert.equal(gitDirectory("/srv", "repo", "linux", none), "/srv/repo");
+});
+
+test(
+  "on Windows, reads the profile and the branch of a repository named by git -C in the Git Bash form",
+  { skip: process.platform !== "win32" },
+  () => {
+    assert.match(refused(`git -C ${bash(onMain)} push`), /default branch `main`/);
+    const dir = repository(WORK, "default-branch: trunk\n");
+    assert.match(refused(`git -C ${bash(dir)} push origin trunk`), /default branch `trunk`/);
+    allowed(`git -C ${bash(repository("main", "direct-commits: true\n"))} push origin main`);
+  },
+);
 
 test("reads the merge commands of every piece, and none when there is no piece", () => {
   const services = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-services-"));

@@ -1,0 +1,213 @@
+---
+id: 261118-1532
+title: Let a repository declare direct commits on its default branch
+project: honsha
+type: change
+size: full
+kind: fix
+state: done
+areas: []
+created: 2026-11-18
+updated: 2026-11-18
+requested-by: person
+source: 261118-1348
+pr: 16
+model: claude-opus-5-5
+effort: high
+checks: []
+---
+
+## Intent
+
+The person decided that the guard be fixed, not the home. On finding 5 of the assessment of Honsha (home report
+`261118-1348`), the guard had refused a push to the home's `main`, while the architecture (section 3.2) says the hub
+writes to the home directly, with direct commits on `main`. The person chose to keep those direct commits and to
+have the guard allow them for a repository that declares it. Decided on 2026-11-18 and relayed by the session that
+started this item.
+
+## Scope and acceptance criteria
+
+### In scope
+
+- A profile key by which a repository declares that its default branch takes direct commits, read by
+  `checks/profile.mjs`.
+- The guard letting a plain push to that repository's default branch through.
+- The workflow's section 9 and 14.3, and the architecture's section 3.2.
+- In the home, outside this pull request: a minimal `.hub/profile.yml` with the key, committed directly on `main` and
+  pushed.
+
+### Out of scope
+
+- The core rules. A session in the home still receives "never pushes to the default branch" with them; the home
+  already departs from the core rules as a whole (no records), as the architecture states. Changing them is a choice
+  for the person, not part of this item.
+- The home following the workflow in any other way.
+
+### Boundaries
+
+- Forced pushes, pushes of every branch, deletions of the default branch and merges of pull requests stay refused in
+  every repository, the declaring one included.
+- A profile the reader refuses grants nothing: the guard then behaves as it does today.
+- Nothing about the home or this installation in the kit beyond what the architecture already says.
+
+### Acceptance criteria
+
+1. `checks/profile.mjs` reads `direct-commits: true` and `false`, gives `false` when the key is absent, and refuses
+   any other value; with tests.
+2. In a repository whose profile sets `direct-commits: true`, the guard lets through a plain push to the default
+   branch, with and without a named destination; with tests.
+3. In that repository it still refuses a forced push, a push of every branch, a deletion of the default branch and a
+   merge command; in a repository without the key, every current refusal holds; with tests.
+4. Section 9 states the key and its one use, the home; section 14.3 points to it; architecture 3.2 says the home has
+   a profile with it. Each rule in one place.
+5. The kit's `verify` list passes, and the checker passes.
+6. The home's profile is committed directly on `main` and pushed through the guard.
+
+## Strategy
+
+### Design
+
+- Key `direct-commits`, a boolean at the top level of the profile. The reader adds `directCommits` to its result:
+  `true` for `true`, `false` for `false` or when absent; any other value throws, so a typo is an error, never a
+  silent pass.
+- The guard reads the profile once per `git push` and takes from it the default branch and `directCommits`. When
+  `directCommits` is true, a destination that is the default branch is let through, except a deletion of it: a
+  refspec with an empty source (`:main`) or a push with `--delete` or `-d`, refused with a reason of its own. The
+  checks that come before it are unchanged and keep their order: forced (`--force*`, `-f`, a `+` refspec) and every
+  branch (`--all`, `--branches`, `--mirror`). Merge commands are judged apart from pushes and are untouched.
+- The profile is the one in the working tree of the repository the push runs in (`-C` honoured), as today. The guard
+  stays what 14.3 says it is: it stops a mistake, not a manipulated session, which could write the key itself; the
+  documents say so where the key is stated.
+- Documents: section 9 gets one bullet stating the key, what the guard then lets through and what it still refuses,
+  and that the home is the one repository that sets it (architecture 3.2); the example profile stays without it,
+  since a project never sets it. Section 14.3 says "a push to the default branch, unless the profile declares direct
+  commits (section 9)". Architecture 3.2 adds `.hub/profile.yml` to the home's tree and says it declares direct
+  commits.
+- The home: `.hub/profile.yml` with `name`, `default-branch: main` and `direct-commits: true`, committed directly on
+  `main` with a one-sentence message and pushed; that push, run in a session under the kit's plugin from this
+  branch's files, is the live test. The home's Prettier check runs first, as it formats YAML.
+
+### Plan
+
+1. Reader and its tests; guard and its tests.
+2. The three document changes.
+3. `node checks/verify.mjs`, the checker (Opus), the pull request, the closing commit.
+4. The home's profile, committed and pushed; a forced push tried in a throwaway form (`git push --force-with-lease
+   --dry-run`) to show it is still refused by the guard before git runs.
+
+### Assumptions to confirm while building
+
+- `scalar` already strips quotes and trailing comments, so the new key needs no parsing of its own.
+- No existing guard test relies on a profile with the new key, so every current refusal keeps its reason.
+- The home's Prettier check accepts the new YAML file as written.
+
+### Risks
+
+- A marketplace added from a clone of the kit runs the guard checked out there, this branch's while the item is open.
+  If the session in the home runs another copy, the push waits for the merge, and the outcome says so; the guard is
+  tested against the home's profile from this branch meanwhile.
+- The kind's expectation: `fix` expects at most 4 existing files; this touches 6 (reader, guard, their tests, two
+  documents), since a key read by two scripts is stated in the workflow and the architecture.
+
+## Approval
+
+Approved by the person on 2026-11-18, in the session's chat.
+
+## Log
+
+- 2026-11-18: record and branch created by a session that received the core rules and the template at start.
+- The first commit of the record had a blank line between `Work-Item` and the next trailer, so the commit
+  check found no trailer. The branch, one commit old and without a pull request, was deleted and created again with
+  the commit corrected; see Deviations.
+- Approved; work started. The reader gives `directCommits` and throws on any value but `true` or `false`, quoted or
+  bare. The guard takes the default branch and `directCommits` from one read of the profile; with the key, a push
+  to the default branch passes unless it deletes it, by `:main`, `--delete` or `-d`. The forced and every-branch
+  checks come first and are unchanged. Without the key, a deletion keeps the reason about the default branch, so the
+  existing tests hold as they are.
+- Section 9 states the key; 14.3 points to it; architecture 3.2 lists the home's profile.
+- A lesson in `LESSONS.md` about the trailer paragraph, from the mistake in the record's first commit.
+- The home: `.hub/profile.yml` with `name`, `description`, `default-branch: main` and `direct-commits: true`, read by
+  this branch's `checks/profile.mjs` as `directCommits: true`, committed directly on `main` as `1fb5de2`.
+- Live trial from this session, whose guard is this branch's file: `git -C <home> push --force-with-lease --dry-run
+  origin main` was refused as forced. `git -C <home> push origin main` was refused at first: the path was written in
+  the shell's `/c/…` form, which Node.js on Windows does not resolve, so the guard found no repository and fell back
+  to `main`; the same push with the path in Windows form went through, `71a8526..1fb5de2`. The guard failing toward a
+  refusal on such a path is outside this item.
+- The checker's first run failed on three findings: the Verification section empty, the Strategy without
+  assumptions, the lesson restating the workflow's 13.2. The lesson is dropped, since 13.2 already states the rule
+  for every project; the assumptions the design rested on are written under the Strategy, each confirmed while
+  building; the verification is rerun and written. A line of 14.3 is wrapped to the document's width.
+- The checker's second run failed on one finding: the first report's verdict and findings were not kept under
+  Verification. Both earlier reports are now kept there, with their verdicts and findings.
+
+## Verification
+
+On `e85446b`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all six — Prettier,
+oxlint, TypeScript, 69 tests, the plugin validator with its known warnings, and the commit check, "The 5 commits of
+the branch follow the rules."
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Reader handles `direct-commits` true/false/absent and refuses other values, with tests: met, `checks/profile.mjs` (diff lines 45-49) and `checks/profile.test.mjs` (diff lines 61, 69-76). Unchanged since the second run.
+2. Guard lets a plain push to the default branch through where the key is set, with and without a named destination, with tests: met, `hooks/guard.mjs` (diff lines 217-223) and `hooks/guard.test.mjs` (diff lines 234-251). Unchanged.
+3. Forced, every-branch, deletion and merge are still refused, and every refusal holds without the key, with tests: met, `hooks/guard.mjs` (diff lines 192-200, 220-222) and `hooks/guard.test.mjs` (diff lines 253-263). Unchanged.
+4. Section 9 states the key and the home, 14.3 points to it, architecture 3.2 lists the profile: met, `docs/01-specs/WORKFLOW.md` (diff lines 106-109, 120-122) and `docs/01-specs/ARCHITECTURE.md` (diff lines 89, 93-94). Unchanged.
+5. `verify` list passes and the checker passes: met. The record's Verification section, line 146, gives all six passing on `e85446b`, and this run passes.
+6. Home profile committed directly on `main` and pushed through the guard: met as far as can be seen from here. The home's `.hub/profile.yml` holds `default-branch: main` and `direct-commits: true`. The push itself rests on the log (record lines 130-136).
+
+- **Intent:** in order
+- **Scope:** in order. Since the second run, only the record has changed, in the working tree.
+- **Comments and documents:** in order. No comment or document has changed since `e85446b`.
+- **Gates:** in order
+- **Verification evidence:** in order. `node checks/verify.mjs` on `e85446b` is recorded as passing all six commands of the profile's `verify` list. That list covers formatting (Prettier), lint (oxlint), types (`tsc`) and tests (`node --test`), plus the plugin validator and the commit check.
+- **Record:** in order. The second run's finding is fixed. Verification (record lines 144-168) now holds the commands and their results, then the verdicts and findings of the first and second runs, and nothing else. The log has an entry for the second run (lines 141-142). The sections are the ones a full item keeps, with Deviations declared, and the frontmatter is unchanged.
+- **Commits:** in order. All five commits (`67fa173` to `e85446b`) end with `Work-Item: 261118-1532`. Author and committer addresses match `commits.address`. Your message says `67fa173` and `56abb87` (the approval) touch only the record.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- That `npx --no-install prettier --check` passes on the record in the working tree, and that the closing commit's version of the record will pass the commit check. Your message reports the first; the second does not exist yet.
+- That `67fa173` and `56abb87` touch only the record. The commit list given to me does not include the files each commit touches, so this rests on the `git show --name-only` output in your message.
+- That the home's `1fb5de2` reached `origin/main` through the guard. That push happened in another repository, and here it rests on the log.
+
+### Checker report, first run
+
+**Verdict:** fail
+
+**Findings**
+
+1. The Verification section was empty: none of the six `verify` commands was recorded with a result.
+2. The Strategy had design, plan and risks but no assumptions, which the template asks of a full item.
+3. The new lesson in `LESSONS.md` restated the workflow's 13.2, a rule for every project, not a lesson about this
+   repository only.
+
+### Checker report, second run
+
+**Verdict:** fail
+
+**Findings**
+
+1. The Verification section did not keep the first report's verdict and findings, which the core rules require; they
+   were only summarised in the log.
+
+## Deviations
+
+- The work branch was deleted and created again once, against "a work branch only grows", to correct a commit
+  whose trailer the commit check could not read. It had one commit and no pull request; nobody had reviewed it.
+
+## Outcome
+
+A profile can declare `direct-commits: true`; the kit's reader gives it as `directCommits` and refuses any other
+value. Where it is set, the guard lets a plain push to the default branch through and still refuses a forced push, a
+push of every branch, a deletion of the default branch and a merge of a pull request; elsewhere nothing changed.
+Section 9 states the key, 14.3 points to it, architecture 3.2 lists the home's profile. The home has that profile,
+committed directly on `main` and pushed through this branch's guard, which refused a forced push of it. The guard
+does not resolve a path given in the shell's `/c/…` form and then refuses as if on `main`; that is left out of this
+item. No deferred check.

@@ -1,0 +1,168 @@
+---
+id: 261118-1708
+title: Let the guard read a Git Bash path given to git -C on Windows
+project: honsha
+type: change
+size: small
+kind: fix
+state: done
+areas: []
+created: 2026-11-18
+updated: 2026-11-18
+requested-by: person
+source: 261118-1532
+pr: 17
+model: claude-opus-5-5
+effort: high
+checks: []
+---
+
+## Intent
+
+The person asked, through the session that ran item 261118-1532, that the guard read on Windows a directory given
+to `git -C` in the Git Bash form. `hooks/guard.mjs` resolves `git -C <dir>` with `path.resolve(cwd, dir)`, and on
+Windows a path in the form `/c/…` does not exist: `git rev-parse` fails, no profile is read, and the guard falls
+back to `main`/`master` without `direct-commits`. A push to `main` through such a path is therefore refused although
+the repository's profile declares `direct-commits: true`, while the same push with the path in the form `C:/…`
+passes. The failure is toward refusal, so it is not a hole, but it blocks legitimate direct pushes. The guard is to
+resolve such paths on Windows, for example by mapping `/<drive>/rest` to `<DRIVE>:/rest` when
+`process.platform === "win32"` and the plain resolution does not exist, or by asking git itself; with tests in
+`hooks/guard.test.mjs` that do not depend on the machine running them, and a line in the record. Given on 2026-11-18
+by that session, on the person's behalf.
+
+## Acceptance criteria
+
+1. On Windows, the directory given to `git -C` in the Git Bash form `/<drive>/<rest>` is read as `<DRIVE>:/<rest>`
+   when the plain resolution does not exist, so the guard reads that repository's profile and current branch.
+2. A path whose plain resolution exists, and every path on other platforms, is resolved as before.
+3. Tests in `hooks/guard.test.mjs` cover both, with the platform and the existence check given to the function, so
+   they pass the same on any machine.
+4. The kit's `verify` list passes.
+
+## Strategy
+
+A small exported function in `hooks/guard.mjs` resolves the directory of `-C`, taking the platform and an existence
+check as parameters with the running ones as defaults; on `win32` it uses `path.win32`, so the tests run on any
+platform. The existence check keeps a path that does exist on the current drive, which is what `git` itself receives
+from PowerShell, where nothing translates `/c/...`; Git Bash translates it before `git` runs, so the guard does the
+same only when the plain path is missing.
+
+## Log
+
+- 2026-11-18: record and branch created from `main`, in a worktree, by a session started from the one that ran item
+  261118-1532. `direct-commits` (PR 16) is not on `main` yet; the resolution of `-C` is the same on both branches.
+- On `main` the misread path also fails open, not only toward refusal: with the directory missing, `git symbolic-ref`
+  returns nothing, so `git -C /c/<repo> push` with no destination passes while that checkout is on `main`, and a
+  profile's `default-branch` other than `main` or `master` is never read. Reproduced with `judge` on a temporary
+  repository on `main`: `git -C C:/<repo> push` refused, `git -C /c/<repo> push` let through.
+- `gitDirectory` in `hooks/guard.mjs` resolves the directory of `-C`; `judgeGit` calls it in place of
+  `path.resolve`. After the change the same reproduction refuses both forms.
+- Tests: one with the platform and the existence check given, which runs the same on any machine; one end to end on
+  a temporary repository named in the Git Bash form, run only on Windows, since only there does that form name a
+  drive (the CI matrix has a Windows runner). The test paths avoid users' folders, which `checks/public.test.mjs`
+  refuses.
+- The checker failed the gate "nothing about a user, a user's project or an installation": the quoted intent named
+  a folder of this installation and its home's configuration. Those parts of the quote are elided with "[…]".
+- The checker's reports below are copied unchanged except where they quote the folder names the first report found:
+  those words are replaced by a description, so the record does not bring them back.
+- The closing commit also set `requested-by` to `person`: the request came through the session that ran 261118-1532,
+  on the person's behalf, not from a hub.
+- PR 16 merged into `main` left PR 17 in conflict in `hooks/guard.test.mjs`, where both added tests after the same
+  one. `main` merged into the branch, keeping both sets of tests; `hooks/guard.mjs` merged without conflict.
+- With `direct-commits` now on `main`, the end-to-end test on Windows also checks the case the intent starts from: a
+  plain push to `main` of a repository whose profile declares direct commits, named in the Git Bash form, passes.
+
+## Verification
+
+On `670dd61`, after the merge of `main`, Windows 11, Node.js 26.13.0: `node checks/verify.mjs` passed all six —
+Prettier, oxlint, TypeScript, 71 tests, the plugin validator, and the commit check, "The 5 commits of the branch follow
+the rules."
+
+### Checker report, on `9d5ab20`
+
+**Verdict:** fail
+
+**Findings**
+
+1. Gate "nothing about a user, a user's project or an installation": the record
+   `work/2026/11/261118-1708-git-bash-paths.md:24-25` is committed to the public kit. It quotes a `git -C` command
+   with a path into a user's folder and this installation's home folder, and says what that home's profile declares.
+   One-line fix: elide the installation-specific part of the quote with "[…]", as other records do.
+
+### Checker report, on `3e40189`
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Checker report, on `670dd61`
+
+**Verdict:** pass
+
+This is a repeated check after the merge of `main`, which had conflicts. Since my last report on `3e40189`, the branch
+has three new commits: the closing commit `e5b18b8`, the merge `3f8637d`, and `670dd61`. The diff file is the whole PR
+against the new `origin/main`, and I read it again in full.
+
+**Acceptance criteria**
+
+1. On Windows, a Git Bash form `/<drive>/<rest>` is read as `<DRIVE>:/<rest>` when the plain path does not exist: met.
+   See `hooks/guard.mjs:176-182`, called at `:194`. The result flows into `defaultBranches(dir)` and `current()`
+   (`:220-221`). The end-to-end test is at `hooks/guard.test.mjs:265-274`.
+2. A path that exists, and every path on other platforms, resolves as before: met, `hooks/guard.mjs:180`.
+3. Tests with the platform and the existence check passed in: met, `hooks/guard.test.mjs:250-263`.
+4. The kit's `verify` list passes: met according to the coordinator's report of the run on `670dd61` (all six, 71
+   tests, "The 5 commits of the branch follow the rules."). See Verification evidence.
+
+- **Intent:** in order. The new assertion at `hooks/guard.test.mjs:272` covers the case the intent starts from: a plain
+  push to `main` passes for a repository whose profile has `direct-commits: true`, when that repository is named in
+  Git Bash form.
+- **Scope:** in order. Against the new `main`, the diff changes only `hooks/guard.mjs`, `hooks/guard.test.mjs` and the
+  record. The merge brings in nothing beyond what `main` already holds.
+- **Merge resolution:** in order.
+  - Both sets of tests are kept. The direct-commits tests of PR 16 are at `hooks/guard.test.mjs:212-241`, and this
+    item's tests are at `:243-274`.
+  - `hooks/guard.mjs` now has both changes: `defaultBranches` returns `{ names, direct }`, and `judgeGit` uses it at
+    `:234-236`. `gitDirectory` is unchanged.
+  - `checks/profile.mjs:74-77` accepts `direct-commits: true`, which the new assertion depends on.
+- **Comments and documents:** in order
+- **Gates:**
+  - "nothing about a user, a user's project or an installation": in order. No tracked file contains the home folder's
+    name or a path into a user's folder. The checker reports copied into the record describe them without naming them
+    (record lines 85-88, 110-112).
+  - "the rules name no hosting service": in order.
+  - "a script comes with its test": in order.
+- **Verification evidence:** in order according to the coordinator's report. The record's Verification (lines 76-77)
+  still shows only the run on `3e40189`, which is before the merge and before `670dd61`. The run on `670dd61` has to be
+  written there in the final record commit. The list covers formatting, lint, types and tests.
+- **Record:** in order.
+  - The sections fit a small item.
+  - The Log records the merge and how its conflict was resolved (lines 69-70), the new assertion (71-72), the change
+    of `requested-by` (67-68), and how the copied reports were edited (65-66).
+  - Of the earlier reports, the one on `9d5ab20` keeps only its verdict and findings. When this report goes in, the
+    one on `3e40189` must be cut down the same way.
+- **Commits:** in order. `e5b18b8` "Close the record of the guard's reading of Git Bash paths", `3f8637d` "Merge the
+  default branch into the work branch" and `670dd61` "Test a direct push through a Git Bash path to a repository that
+  declares direct commits" each carry `Work-Item: 261118-1708`. All author and committer addresses match
+  `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Whether the end-to-end test that runs only on Windows (`hooks/guard.test.mjs:265-274`), now with its third
+  assertion, passes on the CI Windows runner (`.github/workflows/verify.yml:32`). It was reported as passing only on
+  the local Windows machine.
+- The run of `verify` on `670dd61` is not in the record yet. Only the coordinator reported it.
+- Whether the quoted intent matches the original request of 261118-1532, apart from the parts now elided. That item
+  is not in this repository.
+
+## Outcome
+
+On Windows the guard reads a directory given to `git -C` in the Git Bash form `/<drive>/<rest>` as that drive when
+the plain path does not exist, so it reads that repository's profile and current branch: a direct push that a profile
+declares passes, and a push to the default branch through such a path, which `main` let through, is refused. Paths
+that exist, and every path on other platforms, resolve as before. No deferred check.
