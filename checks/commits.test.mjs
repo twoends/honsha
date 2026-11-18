@@ -155,3 +155,62 @@ test("the exit code is 1 with the commit named, and 0 when the rules are followe
   assert.equal(failed.status, 1);
   assert.match(failed.stderr, /Add the export: no .Work-Item. trailer/);
 });
+
+/**
+ * Writes a file of the repository and stages it.
+ * @param {string} dir
+ * @param {(args: string[]) => string} git
+ * @param {string} file
+ * @param {string} text
+ */
+function put(dir, git, file, text) {
+  fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+  fs.writeFileSync(path.join(dir, file), text);
+  git(["add", file]);
+}
+
+const RECORD = `work/2026/11/${ID}-export-orders.md`;
+/**
+ * @param {string} size
+ * @param {string} approval
+ */
+const record = (size, approval) =>
+  `---\nid: ${ID}\nsize: ${size}\nstate: in-progress\n---\n\n## Intent\n\n> Export the orders.\n\n## Approval\n\n${approval}`;
+
+test("for a full item, a commit up to the approval that changes another file than the record is named", () => {
+  const { dir, git } = repository();
+  put(dir, git, RECORD, record("full", ""));
+  put(dir, git, "export.js", "export {};\n");
+  git(["commit", "-q", "-m", "Write the strategy", "-m", `Work-Item: ${ID}`]);
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  git(["commit", "-q", "-m", "Record the approval", "-m", `Work-Item: ${ID}`]);
+  put(dir, git, "export.js", "export const orders = [];\n");
+  git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /Write the strategy: changes export\.js before the approval is committed$/);
+});
+
+test("for a full item, the commits after the approval and a merge of the default branch are free", () => {
+  const { dir, git } = repository();
+  put(dir, git, RECORD, record("full", ""));
+  git(["commit", "-q", "-m", "Write the strategy", "-m", `Work-Item: ${ID}`]);
+  git(["checkout", "-q", "main"]);
+  put(dir, git, "other.js", "export {};\n");
+  git(["commit", "-q", "-m", "Merge the work of another item"]);
+  git(["checkout", "-q", BRANCH]);
+  git(["merge", "-q", "--no-ff", "main", "-m", "Merge the default branch", "-m", `Work-Item: ${ID}`]);
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  git(["commit", "-q", "-m", "Record the approval", "-m", `Work-Item: ${ID}`]);
+  put(dir, git, "export.js", "export {};\n");
+  git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
+  assert.deepEqual(run(dir), { commits: 4, problems: [] });
+});
+
+test("a small item changes other files from its first commit", () => {
+  const { dir, git } = repository();
+  put(dir, git, RECORD, record("small", ""));
+  put(dir, git, "export.js", "export {};\n");
+  git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
+  assert.deepEqual(run(dir), { commits: 1, problems: [] });
+});
