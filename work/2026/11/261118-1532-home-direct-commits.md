@@ -120,6 +120,13 @@ Approved by the person on 2026-11-18, in the session's chat.
   existing tests hold as they are.
 - Section 9 states the key; 14.3 points to it; architecture 3.2 lists the home's profile.
 - A lesson in `LESSONS.md` about the trailer paragraph, from the mistake in the record's first commit.
+- The home: `.hub/profile.yml` with `name`, `description`, `default-branch: main` and `direct-commits: true`, read by
+  this branch's `checks/profile.mjs` as `directCommits: true`, committed directly on `main` as `1fb5de2`.
+- Live trial from this session, whose guard is this branch's file: `git -C <home> push --force-with-lease --dry-run
+  origin main` was refused as forced. `git -C <home> push origin main` was refused at first: the path was written in
+  the shell's `/c/…` form, which Node.js on Windows does not resolve, so the guard found no repository and fell back
+  to `main`; the same push with the path in Windows form went through, `71a8526..1fb5de2`. The guard failing toward a
+  refusal on such a path is outside this item.
 
 ## Verification
 
