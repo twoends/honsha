@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 22
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -162,3 +162,56 @@ recommended decisions.
 - `add --assessment <id>` takes a report already in the home as the assessment. Decision 2 enters the kit as `active`
   without `add`; the option lets the script do it instead of a hand edit of the registry: `add` with the kit's
   report `261118-1348`, then `choose` and `refresh`. Decision 3 still holds: the pilot gets a new assessment.
+
+## Verification
+
+On `2e91711`, Windows 11: `node checks/verify.mjs` passed all seven commands of the profile — Prettier, oxlint,
+TypeScript, 113 tests (the six of `hub/projects.test.mjs` among them), the plugin validator with its known warnings,
+`node checks/record.mjs` and `node checks/commits.mjs` ("The 5 commits of the branch follow the rules.").
+
+### Checker report, on `2398336`
+
+**Verdict:** fail
+
+**Findings**
+
+1. Scope: `hub/projects.mjs` adds `add ... --assessment <id>`, which reuses an existing report. This goes against
+   approved decision 3 ("Recommended: a new assessment"), and the record does not declare it under "Deviations". Fix:
+   remove the option, or declare it as a deviation and document it in section 20.
+2. Record: `work/2026/11/261118-2039-project-entry.md` line 8 has `state: awaiting-approval` after the approval
+   (`c904b9d`) and the work (`f627fea`, `2398336`). The record should say `in-progress` until it closes.
+
+### Checker report, on `2e91711`, repeated check of the changes since `2398336`
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Section 20 states the mandatory assessment, the three states, the moves, that code does them, and that a project outside the registry gets no work item: met, `docs/01-specs/WORKFLOW.md` lines 585-604. The diff only adds the `--assessment <id>` sentence, at line 597.
+2. Architecture section 3.2 gives the registry's format and points to section 20: met. The diff does not touch it, and it was not a finding in the last check.
+3. `hub/projects.mjs` commands `add`, `choose`, `refresh`, `may-start`: met. `hub/projects.mjs` lines 228-297. When `add` gets `--assessment` it skips writing a new record (lines 233-245). This is now declared under "Deviations".
+4. Tests for each command: met. `hub/projects.test.mjs` lines 94-171. The new option has its own test at line 120, which also covers refusing a report that is missing (line 131).
+5. The `verify` list passes, the record and commit checks included: met, as recorded under "Verification" for `2e91711`.
+
+- **Intent:** in order
+- **Scope:** in order. The `--assessment` option is now declared under "Deviations", together with how it relates to decisions 2 and 3.
+- **Comments and documents:** in order. The changed paragraph in `docs/01-specs/WORKFLOW.md` (lines 595-601) describes what holds now and carries no history.
+- **Gates:** in order. No hosting service is named, nothing is specific to an installation, and the new option has a test.
+- **Verification evidence:** in order; covers formatting (Prettier), lint (oxlint), types (`tsc -p .`) and tests (`node --test`, `hub/*.test.mjs` included).
+- **Record:** in order. Both findings from the last report are fixed. Finding 1: the option is declared under "Deviations" (record lines 165-167) and described in section 20. Finding 2: `state: in-progress` at line 8. The earlier report keeps only its verdict and findings.
+- **Commits:** in order. `2e91711` "Declare the option that takes an existing assessment, and set the record in progress" is one imperative sentence and carries `Work-Item: 261118-2039`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
+## Outcome
+
+Section 20 makes an assessment the way every project enters an installation, with three states in the home's
+registry and the work each allows. `hub/projects.mjs` does the entry and the moves, so no agent does them: `add`,
+`choose`, `refresh`, and `may-start` before any work starts. The registry itself and the hub's instructions are the
+home's, next.
