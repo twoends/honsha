@@ -544,5 +544,11 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
   kind is expected to touch. A project whose profile has none uses `feature: 10`, `fix: 5`, `upkeep: 5`,
   `change: 10`. New files are not counted: a capability added in its own files is the shape that stays easy to
   change.
+- **Sessions.** Where the platform's session files are on the machine, each item also gets the tokens by class and by
+  model, and the active minutes, of the sessions and subagents that worked on it. A response belongs to an item by
+  the branch `work/<id>-<slug>` it was on; on no work branch, in the project's folder, by the one item whose window,
+  from creation to delivery, holds it; otherwise to none. The files' format is the platform's and not documented as
+  stable: what cannot be read is counted and reported, and the git measures stand alone. Only sums are printed;
+  nothing is stored. An installation that wants a documented source can use the platform's OpenTelemetry metrics.
 - **Use.** For estimates, and for finding coupling. They are not a judgement of a session or a person.
 - **Limit.** An item is found from its merge commit; a project that merges in another way gets no measures.

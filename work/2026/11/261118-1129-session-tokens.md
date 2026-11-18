@@ -123,6 +123,21 @@ recommended.
 
 - 2026-11-18: session files and the documentation read; tokens of this session summed per item as a trial. The
   strategy is written and the item waits for approval.
+- Approved; state set to `in-progress`.
+- `checks/sessions.mjs`, new: reads the session files under `CLAUDE_CONFIG_DIR` or `~/.claude`, `projects/`, keeps
+  one response per `message.id` (the last line of a streamed one), counts the lines it cannot read, attributes by
+  branch, then by the one window that holds a response in the repository's folder, and sums tokens by class and by
+  model and the active minutes. Its test uses invented session files: a streamed response, two models, a subagent on
+  a branch in another folder, a response attributed by window, one in no window, one in another folder, two
+  unreadable lines, and overlapping windows.
+- `checks/measures.mjs`: each item also has its delivery time; the report adds the sessions' figures, "no session
+  data", or the number of unreadable lines; `--sessions <folder>` for another folder. Workflow 19: the sessions.
+  README: the checks.
+- Both assumptions hold: the subagents' files have the same fields; reading every session file of this PC takes about
+  9 seconds. On the kit every item since `261117-1903` gets figures; for example `261117-2114`: 201 responses,
+  250,629 output tokens on Opus, 42 active minutes against 89 minutes of agent time.
+- The capability is in a new file; the existing files changed are the measures script, the workflow and the README.
+- Work committed in one commit.
 
 ## Verification
 

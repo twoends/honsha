@@ -1,6 +1,6 @@
 // Prints the measures of every work item merged into the default branch, from git alone.
 //
-//   node checks/measures.mjs [--json]
+//   node checks/measures.mjs [--json] [--sessions <folder>]
 //
 // An item is found from its merge commit on the default branch: the commits the merge brings in
 // carry the trailer `Work-Item: <id>`, or the merge's subject names the branch `work/<id>-<slug>`.
@@ -13,13 +13,16 @@
 // existing (changed, deleted or renamed) or new. Records under `work/` are left out of the files.
 // An item is over its expectation when it changed more existing files than the profile's
 // `kinds` allow for its kind; a profile with no kinds, or an empty map, gets the default ones.
-// Only items merged with a merge commit are found. Nothing here fails: it is a report.
+// Only items merged with a merge commit are found. Where the platform's session files are on the
+// machine, each item also gets the tokens, models and active minutes of the sessions that worked on
+// it (`checks/sessions.mjs`). Nothing here fails: it is a report.
 
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { readProfile } from "./profile.mjs";
+import { attribute, describeUsage, readResponses, sessionsDir } from "./sessions.mjs";
 
 /** The kinds a project has when its profile names none. */
 export const DEFAULT_KINDS = { feature: 10, fix: 5, upkeep: 5, change: 10 };
@@ -29,7 +32,7 @@ const TRAILER = /^Work-Item:\s*(\d{6}-\d{4})\s*$/m;
 
 /**
  * @typedef {{ id: string, size: string | null, kind: string | null, commits: number, added: number, removed: number,
- *   existing: number, newFiles: number, created: number, agentMinutes: number, approvalMinutes: number | null, reviewMinutes: number,
+ *   existing: number, newFiles: number, created: number, delivered: number, agentMinutes: number, approvalMinutes: number | null, reviewMinutes: number,
  *   expected: number | null, over: boolean }} Measure
  */
 
@@ -132,6 +135,7 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
       existing,
       newFiles,
       created,
+      delivered,
       agentMinutes,
       approvalMinutes: approval === null ? null : minutes(strategy, approval),
       reviewMinutes: minutes(delivered, Number(mergedTime) * 1000),
@@ -159,11 +163,19 @@ function main() {
   const kinds = listed && Object.keys(listed).length > 0 ? listed : DEFAULT_KINDS;
   const ref = profile?.defaultBranch ?? "HEAD";
   const items = measure({ ref, kinds });
+  const option = process.argv.indexOf("--sessions");
+  const read = readResponses(option > 0 ? process.argv[option + 1] : sessionsDir());
+  const usage = read ? attribute(read.responses, items, git(".", ["rev-parse", "--show-toplevel"]).trim()) : null;
   if (process.argv.includes("--json")) {
-    process.stdout.write(`${JSON.stringify(items, null, 2)}\n`);
+    const withUsage = items.map((item) => ({ ...item, usage: usage?.get(item.id) ?? null }));
+    process.stdout.write(`${JSON.stringify(withUsage, null, 2)}\n`);
     return;
   }
-  for (const item of items) process.stdout.write(`${describe(item)}\n`);
+  for (const item of items) {
+    const sessions = usage?.get(item.id);
+    process.stdout.write(`${describe(item)}; ${sessions ? describeUsage(sessions) : "no session data"}\n`);
+  }
+  if (read && read.skipped > 0) process.stdout.write(`${read.skipped} lines of the session files could not be read\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main();
