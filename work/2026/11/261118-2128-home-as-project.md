@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: 261118-2039
-pr: null
-model: null
+pr: 24
+model: claude-opus-5-5
 effort: high
 checks: []
 ---
@@ -170,3 +170,65 @@ decision.
 - Specifications: workflow sections 1, 3.1, 3.3, 8 (lessons of the home enter through its work items), 9, 14.3 and
   20; architecture 3.2. `agents/worker.md` runs `hub/projects.mjs check` where the root holds a `registry.yml`. The
   kit's own `verify` gains nothing: its tests already cover `hub/`.
+
+## Verification
+
+On `aaed3d8`, from the kit's root:
+
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, 8 commits.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 115 tests.
+- `claude plugin validate .`: passed, with the warnings it always gives (no version, no licence).
+- `node hub/projects.mjs check`: not run, the kit has no `registry.yml`; its tests run it on homes they build.
+
+### Checker report
+
+On `aaed3d8`, a full check.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Specifications describe the home as a project, a report as a work item of the home with a pull request, and the hub changing the home only through work items: met, `docs/01-specs/WORKFLOW.md` lines 13-15 (section 1), 48-49 (3.1), 71-72 (3.3), 592-611 (20); `docs/01-specs/ARCHITECTURE.md` lines 117, 120, 123-125 (3.2). Outside a work record, `direct-commits` now appears only in the refusal and its tests.
+2. `direct-commits` gone from the reader, the guard, their tests and the specifications, and refused with a line saying the key no longer exists: met. `checks/profile.mjs` lines 73-77 throw "`direct-commits` no longer exists"; `checks/profile.test.mjs` lines 44-50 test this for every value; `hooks/guard.mjs` lines 155-165 and 235 have no exception left; `hooks/guard.test.mjs` lines 219-231 show that such a profile lets no push through; WORKFLOW sections 9 and 14.3 no longer mention it.
+3. `checks/record.mjs` asks a `done` report for its `pr`, and its tests say so: met, `checks/record.mjs` line 243 (`a done item has no \`pr\``); `checks/record.test.mjs` lines 146-155.
+4. `hub/projects.mjs`:
+   - `add` creates the assessment's branch and commits the entry and the record with the trailer: met, `run` "add" branch and `commitMove`/`commitOnBranch` (the message ends `Work-Item: ${id}`). Tested in `hub/projects.test.mjs` "add commits the entry and the assessment's record…" (one commit, trailer, both files).
+   - `choose` and `refresh` each create a branch with a trivial record written by the script: met, `moveRecord` and the "choose" and "refresh" branches of `run`. The tests check `size`, `requested-by` and that `checkRecord` finds no problems.
+   - None pushes, and each prints the branch and the next step: met. `commitMove` prints "Committed on `<branch>`…" and "Next: push the branch and open its pull request…". The test checks `ls-remote` is empty and that the branch has no upstream (`--no-track`).
+   - `check` fails on an unreadable entry or a missing assessment record: met, `checkRegistry`. The test "check fails on a registry it cannot read…" covers both.
+5. The worker runs `hub/projects.mjs check` with the kit's checks where a `registry.yml` exists: met, `agents/worker.md` lines 40-43.
+6. Tests for every change, and the kit's `verify` passes: met. There are tests for the reader, the guard, the record check and the hub script. The recorded result is 115 tests, consistent with 113 after the merge plus the two new tests in `hub/projects.test.mjs`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order. All three are met: the rules name no hosting service (the diff speaks only of "the hosting service's piece"); there is nothing about a user or an installation (the tests use `example-*` names); every changed script comes with its test.
+- **Verification evidence:** in order; covers formatting (prettier), lint (oxlint), types (tsc) and tests (`node --test`), plus `claude plugin validate .`, `checks/record.mjs` and `checks/commits.mjs`
+- **Record:** in order
+- **Commits:** in order. 5367af3 "Write the strategy…" and 56f4e63 "Record the approval…" hold only the record. Every commit carries `Work-Item: 261118-2128`. The merges are 55ffe5b, c6f535e and 73a46dd.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The kind `flow` expects at most 3 existing files and the item touches 11. This is a measure only (WORKFLOW section 19, "it is a report and fails nothing"), not a finding.
+- ARCHITECTURE section 4.1 still says the hub "writes" the inbox item and its verdict. It does not say these go through a work item. It does not say the opposite either, and the general rule in 3.2 now covers it. How these writes reach the home is left to the home's adoption, which is out of scope.
+
+## Outcome
+
+The home is a project like any other in the kit's specifications: every change to it, a report or a move in the
+registry included, is a work item that arrives as a pull request of the home. `direct-commits` is gone, and a profile
+that still holds it is refused. A `done` report needs its pull request. `hub/projects.mjs` commits each move on a work
+branch of the home with its record, and never pushes; `check` validates the registry, and the worker runs it where a
+`registry.yml` exists.
+
+Until the home's own adoption is merged, its profile still holds `direct-commits`, which the kit now refuses, and
+nothing lets a direct commit to the home through. The adoption comes next, through `add` and an assessment: its
+profile without the key, with `upkeep` among its kinds (or none, for the defaults), `reports/` under `legacy`, and
+`hub/projects.mjs check` in its verification.
