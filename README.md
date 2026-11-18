@@ -15,7 +15,7 @@ specific to a user, a project or an installation lives in that user's separate h
 | `agents/worker.md`    | `honsha:worker`: executes one work item, from its record to an open pull request                                                                                         |
 | `agents/checker.md`   | `honsha:checker`: verifies a finished item against its record, with read-only tools                                                                                      |
 | `hooks/`              | The hook definitions; the script that writes the effort level into a record; the guard that refuses merging, a push to the default branch and a forced push; their tests |
-| `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, and their tests                                                                   |
+| `checks/`             | The runner of a profile's verification commands, the check of a work branch's commits, the measures of merged items, and their tests                                     |
 | `services/github/`    | What is specific to GitHub, apart from the rules: commands, settings, what it can enforce, the wiring of the checks                                                      |
 | `.hub/profile.yml`    | The kit's own profile: its verification commands and its gates                                                                                                           |
 | `.github/workflows/`  | The GitHub wiring that runs the verification commands on pull requests                                                                                                   |
@@ -79,7 +79,7 @@ there is no licence and no icon, which matters only for a submission to the publ
 - [Vision](docs/00-vision/VISION.md): what it does, for whom, principles, non-goals, glossary.
 - [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
 - [Workflow](docs/01-specs/WORKFLOW.md): work items, sizes, records, parallel work, lessons, project profile, commits
-  and branches, the hosting service, comments and documents, decisions, dependencies, the upkeep review.
+  and branches, the hosting service, comments and documents, decisions, dependencies, the upkeep review, measures.
 
 The rules every session receives are in `rules/core.md`; the workflow points to them and gives their reasons.
 Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule is as it is can be read

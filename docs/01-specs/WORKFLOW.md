@@ -73,6 +73,7 @@ title: Export orders as CSV
 project: example-project
 type: change # change | report
 size: small # trivial | small | full
+kind: feature # one of the profile's kinds
 state: in-progress
 areas: [backend]
 created: 2026-11-16
@@ -276,6 +277,7 @@ title: Export orders as CSV
 project: example-project
 type: change
 size: small
+kind: feature
 state: done
 areas: [backend]
 created: 2026-11-16
@@ -519,7 +521,28 @@ working, so a review on a date looks for it.
 
 - **When.** On the same date as the radar review of section 17.
 - **What.** The documents and logs of the kit, of the home and of each project are read for duplication, stale text
-  and size.
+  and size; and the measures of section 19 are read for items that touched more existing files than their kind
+  expects.
 - **Result.** The findings become one work item.
 - **Who.** The review is started by the scheduler where an installation has one; until then, by a scheduled task of
   the installation, which reports its findings and changes nothing.
+
+---
+
+## 19. Measures
+
+Each merged item is measured from git, so that later work can be estimated from similar items, and so that a change
+that touches more of a project than its kind should shows where the project is too coupled. Nothing is typed by hand
+but the kind. `node checks/measures.mjs` in the kit prints them; it is a report and fails nothing.
+
+- **Times,** from commits. Created: the identifier. Strategy and approval: the two record-only commits of a full
+  item. Delivered: the closing commit. Merged: the merge commit on the default branch.
+- **Intervals.** Agent work: created to delivered, less the wait for approval. Waiting for approval: strategy to
+  approval. Review: delivered to merged.
+- **Size.** Commits; lines added and removed; existing files changed and new files added, records left out.
+- **Kind.** Chosen with the size, from the profile's `kinds`, each with the most existing files a change of that
+  kind is expected to touch. A project whose profile has none uses `feature: 10`, `fix: 5`, `upkeep: 5`,
+  `change: 10`. New files are not counted: a capability added in its own files is the shape that stays easy to
+  change.
+- **Use.** For estimates, and for finding coupling. They are not a judgement of a session or a person.
+- **Limit.** An item is found from its merge commit; a project that merges in another way gets no measures.

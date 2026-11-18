@@ -41,6 +41,7 @@ test("the template has the front matter keys of the workflow, in order", () => {
     "project",
     "type",
     "size",
+    "kind",
     "state",
     "areas",
     "created",

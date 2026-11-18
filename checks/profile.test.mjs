@@ -32,7 +32,12 @@ test("reads the three keys in their plain forms", () => {
 });
 
 test("a profile without the keys gives nothing to run and nothing to match", () => {
-  assert.deepEqual(parseProfile("name: example-project\n"), { defaultBranch: null, verify: [], commitsAddress: null });
+  assert.deepEqual(parseProfile("name: example-project\n"), {
+    defaultBranch: null,
+    verify: [],
+    commitsAddress: null,
+    kinds: null,
+  });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
 });
 
@@ -66,4 +71,15 @@ test("the kit's own profile is one the reader accepts", () => {
   assert.equal(profile.defaultBranch, "main");
   assert.ok(profile.verify.length > 0);
   assert.ok(profile.commitsAddress);
+});
+
+test("reads the kinds and the most existing files each may touch", () => {
+  const profile = parseProfile("kinds:\n  gate: 1\n  rule: 3 # rules live in one place\nname: x\n");
+  assert.deepEqual(profile.kinds, { gate: 1, rule: 3 });
+  assert.deepEqual(parseProfile("kinds: {}\n").kinds, {});
+});
+
+test("refuses a kind without a whole number, and kinds in another form", () => {
+  assert.throws(() => parseProfile("kinds:\n  gate: one\n"), /whole number/u);
+  assert.throws(() => parseProfile("kinds: gate\n"), /must be a map/u);
 });

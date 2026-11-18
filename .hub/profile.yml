@@ -15,5 +15,12 @@ gates:
   - the rules name no hosting service
   - nothing about a user, a user's project or an installation
   - a script comes with its test
+kinds: # the most existing files a change of each kind is expected to touch
+  gate: 1
+  rule: 3
+  flow: 3
+  capability: 3
+  fix: 4
+  upkeep: 6
 commits:
   address: '@users\.noreply\.github\.com$'

@@ -9,6 +9,8 @@
 //     - npm run check
 //   commits:
 //     address: '@example\.org$'
+//   kinds:
+//     feature: 10
 //
 // A value can be bare or in quotes. A regular expression is best written in single quotes, where
 // YAML keeps a backslash as it is.
@@ -17,7 +19,10 @@ import fs from "node:fs";
 
 const BLANK = /^\s*(#.*)?$/;
 
-/** @typedef {{ defaultBranch: string | null, verify: string[], commitsAddress: string | null }} Profile */
+/**
+ * @typedef {{ defaultBranch: string | null, verify: string[], commitsAddress: string | null,
+ *   kinds: Record<string, number> | null }} Profile
+ */
 
 /**
  * The value of a scalar: without its quotes, or without a trailing comment when it is bare.
@@ -50,7 +55,7 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, commitsAddress }` from the text of a profile.
+ * Returns `{ defaultBranch, verify, commitsAddress, kinds }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -58,7 +63,7 @@ function block(lines, start, test) {
 export function parseProfile(text) {
   const lines = text.split(/\r?\n/);
   /** @type {Profile} */
-  const profile = { defaultBranch: null, verify: [], commitsAddress: null };
+  const profile = { defaultBranch: null, verify: [], commitsAddress: null, kinds: null };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
     if (!top) return;
@@ -84,6 +89,22 @@ export function parseProfile(text) {
         if (address) profile.commitsAddress = scalar(address[2]);
       } else if (value !== "{}") {
         throw new Error("profile: `commits` must be a map with the key `address`");
+      }
+    }
+    if (key === "kinds") {
+      if (value === "{}") {
+        profile.kinds = {};
+      } else if (value === "") {
+        /** @type {Record<string, number>} */
+        const kinds = {};
+        for (const match of block(lines, index, /^\s+([\w-]+):(.*)$/)) {
+          const most = scalar(match[2]);
+          if (!/^\d+$/.test(most)) throw new Error(`profile: kind \`${match[1]}\` needs a whole number of files`);
+          kinds[match[1]] = Number(most);
+        }
+        profile.kinds = kinds;
+      } else {
+        throw new Error("profile: `kinds` must be a map from a kind to a number of files");
       }
     }
   });
