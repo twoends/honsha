@@ -216,35 +216,18 @@ test("takes the default branch from the profile when it names one", () => {
   allowed("git push origin trunk", repository(WORK, "verify: [unreadable]\n"));
 });
 
-test("lets a plain push to the default branch through where the profile declares direct commits", () => {
-  const profile = "default-branch: main\ndirect-commits: true\n";
-  const direct = repository("main", profile);
-  for (const line of [
-    "git push",
-    "git push origin",
-    "git push origin main",
-    "git push -u origin main",
-    "git push origin HEAD:main",
-    "git push origin refs/heads/main",
-    'git add decisions.md && git commit -m "Record a decision" && git push',
-  ]) {
-    allowed(line, direct);
+test("a profile that declares direct commits lets no push to the default branch through", () => {
+  const direct = repository("main", "default-branch: main\ndirect-commits: true\n");
+  for (const line of ["git push", "git push origin main", 'git commit -m "Record a decision" && git push']) {
+    assert.match(refused(line, direct), /update the default branch `main`/);
   }
-  allowed(`git -C "${direct}" push origin main`, onWork);
-  assert.match(refused("git push origin main", repository("main", "direct-commits: false\n")), /default branch/);
-  assert.match(refused("git push origin main", repository("main", "direct-commits: yes\n")), /default branch/);
+  assert.match(refused(`git -C "${direct}" push origin main`, onWork), /default branch `main`/);
 });
 
-test("refuses the rest where the profile declares direct commits", () => {
-  const direct = repository("main", "default-branch: main\ndirect-commits: true\n");
-  for (const line of ["git push --force origin main", "git push -f", "git push origin +main"]) {
-    assert.match(refused(line, direct), /is forced/);
-  }
-  assert.match(refused("git push --all origin", direct), /every branch/);
+test("a push that deletes the default branch is refused as a deletion", () => {
   for (const line of ["git push origin :main", "git push origin --delete main", "git push -d origin main"]) {
-    assert.match(refused(line, direct), /delete the default branch `main`/);
+    assert.match(refused(line), /delete the default branch `main`/);
   }
-  assert.match(refused("forge merge 12", direct), /merges a pull request/);
 });
 
 const none = () => false;
@@ -276,7 +259,6 @@ test(
     assert.match(refused(`git -C ${bash(onMain)} push`), /default branch `main`/);
     const dir = repository(WORK, "default-branch: trunk\n");
     assert.match(refused(`git -C ${bash(dir)} push origin trunk`), /default branch `trunk`/);
-    allowed(`git -C ${bash(repository("main", "direct-commits: true\n"))} push origin main`);
   },
 );
 

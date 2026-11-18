@@ -11,9 +11,7 @@
 //     (`services/<name>/merge-commands.json`).
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
-// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
-// profile with `direct-commits: true` lets a plain push to the default branch through; the other
-// refusals hold there too.
+// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -37,7 +35,7 @@ const REASONS = {
     `Honsha guard: this push would update the default branch \`${branch}\`. The default branch changes only through pull requests, and the person merges them.`,
   /** @param {string} branch */
   delete: (branch) =>
-    `Honsha guard: this push would delete the default branch \`${branch}\`. Direct commits on it, where the profile declares them, never extend to deleting it.`,
+    `Honsha guard: this push would delete the default branch \`${branch}\`. The default branch changes only through pull requests.`,
   every: () =>
     "Honsha guard: this push sends every branch, the default branch among them. The default branch changes only through pull requests, and the person merges them.",
   force: () =>
@@ -151,8 +149,7 @@ function git(cwd, args) {
 }
 
 /**
- * The names the default branch of the repository in `cwd` can have, and whether its profile
- * declares that the default branch takes direct commits.
+ * The names the default branch of the repository in `cwd` can have.
  * @param {string} cwd
  */
 function defaultBranches(cwd) {
@@ -161,10 +158,10 @@ function defaultBranches(cwd) {
   try {
     profile = readProfile(path.join(top || cwd, ".hub", "profile.yml"));
   } catch {
-    // A profile the reader refuses names no branch and grants nothing.
+    // A profile the reader refuses names no branch.
   }
   const named = profile?.defaultBranch ?? null;
-  return { names: named ? [named] : ["main", "master"], direct: profile?.directCommits === true };
+  return named ? [named] : ["main", "master"];
 }
 
 /**
@@ -235,9 +232,7 @@ function judgeGit(args, cwd) {
         : [{ destination: "HEAD", deletion: false }];
   for (const { destination, deletion } of targets) {
     const branch = (destination === "HEAD" ? current() : destination).replace(/^refs\/heads\//, "");
-    if (!defaults.names.includes(branch)) continue;
-    if (!defaults.direct) return REASONS.default(branch);
-    if (deletion) return REASONS.delete(branch);
+    if (defaults.includes(branch)) return deletion ? REASONS.delete(branch) : REASONS.default(branch);
   }
   return null;
 }

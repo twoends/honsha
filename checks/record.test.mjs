@@ -198,7 +198,7 @@ test("before done, sections still to write are not missing; after it, they are",
   assert.deepEqual(problems(record({ pr: "null", model: "null" }, (t) => t.slice(0, t.indexOf("## Verification")))), [
     `${FILE}: section "Verification" is not written`,
     `${FILE}: section "Outcome" is not written`,
-    `${FILE}: a done change has no \`pr\``,
+    `${FILE}: a done item has no \`pr\``,
     `${FILE}: a done item has no \`model\``,
     `${FILE}: the verification has no checker report with a verdict`,
   ]);
@@ -243,14 +243,15 @@ test("the report kept in full decides, wherever earlier reports stand", () => {
   ]);
 });
 
-test("a trivial item needs no checker report, and a report item no pull request", () => {
+test("a trivial item needs no checker report, and a report item needs its pull request", () => {
   const trivial = record({ size: "trivial" }, (t) =>
     t
       .replace(/## Acceptance criteria[\s\S]*?## Verification/, "## Verification")
       .replace(/### Checker report[\s\S]*?## Outcome/, "## Outcome"),
   );
   assert.deepEqual(problems(trivial), []);
-  assert.deepEqual(problems(record({ type: "report", pr: "null" })), []);
+  assert.deepEqual(problems(record({ type: "report" })), []);
+  assert.deepEqual(problems(record({ type: "report", pr: "null" })), [`${FILE}: a done item has no \`pr\``]);
 });
 
 /**
@@ -300,7 +301,7 @@ test("the exit code is 1 with each break named, and 0 when the record is in shap
   fs.writeFileSync(path.join(dir, FILE), record({ pr: "null" }));
   const failed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
   assert.equal(failed.status, 1);
-  assert.match(failed.stderr, /a done change has no `pr`/);
+  assert.match(failed.stderr, /a done item has no `pr`/);
 });
 
 test("a section kept only if there is something to say is not left empty", () => {

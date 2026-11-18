@@ -9,7 +9,7 @@
 //   - every section is one the item's size keeps, and appears once; the intent is quoted;
 //   - at `in-progress`: every section the size keeps before Verification is written, the approval
 //     of a full item and the headings of its scope among them;
-//   - at `done`: every section the size keeps is written, `pr` (for a change) and `model` are set,
+//   - at `done`: every section the size keeps is written, `pr` and `model` are set,
 //     and a small or full item ends with a checker report whose verdict is `pass`.
 // What a size keeps is read from the template's comments, so that it is written in one place;
 // the template is the one in the kit directory, beside this script's folder.
@@ -240,7 +240,7 @@ export function checkRecord(text, { file, id, kinds, template = readTemplate(fs.
     say("the intent is not quoted");
   }
   if (state === "done") {
-    if (value("type") === "change" && !/^[1-9]\d*$/.test(value("pr"))) say("a done change has no `pr`");
+    if (!/^[1-9]\d*$/.test(value("pr"))) say("a done item has no `pr`");
     if (value("model") === "" || value("model") === "null") say("a done item has no `model`");
     if (size === "small" || size === "full") {
       const verification = named.get("Verification")?.text ?? "";
