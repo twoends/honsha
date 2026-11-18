@@ -8,7 +8,7 @@ verify:
   - npx --no-install prettier --check .
   - npx --no-install oxlint
   - npx --no-install tsc -p .
-  - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "services/*/*.test.mjs"
+  - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"
   - claude plugin validate .
   - node checks/record.mjs
   - node checks/commits.mjs

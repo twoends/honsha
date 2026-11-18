@@ -143,3 +143,17 @@ recommended decisions.
   failed it as a full item: it defines the values of the registry's `state` and chooses what moves each one. Its
   branch was never pushed and was deleted; its text is the starting point of step 1. Branch cut from `main` at
   `0b7ad63`.
+- Step 1: section 20 takes the first version's text, with the script's commands named and an adopting project's
+  items recognised by their `source`; the architecture lists `hub/` in the kit and the registry's fields in the home.
+- First assumption: the profile's reader reads only the keys of a profile, by name, not a list of mappings. The
+  script has a reader of its own for the registry, strict on the one shape it writes; the folders on each host are a
+  block under `paths`, with the folder in single quotes, since a folder can hold a colon.
+- Step 2: `hub/projects.mjs` with `add`, `choose`, `refresh`, `may-start`, and six tests on homes and project clones
+  built in temporary folders. `add` refuses a second report with the same identifier, made in the same minute. The
+  record written by `add` passes `checkRecord` as a `ready` small report. The kit's profile runs `hub/*.test.mjs`.
+- Second assumption: `git fetch` and `git show` in the project's clone leave its working tree clean; a test checks it.
+
+## Deviations
+
+- The registry's folders on each host are a block under `paths`, not the inline map of the strategy's example: a
+  folder can hold a colon, which the inline form would make ambiguous for the strict reader.

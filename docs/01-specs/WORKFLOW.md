@@ -579,9 +579,28 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
 
 ## 20. Assessing a project
 
-Before a project adopts the kit, or when the person asks for one, an assessment reads the project against the kit's
-rules and proposes the work that would close each gap. It changes nothing: it is a small report item in the home
-(section 3.1), and the person chooses which of its proposed items start.
+An assessment reads a project against the kit's rules and proposes the work that would close each gap. It changes
+nothing: it is a small report item in the home (section 3.1), and the person chooses which of its proposed items start.
+
+Every project that joins an installation is assessed first. Its entry in the home's registry (architecture, section
+3.2) says where it stands, and so what work may start in it:
+
+- **`assessing`:** the person has decided that the project joins. Only its assessment runs.
+- **`adopting`:** the person has taken the decisions of the assessment's report and chosen its proposed items. Only
+  those items start, each with the assessment's identifier as its `source`; the one that declares the kit in the
+  project's repository goes first.
+- **`active`:** the kit is declared on the project's default branch, so its sessions run under the core rules. Any
+  work item may start; the chosen items left go on as ordinary items.
+
+Entering a project and moving it between states are mechanical, so code does them, not an agent: `hub/projects.mjs`
+in the kit, run from the home's folder by the person, the hub or an interface. `add` writes the entry as `assessing`
+and the assessment's record, ready to start. `choose`, once the assessment is done and the person has chosen its
+items, moves the project to `adopting`. `refresh` moves it to `active` when its default branch declares the kit.
+`may-start` answers whether a work item may start in a project, and is asked before one starts. An agent does only
+the assessment and the items.
+
+A project that is not in the registry gets no work item. An active project can be assessed again when the person
+asks; its state does not change.
 
 ### 20.1 What is read
 
