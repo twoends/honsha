@@ -190,11 +190,11 @@ test("install names the kit's hooks once, and leaves a hooks folder already set"
 
 test("the hook, once installed, stops the push and lets a clean one through", () => {
   const dir = clone();
+  // The copy keeps the mode the checkout gave the hook, so on Linux this also tries the mode committed.
   for (const file of [".githooks/pre-push", "checks/pushed.mjs", "checks/public.mjs"]) {
     fs.mkdirSync(path.join(dir, path.dirname(file)), { recursive: true });
     fs.copyFileSync(path.join(kit, file), path.join(dir, file));
   }
-  fs.chmodSync(path.join(dir, ".githooks/pre-push"), 0o755);
   commit(dir, {}, "Add the hook", ["--allow-empty"]);
   assert.equal(install(dir), true);
 
