@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: 261118-1348
-pr: null
-model: null
+pr: 16
+model: claude-opus-5-5
 effort: high
 checks: []
 ---
@@ -137,8 +137,65 @@ Approved by the person on 2026-11-18, in the session's chat.
   assumptions, the lesson restating the workflow's 13.2. The lesson is dropped, since 13.2 already states the rule
   for every project; the assumptions the design rested on are written under the Strategy, each confirmed while
   building; the verification is rerun and written. A line of 14.3 is wrapped to the document's width.
+- The checker's second run failed on one finding: the first report's verdict and findings were not kept under
+  Verification. Both earlier reports are now kept there, with their verdicts and findings.
 
 ## Verification
+
+On `e85446b`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all six — Prettier,
+oxlint, TypeScript, 69 tests, the plugin validator with its known warnings, and the commit check, "The 5 commits of
+the branch follow the rules."
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Reader handles `direct-commits` true/false/absent and refuses other values, with tests: met, `checks/profile.mjs` (diff lines 45-49) and `checks/profile.test.mjs` (diff lines 61, 69-76). Unchanged since the second run.
+2. Guard lets a plain push to the default branch through where the key is set, with and without a named destination, with tests: met, `hooks/guard.mjs` (diff lines 217-223) and `hooks/guard.test.mjs` (diff lines 234-251). Unchanged.
+3. Forced, every-branch, deletion and merge are still refused, and every refusal holds without the key, with tests: met, `hooks/guard.mjs` (diff lines 192-200, 220-222) and `hooks/guard.test.mjs` (diff lines 253-263). Unchanged.
+4. Section 9 states the key and the home, 14.3 points to it, architecture 3.2 lists the profile: met, `docs/01-specs/WORKFLOW.md` (diff lines 106-109, 120-122) and `docs/01-specs/ARCHITECTURE.md` (diff lines 89, 93-94). Unchanged.
+5. `verify` list passes and the checker passes: met. The record's Verification section, line 146, gives all six passing on `e85446b`, and this run passes.
+6. Home profile committed directly on `main` and pushed through the guard: met as far as can be seen from here. The home's `.hub/profile.yml` holds `default-branch: main` and `direct-commits: true`. The push itself rests on the log (record lines 130-136).
+
+- **Intent:** in order
+- **Scope:** in order. Since the second run, only the record has changed, in the working tree.
+- **Comments and documents:** in order. No comment or document has changed since `e85446b`.
+- **Gates:** in order
+- **Verification evidence:** in order. `node checks/verify.mjs` on `e85446b` is recorded as passing all six commands of the profile's `verify` list. That list covers formatting (Prettier), lint (oxlint), types (`tsc`) and tests (`node --test`), plus the plugin validator and the commit check.
+- **Record:** in order. The second run's finding is fixed. Verification (record lines 144-168) now holds the commands and their results, then the verdicts and findings of the first and second runs, and nothing else. The log has an entry for the second run (lines 141-142). The sections are the ones a full item keeps, with Deviations declared, and the frontmatter is unchanged.
+- **Commits:** in order. All five commits (`67fa173` to `e85446b`) end with `Work-Item: 261118-1532`. Author and committer addresses match `commits.address`. Your message says `67fa173` and `56abb87` (the approval) touch only the record.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- That `npx --no-install prettier --check` passes on the record in the working tree, and that the closing commit's version of the record will pass the commit check. Your message reports the first; the second does not exist yet.
+- That `67fa173` and `56abb87` touch only the record. The commit list given to me does not include the files each commit touches, so this rests on the `git show --name-only` output in your message.
+- That the home's `1fb5de2` reached `origin/main` through the guard. That push happened in another repository, and here it rests on the log.
+
+### Checker report, first run
+
+**Verdict:** fail
+
+**Findings**
+
+1. The Verification section was empty: none of the six `verify` commands was recorded with a result.
+2. The Strategy had design, plan and risks but no assumptions, which the template asks of a full item.
+3. The new lesson in `LESSONS.md` restated the workflow's 13.2, a rule for every project, not a lesson about this
+   repository only.
+
+### Checker report, second run
+
+**Verdict:** fail
+
+**Findings**
+
+1. The Verification section did not keep the first report's verdict and findings, which the core rules require; they
+   were only summarised in the log.
 
 ## Deviations
 
@@ -146,3 +203,11 @@ Approved by the person on 2026-11-18, in the session's chat.
   whose trailer the commit check could not read. It had one commit and no pull request; nobody had reviewed it.
 
 ## Outcome
+
+A profile can declare `direct-commits: true`; the kit's reader gives it as `directCommits` and refuses any other
+value. Where it is set, the guard lets a plain push to the default branch through and still refuses a forced push, a
+push of every branch, a deletion of the default branch and a merge of a pull request; elsewhere nothing changed.
+Section 9 states the key, 14.3 points to it, architecture 3.2 lists the home's profile. The home has that profile,
+committed directly on `main` and pushed through this branch's guard, which refused a forced push of it. The guard
+does not resolve a path given in the shell's `/c/…` form and then refuses as if on `main`; that is left out of this
+item. No deferred check.
