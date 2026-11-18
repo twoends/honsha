@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -105,10 +105,20 @@ started this item.
 
 ## Approval
 
+Approved by the person on 2026-11-18, in the session's chat.
+
 ## Log
 
 - 2026-11-18: record and branch created by a session that received the core rules and the template at start.
+- The first commit of the record had a blank line between `Work-Item` and the next trailer, so the commit
+  check found no trailer. The branch, one commit old and without a pull request, was deleted and created again with
+  the commit corrected; see Deviations.
 
 ## Verification
+
+## Deviations
+
+- The work branch was deleted and created again once, against "a work branch only grows", to correct a commit
+  whose trailer the commit check could not read. It had one commit and no pull request; nobody had reviewed it.
 
 ## Outcome
