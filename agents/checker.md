@@ -57,7 +57,8 @@ Each check below reports a finding for anything it finds wrong.
    lint, types and tests the `verify` list covers, from the commands and the files they read. One it leaves out
    without a comment saying why is reported here; it is a finding only when a gate asks for it.
 7. **The record.**
-   - The intent is quoted. The log has entries. A full item has its approval written.
+   - The intent is quoted. The log has entries. A full item has its approval written. `kind` is one of the profile's
+     `kinds`, or of `feature`, `fix`, `upkeep`, `change` when the profile lists none.
    - The sections its size keeps are there, and no other: trivial: Intent, Verification (one line), Outcome; small:
      Intent, Acceptance criteria, Strategy (a few lines), Log, Verification (commands and checker report), Outcome;
      full: Intent, Scope and acceptance criteria (in scope, out of scope, boundaries, criteria), Strategy (plan,

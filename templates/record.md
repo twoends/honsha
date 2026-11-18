@@ -4,6 +4,7 @@ title: A short title
 project: project-name
 type: change # change | report
 size: small # trivial | small | full
+kind: feature # one of the profile's kinds, set with the size
 state: in-progress # idea | ready | awaiting-approval | in-progress | blocked | done | dropped
 areas: []
 created: YYYY-MM-DD
