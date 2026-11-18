@@ -38,8 +38,9 @@ core rules in your context always hold, and this file does not repeat them: it i
 What the verification writes into the record stays uncommitted until the closing commit (Delivery).
 
 1. From the project's root, run the kit's checks, `node <kit directory>/checks/record.mjs` and
-   `node <kit directory>/checks/commits.mjs`, then every other command listed under `verify` in the profile. Write
-   each command and its result under "Verification".
+   `node <kit directory>/checks/commits.mjs`, and `node <kit directory>/hub/projects.mjs check` where the root holds
+   a `registry.yml`; then every other command listed under `verify` in the profile. Write each command and its result
+   under "Verification".
    A command that fails is fixed or reported; it is never left out.
 2. A trivial item is verified at this point.
 3. For a small or full item, call the checker:

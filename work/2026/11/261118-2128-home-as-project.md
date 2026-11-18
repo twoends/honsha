@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
@@ -138,3 +138,35 @@ decision.
 
 - 2026-11-18: branch cut from `main` at `13b27b0`, with pull request 23 still open; it touches `hub/projects.mjs`,
   which this item changes too, so step 2 starts after it is merged, or merges it.
+- 2026-11-18: pull request 23 merged on `main`; `origin/main` merged into the branch (`55ffe5b`) with the skill
+  `honsha:branch-update`, without conflicts. The verification ran again on the merge: every command passed, 113 tests.
+- Parts A and B ran in parallel, as the plan says, each in its own worktree on a local branch cut from `55ffe5b`
+  (`.a` and `.b`, skill `honsha:parallel-parts`); part A by a subagent, part B by this session. Both were merged into
+  the item's branch with `--no-ff` (`c6f535e`, `73a46dd`), then their branches and worktrees were removed. The
+  specifications, the worker's line and this record came after, on the item's branch.
+- Part A: the profile's reader refuses any profile holding `direct-commits`, whatever its value, with a line saying
+  the key no longer exists; the guard has no exception left, and since a refused profile names no branch, the guard
+  falls back to `main` and `master` for such a profile; a push that deletes the default branch gets the deletion's
+  reason. `checks/record.mjs` asks every `done` item for its `pr`.
+- Part B, decided while building, inside the approved design:
+  - A move is committed in a temporary worktree of the home, from its default branch (`origin/HEAD` after a fetch;
+    `main` or `master` where the home has no origin, as in the tests), on a branch made with `--no-track`, so that a
+    plain push can never reach the default branch. The home's working tree and branch are never touched, so the first
+    assumption is not needed: a dirty home does not stop a move, and a test shows that it stays as it was. The second
+    holds, with the local default branch rather than the working tree where there is no remote.
+  - A report's record goes where every record goes, `work/<yyyy>/<mm>/`, since the home is a project and the kit's
+    record check reads only there. Reports merged before stay in `reports/`, which the script still reads, and which
+    the home's adoption is to list under `legacy`. The architecture's layout of the home loses `reports/` for `work/`.
+  - `add` without `--assessment` makes the assessment's branch `work/<id>-<name>-assessment`; with it, a trivial item
+    `work/<id>-add-<name>`, since the assessment is already merged. `choose` and `refresh` make `work/<id>-choose-<name>`
+    and `work/<id>-refresh`; `refresh` makes none when nothing moved.
+  - The trivial record is committed `in-progress`, with its intent (the command), verification and outcome: `pr`,
+    `model` and `done` are known only once the hub has opened the pull request, so its closing commit writes them, as
+    for any trivial item. Its `project` is the `name` of the home's profile on the default branch, or the folder's
+    name; its kind is `upkeep`, one of the default kinds.
+  - Every move runs the registry's check on what the branch would hold before committing, and commits nothing when it
+    fails. An identifier already used by a branch or a record makes the move wait a minute.
+  - `check` also refuses a name written twice and a project past `assessing` whose assessment is not done.
+- Specifications: workflow sections 1, 3.1, 3.3, 8 (lessons of the home enter through its work items), 9, 14.3 and
+  20; architecture 3.2. `agents/worker.md` runs `hub/projects.mjs check` where the root holds a `registry.yml`. The
+  kit's own `verify` gains nothing: its tests already cover `hub/`.
