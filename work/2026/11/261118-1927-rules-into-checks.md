@@ -5,15 +5,15 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-18
 updated: 2026-11-18
 requested-by: person
 source: 261118-1913
-pr: null
-model: null
-effort: null
+pr: 21
+model: claude-opus-5-5
+effort: high
 checks: []
 ---
 
@@ -197,7 +197,6 @@ Approved by the person on 2026-11-18, in the chat of the session that wrote the 
 - The second assumption, tried on `1eee829` in a temporary clone, on a throwaway checkout of the branch, with the
   clone's plugin (`--plugin-dir`): asked as `honsha:worker` on Opus to bring the branch up to date, the worker
   invoked `honsha:branch-update` as its first action, then fetched and found nothing to merge. The clone was deleted.
-
 - The check on `1eee829` ran as `honsha:checker`, invoked by a new headless session on Opus started in this folder,
   where the kit's plugin is declared and read from the folder itself. In the checker's own transcript, before its
   first prompt, the platform recorded a `hook_success` for `SubagentStart:honsha:checker` and a
@@ -206,3 +205,71 @@ Approved by the person on 2026-11-18, in the chat of the session that wrote the 
   findings. Verdict `fail`, two findings, both inside the scope.
 - Fixes: the comment above the test of the kit's records in `checks/record.test.mjs` gives the reason without
   history; the example of section 12 of the workflow lists the kit's two checks in its Verification.
+- The repeated check on `d62096c`, by a new headless session as before, read only what changed since `1eee829`:
+  verdict `pass`, both findings fixed, no new one.
+
+## Verification
+
+On `d62096c`, Windows 11, Node.js 26.13.0, Claude Code 2.1.325: `node checks/verify.mjs` passed all seven commands of
+the profile — Prettier, oxlint, TypeScript, 107 tests, the plugin validator with its known warnings,
+`node checks/record.mjs` ("The record work/2026/11/261118-1927-rules-into-checks.md has the shape the rules ask
+for.") and `node checks/commits.mjs` ("The 9 commits of the branch follow the rules."). In the kit the profile's
+`verify` list holds the kit's two checks, so they ran once.
+
+### Checker report on `d62096c`, the repeated check
+
+**Verdict:** pass
+
+**Findings of the last report**
+
+1. Comment in `checks/record.test.mjs` mentioning an earlier template: fixed. Lines 119–120 now give the reason ("A script that fails a correct record blocks every item…"), and the filter at line 131 matches it.
+2. `docs/01-specs/WORKFLOW.md` section 12 example: fixed. Lines 334–335 now list `node <kit directory>/checks/record.mjs` and `node <kit directory>/checks/commits.mjs`, before `npm run check`. This matches section 5 and the text at lines 458–459.
+
+**Acceptance criteria**
+
+1. `checks/record.mjs` with tests: met in the last check. This diff changes only a comment in its test.
+2. `checks/commits.mjs` refuses non-record files up to approval: met in the last check. Not touched by this diff.
+3. The worker runs both kit checks, and the kit's profile lists them: met in the last check. `.hub/profile.yml` lines 13–14.
+4. `SubagentStart` hook for the checker, with a test: met in the last check. Not touched by this diff.
+5. `agents/checker.md` reduced, at most 5,000 characters: met in the last check. Not touched by this diff.
+6. Two skills, worker pointers, worker at most 4,500 characters: met in the last check. Not touched by this diff.
+7. `WORKFLOW.md` sections 2 and 18: met in the last check. This diff changes only section 12.
+8. A real check by the new checker, with evidence the core rules reached it: met. Record log lines 204–209 (the `hook_success` for `SubagentStart:honsha:checker` and 8,815 characters of `hook_additional_context`).
+9. The kit's `verify` list passes: met. Recorded in Verification, record lines 215–219, on `d62096c`.
+
+- **Intent:** in order.
+- **Scope:** in order. Both code and document changes fix findings of the last report. The record changes are log entries.
+- **Comments and documents:** in order.
+- **Gates:** in order. The rules name no hosting service; nothing about a user or an installation; no new script.
+- **Verification evidence:** in order; covers formatting, lint, types, tests.
+- **Record:** in order.
+- **Commits:** in order.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The record has an uncommitted change in the working tree. It removes the blank line that commit `d62096c` left inside the log list, between the entry on the second assumption and the entry on the check. This report reads the working copy. The recorded result of `checks/record.mjs` is for the committed version.
+
+### Checker report on `1eee829`
+
+**Verdict:** fail
+
+**Findings**
+
+1. `checks/record.test.mjs` lines 119–120: the comment mentions an earlier version of the template ("the template
+   of their time, which had no `kind`"), which Comments forbids.
+2. `docs/01-specs/WORKFLOW.md` section 12, "Example: a small item", no longer matches the procedure: its
+   Verification lists only `npm run check`, without the kit's `checks/record.mjs` and `checks/commits.mjs`, which
+   section 5, the worker and the checker now require.
+
+## Outcome
+
+The record's shape and the full item's approval gate are checked by scripts that the worker runs in every project,
+from the kit directory, before and after the closing commit. The checker receives the core rules and the template
+from a hook when it starts, as a real check showed, and its file keeps only the procedure, the report and what
+needs judgement: 4,993 characters. The worker's procedures for parallel parts and for a moving default branch are
+skills it invokes, which a trial confirmed: 4,376 characters. The workflow says where a new rule goes, and that a
+reached budget is answered by such a move.
