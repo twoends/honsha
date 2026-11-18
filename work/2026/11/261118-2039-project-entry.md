@@ -132,6 +132,11 @@ One to two times a full item at the kit's medians: 10 to 40 minutes of agent tim
    assessment, or let `add` take an existing report's identifier. Recommended: a new assessment, since the kit has
    changed since that report; the earlier one stays as history.
 
+## Approval
+
+Approved by the person on 2026-11-18, in the chat of the session that wrote the strategy, with the three
+recommended decisions.
+
 ## Log
 
 - 2026-11-18: a first version of this item, sized small, wrote the rule in section 20; its check, by the new checker,
