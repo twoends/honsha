@@ -146,6 +146,13 @@ test("refuses a forced push, whatever its destination", () => {
   }
 });
 
+test("refuses a push that skips the hooks", () => {
+  for (const line of [`git push --no-verify origin ${WORK}`, "git push origin HEAD --no-verify"]) {
+    assert.match(refused(line), /skips the repository's hooks/);
+  }
+  allowed('git commit -m "Say that a session never runs git push --no-verify"');
+});
+
 test("refuses a push of every branch", () => {
   for (const line of [
     "git push --all",

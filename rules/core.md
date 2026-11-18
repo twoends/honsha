@@ -76,7 +76,8 @@ In code and in every other file of the project:
 
 - The default branch changes only through pull requests, and the person merges them, with a merge commit unless the
   project's rules name another method. A session
-  never merges, never pushes to the default branch and never force-pushes; a guard of the kit refuses those commands.
+  never merges, never pushes to the default branch, never force-pushes and never skips a push's hooks; a guard of the
+  kit refuses those commands.
   A session that finds a merged branch deletes it, with its worktrees, locally and on the hosting service.
 - The record travels in the same pull request as the change. The pull request's description comes from the record:
   intent, what changed, verification evidence, checker report, deviations.
