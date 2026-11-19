@@ -34,10 +34,9 @@ the workflow, section 14.
 ## Requirements
 
 - Claude Code 2.1.325 or later, the version the kit was tried with, on Windows 11. Not tried yet: a session on Linux
-  or macOS (the kit's checks do run on Linux, in its pipeline), an installation from the marketplace, a session in the
-  terminal interface, a session of the desktop application with the kit installed, a project other than the kit whose
-  profile has verification commands and gates, what happens after a compaction, and the project setting that starts
-  new worktrees from the current branch.
+  or macOS (the kit's checks do run on Linux, in its pipeline), a session in the terminal interface, a session of the
+  desktop application with the kit installed, a project other than the kit whose profile has verification commands and
+  gates, what happens after a compaction, and the project setting that starts new worktrees from the current branch.
 - git. On Windows, Git for Windows: the hooks run through Git Bash.
 - Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
@@ -66,8 +65,8 @@ The worker runs on Opus unless the session is started with another model (`--mod
 The repository declares its own marketplace and enables its plugin in `.claude/settings.json`, from the repository on
 its hosting service and with automatic updates, as every project does (architecture, section 3.1). A session opened
 in a clone runs under the kit as merged: the core rules at start, the guard, the effort hook, the core rules given to
-the checker when it starts, and the skills. The platform reads that file only in a folder you trust. The first
-session in a new clone adds the marketplace; the plugin is active from the next one.
+the checker when it starts, and the skills. The platform reads that file only in a folder you trust. Each clone
+installs the plugin once, as the architecture says in section 3.3.
 
 A change to a hook, the rules or an agent is not in force until it is merged. To try it before, start the session
 with `claude --plugin-dir <the clone>`, which takes the place of the declared plugin for that session. If the merged
