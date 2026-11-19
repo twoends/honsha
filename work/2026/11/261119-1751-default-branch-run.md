@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
@@ -14,7 +14,8 @@ source: null
 pr: null
 model: null
 effort: null
-checks: []
+checks:
+  - { due: 2026-11-26, what: "The home's first push to its default branch after its caller file adds the push event: a run of project.yml on that commit, read with `gh run list --branch main`, with the commits check over the pushed commits passed." }
 ---
 
 ## Intent
@@ -84,6 +85,12 @@ minutes for private repositories.
 Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy.
 
 ## Log
+
+- 2026-11-19: project.yml takes its three variables from the push on a `push` event and skips the record's check
+  there. The caller file in the piece adds the `push` event and keys its concurrency group on the commit for a push:
+  each run checks only what its push added, so no push may cancel another. Section 14.2's "When", the variables and
+  "What it reports" name the push; its item 2, whose wrap a short line broke, is rewrapped at 120. The push path runs
+  only from a project's caller file, so it is tried by the home after this item is merged: a deferred check.
 
 ## Verification
 

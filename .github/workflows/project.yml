@@ -1,4 +1,5 @@
-# Runs the kit's checks and a project's `verify` commands on the project's pull request.
+# Runs the kit's checks and a project's `verify` commands on the project's pull requests and on each push to its
+# default branch.
 #
 # A project's own workflow calls this one; the caller file is shown in services/github/README.md,
 # under "Checks on a pull request", and what the wiring has to do is in docs/01-specs/WORKFLOW.md,
@@ -28,10 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     # Without a limit a stuck command spends the account's minutes for six hours.
     timeout-minutes: 20
+    # On a push to the default branch, the range is what that push added: the merges and the backlog's direct
+    # commits, which no pull request checks.
     env:
-      HONSHA_BRANCH: ${{ github.head_ref }}
-      HONSHA_BASE: ${{ github.event.pull_request.base.sha }}
-      HONSHA_HEAD: ${{ github.event.pull_request.head.sha }}
+      HONSHA_BRANCH: ${{ github.event_name == 'push' && github.ref_name || github.head_ref }}
+      HONSHA_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
+      HONSHA_HEAD: ${{ github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
     defaults:
       run:
         working-directory: project
@@ -64,6 +67,7 @@ jobs:
           VERSION: ${{ inputs.claude-code }}
         run: npm install --global "@anthropic-ai/claude-code@$VERSION"
       - name: Check the record of the work item
+        if: github.event_name == 'pull_request'
         run: node ../kit/checks/record.mjs
       - name: Check the commits of the branch
         run: node ../kit/checks/commits.mjs

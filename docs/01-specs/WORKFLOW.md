@@ -477,18 +477,21 @@ The checks of a project are the ones its worker runs (`agents/worker.md`, Verifi
 anywhere, a person's computer included. The wiring of a service makes them run on a pull request. It meets this
 contract.
 
-1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch.
-2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the
-   kit's own repository: the check of the record, the check of the
-   commits, and the registry's check where the project's root holds a registry. Then the `verify` commands, as the
-   profile writes them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
-   merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise; the
-   piece says which.
+1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch. And on
+   every push to the default branch itself, which takes the merges and the backlog's direct commits (section 5.2):
+   those commits pass through no pull request, so they are checked there. Every push gets its own run, since each
+   checks only the commits it added.
+2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the kit's
+   own repository: the check of the record, the check of the commits, and the registry's check where the project's root
+   holds a registry. Then the `verify` commands, as the profile writes them. All of them in a clean checkout that holds
+   the history of the branch, and nothing else. On the merge of the branch with the default branch where the service
+   offers that, on the tip of the branch otherwise; the piece says which.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
    itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
-   branch and its last one.
-4. **What it reports.** For each command whether it passed, with its output, shown on the pull request and readable from
-   the service's command line or interface, so that the hub can pass it on.
+   branch and its last one. On a push to the default branch, the default branch's name, its tip before the push and
+   the pushed commit. The record's check, which belongs to a work branch, runs only on a pull request.
+4. **What it reports.** For each command whether it passed, with its output, shown on the pull request, or on the pushed
+   commit, and readable from the service's command line or interface, so that the hub can pass it on.
 5. **What can block.** The piece says whether a failed check can stop a merge on that service, and under which
    conditions. The rules never rely on it: the worker has already run the same commands, and the person merges after
    seeing the result.

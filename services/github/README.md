@@ -127,10 +127,12 @@ name: checks
 on:
   pull_request:
     branches: [<default branch>]
+  push:
+    branches: [<default branch>]
 permissions:
   contents: read
 concurrency:
-  group: checks-${{ github.event.pull_request.number }}
+  group: checks-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 jobs:
   checks:
@@ -148,7 +150,8 @@ from a public repository of the kit, and the kit calls it from its own repositor
 It answers the contract of WORKFLOW.md, section 14.2, in this way.
 
 1. **When.** On the `pull_request` event for the default branch: when a pull request is opened and at every push to its
-   branch. A newer run cancels an older one of the same pull request.
+   branch. A newer run cancels an older one of the same pull request. And on the `push` event for the default branch:
+   the group of such a run is its commit, so no push cancels another, since each run checks only what its push added.
 2. **What it runs.** project.yml checks out the project in `project/` and, beside it in `kit/`, the kit at the commit
    project.yml was read from, which is the kit's default branch for a project and the pull request itself for the kit.
    On Linux, with Node.js 26, it installs the project's tools with `npm ci --ignore-scripts` where the project has a
@@ -159,8 +162,10 @@ It answers the contract of WORKFLOW.md, section 14.2, in this way.
    workflow does not run while the pull request has a conflict. The checkout fetches the whole history
    (`fetch-depth: 0`), which the check of the commits needs.
 3. **What it gives the commands.** `HONSHA_BRANCH` from `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base
-   and head commits of the pull request.
-4. **What it reports.** One result for each job, shown on the pull request and read with `gh pr checks`.
+   and head commits of the pull request. On a push, `github.ref_name`, `github.event.before` and `github.sha`; the
+   record's check is skipped.
+4. **What it reports.** One result for each job, shown on the pull request and read with `gh pr checks`, or, for a push,
+   on the commit and read with `gh run list --branch <default branch>`.
 5. **What can block.** A failed job stops a merge only where branch protection or a ruleset requires it. Elsewhere, and
    so in a private repository of a free account, it is shown and nothing more.
 6. **What it may not do.** The workflow's token has read access to the contents and nothing else: the caller grants
