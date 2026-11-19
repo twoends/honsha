@@ -118,6 +118,8 @@ rests on platform behaviour read in the documentation and only partly tried.
 
 ## Approval
 
+Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy, with the recommended design.
+
 ## Log
 
 - 2026-11-19: branch cut from `main` at `61f8453`. Facts read in the platform's documentation, and tried with the
