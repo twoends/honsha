@@ -142,6 +142,12 @@ written, each with the design its strategy recommends. The change of the kit rep
   why a project needs the kit public, what project.yml runs; "What it costs": one Linux job, counted to the account
   that owns the calling project.
 
+- 2026-11-19, after the checker's first report (verdict fail): section 14.2 says that the kit's own repository runs
+  the kit's checks from the branch under check, as its wiring does; the `verify` job's checkout of `verify.yml` leaves
+  no token in the git configuration either, as the piece says of both checkouts; the change to `verify.yml` is
+  written under Deviations. The empty Verification was the caller's omission: it is written before the repeated
+  check.
+
 ## Verification
 
 ## Deviations
@@ -150,5 +156,8 @@ written, each with the design its strategy recommends. The change of the kit rep
   Claude Code to install, because the kit's own profile runs `claude plugin validate .` and step 3 of the strategy
   runs that profile through project.yml; without it the kit's own pipeline would fail (criterion 4). A project whose
   profile runs no `claude` passes nothing.
+- `.github/workflows/verify.yml` is listed as out of scope, yet it changes: step 3 of the strategy adds its `project`
+  job, and its `verify` job's checkout no longer leaves a token in the git configuration. The out-of-scope entry meant
+  the kit's own checks, which stay as they were.
 
 ## Outcome

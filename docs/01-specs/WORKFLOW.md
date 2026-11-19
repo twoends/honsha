@@ -442,7 +442,8 @@ anywhere, a person's computer included. The wiring of a service makes them run o
 contract.
 
 1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch.
-2. **What it runs.** First the kit's checks, from the kit's default branch: the check of the record, the check of the
+2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the
+   kit's own repository: the check of the record, the check of the
    commits, and the registry's check where the project's root holds a registry. Then the `verify` commands, as the
    profile writes them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
    merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise; the
