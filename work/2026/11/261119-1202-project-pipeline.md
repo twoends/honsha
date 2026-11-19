@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 28
+model: claude-opus-5-5
 effort: high
 checks:
   - { due: 2026-11-26, what: "On the home's first pull request whose workflow calls project.yml: the job ran the record check, the commits check, the registry check and every `verify` command of the home's profile, each with its result in the log, and `gh pr checks` shows it" }
@@ -150,6 +150,69 @@ written, each with the design its strategy recommends. The change of the kit rep
 
 ## Verification
 
+On `8f6c07d`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+### Earlier checker report
+
+On `5dbd143`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. "Verification" in the record is empty (lines 146-147). `agents/worker.md`, Verification, step 1 has each command and its result written there, uncommitted, before the checker is called. The working tree was clean, so none of the 7 `verify` commands appears with its result.
+2. `.github/workflows/verify.yml` is out of scope (record line 44), yet the diff changes it (verify.yml:1-2, 53-60). "Deviations" does not declare this. Strategy step 3 asks for the change but does not lift the out-of-scope entry.
+3. `services/github/README.md:165-166` says the checkouts leave no token in the git configuration. The kit's `verify` job checkout (`.github/workflows/verify.yml:40-42`) keeps the action's default `persist-credentials`, so the statement does not hold for the kit's wiring that the README describes.
+4. `docs/01-specs/WORKFLOW.md:445` requires the kit's checks "from the kit's default branch". The kit's own wiring runs them from the pull request (`services/github/README.md:151`), yet README line 146 says it answers the contract. Section 14.2 and the kit's own wiring disagree.
+
+### Checker report
+
+On `8f6c07d`, a repeated check of the changes since `5dbd143`.
+
+**Verdict:** pass
+
+This was a repeated check. It read the diff since `5dbd143` (commit `8f6c07d`) and the record's uncommitted Verification.
+
+**Earlier findings**
+
+1. Empty Verification: resolved. The record's Verification now lists all 7 `verify` commands with their results on `8f6c07d`, including `checks/record.mjs` and `checks/commits.mjs`.
+2. `verify.yml` changed while out of scope and not declared: resolved. The second entry under Deviations declares it.
+3. README says no token is left in the git configuration, but `verify.yml`'s checkout kept it: resolved. `.github/workflows/verify.yml:43` now sets `persist-credentials: false`, and both checkouts in `.github/workflows/project.yml` (lines 45 and 54) already did. So `services/github/README.md:165-166` holds.
+4. Section 14.2 and the kit's own wiring disagreed: resolved. `docs/01-specs/WORKFLOW.md:445-446` now allows "the branch under check in the kit's own repository", which matches `services/github/README.md:150-151`.
+
+**Acceptance criteria**
+
+1. Section 14.2 runs the kit's checks, and the registry's check where there is a registry, before `verify`: met, `docs/01-specs/WORKFLOW.md:445-448`.
+2. A project wires the checks with one short caller file, and the piece shows it: met at the last check. This diff does not touch it.
+3. The reusable workflow runs the checks and `verify` on a project's pull request: not verifiable from here. It is the deferred check declared in `checks` (due 2026-11-26).
+4. The kit's own pipeline still passes: not verifiable from here. It needs a run on GitHub.
+5. The profile's `verify` passes: met, according to the record's Verification (all 7 commands passed on `8f6c07d`).
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order. The diff names no hosting service in the rules, holds nothing about a user or an installation, and adds no script.
+- **Verification evidence:** in order. Covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test).
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 4: the kit's pipeline, including the new `project` job, can only be confirmed by a run on GitHub, on the pull request.
+- Criterion 3: only the deferred check can confirm it, on the home's first pull request that calls `project.yml`.
+
 ## Deviations
 
 - The strategy installs a project's tools only from its lockfile. project.yml also takes an optional version of
@@ -161,3 +224,8 @@ written, each with the design its strategy recommends. The change of the kit rep
   the kit's own checks, which stay as they were.
 
 ## Outcome
+
+A project wires the kit's checks and its own `verify` on its pull requests with one short caller file of
+`.github/workflows/project.yml`, which section 14.2 and the GitHub piece describe; the kit runs the same workflow on
+its own pull requests. A project can call it once the kit's repository is public, a change the person makes: until
+then the home cannot wire it. The run on a project is a deferred check, due 2026-11-26.
