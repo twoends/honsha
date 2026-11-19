@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 30
+model: claude-opus-5-5
 effort: null
 checks:
   - { due: 2026-11-26, what: "The home's first push to its default branch after its caller file adds the push event: a run of project.yml on that commit, read with `gh run list --branch main`, with the commits check over the pushed commits passed." }
@@ -95,7 +95,81 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
   item 2, and the assessment's step on checks name the push too: the record's check on a pull request only, and the
   pushed commit as what a push checks out. project.yml's header names the piece's new title.
 
+- Pull request 30 was opened before the first check so that the kit's own pipeline could run on it; it ran again on
+  the fix. Both runs are a pull request's, so the push path waits for the deferred check.
+- After the repeated check on `6c8c9cc` (verdict fail): the change to section 20.1 is declared under Deviations.
+
 ## Verification
+
+On `4b3fc46`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+- On GitHub, pull request 30: run `44595758793` on `de16002`, then run `44596499075` on `6c8c9cc`; in each,
+  `project / checks`, `verify (ubuntu-latest, Node.js 26)` and `verify (windows-latest, Node.js 26)` passed.
+
+### Earlier checker reports
+
+On `de16002`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. The documents this item changes still describe the wiring as running on a pull request only, in parts the diff left as they were:
+   - `services/github/README.md:155-163` (item 2, "What it runs") says project.yml runs `checks/record.mjs` with no condition. Item 3 on lines 165-166 says that step is skipped on a push.
+   - The same item 2 says only that "GitHub checks out the merge of the pull request with its base branch". Contract item 2 at `docs/01-specs/WORKFLOW.md:487-488` requires the piece to say which tree is checked out, and for a push it says nothing.
+   - `docs/01-specs/WORKFLOW.md:476-478` still says "The wiring of a service makes them run on a pull request". Item 2 of the contract (lines 484-486) still lists the check of the record without condition. The headings at `docs/01-specs/WORKFLOW.md:474` and `services/github/README.md:113` still say "Checks on a pull request". This breaks the rule in Documents that a document says what holds now.
+
+   Fix in one line: make README item 2 cover the push (what is checked out, the record's step skipped), and align the 14.2 intro and item 2 with item 1.
+
+On `6c8c9cc`, a repeated check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Change outside the scope that is not declared as a deviation. In `docs/01-specs/WORKFLOW.md:675-676`, section 20.1 ("What is read", the assessment), step 2 was renamed to "Checks on pull requests and the default branch". It now requires a pipeline that also runs "on each push to the default branch". This changes what an assessment counts as a gap in a project. The record's In scope does not list section 20.1, and the record has no "Deviations" section. Only the log mentions the change ("the assessment's step on checks name the push too"). Fix: declare the change to section 20.1 under "Deviations", with the reason.
+
+### Checker report
+
+On `4b3fc46`, a repeated check of the changes since `6c8c9cc`, with the record's last log line and Verification not yet committed.
+
+**Verdict:** pass
+
+The finding from the check on `6c8c9cc` is fixed. The record now has a "Deviations" section (`work/2026/11/261119-1751-default-branch-run.md:141-145`). It declares the change to section 20.1, step 2, and gives the reason. The description matches the text at `docs/01-specs/WORKFLOW.md:675-676`. That text is "Checks on pull requests and the default branch", with a pipeline that runs on every pull request and on each push to the default branch.
+
+This check read only the changes since `6c8c9cc`: commit `4b3fc46` and the uncommitted record. Both change only the record.
+
+**Acceptance criteria**
+
+1. Push run of project.yml with the push's variables, record check skipped: met. The diff since `6c8c9cc` does not touch `.github/workflows/project.yml`, and the last check found no fault here.
+2. Caller file triggers on both events, concurrency group works on a push: met. `services/github/README.md` is not changed since `6c8c9cc`.
+3. Section 14.2 names the push and why: met, `docs/01-specs/WORKFLOW.md:474-481`. Not changed since `6c8c9cc`.
+4. Kit's pipeline passes on the pull request, `project` job included: met up to `6c8c9cc`. The record's Verification lists runs `44595758793` on `de16002` and `44596499075` on `6c8c9cc`. A run on `4b3fc46` cannot be seen from here (see Not verified).
+5. Profile's `verify` passes: met as recorded. Verification records all 7 commands passing on `4b3fc46`.
+
+- **Intent:** in order
+- **Scope:** in order. The change to section 20.1 is now declared under "Deviations", and nothing else in the diff is outside the scope.
+- **Comments and documents:** in order. The diff changes no comment and no document other than the record.
+- **Gates:** in order. All three gates in `.hub/profile.yml` hold for this diff, which changes only the record.
+- **Verification evidence:** in order; covers formatting (`prettier --check .`), lint (`oxlint`), types (`tsc -p .`) and tests (`node --test`).
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Whether the kit's pipeline ran and passed on `4b3fc46`. The record lists runs only up to `6c8c9cc`, and the hosting service cannot be read from here. `4b3fc46` changes only the record.
+- The push path of project.yml has not run yet. The record defers it to the `checks` entry due 2026-11-26.
 
 ## Deviations
 
@@ -104,3 +178,9 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
   step would otherwise count a project wired as 14.2 says as wired in part.
 
 ## Outcome
+
+The kit's reusable workflow also runs on each push to a project's default branch, where it checks the commits that
+push added, the merges and the backlog's direct commits, with the registry's check and the profile's `verify`; the
+record's check stays on pull requests. Section 14.2 and the GitHub piece say so, and the piece's caller file triggers
+on both events. A project takes it by updating its caller file: the home does so in an item of its own, whose first
+push answers the deferred check due 2026-11-26.
