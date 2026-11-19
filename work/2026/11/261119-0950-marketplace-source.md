@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: in-progress
+state: done
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 25
+model: claude-opus-5-5
 effort: null
 checks:
   - { due: 2026-11-20, what: "The first session in the kit's clone after the merge receives the core rules, and `claude plugin marketplace list` shows honsha from the repository" }
@@ -140,8 +140,72 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
 - 2026-11-19, after the checker's first report (verdict fail): the change to the workflow's section 14.1 is written
   as a deviation.
 
+## Verification
+
+On `8874f35`, from a worktree of the kit at a path short enough for the test of the hook's output, with the
+development tools of the kit's main clone:
+
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, 4 commits.
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 115 tests.
+- `claude plugin validate .`: passed, with the warnings it always gives.
+
+### Checker report, first run
+
+On `71b7012`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Scope: the diff changes `docs/01-specs/WORKFLOW.md` (section 14.1, item 6, lines 435-436). That file is outside what the record puts in scope ("the kit's `.claude/settings.json`, its README, the architecture (3.1, 3.3) and the piece of the hosting service"), and the record has no "Deviations" section declaring it. Fix: add a deviation for it.
+
+### Checker report
+
+Repeated check on `8874f35`, against the diff `71b7012..HEAD`. The finding of the first run (Scope: `docs/01-specs/WORKFLOW.md` section 14.1 changed with no declared deviation) is resolved. The record now has a "Deviations" section (`work/2026/11/261119-0950-marketplace-source.md`, lines 168-172) that names that file and section, says what changed and gives the reason. The log entry at lines 142-143 records the fix. The description matches the file: `docs/01-specs/WORKFLOW.md` line 435, item 6, "The source of the kit's marketplace".
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+The diff changes only the record, so no criterion's evidence changed since the full check on `71b7012`.
+
+1. Architecture states one declaration, service piece gives the JSON: met at the full check, unchanged by this diff.
+2. Kit's `.claude/settings.json` declares `honsha` from the repository with automatic updates: met at the full check, unchanged.
+3. README on an unmerged change and on moving a host: met at the full check, unchanged.
+4. Kit's `verify` passes: met, Verification at record lines 147-156, on `8874f35`.
+5. Deferred check after the merge: not verifiable. It is declared in `checks` (record line 18) and is due after the merge.
+
+- **Intent:** in order
+- **Scope:** in order. The diff touches only the record. The earlier out-of-scope change to `docs/01-specs/WORKFLOW.md` is now declared under "Deviations".
+- **Comments and documents:** in order. The diff adds no comments and changes no document other than the record.
+- **Gates:** in order. All three gates hold for this diff: no hosting service named in the rules, nothing about a user or an installation, no script added.
+- **Verification evidence:** in order. All seven `verify` commands are recorded as passed on `8874f35`, `checks/record.mjs` and `checks/commits.mjs` included. Covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test).
+- **Record:** in order. The earlier report keeps only its verdict and finding. Verification holds only command results and the report. The deviation copies nothing from another document.
+- **Commits:** in order. `8874f35` "Write the change to the workflow's section 14.1 as a deviation, as the checker asked" is a single fix commit as the checker asked, changes only the record and has the `Work-Item: 261119-0950` trailer.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 5, the deferred check: it can only run after the merge, in a new session in the kit's clone on this host.
+
 ## Deviations
 
 - `docs/01-specs/WORKFLOW.md`, section 14.1, outside the files in scope: the list of what a service's piece says gains
   the marketplace's source and the command that moves a host. Without it the architecture would point to a part of
   the piece that the contract of a piece does not ask for.
+
+## Outcome
+
+Every repository that runs under the kit, the kit's own included, declares the marketplace `honsha` from the kit's
+repository with automatic updates, so a host has one source for it and the same on every host. A session runs under
+the kit as merged; an unmerged change is tried with `--plugin-dir`. The piece of GitHub gives the declaration and the
+command that moves a host's registration. One deferred check, due 2026-11-20: the first session in the kit's clone
+after the merge receives the core rules, and the host lists `honsha` from the repository. The home's item
+`261119-0904` resumes with this source.
