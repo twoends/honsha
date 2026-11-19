@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: in-progress
+state: done
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 27
+model: claude-opus-5-5
 effort: high
 checks: []
 ---
@@ -93,4 +93,47 @@ written, each with the design its strategy recommends.
 
 ## Verification
 
+On `eb230a9`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+### Checker report
+
+On `eb230a9`, a full check.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Section 20 says in one place whether `may-start` is asked for the assessment that `add` starts, and what stands in its place: met, `docs/01-specs/WORKFLOW.md` lines 612-615. It says `may-start` is not asked for that assessment because running `add` is the person's decision that the project joins. It also covers an assessment of a project already `assessing` on the default branch, which is asked like any item.
+2. `may-start` answers other items as it does now in each state, and its test still shows it: met. In `hub/projects.mjs` lines 581-590 the logic for `active`, `assessing` and `adopting` is unchanged. For a project that is not in the registry, the exit code is still 1 (lines 573-580); only the message is longer, as the strategy planned. In `hub/projects.test.mjs` lines 352-367 the checks for every state are kept, and lines 353-355 add a check of the new message.
+3. No document of the kit says that every item, the assessment included, asks `may-start` first: met. A search outside `work/` finds `may-start` only in `docs/01-specs/WORKFLOW.md` (line 612) and in `hub/projects.mjs` / `hub/projects.test.mjs`. Both now state the exception (`hub/projects.mjs` lines 17-19).
+4. The profile's `verify` passes: not verifiable from the record. Its Verification section is still empty. You report that `node checks/verify.mjs` passed all 7 commands on eb230a9.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** not yet in the record; the closing commit is to add it (see Not verified); covers formatting (Prettier over `.`, `work/` ignored), lint (oxlint), types (tsc, `**/*.mjs` with `checkJs`, strict), tests (`hooks`, `checks`, `hub`, `services`).
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 4 and the Verification evidence: the record's Verification section is empty at eb230a9. The result of the 7 `verify` commands, `checks/record.mjs` and `checks/commits.mjs` included, comes only from your message. The closing commit has to write it into the record.
+
 ## Outcome
+
+`may-start` is not asked for the assessment that `add` starts: section 20 of the workflow says so, with the reason,
+and `may-start`'s answer for a project not in the registry says it too, so that a hub that asks anyway learns why it
+got a no. Every other answer of `may-start` is unchanged.
