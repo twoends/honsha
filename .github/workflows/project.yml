@@ -1,0 +1,74 @@
+# Runs the kit's checks and a project's `verify` commands on the project's pull request.
+#
+# A project's own workflow calls this one; the caller file is shown in services/github/README.md,
+# under "Checks on a pull request", and what the wiring has to do is in docs/01-specs/WORKFLOW.md,
+# section 14.2. The commands are the ones the worker runs (agents/worker.md, Verification, step 1);
+# they are not repeated here beyond their order.
+
+name: project
+
+on:
+  workflow_call:
+    inputs:
+      claude-code:
+        description: The version of Claude Code to install, for a profile that runs `claude`; none when empty.
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# No concurrency group here: the caller's own group covers this run, and the same group in the
+# called workflow would cancel the run already going.
+
+jobs:
+  checks:
+    # Linux only: the second system of the kit's own matrix tests the kit, not a project.
+    runs-on: ubuntu-latest
+    # Without a limit a stuck command spends the account's minutes for six hours.
+    timeout-minutes: 20
+    env:
+      HONSHA_BRANCH: ${{ github.head_ref }}
+      HONSHA_BASE: ${{ github.event.pull_request.base.sha }}
+      HONSHA_HEAD: ${{ github.event.pull_request.head.sha }}
+    defaults:
+      run:
+        working-directory: project
+    steps:
+      # The project and the kit sit side by side, so that the project's own commands, such as a
+      # formatter run on `.`, never read the kit's files.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: project
+          fetch-depth: 0
+          persist-credentials: false
+      # The kit at the commit this file was read from, so that the checks and their wiring always
+      # match; a project's caller names the kit's default branch, as its sessions use it. The
+      # caller's own token reads it: a token reads its own repository and any public one.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: kit
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+      - name: Install the project's tools from its lockfile, without install scripts
+        if: hashFiles('project/package-lock.json') != ''
+        run: npm ci --ignore-scripts
+      - name: Install Claude Code
+        if: inputs.claude-code != ''
+        env:
+          VERSION: ${{ inputs.claude-code }}
+        run: npm install --global "@anthropic-ai/claude-code@$VERSION"
+      - name: Check the record of the work item
+        run: node ../kit/checks/record.mjs
+      - name: Check the commits of the branch
+        run: node ../kit/checks/commits.mjs
+      - name: Check the registry of the projects
+        if: hashFiles('project/registry.yml') != ''
+        run: node ../kit/hub/projects.mjs check
+      - name: Run the verification commands of the profile
+        run: node ../kit/checks/verify.mjs

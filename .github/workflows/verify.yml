@@ -1,4 +1,5 @@
-# Runs the kit's verification commands on every pull request to the default branch.
+# Runs the kit's verification commands on every pull request to the default branch, and the
+# workflow that projects call on the kit itself.
 #
 # This file is the GitHub wiring of the checks: what it has to do is in docs/01-specs/WORKFLOW.md,
 # section 14.2, and how it does it on GitHub is in services/github/README.md. The commands are
@@ -39,6 +40,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
@@ -48,3 +50,12 @@ jobs:
         run: npm install --global @anthropic-ai/claude-code@2.1.325
       - name: Run the verification commands of the profile
         run: node checks/verify.mjs
+
+  # The workflow every project calls runs here on the kit's own pull request, so that it is known to
+  # run before a project relies on it. Called from this repository, it reads the kit with this
+  # repository's own token, whatever the repository's visibility.
+  project:
+    uses: ./.github/workflows/project.yml
+    with:
+      # The profile runs `claude plugin validate .`; the same version as the job above.
+      claude-code: "2.1.325"

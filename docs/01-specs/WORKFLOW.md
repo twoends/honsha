@@ -437,13 +437,17 @@ no protection at all: what a service adds beyond that is a further stop, never s
 
 ### 14.2 Checks on a pull request
 
-The checks of a project are the `verify` commands of its profile: commands that run anywhere, a person's computer
-included. The wiring of a service makes them run on a pull request. It meets this contract.
+The checks of a project are the ones its worker runs (`agents/worker.md`, Verification, step 1): commands that run
+anywhere, a person's computer included. The wiring of a service makes them run on a pull request. It meets this
+contract.
 
 1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch.
-2. **What it runs.** The `verify` commands, as the profile writes them, in a clean checkout that holds the history of
-   the branch. Nothing the profile does not list. On the merge of the branch with the default branch where the service
-   offers that, on the tip of the branch otherwise; the piece says which.
+2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the
+   kit's own repository: the check of the record, the check of the
+   commits, and the registry's check where the project's root holds a registry. Then the `verify` commands, as the
+   profile writes them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
+   merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise; the
+   piece says which.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
    itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
    branch and its last one.
@@ -626,7 +630,7 @@ specific to the hosting service are in its piece (section 14).
 
 1. **Profile:** present, or what it would hold; `verify` covering formatting, lint, types and tests (section 9);
    gates, kinds, the lessons file.
-2. **Checks on pull requests:** a pipeline that runs the `verify` commands on every pull request (section 14.2).
+2. **Checks on pull requests:** a pipeline that runs the checks of section 14.2 on every pull request.
 3. **The settings of the hosting service** that the rules rely on: the merge method, merged branches deleted, alerts
    on vulnerable dependencies (section 14.1).
 4. **Dependencies** (section 17): pinned with a lockfile and installed without install scripts; the package manager's
