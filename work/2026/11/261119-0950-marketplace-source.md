@@ -137,3 +137,11 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
   the template, the hook's command and that path come to 8,971 characters, under the kit's margin of 9,000 that
   `hooks/hooks.test.mjs` sets below the platform's 10,000. A trial on 2026-11-19 had already put a copy of the kit at
   `61f8453` there.
+- 2026-11-19, after the checker's first report (verdict fail): the change to the workflow's section 14.1 is written
+  as a deviation.
+
+## Deviations
+
+- `docs/01-specs/WORKFLOW.md`, section 14.1, outside the files in scope: the list of what a service's piece says gains
+  the marketplace's source and the command that moves a host. Without it the architecture would point to a part of
+  the piece that the contract of a piece does not ask for.
