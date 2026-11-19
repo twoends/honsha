@@ -97,4 +97,10 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
 
 ## Verification
 
+## Deviations
+
+- The workflow's section 20.1, step 2, which is out of the listed scope, now names the push to the default branch
+  too: an assessment reads a project's checks against section 14.2, and that section now asks for the push, so the
+  step would otherwise count a project wired as 14.2 says as wired in part.
+
 ## Outcome
