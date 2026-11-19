@@ -110,7 +110,7 @@ Tried with a private repository: the command replaces the registration for every
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
   not by GitHub. In a repository owned by an organisation an account can have a role that reads but does not write.
 
-## Checks on a pull request
+## Checks on pull requests and on the default branch
 
 The wiring is a workflow file. GitHub reads workflow files only from `.github/workflows/` in each repository, so a
 project holds a short file of its own that calls the kit's reusable workflow,
@@ -155,15 +155,14 @@ It answers the contract of WORKFLOW.md, section 14.2, in this way.
 2. **What it runs.** project.yml checks out the project in `project/` and, beside it in `kit/`, the kit at the commit
    project.yml was read from, which is the kit's default branch for a project and the pull request itself for the kit.
    On Linux, with Node.js 26, it installs the project's tools with `npm ci --ignore-scripts` where the project has a
-   `package-lock.json`, then runs from `project/` the kit's `checks/record.mjs` and `checks/commits.mjs`,
-   `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify`
-   list of the profile. The kit's other job runs `node checks/verify.mjs` alone, as its profile lists the kit's checks.
-   GitHub checks out the merge of the pull request with its base branch, so the commands test the merged result; the
-   workflow does not run while the pull request has a conflict. The checkout fetches the whole history
-   (`fetch-depth: 0`), which the check of the commits needs.
+   `package-lock.json`, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and
+   `checks/commits.mjs`, `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`,
+   which runs the `verify` list of the profile. The kit's other job runs `node checks/verify.mjs` alone, as its profile
+   lists the kit's checks. GitHub checks out the merge of the pull request with its base branch, so the commands test
+   the merged result, and the workflow does not run while the pull request has a conflict; on a push it checks out the
+   pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
 3. **What it gives the commands.** `HONSHA_BRANCH` from `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base
-   and head commits of the pull request. On a push, `github.ref_name`, `github.event.before` and `github.sha`; the
-   record's check is skipped.
+   and head commits of the pull request. On a push, `github.ref_name`, `github.event.before` and `github.sha`.
 4. **What it reports.** One result for each job, shown on the pull request and read with `gh pr checks`, or, for a push,
    on the commit and read with `gh run list --branch <default branch>`.
 5. **What can block.** A failed job stops a merge only where branch protection or a ruleset requires it. Elsewhere, and

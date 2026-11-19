@@ -91,6 +91,9 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
   each run checks only what its push added, so no push may cancel another. Section 14.2's "When", the variables and
   "What it reports" name the push; its item 2, whose wrap a short line broke, is rewrapped at 120. The push path runs
   only from a project's caller file, so it is tried by the home after this item is merged: a deferred check.
+- After the checker's first report (verdict fail): section 14.2's title, opening and item 2, the piece's title and its
+  item 2, and the assessment's step on checks name the push too: the record's check on a pull request only, and the
+  pushed commit as what a push checks out. project.yml's header names the piece's new title.
 
 ## Verification
 
