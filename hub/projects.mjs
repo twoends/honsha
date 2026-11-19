@@ -15,7 +15,8 @@
 // so that the home's own working tree and branch, where a session may be working, stay as they
 // are. None of them pushes or opens a pull request: the hub does, with the commands of the hosting
 // service's piece. A move holds once its pull request is merged, which is why `may-start` reads
-// the default branch too. `check` reads the working tree, for the verification of a branch of the
+// the default branch too, and why it is not asked for the assessment that `add` starts: that
+// assessment runs on `add`'s branch, before its entry is merged. `check` reads the working tree, for the verification of a branch of the
 // home. In a project, the script runs `git fetch` and reads the default branch, which leaves the
 // working tree as it is.
 //
@@ -569,7 +570,14 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
 
   const [file] = rest;
   if (!name || !file || !fs.existsSync(file)) return { code: 2, out: ["Usage: may-start <name> <record>."] };
-  if (!project) return { code: 1, out: [`No: \`${name}\` is not in the registry on the home's ${base}.`] };
+  if (!project) {
+    return {
+      code: 1,
+      out: [
+        `No: \`${name}\` is not in the registry on the home's ${base}. The assessment that \`add\` starts is not asked for: it runs on \`add\`'s branch.`,
+      ],
+    };
+  }
   const text = fs.readFileSync(file, "utf8");
   if (project.state === "active") return { code: 0, out: [`Yes: \`${name}\` is active.`] };
   if (project.state === "assessing") {

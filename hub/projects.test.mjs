@@ -350,6 +350,9 @@ test("may-start reads the registry of the home's default branch, and lets throug
   const ask = (/** @type {string} */ file) => run(["may-start", "example", file], { home: dir, host, now }).code;
 
   assert.equal(ask(item), 1);
+  const unknown = run(["may-start", "example", item], { home: dir, host, now });
+  assert.match(unknown.out[0], /is not in the registry/);
+  assert.match(unknown.out[0], /The assessment that `add` starts is not asked for/);
   onMain(dir, { [REGISTRY]: registry([["example", "assessing", "261201-0930"]]) });
   assert.equal(ask(assessment), 0);
   assert.equal(ask(chosen), 1);

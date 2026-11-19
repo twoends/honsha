@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
@@ -83,6 +83,13 @@ items `261119-1200`, `261119-1201` and `261119-1202` as their strategies are
 written, each with the design its strategy recommends.
 
 ## Log
+
+- 2026-11-19: design A, as approved. Section 20's bullet on `may-start` names the assessment that `add` starts as
+  the one item it is not asked for, with the reason, and says that an assessment of a project already `assessing` on
+  the default branch is asked like any item. The header of `hub/projects.mjs` gives the same reason beside the one
+  for reading the default branch. `may-start`'s answer for a project not in the registry adds that the assessment
+  `add` starts is not asked for; the test of `may-start` checks that answer. No other document of the kit says that
+  `may-start` is asked for every item: a search outside `work/` finds it only in section 20 and the script.
 
 ## Verification
 
