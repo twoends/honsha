@@ -173,7 +173,8 @@ milliseconds. It is built with the board.
 **Two rules that keep the files manageable.**
 
 - Records sit in folders by year and month (`inbox/2026/11/`, `work/2026/11/`). A hosting service's pages can stop
-  listing a large folder: GitHub, for one, lists at most 1,000 entries per folder.
+  listing a large folder: GitHub, for one, lists at most 1,000 entries per folder. The home's backlog is the exception,
+  `backlog/<project>/`: it holds only what has not started, and a record leaves it when its item starts.
 - No binary files in git. A voice note or a screenshot is stored as its transcript or description in the record. The
   original stays outside the repository, with a retention period.
 
@@ -214,9 +215,8 @@ board. Both limits are settings in the home.
 ### 4.3 Dispatch
 
 1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size
-   and areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take` if it was
-   there). Parts of
-   the request that are independent are run in parallel by the worker and integrated before verification
+   and areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take`
+   if it was there). Parts of the request that are independent are run in parallel by the worker and integrated before verification
    ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at the same
    time, within the limits of the host and the project.
 2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
