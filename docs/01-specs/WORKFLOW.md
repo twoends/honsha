@@ -432,6 +432,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.
 5. **The wiring of the checks** (14.2), and what it costs on that service.
+6. **The source of the kit's marketplace** that a repository declares (architecture, section 3.1), and the command
+   that moves a host's registration of it to that source.
 
 ### 14.2 Checks on a pull request
 

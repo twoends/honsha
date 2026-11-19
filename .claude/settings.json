@@ -1,7 +1,8 @@
 {
   "extraKnownMarketplaces": {
     "honsha": {
-      "source": { "source": "directory", "path": "." }
+      "source": { "source": "github", "repo": "twoends/honsha" },
+      "autoUpdate": true
     }
   },
   "enabledPlugins": {

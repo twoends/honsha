@@ -68,6 +68,33 @@ In the account of whoever merges:
 - **"Keep my email addresses private".** A merge made on the site is authored with the account's noreply address when it
   is on, and with the address chosen in the merge dialog when it is off. The committer of such a merge is GitHub itself.
 
+## Declaring the kit
+
+Every repository that runs under the kit, the kit's own included, declares its marketplace from the kit's repository
+on GitHub, in `.claude/settings.json` (architecture, section 3.1):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "honsha": {
+      "source": { "source": "github", "repo": "<owner>/<repository of the kit>" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": { "honsha@honsha": true },
+  "worktree": { "baseRef": "head" }
+}
+```
+
+A private repository of the kit is read with the machine's git credentials, which `gh auth setup-git` sets. A host
+whose registration of the marketplace comes from another source, such as a clone's folder, moves it once:
+
+```
+claude plugin marketplace add <owner>/<repository of the kit>
+```
+
+Tried with a private repository: the command replaces the registration for every project of the host, and says so.
+
 ## What GitHub enforces, and what it does not
 
 - **In a private repository of a free account nothing on GitHub stops an account that can write** from pushing to the

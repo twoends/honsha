@@ -1,0 +1,211 @@
+---
+id: 261119-0950
+title: One source for the kit's marketplace on every host, the kit's own clone included
+project: honsha
+type: change
+size: full
+kind: flow
+state: done
+areas: []
+created: 2026-11-19
+updated: 2026-11-19
+requested-by: person
+source: null
+pr: 25
+model: claude-opus-5-5
+effort: null
+checks:
+  - { due: 2026-11-20, what: "The first session in the kit's clone after the merge receives the core rules, and `claude plugin marketplace list` shows honsha from the repository" }
+---
+
+## Intent
+
+The person asked to solve now, rather than later, a problem met while declaring the kit in a project, since it would
+come up sooner or later anyway: on a host where the kit is cloned, the marketplace `honsha` is already registered from
+the clone's folder, so a project cannot declare it from the kit's repository. Asked on 2026-11-19, in the chat of a
+session, answering whether to handle that problem now.
+
+## Scope and acceptance criteria
+
+### In scope
+
+- How a project declares the kit, the kit's own repository included, so that one host gives the marketplace one
+  source.
+- The kit's `.claude/settings.json`, its README, the architecture (3.1, 3.3) and the piece of the hosting service.
+- How a session on a branch of the kit runs under the kit as that branch holds it, where it needs to.
+
+### Out of scope
+
+- The home's declaration of the kit: its own item, `261119-0904` of the home, which resumes with what this item
+  decides.
+- O10, versions of the manifests.
+
+### Boundaries
+
+- The rules name no hosting service: the source type of a service goes in its piece.
+- No setting of a user or a host is committed.
+
+### Acceptance criteria
+
+1. The architecture states one way for every repository to declare the kit, with the reason, and the piece of the
+   hosting service gives the declaration as JSON.
+2. The kit's `.claude/settings.json` declares `honsha` from its repository on the hosting service, with automatic
+   updates, as a project does.
+3. The README says how a session runs under an unmerged change of the kit, and what a host does once to move a
+   registration made from a folder.
+4. The kit's `verify` passes.
+5. A deferred check: the first session in the kit's clone after the merge receives the core rules, and the host lists
+   `honsha` from the repository.
+
+## Strategy
+
+### Facts it rests on
+
+- A host registers one marketplace for a name, for every project (platform documentation, marketplace reference and
+  plugin loading).
+- Adding `honsha` from another source replaces the registration for every project: tried on 2026-11-19 with the
+  command line.
+- A settings file of a project outranks the user's, and its entry for a marketplace replaces a lower one whole.
+- A project's marketplaces and plugins apply only in a folder whose trust was accepted; a `claude -p` run in another
+  folder ignores them.
+- A marketplace entry takes `autoUpdate: true`, which refreshes the marketplace and its plugins after startup; a
+  third party's default is off.
+- A plugin's relative source cannot leave its marketplace's folder, and no setting loads a plugin from a folder
+  without a marketplace; `claude --plugin-dir <folder>` loads one for a session.
+- The kit declares itself today as `{ "source": "directory", "path": "." }`, so every session in a clone runs the kit
+  as the clone holds it, whatever branch is checked out.
+
+### Design
+
+- **One declaration everywhere.** Every repository that runs under the kit, the kit's own included, declares
+  `honsha` from the kit's repository on the hosting service, with `autoUpdate: true`. A host then has one source for
+  the name, the same on every host, and every project gets the kit as merged into its default branch.
+- **A session works under the rules in force.** A session on a branch of the kit runs under the merged kit, not under
+  the change it is making, as any project's session does. Where a change to the rules, a hook or an agent must be
+  tried before it is merged, the session starts with `claude --plugin-dir <the clone>`, which the README already
+  names.
+- **The service's piece holds the JSON.** The architecture says what a declaration does; `services/github/README.md`
+  gives `{ "source": "github", "repo": "<owner>/<repository>" }`.
+- **Moving a host.** A host that registered `honsha` from a folder runs once
+  `claude plugin marketplace add <owner>/<repository>`; the README says so.
+
+### Plan
+
+1. The kit's settings, the architecture, the service's piece and the README.
+2. The verification, the checker, the pull request; the deferred check in `checks`.
+3. After the merge, on this host: move the registration, open a session in the kit's clone and in the home, and read
+   that the rules arrive. Then the home's item resumes.
+
+### Risks
+
+- A session of the kit no longer sees an unmerged change to the rules unless started with `--plugin-dir`; an item
+  that changes a hook is tried that way.
+- Automatic updates bring every merge of the kit to every project at its next session. That is what the kit's
+  manifests without a version mean already (O10).
+- Until the kit's clone checks out a commit with this change, a session in it declares the folder, which outranks the
+  registration and may move it back.
+
+### Measure
+
+1 to 2 times a full item at the kit's medians: 10 to 20 minutes of agent time, 60,000 to 120,000 output tokens. It
+rests on platform behaviour read in the documentation and only partly tried.
+
+### Decisions for the person
+
+1. **The design.** Recommended: one declaration from the repository everywhere, the kit included, as above. The
+   alternative keeps the kit's clone as the source on a host and has each project declare the kit only in its
+   untracked `.claude/settings.local.json`, by host; it keeps the kit's sessions on their branch's rules, but every
+   clone of every project needs a hand-written file, and a fresh clone runs without the kit.
+
+## Approval
+
+Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy, with the recommended design.
+
+## Log
+
+- 2026-11-19: branch cut from `main` at `61f8453`. Facts read in the platform's documentation, and tried with the
+  command line on throwaway marketplaces. One trial also added `honsha` from the repository and so moved this host's
+  registration away from the clone's folder, which is how the second fact above was seen; it was put back at once,
+  with the user settings as they were.
+- The kit's `.claude/settings.json` declares `honsha` from `twoends/honsha` with `autoUpdate: true`; its pre-push
+  hook stays as it was.
+- The architecture (3.1, 3.3) states the one declaration and its reason; the workflow's section 14.1 adds the source
+  of the marketplace, and the command that moves a host, to what a service's piece says; `services/github/README.md`
+  gives both; the README says how an unmerged change is tried, and how a host moves.
+- The README still lists an installation from the marketplace among what is not tried: the deferred check tries it.
+- The installed copy lives under the user's plugin cache, a longer path than a clone: on this host the core rules,
+  the template, the hook's command and that path come to 8,971 characters, under the kit's margin of 9,000 that
+  `hooks/hooks.test.mjs` sets below the platform's 10,000. A trial on 2026-11-19 had already put a copy of the kit at
+  `61f8453` there.
+- 2026-11-19, after the checker's first report (verdict fail): the change to the workflow's section 14.1 is written
+  as a deviation.
+
+## Verification
+
+On `8874f35`, from a worktree of the kit at a path short enough for the test of the hook's output, with the
+development tools of the kit's main clone:
+
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, 4 commits.
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 115 tests.
+- `claude plugin validate .`: passed, with the warnings it always gives.
+
+### Checker report, first run
+
+On `71b7012`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Scope: the diff changes `docs/01-specs/WORKFLOW.md` (section 14.1, item 6, lines 435-436). That file is outside what the record puts in scope ("the kit's `.claude/settings.json`, its README, the architecture (3.1, 3.3) and the piece of the hosting service"), and the record has no "Deviations" section declaring it. Fix: add a deviation for it.
+
+### Checker report
+
+Repeated check on `8874f35`, against the diff `71b7012..HEAD`. The finding of the first run (Scope: `docs/01-specs/WORKFLOW.md` section 14.1 changed with no declared deviation) is resolved. The record now has a "Deviations" section (`work/2026/11/261119-0950-marketplace-source.md`, lines 168-172) that names that file and section, says what changed and gives the reason. The log entry at lines 142-143 records the fix. The description matches the file: `docs/01-specs/WORKFLOW.md` line 435, item 6, "The source of the kit's marketplace".
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+The diff changes only the record, so no criterion's evidence changed since the full check on `71b7012`.
+
+1. Architecture states one declaration, service piece gives the JSON: met at the full check, unchanged by this diff.
+2. Kit's `.claude/settings.json` declares `honsha` from the repository with automatic updates: met at the full check, unchanged.
+3. README on an unmerged change and on moving a host: met at the full check, unchanged.
+4. Kit's `verify` passes: met, Verification at record lines 147-156, on `8874f35`.
+5. Deferred check after the merge: not verifiable. It is declared in `checks` (record line 18) and is due after the merge.
+
+- **Intent:** in order
+- **Scope:** in order. The diff touches only the record. The earlier out-of-scope change to `docs/01-specs/WORKFLOW.md` is now declared under "Deviations".
+- **Comments and documents:** in order. The diff adds no comments and changes no document other than the record.
+- **Gates:** in order. All three gates hold for this diff: no hosting service named in the rules, nothing about a user or an installation, no script added.
+- **Verification evidence:** in order. All seven `verify` commands are recorded as passed on `8874f35`, `checks/record.mjs` and `checks/commits.mjs` included. Covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test).
+- **Record:** in order. The earlier report keeps only its verdict and finding. Verification holds only command results and the report. The deviation copies nothing from another document.
+- **Commits:** in order. `8874f35` "Write the change to the workflow's section 14.1 as a deviation, as the checker asked" is a single fix commit as the checker asked, changes only the record and has the `Work-Item: 261119-0950` trailer.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 5, the deferred check: it can only run after the merge, in a new session in the kit's clone on this host.
+
+## Deviations
+
+- `docs/01-specs/WORKFLOW.md`, section 14.1, outside the files in scope: the list of what a service's piece says gains
+  the marketplace's source and the command that moves a host. Without it the architecture would point to a part of
+  the piece that the contract of a piece does not ask for.
+
+## Outcome
+
+Every repository that runs under the kit, the kit's own included, declares the marketplace `honsha` from the kit's
+repository with automatic updates, so a host has one source for it and the same on every host. A session runs under
+the kit as merged; an unmerged change is tried with `--plugin-dir`. The piece of GitHub gives the declaration and the
+command that moves a host's registration. One deferred check, due 2026-11-20: the first session in the kit's clone
+after the merge receives the core rules, and the host lists `honsha` from the repository. The home's item
+`261119-0904` resumes with this source.
