@@ -32,17 +32,17 @@
 //
 // A project has a folder on each host, by the name the system gives the host.
 
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { parseRecord, readTemplate } from "../checks/record.mjs";
+import { attempt, defaultRef, git, inWorktree, writeFiles } from "./home.mjs";
 
 export const REGISTRY = "registry.yml";
 const STATES = ["assessing", "adopting", "active"];
-const NAME = /^[a-z0-9][a-z0-9-]*$/;
+export const NAME = /^[a-z0-9][a-z0-9-]*$/;
 const ID = /^\d{6}-\d{4}$/;
 const KIT = new URL("..", import.meta.url);
 // A report merged before its home ran as a project stays where it was written (workflow, section 11).
@@ -121,26 +121,6 @@ export function formatRegistry(projects) {
 }
 
 /**
- * @param {string} dir
- * @param {string[]} args
- */
-function git(dir, args) {
-  return execFileSync("git", ["-C", dir, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-}
-
-/**
- * @param {string} dir
- * @param {string[]} args
- */
-function attempt(dir, args) {
-  try {
-    return git(dir, args);
-  } catch {
-    return null;
-  }
-}
-
-/**
  * The files of the home's working tree, by their paths from the home's root.
  * @param {string} home
  * @returns {Files}
@@ -182,23 +162,6 @@ function overlay(files, written) {
       return [...new Set([...files.list(folder), ...added])];
     },
   };
-}
-
-/**
- * The home's default branch as a ref, after a fetch: the remote's where the home has one, the local branch otherwise.
- * @param {string} home
- */
-function defaultRef(home) {
-  if (attempt(home, ["rev-parse", "--git-dir"]) === null) throw new Error(`${home} is not a git repository.`);
-  if ((attempt(home, ["remote"]) ?? "").split(/\r?\n/).includes("origin")) {
-    git(home, ["fetch", "-q", "origin"]);
-    const head = attempt(home, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"])?.trim();
-    if (!head) throw new Error("The home's origin has no HEAD: set it with `git remote set-head origin --auto`.");
-    return head;
-  }
-  const local = ["main", "master"].find((name) => attempt(home, ["rev-parse", "--verify", "-q", `refs/heads/${name}`]));
-  if (!local) throw new Error("The home has neither an origin nor a branch `main` or `master`.");
-  return local;
 }
 
 /**
@@ -395,30 +358,6 @@ function taken(home, files, id) {
 }
 
 /**
- * Creates a work branch from `base` and commits `written` on it, in a temporary worktree that it removes.
- * @param {string} home
- * @param {{ base: string, branch: string, written: Record<string, string>, message: string }} change
- */
-function commitOnBranch(home, { base, branch, written, message }) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-move-"));
-  // From a remote branch a new branch would track it, and a plain push could then reach the default branch.
-  git(home, ["worktree", "add", "-q", "--no-track", "-b", branch, dir, base]);
-  try {
-    for (const [file, text] of Object.entries(written)) {
-      fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
-      fs.writeFileSync(path.join(dir, file), text);
-    }
-    git(dir, ["add", "--", ...Object.keys(written)]);
-    git(dir, ["commit", "-q", "-m", message]);
-  } catch (error) {
-    git(home, ["worktree", "remove", "--force", dir]);
-    git(home, ["branch", "-D", branch]);
-    throw error;
-  }
-  git(home, ["worktree", "remove", dir]);
-}
-
-/**
  * Commits a move as a work item of the home, its record with the registry, on a new branch; nothing when the
  * registry it would hold fails its check.
  * @param {string} home
@@ -432,7 +371,11 @@ function commitMove(home, { base, files, id, slug, title, projects, record }) {
   const written = { [file]: record, [REGISTRY]: formatRegistry(projects) };
   const problems = checkRegistry(overlay(files, written));
   if (problems.length > 0) return { code: 1, out: [...problems, "Nothing was committed."] };
-  commitOnBranch(home, { base, branch, written, message: `${title}\n\nWork-Item: ${id}` });
+  inWorktree(home, { base, branch }, (dir) => {
+    writeFiles(dir, written);
+    git(dir, ["add", "--", ...Object.keys(written)]);
+    git(dir, ["commit", "-q", "-m", `${title}\n\nWork-Item: ${id}`]);
+  });
   return {
     code: 0,
     out: [

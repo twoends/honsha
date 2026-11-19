@@ -75,7 +75,8 @@ In code and in every other file of the project:
 ## Delivery
 
 - The default branch changes only through pull requests, and the person merges them, with a merge commit unless the
-  project's rules name another method. A session
+  project's rules name another method. The one exception: the kit's script `hub/backlog.mjs` pushes the records of the
+  home's backlog there without a pull request, in commits that only add or remove one file under `backlog/`. A session
   never merges, never pushes to the default branch, never force-pushes and never skips a push's hooks; a guard of the
   kit refuses those commands.
   A session that finds a merged branch deletes it, with its worktrees, locally and on the hosting service.
@@ -94,11 +95,6 @@ Work stops, the record's state becomes `blocked` and the person is told why, whe
 - the work conflicts with the documented architecture;
 - the work goes beyond the scope;
 - a case from the "always full" list appears in an item that was sized smaller.
-
-## Area packs
-
-An area named in a record's `areas` can have a rule pack: the skill `honsha:area-<name>`. A session that works on
-the item loads the pack of each of its areas before it changes anything. An area without a pack has no extra rules.
 
 ## Lessons
 

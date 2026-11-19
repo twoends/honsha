@@ -214,3 +214,44 @@ test("a small item changes other files from its first commit", () => {
   git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
   assert.deepEqual(run(dir), { commits: 1, problems: [] });
 });
+
+test("on the default branch, merges and captures of the backlog pass, and any other direct commit is named", () => {
+  const { dir, git } = repository();
+  git(["checkout", "-q", "main"]);
+  const start = git(["rev-parse", "HEAD"]);
+  const capture = "backlog/example/261201-0930-export-orders.md";
+  put(dir, git, capture, "A record.\n");
+  git(["commit", "-q", "-m", "Capture 261201-0930 in the backlog of example", "-m", "Backlog: 261201-0930"]);
+  git(["checkout", "-q", BRANCH]);
+  put(dir, git, "export.js", "export {};\n");
+  git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
+  git(["checkout", "-q", "main"]);
+  git(["merge", "-q", "--no-ff", BRANCH, "-m", "Merge pull request #1"]);
+  git(["rm", "-q", capture]);
+  git(["commit", "-q", "-m", "Take 261201-0930 from the backlog of example", "-m", "Backlog: 261201-0930"]);
+  const passed = git(["rev-parse", "HEAD"]);
+  const env = { HONSHA_BRANCH: "main", HONSHA_BASE: start, HONSHA_HEAD: passed };
+  assert.deepEqual(run(dir, env), { commits: 3, problems: [] });
+
+  put(dir, git, "README.md", "Pushed straight to main.\n");
+  git(["commit", "-q", "-m", "Edit the readme"]);
+  put(dir, git, "backlog/example/261201-0931-import-orders.md", "A record.\n");
+  put(dir, git, "settings.yml", "quiet: 22-07\n");
+  git(["commit", "-q", "-m", "Capture 261201-0931 with a setting", "-m", "Backlog: 261201-0931"]);
+  put(dir, git, "backlog/example/261201-0931-import-orders.md", "Another record.\n");
+  git(["commit", "-q", "-m", "Rewrite 261201-0931 in the backlog", "-m", "Backlog: 261201-0931"]);
+  put(dir, git, "backlog/example/261201-0932-other.md", "A record.\n");
+  git(["commit", "-q", "-m", "Capture 261201-0932 under another name", "-m", "Backlog: 261201-0933"]);
+  const { problems } = run(dir, { ...env, HONSHA_HEAD: git(["rev-parse", "HEAD"]) });
+  assert.equal(problems.length, 4);
+  assert.match(problems[0], /Edit the readme: a direct commit, not a capture: no `Backlog` trailer$/);
+  assert.match(problems[1], /with a setting: .*changes 2 files, not one record under backlog\/$/);
+  assert.match(
+    problems[2],
+    /Rewrite 261201-0931 .*: changes backlog\/example\/261201-0931-import-orders\.md other than/,
+  );
+  assert.match(
+    problems[3],
+    /under another name: .*261201-0932-other\.md is not backlog\/<project>\/261201-0933-<slug>\.md$/,
+  );
+});
