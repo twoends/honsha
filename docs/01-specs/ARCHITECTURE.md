@@ -146,6 +146,11 @@ default branch, while the parts of a work item start from the item's branch ([WO
 13.6). The declaration of the marketplace is the same in every project and on every host (section 3.1); the piece of
 the hosting service gives its source.
 
+The declaration makes the marketplace known; each clone of a project installs the plugin once, with
+`claude plugin install honsha@honsha --scope project`, and the plugin is active from the next session. The command
+writes `.claude/settings.json` again with the same values in another order of keys: `git checkout .claude/settings.json`
+restores it, so that no change to the file is committed by mistake.
+
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 
 ### 3.4 Files and index
