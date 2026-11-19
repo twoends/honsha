@@ -87,6 +87,11 @@ work/                  the kit's own work records
 
 - It is distributed as a Claude Code plugin from the kit's own repository, private until published. The repository
   is its own marketplace: the plugin is the repository root.
+- Every repository that runs under the kit, the kit's own included, declares that marketplace from the repository on
+  its hosting service, with automatic updates. A host registers one source for a marketplace's name, for all its
+  projects, so a second source, such as a clone's folder, would replace the first for every one of them. A session
+  therefore runs under the kit as merged; an unmerged change to the kit is tried in a session started with
+  `--plugin-dir`, as the kit's README says.
 - The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
   one, it would stay on its copy until the version changes (O10, section 9).
 - What a piece of `services/<name>/` holds is in [WORKFLOW.md](WORKFLOW.md), section 14; the wiring of the checks
@@ -132,13 +137,14 @@ What the kit adds to a project:
 .hub/profile.yml       language, stack, areas with their paths, verification commands, quality gates, data sources, playbooks
 work/                  the project's work records
 CLAUDE.md              short; names the profile and anything truly project-specific
-.claude/settings.json  declares the kit's marketplace and plugin; starts new worktrees from the current branch
+.claude/settings.json  declares the kit's marketplace, from its repository, and its plugin; starts new worktrees from the current branch
 .claude/rules/         project-specific rules, scoped by path
 ```
 
 The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the
 default branch, while the parts of a work item start from the item's branch ([WORKFLOW.md](WORKFLOW.md), section
-13.6).
+13.6). The declaration of the marketplace is the same in every project and on every host (section 3.1); the piece of
+the hosting service gives its source.
 
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 

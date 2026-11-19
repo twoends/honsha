@@ -63,13 +63,19 @@ The worker runs on Opus unless the session is started with another model (`--mod
 
 ## Working on the kit
 
-The repository declares itself as a marketplace and enables its own plugin, in `.claude/settings.json`, so that a
-session opened in a clone runs under the kit as the clone holds it: the core rules at start, the guard, the effort
-hook, the core rules given to the checker when it starts, and the skills. The platform reads that file only in a
-folder you trust. The first session in a new clone adds the marketplace; the plugin is active from the next one. An edit to a hook or the rules takes effect in the next session.
-If an edit breaks a session, set `"honsha@honsha": false` under `enabledPlugins` in `.claude/settings.local.json`,
-which git does not track, until it is fixed; or start the session with `claude --plugin-dir <a clone of a working
-commit>`, which takes the place of the declared plugin.
+The repository declares its own marketplace and enables its plugin in `.claude/settings.json`, from the repository on
+its hosting service and with automatic updates, as every project does (architecture, section 3.1). A session opened
+in a clone runs under the kit as merged: the core rules at start, the guard, the effort hook, the core rules given to
+the checker when it starts, and the skills. The platform reads that file only in a folder you trust. The first
+session in a new clone adds the marketplace; the plugin is active from the next one.
+
+A change to a hook, the rules or an agent is not in force until it is merged. To try it before, start the session
+with `claude --plugin-dir <the clone>`, which takes the place of the declared plugin for that session. If the merged
+kit breaks a session, start it with `--plugin-dir` on a clone of a working commit, or set `"honsha@honsha": false`
+under `enabledPlugins` in `.claude/settings.local.json`, which git does not track, until it is fixed.
+
+A host registers one source for the marketplace's name, for all its projects. A host that registered it from a
+clone's folder moves it once, with the command in the piece of its hosting service.
 
 Whatever is committed to the kit counts as public from its first commit, whether its repository is public or private.
 So a push from a clone is checked by the hook `.githooks/pre-push`: it refuses a push when any commit it sends, and

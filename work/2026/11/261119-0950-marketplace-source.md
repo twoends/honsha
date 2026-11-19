@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
@@ -14,7 +14,8 @@ source: null
 pr: null
 model: null
 effort: null
-checks: []
+checks:
+  - { due: 2026-11-20, what: "The first session in the kit's clone after the merge receives the core rules, and `claude plugin marketplace list` shows honsha from the repository" }
 ---
 
 ## Intent
@@ -126,3 +127,13 @@ Approved by the person on 2026-11-19, in the chat of the session that wrote the 
   command line on throwaway marketplaces. One trial also added `honsha` from the repository and so moved this host's
   registration away from the clone's folder, which is how the second fact above was seen; it was put back at once,
   with the user settings as they were.
+- The kit's `.claude/settings.json` declares `honsha` from `twoends/honsha` with `autoUpdate: true`; its pre-push
+  hook stays as it was.
+- The architecture (3.1, 3.3) states the one declaration and its reason; the workflow's section 14.1 adds the source
+  of the marketplace, and the command that moves a host, to what a service's piece says; `services/github/README.md`
+  gives both; the README says how an unmerged change is tried, and how a host moves.
+- The README still lists an installation from the marketplace among what is not tried: the deferred check tries it.
+- The installed copy lives under the user's plugin cache, a longer path than a clone: on this host the core rules,
+  the template, the hook's command and that path come to 8,971 characters, under the kit's margin of 9,000 that
+  `hooks/hooks.test.mjs` sets below the platform's 10,000. A trial on 2026-11-19 had already put a copy of the kit at
+  `61f8453` there.
