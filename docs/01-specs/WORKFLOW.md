@@ -9,10 +9,11 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 - **One record per work item,** one file, with front matter. Its sections depend on the size of the work.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
-  the change. The person merges (core rules, Delivery).
+  the change. The person merges. The one exception is the home's backlog (core rules, Delivery; section 5.2).
 - **The home is a project like any other.** What is not a change to another project lives there: backlog, inbox and
   verdicts, reports, check outcomes. It reaches the home's default branch as any change does, through a work item and
-  a pull request, the writes the hub and its scripts make included.
+  a pull request, the writes the hub and its scripts make included; only the backlog's records are pushed there by a
+  script of the kit, at once (section 5.2).
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
 - **Parallel by default.** Work is split and run in parallel whenever its parts are independent, without being asked.
 
@@ -59,17 +60,17 @@ one.
 
 | State               | Meaning                                                     | Where the record is         |
 | ------------------- | ----------------------------------------------------------- | --------------------------- |
-| `idea`              | Captured, not yet decided                                   | Home, `backlog/`            |
-| `ready`             | Intent clear, size set, can start                           | Home, `backlog/`            |
+| `idea`              | Captured, not yet decided                                   | Home, `backlog/<project>/`  |
+| `ready`             | Intent clear, size set, can start                           | Home, `backlog/<project>/`  |
 | `awaiting-approval` | Full item with its strategy written, waiting for the person | Branch of the project       |
 | `in-progress`       | A worker is on it                                           | Branch of the project       |
 | `blocked`           | A stop condition was met; waiting for the person            | Branch of the project       |
 | `done`              | Work finished and verified                                  | Branch, then default branch |
-| `dropped`           | Abandoned                                                   | Home, `backlog/`            |
+| `dropped`           | Abandoned                                                   | Home, `backlog/<project>/`  |
 
 "In review" is not a state: it is a `done` record on a branch whose pull request is open. Starting an item moves its
-record from the home's backlog into a new branch of the project. A report's project is the home: its record follows
-the same states on a branch of the home.
+record from the home's backlog into a new branch of the project (section 5.2). A report's project is the home: its
+record follows the same states on a branch of the home.
 
 ---
 
@@ -119,10 +120,11 @@ extended instead.
 
 ## 5. Procedure
 
-1. **Capture.** A record is created with the intent verbatim. It is an `idea` or `ready` in the home's backlog, or it
-   starts at once.
+1. **Capture.** A record is created with the intent verbatim. It is an `idea` or `ready` in the home's backlog, where
+   the hub captures it at once (section 5.2), or it starts at once.
 2. **Size and areas.** Proposed from the core rules (Sizes) and the profile's area map.
-3. **Start.** A branch is created in the project and the record moves into it.
+3. **Start.** A branch is created in the project and the record moves into it; one in the backlog is taken from there
+   (section 5.2).
 4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written and the item stops for the
    approval, as the core rules say (Sizes; Commits and branches).
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas.
@@ -166,6 +168,35 @@ workers in a project. `parallel.exclusive` names resources that only one worker 
 database or a development server; a worker that needs one waits its turn. Work beyond a limit is queued, not dropped.
 
 **Record.** The item's log says which parts ran in parallel and how they were integrated.
+
+### 5.2 The backlog
+
+The home's backlog holds the records kept for later: ideas, requests that wait, `ready` items and `dropped` ones, one
+file each, `backlog/<project>/<id>-<slug>.md` on the home's default branch. A pull request exists so that the person
+reviews a change before it lands. A captured record changes nothing and has nothing to review, and capturing one must
+not become a job for anyone: it is the one write that reaches a default branch without a pull request (core rules,
+Delivery). Code keeps the exception narrow, not trust.
+
+`hub/backlog.mjs` in the kit, run from the home's folder, does both moves:
+
+- `add <project> <file>` captures a record. It reads the registry from the home's default branch after a fetch, and
+  refuses a project that is not there, a file that is not a record of that project in the state `idea`, `ready` or
+  `dropped` and named `<id>-<slug>.md`, and a record the backlog holds already. It commits the file in a temporary
+  worktree of the default branch's tip, with the trailer `Backlog: <id>`, and pushes it before it returns, so that the
+  capture is on the hosting service and the person does nothing for it.
+- `take <project> <id>` removes the record in the same way when the item starts, and prints it for the session that
+  creates the item in its project.
+
+Neither touches the home's working tree. When a push is refused because the default branch moved in the meantime, the
+script fetches and commits again on the new tip. It refuses to push a commit that does anything but add or remove one
+file under `backlog/<project>/`.
+
+On the default branch, `node checks/commits.mjs` reads the commits of the first parents: a merge commit, which brings
+a pull request whose commits were checked on its branch, and the commits pushed there directly. It accepts a direct
+commit only when it carries the `Backlog` trailer and adds or removes exactly the one record that trailer names, and
+it fails on any other. This reading assumes that the project merges with merge commits (section 13.4): a pull
+request squashed or rebased onto the default branch looks like a direct commit. A pipeline that checks the default
+branch after each push runs it there.
 
 ---
 
@@ -248,6 +279,10 @@ legacy:
 
 - `language` sets the language of the project's documents and records (core rules, Work items).
 - `stack` lists the technologies whose lessons the project's sessions load (section 8).
+- `areas` maps each area of the project to its paths; an item's areas are proposed from it (section 5). An area named
+  in a record's `areas` can have a rule pack: the skill `honsha:area-<name>`. A session that works on the item loads
+  the pack of each of its areas before it changes anything (`agents/worker.md`). An area without a pack has no extra
+  rules.
 - `parallel` sets how many workers may run in the project at once and which resources cannot be shared (section 5.1).
 - `lessons` names the file that holds the project-level lessons only. The file name is the project's choice.
 - `legacy` lists folders with documents from before the project adopted this workflow (section 11).
@@ -392,7 +427,8 @@ A message is read as a title in the history; the reasons are in the record, so t
 ### 13.4 Merging
 
 - With a merge commit, every commit of the item reaches the default branch as it was made, and the default branch
-  shows one entry for each item (`git log --first-parent`).
+  shows one entry for each item (`git log --first-parent`). Between them stand only the backlog's captures, and the
+  check of commits reads that history on the default branch (section 5.2).
 - A merged branch left behind shows a finished item among the open ones (section 10).
 - A project that already merges in another way can keep it. The record still arrives whole and the trailer still ties
   the commits to it; the order of the approval gate is then visible only where the hosting service keeps the pull
@@ -459,13 +495,15 @@ contract.
 6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
 
 In the kit, `node checks/verify.mjs` runs the `verify` list of a profile; `node checks/commits.mjs` reads the three
-variables, and `node checks/record.mjs` reads `HONSHA_BRANCH`.
+variables, also when they name the default branch (section 5.2), and `node checks/record.mjs` reads `HONSHA_BRANCH`.
 
 ### 14.3 The guard
 
 - A hook of the kit refuses four kinds of shell command in a session: a push to the default branch, a forced push, a
   push that skips the repository's hooks (`--no-verify`), and a command that merges a pull request. The first three
   are plain git and hold on any service. The fourth comes from the `merge-commands.json` of each service's piece.
+- The backlog's script (section 5.2) pushes to the default branch from inside the script, the one way there. A push to
+  the default branch typed in a session is still refused.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.

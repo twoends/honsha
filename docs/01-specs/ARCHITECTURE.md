@@ -75,8 +75,8 @@ rules/core.md          the few always-on rules
 skills/                workflow, triage, radar, status, one pack per area, the worker's situational procedures
 agents/                worker, reader, checker
 hooks/                 session and checker start; the guard on shell commands; write the effort level into records
-checks/                run a profile's verification commands; check a work branch's record and commits
-hub/                   the hub's code: the registry of projects and the moves between their states
+checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
+hub/                   the hub's code: the registry of projects, the moves between their states, the backlog
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
 templates/             record, inbox item, radar entry, profile
 board/                 the board generator
@@ -117,7 +117,7 @@ settings.yml           quiet period, notification rules, allowlisted senders, wo
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, section 16)
 inbox/                 one file per item received, with its verdict
-backlog/               work items not yet started, per project
+backlog/               work items not yet started, per project; written by hub/backlog.mjs (workflow, section 5.2)
 radar/                 one file per tool
 work/                  the home's work items: reports with their answers, outcomes of deferred checks, moves in the registry
 lessons/tech/          one file per technology, shared by every project that uses it
@@ -127,7 +127,9 @@ lessons/host/          one file per host
 
 The home is a project like any other: the kit is declared in it, and its default branch changes only through pull
 requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
-scripts included; a report is one of them, and its record holds the answer.
+scripts included; a report is one of them, and its record holds the answer. The one exception is the backlog: the
+kit's script pushes each record there and takes it out without a pull request, in commits that do nothing else (core
+rules, Delivery; workflow, section 5.2).
 
 ### 3.3 Project (each registered repository)
 
@@ -176,7 +178,8 @@ milliseconds. It is built with the board.
 **Two rules that keep the files manageable.**
 
 - Records sit in folders by year and month (`inbox/2026/11/`, `work/2026/11/`). A hosting service's pages can stop
-  listing a large folder: GitHub, for one, lists at most 1,000 entries per folder.
+  listing a large folder: GitHub, for one, lists at most 1,000 entries per folder. The home's backlog is the exception,
+  `backlog/<project>/`: it holds only what has not started, and a record leaves it when its item starts.
 - No binary files in git. A voice note or a screenshot is stored as its transcript or description in the record. The
   original stays outside the repository, with a retention period.
 
@@ -216,11 +219,11 @@ board. Both limits are settings in the home.
 
 ### 4.3 Dispatch
 
-1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size
-   and areas and creates the record in a new branch of the project (moved from the backlog if it was there). Parts of
-   the request that are independent are run in parallel by the worker and integrated before verification
-   ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at the same
-   time, within the limits of the host and the project.
+1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size and
+   areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take` if it
+   was there). Parts of the request that are independent are run in parallel by the worker and integrated before
+   verification ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at
+   the same time, within the limits of the host and the project.
 2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
 4. The checker verifies the result. Its report goes into the record and the pull request.

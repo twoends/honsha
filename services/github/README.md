@@ -102,7 +102,9 @@ Tried with a private repository: the command replaces the registration for every
   (WORKFLOW.md, section 14.3).
 - **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
-  works the same with them: they add a stop on the server and change no rule.
+  works the same with them: they add a stop on the server and change no rule. In the home, the account that the
+  backlog's script pushes with must be allowed to push to the default branch (WORKFLOW.md, section 5.2), and nothing
+  else may be.
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
