@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-19
 updated: 2026-11-19
@@ -14,7 +14,8 @@ source: null
 pr: null
 model: null
 effort: high
-checks: []
+checks:
+  - { due: 2026-11-26, what: "On the home's first pull request whose workflow calls project.yml: the job ran the record check, the commits check, the registry check and every `verify` command of the home's profile, each with its result in the log, and `gh pr checks` shows it" }
 ---
 
 ## Intent
@@ -98,6 +99,56 @@ written, each with the design its strategy recommends. The change of the kit rep
 
 ## Log
 
+- 2026-11-19: branch at `5c10e7f`, the approval. No areas, so no pack to load.
+- The assumption, read in GitHub's documentation before the work:
+  - "Reusing workflow configurations", Access to reusable workflows
+    (docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations): a workflow can use a
+    reusable workflow of the same repository, or of a public repository; one of a private repository only when that
+    repository's Access setting allows it. Its table gives a private caller access to private and public repositories.
+    The caller's Actions permissions must allow reusable workflows; "Managing GitHub Actions settings for a repository"
+    says Actions is enabled by default, and then workflows may use reusable workflows of any public repository. The
+    assumption holds.
+  - The same page: the `github` context of a called workflow is the caller's, so `github.head_ref` and
+    `github.event.pull_request` hold the project's pull request; the token's permissions can only be lowered by the
+    called workflow; billing for GitHub's runners goes to the caller; the same concurrency group in caller and called
+    workflow cancels the running one, so project.yml declares none.
+  - "Contexts" (docs.github.com/en/actions/reference/workflows-and-actions/contexts): `job.workflow_repository` and
+    `job.workflow_sha` name the repository and commit of the file that defines the job, and its example checks out a
+    reusable workflow's own repository with them; the `job` context is available in a step's `with`.
+  - Checking out the kit with the caller's token: "GITHUB_TOKEN"
+    (docs.github.com/en/actions/concepts/security/github_token) says its permissions are limited to the workflow's
+    repository and says nothing of other public repositories.
+    The README of `actions/checkout` (github.com/actions/checkout) says the default token is scoped to the current
+    repository, "so if you want to checkout a different repository that is private you will need to provide your own"
+    token, and its side-by-side example checks out another repository with the default token. So a public kit is
+    read with no secret; GitHub's documentation does not state it in so many words, and only the deferred check
+    shows it on a project.
+- `.github/workflows/project.yml`: called with `workflow_call`; checks out the project in `project/` and the kit in
+  `kit/`, side by side so that a project's formatter or linter run on `.` never reads the kit's files; the kit from
+  `job.workflow_repository` at `job.workflow_sha`, so that the checks and the file that runs them come from one
+  commit: the kit's default branch for a project, whose caller names it, and the pull request for the kit's own run.
+  Node.js 26, `npm ci --ignore-scripts` when `package-lock.json` is there, then the record check, the commits check,
+  the registry's check when `registry.yml` is there, and `checks/verify.mjs`, from the project's folder, with the
+  three variables. Linux only, `permissions: contents: read`, the same pinned commits as `verify.yml`, no token left in
+  the git configuration, a limit of 20 minutes.
+- An optional input `claude-code`, a version of Claude Code to install: the kit's profile runs
+  `claude plugin validate .`, so the kit's own run of project.yml needs it (see Deviations).
+- `verify.yml`: a second job, `project`, calls `./.github/workflows/project.yml` with the same Claude Code version as
+  the first. Called from the same repository it is allowed whatever the visibility, and the kit's own token reads the
+  kit, so it runs while the kit is private and after.
+- WORKFLOW.md section 14.2: the checks are the worker's (Verification, step 1); item 2 runs the kit's checks first,
+  then `verify`. Section 20.1, item 2, which said the pipeline runs the `verify` commands, now points to section 14.2.
+- `services/github/README.md`, "Checks on a pull request": the project's caller file in full, how the kit is read and
+  why a project needs the kit public, what project.yml runs; "What it costs": one Linux job, counted to the account
+  that owns the calling project.
+
 ## Verification
+
+## Deviations
+
+- The strategy installs a project's tools only from its lockfile. project.yml also takes an optional version of
+  Claude Code to install, because the kit's own profile runs `claude plugin validate .` and step 3 of the strategy
+  runs that profile through project.yml; without it the kit's own pipeline would fail (criterion 4). A project whose
+  profile runs no `claude` passes nothing.
 
 ## Outcome
