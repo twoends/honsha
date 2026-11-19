@@ -610,7 +610,9 @@ the person merges its pull request: a project's state is the one on the home's d
   record, or a project past `assessing` whose assessment is not done. The worker runs it in the home with the kit's
   other checks (`agents/worker.md`).
 - `may-start` answers, from the home's default branch, whether a work item may start in a project, and is asked
-  before one starts.
+  before one starts, except the assessment that `add` starts: running `add` is the person's decision that the project
+  joins, and the assessment runs on `add`'s branch, before its entry reaches the default branch. An assessment of a
+  project already `assessing` there, whose `add` was merged before the assessment was done, is asked like any item.
 
 An agent does only the assessment and the items.
 
