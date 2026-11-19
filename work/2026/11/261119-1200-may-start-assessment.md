@@ -78,6 +78,10 @@ case today, and the home's instructions ask it for every dispatched item.
 
 ## Approval
 
+Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy, in one approval for the
+items `261119-1200`, `261119-1201` and `261119-1202` as their strategies are
+written, each with the design its strategy recommends.
+
 ## Log
 
 ## Verification
