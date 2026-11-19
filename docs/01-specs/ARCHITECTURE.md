@@ -214,11 +214,11 @@ board. Both limits are settings in the home.
 
 ### 4.3 Dispatch
 
-1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size
-   and areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take`
-   if it was there). Parts of the request that are independent are run in parallel by the worker and integrated before verification
-   ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at the same
-   time, within the limits of the host and the project.
+1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size and
+   areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take` if it
+   was there). Parts of the request that are independent are run in parallel by the worker and integrated before
+   verification ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at
+   the same time, within the limits of the host and the project.
 2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
 4. The checker verifies the result. Its report goes into the record and the pull request.
