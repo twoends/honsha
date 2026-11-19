@@ -81,6 +81,8 @@ minutes for private repositories.
 
 ## Approval
 
+Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy.
+
 ## Log
 
 ## Verification
