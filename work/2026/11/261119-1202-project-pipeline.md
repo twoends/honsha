@@ -92,6 +92,10 @@ Cost: one full item, plus the person's change of visibility.
 
 ## Approval
 
+Approved by the person on 2026-11-19, in the chat of the session that wrote the strategy, in one approval for the
+items `261119-1200`, `261119-1201` and `261119-1202` as their strategies are
+written, each with the design its strategy recommends. The change of the kit repository's visibility is not part of this approval: the person makes it, or asks for it in words of its own.
+
 ## Log
 
 ## Verification
