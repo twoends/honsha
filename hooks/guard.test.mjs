@@ -275,6 +275,14 @@ test("a line the guard cannot follow for sure is judged in the session's folder"
     `(cd ${work} && git push)`,
     `x=$(cd ${work} && pwd); git push`,
     `Set-Location ${work} && git push`,
+    `cd -Path ${work} && git push`,
+    `cd ${work} && builtin cd ${slash(onMain)} && git push`,
+    `cd ${work} && trap "cd ${slash(onMain)}" DEBUG && git push`,
+    `cd ${work} && echo done && git push`,
+    `env cd ${work} && git push`,
+    `X=1 cd ${work} && git push`,
+    `sudo cd ${work} && git push`,
+    `cd ${slash(script)} && git push`,
   ]) {
     refused(line, onMain);
   }
@@ -299,9 +307,18 @@ test("in PowerShell a backslash belongs to the path, and Set-Location moves as c
     `Push-Location ${onWork}; Pop-Location; git push`,
     `Set-Location ${onWork}; Invoke-Expression "cd ${onMain}"; git push`,
     `Set-Location ${onWork}; foreach ($x in 1) { cd ${onMain} }; git push`,
+    `Set-Location ${onWork}; try { cd ${onMain} } catch {}; git push`,
+    `Set-Location ${onWork}; 1 | % { cd ${onMain} }; git push`,
+    `Set-Location ${onWork}; $null = cd ${onMain}; git push`,
+    `Set-Location ${onWork}; &{cd ${onMain}}; git push`,
+    `sudo cd ${onWork}; git push`,
+    `X=1 cd ${onWork}; git push`,
+    `cd ${script}; git push`,
   ]) {
     assert.ok(judged(line, onMain), `let through: ${line}`);
   }
+  // Only Bash reads `/c/rest` as the drive C:, so PowerShell's move to it fails.
+  if (process.platform === "win32") assert.ok(judged(`cd ${bash(onWork)}; git push`, onMain));
   const passed = hook(call(`Set-Location ${onWork}; git push`, { tool_name: "PowerShell", cwd: onMain }));
   assert.equal(passed.status, 0, passed.stderr);
 });
