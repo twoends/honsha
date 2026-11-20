@@ -3,5 +3,13 @@
   "description": "A workflow for running software projects with AI agents: core rules, work-item records, a worker and a checker.",
   "author": {
     "name": "Honsha"
+  },
+  "userConfig": {
+    "home": {
+      "type": "directory",
+      "title": "Honsha home",
+      "description": "The folder of this installation's home repository on this machine, which holds the lessons of technologies and of hosts that sessions receive when they start.",
+      "required": false
+    }
   }
 }

@@ -108,7 +108,9 @@ work/                  the kit's own work records
   each, and the record template, each file by a hook of its own, since the platform caps each hook's output at
   10,000 characters and replaces a longer one with a file path and a short preview. What a part near that cap, or a
   full total, calls for is in [WORKFLOW.md](WORKFLOW.md), section 2. The checker, a subagent, receives the same files
-  when it starts, from hooks matched to it alone.
+  when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
+  technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
+  `home` names ([WORKFLOW.md](WORKFLOW.md), section 8).
 
 ### 3.2 Home (one per user, private)
 

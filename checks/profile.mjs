@@ -12,6 +12,8 @@
 //   kinds:
 //     feature: 10
 //   public: true
+//   stack: [node, postgres]
+//   lessons: LESSONS.md
 //
 // A value can be bare or in quotes. A regular expression is best written in single quotes, where
 // YAML keeps a backslash as it is.
@@ -19,10 +21,13 @@
 import fs from "node:fs";
 
 const BLANK = /^\s*(#.*)?$/;
+// A technology names a file of the home's lessons, so it may not lead out of their folder.
+const TECHNOLOGY = /^[A-Za-z0-9][\w.+-]*$/;
 
 /**
  * @typedef {{ defaultBranch: string | null, verify: string[],
- *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean }} Profile
+ *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean,
+ *   stack: string[], lessons: string | null }} Profile
  */
 
 /**
@@ -56,7 +61,7 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, commitsAddress, kinds, public }` from the text of a profile.
+ * Returns `{ defaultBranch, verify, commitsAddress, kinds, public, stack, lessons }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -64,13 +69,44 @@ function block(lines, start, test) {
 export function parseProfile(text) {
   const lines = text.split(/\r?\n/);
   /** @type {Profile} */
-  const profile = { defaultBranch: null, verify: [], commitsAddress: null, kinds: null, public: false };
+  const profile = {
+    defaultBranch: null,
+    verify: [],
+    commitsAddress: null,
+    kinds: null,
+    public: false,
+    stack: [],
+    lessons: null,
+  };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
     if (!top) return;
     const [, key, rest] = top;
     const value = scalar(rest);
     if (key === "default-branch") profile.defaultBranch = value || null;
+    if (key === "stack") {
+      const inline = /^\[(.*)\]$/.exec(value);
+      if (inline) {
+        profile.stack = inline[1]
+          .split(",")
+          .map((item) => scalar(item))
+          .filter(Boolean);
+      } else if (value === "") {
+        profile.stack = block(lines, index, /^\s*-\s+(.*)$/).map((match) => scalar(match[1]));
+      } else {
+        throw new Error("profile: `stack` must be a list of technologies");
+      }
+      const wrong = profile.stack.find((technology) => !TECHNOLOGY.test(technology));
+      if (wrong !== undefined) throw new Error(`profile: \`${wrong}\` in \`stack\` is not the name of a technology`);
+    }
+    if (key === "lessons") {
+      if (value === "") throw new Error("profile: `lessons` must name a file");
+      // A hook gives this file to every session, so it may not lead out of the project, as a session may not.
+      if (/^([\\/]|[A-Za-z]:)/.test(value) || value.split(/[\\/]/).includes("..")) {
+        throw new Error("profile: `lessons` must name a file inside the project");
+      }
+      profile.lessons = value;
+    }
     if (key === "direct-commits") {
       // A profile that expects pushes to its default branch is refused, so the mismatch is seen when it is read.
       throw new Error(

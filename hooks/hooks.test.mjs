@@ -5,6 +5,8 @@ import fs from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { BUDGET, LEVELS } from "./lessons.mjs";
+
 const root = fileURLToPath(new URL("..", import.meta.url));
 /** @param {string} file */
 const read = (file) => fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
@@ -45,20 +47,28 @@ function output(handler) {
  */
 const files = (list) => list.map((handler) => handler.args.slice(1).join(" ")).toSorted();
 
+const RULES = "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs";
+const LESSONS = "${CLAUDE_PLUGIN_ROOT}/hooks/lessons.mjs";
+const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
+const rulesAtStart = start.filter((/** @type {any} */ handler) => handler.args?.[0] === RULES);
+
 test("each part of the core rules, and the template, has a hook at a session's start and one for the checker alone", () => {
-  const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
   assert.ok(hooks.SessionStart.every((/** @type {any} */ group) => group.matcher === undefined));
   assert.equal(hooks.SubagentStart.length, 1);
   const [checker] = hooks.SubagentStart;
   assert.equal(checker.matcher, "^honsha:checker$");
-  for (const handler of [...start, ...checker.hooks]) {
-    assert.equal(handler.args?.[0], "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs");
-  }
-  assert.deepEqual(files(start), given);
+  for (const handler of checker.hooks) assert.equal(handler.args?.[0], RULES);
+  assert.deepEqual(files(rulesAtStart), given);
   assert.deepEqual(
     files(checker.hooks),
     given.map((file) => `${file} --subagent`),
   );
+});
+
+test("each level of lessons has a hook at a session's start, and nothing else starts there", () => {
+  const lessons = start.filter((/** @type {any} */ handler) => handler.args?.[0] === LESSONS);
+  assert.deepEqual(files(lessons), LEVELS.toSorted());
+  assert.equal(rulesAtStart.length + lessons.length, start.length);
 });
 
 test("the opening of the core rules names each of their other parts", () => {
@@ -70,20 +80,22 @@ test("the opening of the core rules names each of their other parts", () => {
 // Claude Code replaces a hook's output over 10,000 characters with a file path and a short preview, which would take
 // that part out of the context without a word: a part that reaches PART is split into two topics, never shortened.
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
-// that says why, or answered by moving a rule that only some situations need into a skill.
+// that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
+// budget, since their files are the installation's and the hook that gives them keeps each level under it.
 const PART = 9000;
-const TOTAL = 20000;
+const TOTAL = 25000;
 
 test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
   let total = 0;
-  for (const handler of hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks)) {
+  for (const handler of rulesAtStart) {
     const [, file] = handler.args;
     const text = output(handler);
     assert.ok(text.endsWith(read(file)), file);
     assert.ok(text.length < PART, `${file}: ${text.length} characters`);
     total += text.length;
   }
-  assert.ok(total <= TOTAL, `${total} characters at a session's start`);
+  const lessons = LEVELS.length * BUDGET;
+  assert.ok(total + lessons <= TOTAL, `${total} characters of rules and ${lessons} of lessons at a session's start`);
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
     const [, file] = handler.args;
     const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;
