@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
 requested-by: person
 source: 261120-1617
-pr: null
-model: null
+pr: 37
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -114,6 +114,109 @@ words of a line, and its tests.
   `git push origin --repo {1x} --repo feature`, the line Bash runs, is refused. The guard does not judge every mix of
   the two (Deviations).
 
+## Verification
+
+On `2bda08d`, Windows 11, Node.js 26.13.0: `node checks/verify.mjs` passed all seven commands — Prettier, oxlint,
+TypeScript, 147 tests, the plugin validator, `node checks/record.mjs` ("The record
+work/2026/11/261120-1813-guard-glued-redirection.md has the shape the rules ask for.") and `node checks/commits.mjs`
+("The 4 commits of the branch follow the rules.").
+
+### Checker report, on `d2c1674`
+
+**Verdict:** fail
+
+**Findings**
+
+1. **Record and comments: the change also lets through lines the guard refused, while the record and a comment say it cannot.**
+   - What they say:
+     - The Strategy says "the guard can only refuse more than before".
+     - The log says of the PowerShell reading "The guard can only refuse more by it".
+     - `hooks/guard.mjs:155-156` says such a word "can only make the guard refuse a push of a branch whose name holds a `>`".
+   - Why it is untrue:
+     - `lead` checks the first raw word of each later command against `STILL` (`hooks/guard.mjs:410-412`). That word is now `node` in `node>log`, where it was `node>log`.
+     - So `cd <work checkout> && git push origin HEAD && node>log x.mjs`, run from a checkout on `main`, was refused at `88b8abb`. The line was not followed, and `HEAD` was read in the session's checkout.
+     - It is now followed and let through. The same holds in PowerShell with `;`.
+     - The unanchored merge pattern in `services/github/merge-commands.json:6` also matched text after a `>`. So `echo done>api.github.com/repos/o/r/pulls/1/merge` was refused and is now let through.
+   - The guard is right in both cases: `node` cannot move the shell, and the second line only writes a file.
+   - The record says the opposite of what the code does, Deviations do not name it, and no test covers it.
+   - Fix in one line: say that a later `STILL` command with a glued redirection is now followed, and drop "only".
+2. **Intent: the guard does not read Bash's `{name}` form of a file descriptor.**
+   - Bash 4.1 and later, which is what Git Bash runs, also reads a word `{name}` right before `>` or `<` as a file descriptor. For example, `{fd}>/dev/null` opens a descriptor and stores it in `fd`.
+   - The guard splits `{fd}` off as a word of its own, and `program`'s pattern (`hooks/guard.mjs:178`) would not take it as a redirection either.
+   - So `git push origin {fd}>/dev/null`, run from a checkout on `main`, is judged as a push of the refspec `{fd}` and let through. Bash runs `git push origin`, a push of the current branch, which the guard itself treats as `HEAD` (`hooks/guard.mjs:290`).
+   - `88b8abb` let it through as well, so this is not a regression. But it is the item's own class of defect: a glued redirection hiding a push to the default branch.
+   - The log's "A file descriptor is a word made only of unquoted digits", `hooks/guard.mjs:153-154` and the docstring's "as Bash reads it" (`hooks/guard.mjs:89`) state a narrower rule as Bash's. No test covers it.
+   - Fix in one line: read `{name}` right before `>` or `<` as part of the redirection, or declare the gap under Deviations.
+
+### Checker report, on `2ea921e`
+
+**Verdict:** fail
+
+**Findings**
+
+1. **Intent and comments: Bash's `{varname}` form also accepts an array element, and the guard does not read it.**
+   - **What Bash does.** In Bash's parser (`read_token_word` in `parse.y`, built with array variables as Git Bash is), a word `{…}` right before `<` or `>` is a redirection word when its inside is a legal identifier or a valid array reference. `redir.c` then assigns the new descriptor through the array code. So `{a[0]}>/dev/null` opens a descriptor and stores its number in `a[0]`.
+   - **What the guard does.** `DESCRIPTOR` (`hooks/guard.mjs:48`) accepts only `\{[A-Za-z_][A-Za-z0-9_]*\}`, so `simpleCommands` splits `{a[0]}` off as a word of its own (`hooks/guard.mjs:156`).
+   - **What gets through:**
+     - `git push origin {a[0]}>/dev/null`, run from a checkout on `main`, is judged as a push of the refspec `{a[0]}` and let through. Bash runs `git push origin`, which the guard itself treats as `HEAD` (`hooks/guard.mjs:293`).
+     - `{a[0]}>/dev/null git push origin main` takes `{a[0]}` as the program and is let through from any checkout.
+   - **What the code says.** The comment on `DESCRIPTOR` (`hooks/guard.mjs:46-47`) calls its rule what Bash reads, and the docstring says "as Bash reads it" (`hooks/guard.mjs:92`). No test covers the array-element form.
+   - **How sure this is.** This comes from Bash's source; it was not run here. In Git Bash, `printf '%s|' A {a[0]}>/dev/null; echo "${a[0]}"` would show it.
+   - **Fix in one line:** once Git Bash confirms it, also read `{name[subscript]}` as a descriptor; otherwise declare the gap under Deviations and narrow the two comments.
+
+### Checker report, on `e11e24b`
+
+**Verdict:** fail
+
+**Findings**
+
+1. **Intent and record: a line that mixes both forms of `{…}` around an option that takes a value still hides a push to the default branch, while the log says the two readings leave nothing out.**
+   - **What the record says.** The log entry for the check on `2ea921e` says: "Whichever way Bash takes each `{…}`, it refuses nothing that both readings let through". Its two reasons are:
+     - every refspec Bash reads is also a refspec in the reading without braces;
+     - a push Bash reads without a refspec has none in the reading with braces.
+   - **Why it does not hold.** Both reasons assume that keeping or dropping a `{…}` does not change which word an option takes as its value. But `judgeGit` skips the word after `--repo`, `-o` and the other `PUSH_OPTIONS_WITH_VALUE` (`hooks/guard.mjs:284`).
+   - **Example**, run from a checkout on `main`: `git push origin --repo {1x}>y --repo {a}>x feature`.
+     - **What Bash runs.** The record's own Git Bash checks show that Bash takes `{1x}` as a word and `{a}` as the variable of a new descriptor. So Bash runs `git push origin --repo {1x} --repo feature`.
+     - **What that pushes.** git lets the positional `origin` take precedence over `--repo`, so there is no refspec and the current branch is pushed. The guard itself treats that as `HEAD` (`hooks/guard.mjs:299-301`), which here is `main`.
+     - **Reading without braces:** `--repo` takes `{1x}`, the second `--repo` takes `{a}`, and the only refspec is `feature`. Let through.
+     - **Reading with braces:** the first `--repo` takes the second `--repo` as its value, and the only refspec is `feature`. Let through.
+   - **How sure this is.** I traced this through the code; it was not run here. It needs both forms in one line: when Bash takes every `{…}` the same way, one of the two readings matches Bash's exactly. The code comment at `hooks/guard.mjs:436-437` claims no more than "judged both ways", so it is accurate.
+   - **Fix in one line:** add a log entry that narrows the claim, and declare the mixed case under Deviations.
+
+### Checker report, on `2bda08d`
+
+**Verdict:** pass
+
+The finding of the last report, on `e11e24b`, is fixed.
+
+- **Narrowed claim.** A new log entry (`work/2026/11/261120-1813-guard-glued-redirection.md:109-115`) narrows the claim that the two readings leave nothing out. It now says the claim holds only when Bash takes every `{…}` of a line the same way.
+- **Declared gap.** A new entry under Deviations (`:195-198`) declares the mixed case. It gives the reason by pointing to the guard's opening comment (`hooks/guard.mjs:23-25`) and does not copy it.
+- **The example in the log is correct**, traced through the code:
+  - `git push origin --repo {1x}>y --repo {a}>x feature` keeps `feature` as its only refspec in both readings, so it is let through. In the reading without braces, `--repo` takes `{1x}` and `{a}`. In the reading with braces, `program` drops both `{…}>` words (`hooks/guard.mjs:187-204`), so the first `--repo` takes the second (`hooks/guard.mjs:284`).
+  - `git push origin --repo {1x} --repo feature` has no refspec, so it is judged as `HEAD` and refused from a checkout on `main` (`hooks/guard.mjs:293-304`).
+
+**Acceptance criteria**
+
+1. Unquoted `>` or `<` after other text begins a word of its own, except after a file descriptor, the `&` of `&>`, or a `>`/`<`: met, `hooks/guard.mjs:116` and `hooks/guard.mjs:161-167`, with `DESCRIPTOR` and `BRACED` at `hooks/guard.mjs:48-49`. The `{…}` form and its mixed case are declared under Deviations. The diff changes no code.
+2. Tests show `main>/dev/null` and `main 2>/dev/null` refused, and `HEAD>/dev/null` let through, from a work branch: met, `hooks/guard.test.mjs:319`, `:322` and `:328`. That they fail on the guard before the fix is recorded in the log.
+3. `node checks/verify.mjs` passes: met, according to Verification, on `2bda08d`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Deviations
 
 - The request counts `main2>&1` among the forms that hide a push to `main`. Bash reads it as the word `main2` and the
@@ -127,3 +230,11 @@ words of a line, and its tests.
   judged only in the two readings, where all of them are taken one way. Around an option that takes a value such a
   line can hide a push to the default branch, as the check on `e11e24b` found. It is not a line written by mistake, and
   the guard stops a mistake, not a command made to get past it (its opening comment).
+
+## Outcome
+
+The guard reads a redirection glued to the word before it as a word of its own, as Bash does: a push hidden by one,
+such as `git push origin main>/dev/null`, is refused, and `git push origin HEAD>/dev/null` from a work branch is let
+through. Unquoted digits and the `&` of `&>` stay in the redirection. A `{…}` right before one is read both as the
+variable of a new descriptor and as a word, and a line is refused if either reading refuses; a line that mixes the two
+around an option that takes a value is left out (Deviations). No deferred check.
