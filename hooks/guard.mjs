@@ -11,7 +11,14 @@
 //     (`services/<name>/merge-commands.json`).
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
-// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say.
+// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
+// push is judged in the session's folder, or in another one when the line begins by moving there
+// for sure: its first word is `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
+// `Push-Location`), with one path to a folder that the tool's shell cannot read as another folder
+// (no wildcard, variable or leading `~`, and `..` only at the start of a relative path; in Bash an
+// absolute path or one whose first part is `.` or `..`, and on Windows no `..` at all), followed by
+// `&&` (in PowerShell also by `;`), and every later command is one of a few programs that cannot
+// move a shell. Any other line is judged in the session's folder.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -26,6 +33,16 @@ import { readProfile } from "../checks/profile.mjs";
 
 const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
 const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
+// The moves a line may begin with, in each tool's shell.
+const LEADS = {
+  bash: new Set(["cd", "pushd"]),
+  powershell: new Set(["cd", "chdir", "sl", "set-location", "pushd", "push-location"]),
+};
+// Programs that run in a process of their own, so they cannot move the shell that starts them: the
+// only commands a followed line may hold after its move. Anything else, a builtin, a keyword, a
+// script block or an assignment, could move the shell where the guard cannot see it.
+const STILL = new Set(["git", "gh", "node", "npm", "npx"]);
+const JOINS = new Set([";", "&&", "||", "|", "&"]);
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -69,10 +86,14 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
+ * With `marks`, what separates them comes between them as a list of one word: `;`, `&&`, `||`,
+ * `|`, `&`, a new line as `;`, and `(`, `)` or a backtick where a subshell may open or close.
+ * With `escapes` off, as PowerShell reads a line, a backslash is a character of its word.
  * @param {string} line
+ * @param {{ marks?: boolean, escapes?: boolean }} [options]
  * @returns {string[][]}
  */
-export function simpleCommands(line) {
+export function simpleCommands(line, { marks = false, escapes = true } = {}) {
   /** @type {string[][]} */
   const commands = [];
   /** @type {string[]} */
@@ -90,24 +111,41 @@ export function simpleCommands(line) {
     if (words.length > 0) commands.push(words);
     words = [];
   };
+  // The last character when it was a `>` or `<` outside quotes and escapes. An `&` right after one
+  // belongs to the redirection, as in `2>&1`, and so does a `|` after `>`, as in `>|file`; an `&`
+  // right before a `>` begins one, as in `&>file`. None of them ends the command.
+  let redirection = "";
   const text = withoutHereDocuments(line);
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
+    const after = redirection;
+    redirection = "";
     if (quote) {
       if (char === quote) quote = null;
-      else if (char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1])) word += text[(index += 1)];
+      else if (escapes && char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1]))
+        word += text[(index += 1)];
       else word += char;
     } else if (char === "'" || char === '"') {
       quote = char;
       word ??= "";
-    } else if (char === "\\" && index + 1 < text.length) {
+    } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
+    } else if ((char === "&" && after) || (char === "|" && after === ">")) {
+      word = (word ?? "") + char;
+    } else if (char === "&" && text[index + 1] === ">") {
+      endWord();
+      word = char;
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
+      if (marks) {
+        const pair = (char === "&" || char === "|") && text[index + 1] === char;
+        commands.push([pair ? char + text[(index += 1)] : char === "\n" ? ";" : char]);
+      }
     } else if (/\s/.test(char)) {
       endWord();
     } else {
       word = (word ?? "") + char;
+      if (char === ">" || char === "<") redirection = char;
     }
   }
   endCommand();
@@ -120,18 +158,24 @@ export function simpleCommands(line) {
  * @returns {string[]}
  */
 function program(words) {
+  // A redirection is neither the program nor an argument: `2>&1`, `>file`, `&>file`, and `>`, `>&`,
+  // `>|` or `&>` with the file as the next word. It may stand before the program as well as after it.
+  const alone = /^(\d*|&)(>>|>\||>&?|<&?)$/;
+  const redirection = /^(\d*|&)[<>]/;
   let start = 0;
-  while (start < words.length && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(words[start]) || WRAPPERS.has(words[start]))) {
-    start += 1;
+  while (start < words.length) {
+    const word = words[start];
+    if (alone.test(word)) start += 2;
+    else if (redirection.test(word) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(word) || WRAPPERS.has(word)) start += 1;
+    else break;
   }
   if (start >= words.length) return [];
   const file = words[start].replace(/\\/g, "/").split("/").pop() ?? "";
   const name = file.replace(/\.exe$/i, "").toLowerCase();
   const rest = [];
   for (let index = start + 1; index < words.length; index += 1) {
-    // A redirection is not an argument: `2>`, `>file`, and `>` with the file as the next word.
-    if (/^\d*(>>?|<)$/.test(words[index])) index += 1;
-    else if (!/^\d*(>>?|<)/.test(words[index])) rest.push(words[index]);
+    if (alone.test(words[index])) index += 1;
+    else if (!redirection.test(words[index])) rest.push(words[index]);
   }
   return [name, ...rest];
 }
@@ -257,18 +301,120 @@ function mergePatterns(services = SERVICES) {
 }
 
 /**
- * The reason to refuse the command line, or null when the guard lets it through.
- * @param {string} line
- * @param {{ cwd?: string, services?: string }} [options]
+ * The one folder that the words after a move's name name: a lone path, or in PowerShell the one
+ * after `-Path` or `-LiteralPath`; null for any other form, such as an option, `-`, a stack's
+ * position or no target.
+ * @param {string[]} args
+ * @param {boolean} powershell
  * @returns {string | null}
  */
-export function judge(line, { cwd = ".", services } = {}) {
+function target(args, powershell) {
+  if (args.length === 1 && !/^[-+]/.test(args[0])) return args[0];
+  if (powershell && args.length === 2 && /^-(literal)?path$/i.test(args[0])) return args[1];
+  return null;
+}
+
+/**
+ * The path a move's target names from `dir` as the tool's shell reads it, or null when the guard
+ * gives up on it. It gives up where the shell could read the same words as another folder: a
+ * wildcard, a variable or a leading `~` expand; a name that ends in a dot or a space is cut by
+ * Windows and kept by Git Bash; in Bash a relative path is first looked for along `CDPATH`, unless
+ * its first part is `.` or `..`; a path that begins with `//` may name a network share; and Git Bash
+ * resolves a path in its own tree, where drive C: is the folder `/c`, the rest goes through its
+ * mounts, and the session's folder may itself be written through one, such as `/tmp`. It also gives
+ * up on a `..` anywhere but at the start of a relative path, one rule for every path, since a `..`
+ * after a named part is entered through a link by a shell that follows links. So on Windows a Bash
+ * path is read only without `..`: an absolute path that ends on a drive, `/c/rest`, or a relative one
+ * such as `./rest`.
+ * @param {string} dir
+ * @param {string} where
+ * @param {boolean} powershell
+ * @param {string} [platform]
+ * @returns {string | null}
+ */
+export function readPath(dir, where, powershell, platform = process.platform) {
+  const windows = platform === "win32";
+  const paths = windows ? path.win32 : path.posix;
+  if (!/^[\p{L}\p{N} _.~\-/\\:]+$/u.test(where) || where.startsWith("~")) return null;
+  const parts = where.split(/[\\/]/);
+  if (parts.some((part) => part !== "." && part !== ".." && /[. ]$/.test(part))) return null;
+  const named = parts.findIndex((part) => part !== "..");
+  if (named >= 0 && parts.slice(named).includes("..")) return null;
+  if (powershell) {
+    // A colon only in a drive that begins an absolute path: `C:rest` starts from the drive's own folder.
+    const rest = windows ? where.replace(/^[A-Za-z]:(?=[\\/])/, "") : where;
+    if (rest.includes(":") || (!windows && rest.includes("\\"))) return null;
+    return paths.resolve(dir, where);
+  }
+  if (where.includes("\\") || where.includes(":") || where.startsWith("//")) return null;
+  if (!where.startsWith("/") && !/^\.\.?(\/|$)/.test(where)) return null;
+  if (!windows) return paths.resolve(dir, where);
+  if (parts.includes("..")) return null;
+  if (!where.startsWith("/")) return paths.resolve(dir, where);
+  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(path.posix.resolve(where));
+  return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
+}
+
+/**
+ * The folder a move goes to from `dir`, or null when the guard cannot be sure of it: the path is one
+ * that `readPath` gives up on, or not a folder the shell may enter, so the move fails, or it names
+ * another folder when `..` is read through the real folder rather than through `dir` as written, as
+ * a shell that resolves links does.
+ * @param {string} dir
+ * @param {string} where
+ * @param {boolean} powershell
+ */
+export function moveTo(dir, where, powershell) {
+  const next = readPath(dir, where, powershell);
+  if (next === null) return null;
+  try {
+    const real = readPath(fs.realpathSync.native(dir), where, powershell);
+    if (real === null || fs.realpathSync.native(real) !== fs.realpathSync.native(next)) return null;
+    if (!fs.statSync(next).isDirectory()) return null;
+    fs.accessSync(next, fs.constants.X_OK);
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The folder the rest of a line runs in when it begins by moving there for sure, or null: its first
+ * word is a move with one path to a folder, joined by `&&` (in PowerShell also by `;`) to a rest
+ * whose every command is one of `STILL`.
+ * @param {string[][]} items the line's simple commands and the marks between them
+ * @param {string} cwd
+ * @param {boolean} powershell
+ */
+function lead(items, cwd, powershell) {
+  const [first, join, ...rest] = items;
+  if (!first || !join || (join[0] !== "&&" && !(powershell && join[0] === ";"))) return null;
+  const name = powershell ? first[0].toLowerCase() : first[0];
+  if (!(powershell ? LEADS.powershell : LEADS.bash).has(name)) return null;
+  const where = target(first.slice(1), powershell);
+  if (where === null) return null;
+  const still = rest.every((words) =>
+    words.length === 1 && JOINS.has(words[0]) ? true : STILL.has(powershell ? words[0].toLowerCase() : words[0]),
+  );
+  return still ? moveTo(cwd, where, powershell) : null;
+}
+
+/**
+ * The reason to refuse the command line, or null when the guard lets it through. `powershell`
+ * reads the line as the PowerShell tool runs it, where a backslash belongs to a path.
+ * @param {string} line
+ * @param {{ cwd?: string, services?: string, powershell?: boolean }} [options]
+ * @returns {string | null}
+ */
+export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
-  for (const words of simpleCommands(line)) {
+  const items = simpleCommands(line, { marks: true, escapes: !powershell });
+  const dir = lead(items, cwd, powershell) ?? cwd;
+  for (const words of items) {
     const [name, ...args] = program(words);
     if (!name) continue;
     if (name === "git") {
-      const reason = judgeGit(args, cwd);
+      const reason = judgeGit(args, dir);
       if (reason) return reason;
     }
     const text = [name, ...args].join(" ");
@@ -280,7 +426,8 @@ export function judge(line, { cwd = ".", services } = {}) {
 function main() {
   const input = JSON.parse(fs.readFileSync(0, "utf8"));
   if (input.hook_event_name !== "PreToolUse" || typeof input.tool_input?.command !== "string") return 0;
-  const reason = judge(input.tool_input.command, { cwd: input.cwd || "." });
+  const powershell = input.tool_name === "PowerShell";
+  const reason = judge(input.tool_input.command, { cwd: input.cwd || ".", powershell });
   if (!reason) return 0;
   process.stderr.write(`${reason}\n`);
   return 2;

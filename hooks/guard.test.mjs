@@ -7,7 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { gitDirectory, judge, simpleCommands } from "./guard.mjs";
+import { gitDirectory, judge, readPath, simpleCommands } from "./guard.mjs";
 
 const script = fileURLToPath(new URL("./guard.mjs", import.meta.url));
 const WORK = "work/261116-1432-export-orders";
@@ -230,12 +230,208 @@ test("a push that deletes the default branch is refused as a deletion", () => {
   }
 });
 
-const none = () => false;
 /**
- * A Windows path as Git Bash writes it: `C:\x` as `/c/x`.
+ * A path as a Bash line writes it: with forward slashes, and on Windows `C:\x` as Git Bash's `/c/x`.
  * @param {string} dir
  */
 const bash = (dir) => dir.replace(/\\/g, "/").replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
+
+/**
+ * The guard's reason for a line as the PowerShell tool runs it.
+ * @param {string} line
+ * @param {string} cwd
+ */
+const judged = (line, cwd) => judge(line, { cwd, services: pieces, powershell: true });
+
+/**
+ * A checkout on the work branch at `dir`, cloned from `onWork`.
+ * @param {string} dir
+ */
+const workClone = (dir) => {
+  execFileSync("git", ["clone", "-q", onWork, dir], { stdio: "ignore" });
+  return dir;
+};
+workClone(path.join(onMain, "nested"));
+const wild = workClone(path.join(onMain, "app[v2]"));
+// A folder whose two links lead to the two checkouts: from `linked/main`, `../work` is the work
+// checkout as written, and nothing through the real folder of the checkout on `main`.
+const linked = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-linked-"));
+made.push(linked);
+fs.symlinkSync(onMain, path.join(linked, "main"), "junction");
+fs.symlinkSync(onWork, path.join(linked, "work"), "junction");
+
+test("judges a push in the folder that the line begins by moving to", () => {
+  refused(`cd ${bash(onMain)} && git push`, onWork);
+  allowed(`cd ${bash(onWork)} && git push`, onMain);
+  allowed(`cd "${bash(onWork)}" && git add . && git commit -m "Add a thing" && git push origin HEAD`, onMain);
+  allowed(`pushd ${bash(onWork)} && git push`, onMain);
+  allowed(`cd ${bash(onWork)} && git push 2>&1`, onMain);
+  allowed(`cd ${bash(onWork)} && git push &>/dev/null`, onMain);
+  allowed(`cd ${bash(onWork)} && git push >|/dev/null`, onMain);
+  allowed("cd ./nested && git push", onMain);
+  // Git Bash may write the session's folder through one of its mounts, so on Windows `..` is not followed.
+  if (process.platform === "win32") refused(`cd ../${path.basename(onWork)} && git push`, onMain);
+  else allowed(`cd ../${path.basename(onWork)} && git push`, onMain);
+});
+
+test("the & or | of a redirection belongs to it, and a redirection may come before the program", () => {
+  assert.deepEqual(simpleCommands("git push 2>&1 >&2", { marks: true }), [["git", "push", "2>&1", ">&2"]]);
+  assert.deepEqual(simpleCommands("git push &>/dev/null >|log &>> all", { marks: true }), [
+    ["git", "push", "&>/dev/null", ">|log", "&>>", "all"],
+  ]);
+  assert.deepEqual(simpleCommands("a&>x", { marks: true }), [["a", "&>x"]]);
+  assert.deepEqual(simpleCommands("echo '>'& git push", { marks: true }), [["echo", ">"], ["&"], ["git", "push"]]);
+  assert.deepEqual(simpleCommands("echo \\>& git push", { marks: true }), [["echo", ">"], ["&"], ["git", "push"]]);
+  assert.deepEqual(simpleCommands("echo '>'| git push", { marks: true }), [["echo", ">"], ["|"], ["git", "push"]]);
+  refused("2>/dev/null git push origin main");
+  refused(">& log git push origin main");
+  refused("&>/dev/null git push origin main");
+  refused("git push origin main 2>&1");
+});
+
+test("a line the guard cannot follow for sure is judged in the session's folder", () => {
+  const work = bash(onWork);
+  for (const line of [
+    `cd ${work}; git push`,
+    `cd ${work} & git push`,
+    `cd ${work} | git push`,
+    `cd ${work} || git push`,
+    `cd ${bash(path.join(onWork, "missing"))} && git push`,
+    "cd - && git push",
+    "cd && git push",
+    `cd -P ${work} && git push`,
+    `pushd -P ${work} && git push`,
+    `pushd +1 && git push`,
+    `cd ${work} && cd - && git push`,
+    `cd ${work} && cd ${bash(onMain)} && git push`,
+    `pushd ${work} && popd && git push`,
+    `cd ${work} && { cd ${bash(onMain)}; } && git push`,
+    `cd ${work} && if true; then cd ${bash(onMain)}; fi && git push`,
+    `cd ${work} && source ./back.sh && git push`,
+    `cd ${work} && eval "cd ${bash(onMain)}" && git push`,
+    `cd ${work} && (cd ${bash(onMain)}) && git push`,
+    `cd ${work} && x=\`cd ${bash(onMain)}\` && git push`,
+    `(cd ${work} && git push)`,
+    `x=$(cd ${work} && pwd); git push`,
+    `Set-Location ${work} && git push`,
+    `cd -Path ${work} && git push`,
+    `cd ${work} && builtin cd ${bash(onMain)} && git push`,
+    `cd ${work} && trap "cd ${bash(onMain)}" DEBUG && git push`,
+    `cd ${work} && echo done && git push`,
+    `env cd ${work} && git push`,
+    `X=1 cd ${work} && git push`,
+    `sudo cd ${work} && git push`,
+    `cd ${bash(script)} && git push`,
+    "cd nested && git push",
+    `cd ${bash(onWork)} 2>/dev/null && git push`,
+  ]) {
+    refused(line, onMain);
+  }
+  refused("cd ../work && git push", path.join(linked, "main"));
+});
+
+test("reads a move's path as the tool's shell does, and gives up where the shell could read another folder", () => {
+  assert.equal(readPath("/s", "./sub", false, "linux"), "/s/sub");
+  assert.equal(readPath("/s/t", "../x", false, "linux"), "/s/x");
+  assert.equal(readPath("/s/t", "../..", false, "linux"), "/");
+  assert.equal(readPath("/s", "/abs/x", false, "linux"), "/abs/x");
+  assert.equal(readPath("D:\\s\\t", "..\\x", true, "win32"), "D:\\s\\x");
+  assert.equal(readPath("D:\\s", "/c/src/repo", false, "win32"), "C:\\src\\repo");
+  assert.equal(readPath("D:\\s", "/c", false, "win32"), "C:\\");
+  assert.equal(readPath("C:\\p", "./q/x", false, "win32"), "C:\\p\\q\\x");
+  // A `..` is read only at the start of a relative path: after a named part, a shell that follows
+  // links enters it through the link, and one rule holds for `./..` as for every other path.
+  /** @type {[string, boolean, string][]} */
+  const climbs = [
+    ["/a/link/../x", false, "linux"],
+    ["./a/../x", false, "linux"],
+    ["./..", false, "linux"],
+    ["C:\\a\\..\\x", true, "win32"],
+  ];
+  for (const [where, powershell, platform] of climbs) {
+    assert.equal(readPath("/s", where, powershell, platform), null, where);
+  }
+  // Git Bash resolves `..` before it reads the drive, so `/c/..` is its own root, not `C:\`; and it may write the
+  // session's folder through a mount such as `/tmp`, from which `..` climbs elsewhere.
+  for (const where of ["/c/../c/x", "..", "../x"]) {
+    assert.equal(readPath("C:\\p\\q", where, false, "win32"), null, where);
+  }
+  // A leading `//` may name a network share.
+  assert.equal(readPath("D:\\s", "//c/x", false, "win32"), null);
+  assert.equal(readPath("/s", "//x", false, "linux"), null);
+  assert.equal(readPath("D:\\s", "C:\\a b\\PROGRA~1", true, "win32"), "C:\\a b\\PROGRA~1");
+  assert.equal(readPath("D:\\s", "sub", true, "win32"), "D:\\s\\sub");
+  /** @type {[string, boolean, string][]} */
+  const unsure = [
+    ["sub", false, "linux"],
+    [".config", false, "linux"],
+    ["sub/x", false, "win32"],
+    ["/usr/x", false, "win32"],
+    ["/C/x", false, "win32"],
+    ["C:/x", false, "win32"],
+    ["~/x", false, "linux"],
+    ["~", true, "win32"],
+    ["$HOME/x", false, "linux"],
+    ["$HOME", true, "win32"],
+    ["app[v2]", true, "win32"],
+    ["a*", true, "win32"],
+    ["a?", false, "linux"],
+    ["{a,b}", false, "linux"],
+    ["C:x", true, "win32"],
+    ["Env:", true, "win32"],
+    ["C:/x", true, "linux"],
+    ["a\\b", true, "linux"],
+    ["x.", true, "win32"],
+    ["./x ", false, "win32"],
+    ["...", false, "linux"],
+  ];
+  for (const [where, powershell, platform] of unsure) {
+    assert.equal(readPath("D:\\s", where, powershell, platform), null, where);
+  }
+});
+
+test("in PowerShell a backslash belongs to the path, and Set-Location moves as cd does", () => {
+  assert.deepEqual(simpleCommands("cd C:\\a\\b; git push", { escapes: false }), [
+    ["cd", "C:\\a\\b"],
+    ["git", "push"],
+  ]);
+  assert.deepEqual(simpleCommands("cd C:\\a\\b; git push"), [
+    ["cd", "C:ab"],
+    ["git", "push"],
+  ]);
+  assert.equal(judged(`Set-Location ${onWork}; git push`, onMain), null);
+  assert.equal(judged(`Set-Location -Path "${onWork}"; git push`, onMain), null);
+  assert.equal(judged(`cd ${onWork}; git push`, onMain), null);
+  assert.equal(judged(`cd ${onWork}; git push 2>&1`, onMain), null);
+  assert.equal(judged("cd nested; git push", onMain), null);
+  assert.ok(judged(`sl ${onMain}; git push`, onWork));
+  for (const line of [
+    `Set-Location -P ${onWork}; git push`,
+    `Set-Location ${onWork}; Set-Location -; git push`,
+    `Push-Location ${onWork}; Pop-Location; git push`,
+    `Set-Location ${onWork}; Invoke-Expression "cd ${onMain}"; git push`,
+    `Set-Location ${onWork}; foreach ($x in 1) { cd ${onMain} }; git push`,
+    `Set-Location ${onWork}; try { cd ${onMain} } catch {}; git push`,
+    `Set-Location ${onWork}; 1 | % { cd ${onMain} }; git push`,
+    `Set-Location ${onWork}; $null = cd ${onMain}; git push`,
+    `Set-Location ${onWork}; &{cd ${onMain}}; git push`,
+    `sudo cd ${onWork}; git push`,
+    `X=1 cd ${onWork}; git push`,
+    `cd ${script}; git push`,
+    `cd ${wild}; git push`,
+    "cd -Path app[v2]; git push",
+    "cd -LiteralPath app[v2]; git push",
+  ]) {
+    assert.ok(judged(line, onMain), `let through: ${line}`);
+  }
+  assert.ok(judged("cd ..\\work; git push", path.join(linked, "main")));
+  // Only Bash reads `/c/rest` as the drive C:, so PowerShell's move to it fails.
+  if (process.platform === "win32") assert.ok(judged(`cd ${bash(onWork)}; git push`, onMain));
+  const passed = hook(call(`Set-Location ${onWork}; git push`, { tool_name: "PowerShell", cwd: onMain }));
+  assert.equal(passed.status, 0, passed.stderr);
+});
+
+const none = () => false;
 
 test("reads a Git Bash path given to git -C as a drive on Windows, only when the plain path does not exist", () => {
   assert.equal(gitDirectory("D:\\work", "/c/src/repo", "win32", none), "C:\\src\\repo");
