@@ -18,8 +18,6 @@ import { readProfile } from "../checks/profile.mjs";
 
 export const LEVELS = ["project", "technologies", "host"];
 export const BUDGET = 4000;
-// Room kept for the closing line that names what was left out.
-const NOTE = 400;
 
 /**
  * The files of one level of lessons, absolute and as the output names them, and a notice when the level cannot be
@@ -29,8 +27,11 @@ const NOTE = 400;
  * @returns {{ files: { file: string, name: string }[], notice: string | null }}
  */
 export function sources(level, { project, home, host }) {
+  const missing = home !== "" && !fs.existsSync(home);
+  const unknown = `the plugin's setting \`home\` names ${home}, which is not a folder on this machine`;
   if (level === "host") {
     if (!home) return { files: [], notice: null };
+    if (missing) return { files: [], notice: `${unknown}, so the host's lessons are not loaded.` };
     const name = `lessons/host/${host.toLowerCase()}.md`;
     return { files: [{ file: path.join(home, name), name: `${name} in the home` }], notice: null };
   }
@@ -41,12 +42,9 @@ export function sources(level, { project, home, host }) {
   }
   const stack = profile?.stack ?? [];
   if (stack.length === 0) return { files: [], notice: null };
-  if (!home) {
-    return {
-      files: [],
-      notice: `the plugin's setting \`home\` is not set on this machine, so the lessons of ${stack.join(", ")} are not loaded.`,
-    };
-  }
+  const which = `the lessons of ${stack.join(", ")} are not loaded`;
+  if (!home) return { files: [], notice: `the plugin's setting \`home\` is not set on this machine, so ${which}.` };
+  if (missing) return { files: [], notice: `${unknown}, so ${which}.` };
   const files = stack.map((technology) => {
     const name = `lessons/tech/${technology}.md`;
     return { file: path.join(home, name), name: `${name} in the home` };
@@ -72,9 +70,29 @@ export function split(text) {
   return { head: lines.slice(0, first).join("\n").trimEnd(), items: items.map((item) => item.trimEnd()) };
 }
 
+/** @param {number} count */
+const files = (count) => `${count} file${count === 1 ? "" : "s"}`;
+
 /**
- * What one level gives: a line that names it and its files, then each file's head and lessons while they fit, and a
- * line that names each file left in part. Empty when the level has nothing to give.
+ * The line that names what a level left out, kept within `room` characters: past it, the files it cannot name are
+ * counted instead.
+ * @param {string[]} left
+ * @param {number} room
+ */
+function closing(left, room) {
+  const start = `\nLeft out, past the ${BUDGET} characters a level of lessons may give: `;
+  const end = ". Read them there, and tell the person that this level is full.\n";
+  for (let named = left.length; named > 0; named -= 1) {
+    const rest = left.length - named;
+    const line = `${start}${left.slice(0, named).join("; ")}${rest === 0 ? "" : `; and ${files(rest)} more`}${end}`;
+    if (line.length <= room) return line;
+  }
+  return `${start}${files(left.length)} of this level, in whole or in part${end}`;
+}
+
+/**
+ * What one level gives: a line that names the level, then each file, named, with its head and its lessons while they
+ * fit, and a line that names what was left out. Empty when the level has nothing to give.
  * @param {string} level
  * @param {{ project: string, home: string, host: string }} where
  */
@@ -92,27 +110,33 @@ export function context(level, where) {
     notice = `${error instanceof Error ? error.message : String(error)}; the lessons are not loaded.`;
   }
   if (present.length === 0) return notice ? `Honsha lessons of the ${level}: ${notice}\n` : "";
-  const room = BUDGET - NOTE;
-  let out = `Honsha lessons of the ${level}, from ${present.map(({ name }) => name).join(", ")}:\n`;
-  /** @type {string[]} */
-  const left = [];
-  for (const { file } of present) {
+  const header = `Honsha lessons of the ${level}:\n`;
+  // The output is a prefix of these pieces: a file's head opens its lessons, so no lesson comes without its file.
+  const pieces = present.flatMap(({ file, name }, index) => {
     const { head, items } = split(fs.readFileSync(file, "utf8"));
-    if (out.length + head.length + 2 > room) {
-      left.push(`${file}, all of it`);
-      continue;
-    }
-    out += `\n${head}\n\n`;
-    let given = 0;
-    for (const item of items) {
-      if (out.length + item.length + 1 > room) break;
-      out += `${item}\n`;
-      given += 1;
-    }
-    if (given < items.length) left.push(`${file}, ${items.length - given} of its ${items.length} lessons`);
-  }
-  if (left.length > 0) {
-    out += `\nLeft out, past the ${BUDGET} characters a level of lessons may give: ${left.join("; ")}. Read them there, and tell the person that this level is full.\n`;
+    return [
+      { index, file, lessons: items.length, text: `\nFrom ${name}:\n\n${head}\n\n` },
+      ...items.map((item) => ({ index, file, lessons: items.length, text: `${item}\n` })),
+    ];
+  });
+  /** @param {number} count how many pieces are given */
+  const render = (count) => {
+    const given = pieces.slice(0, count);
+    const left = present.flatMap(({ file }, index) => {
+      const shown = given.filter((piece) => piece.index === index);
+      const lessons = pieces.find((piece) => piece.index === index)?.lessons ?? 0;
+      if (shown.length === 0) return [`${file}, all of it`];
+      if (shown.length - 1 < lessons) return [`${file}, ${lessons - shown.length + 1} of its ${lessons} lessons`];
+      return [];
+    });
+    const body = header + given.map((piece) => piece.text).join("");
+    return left.length === 0 ? body : body + closing(left, BUDGET - body.length);
+  };
+  let count = pieces.length;
+  let out = render(count);
+  while (out.length > BUDGET && count > 0) {
+    count -= 1;
+    out = render(count);
   }
   return out;
 }

@@ -237,7 +237,8 @@ once:
   so a project never carries lessons for tools it does not use. A hook of the kit gives each of the three levels when
   the session starts (`hooks/lessons.mjs`). The home's folder on the machine is the plugin's setting `home`, which
   Claude Code asks for when the plugin is enabled and shows among its settings; without it a session receives only
-  its project's lessons, and is told why when its profile has a `stack`.
+  its project's lessons, and is told why when its profile has a `stack`. A setting that names no folder on the
+  machine is named in the same way.
 - **Budget.** Each level gives at most 4,000 characters, about fifteen lessons. A level with more gives the lessons
   that fit and names each file it left in part, and the session tells the person. A full level is answered by this
   section's other moves: a lesson of general worth is promoted to the kit, one tied to a version is reviewed at the
@@ -300,7 +301,8 @@ legacy:
   the pack of each of its areas before it changes anything (`agents/worker.md`). An area without a pack has no extra
   rules.
 - `parallel` sets how many workers may run in the project at once and which resources cannot be shared (section 5.1).
-- `lessons` names the file that holds the project-level lessons only. The file name is the project's choice.
+- `lessons` names the file, inside the project, that holds the project-level lessons only. The file name is the
+  project's choice.
 - `legacy` lists folders with documents from before the project adopted this workflow (section 11).
 - `secret` is the name of a secret on the host, never its value.
 - `verify` is written as a list with one command on each line: the kit's scripts read no other form. Each command

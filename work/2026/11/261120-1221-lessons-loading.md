@@ -149,7 +149,30 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
   the technology's one and the host's one. The run also printed that the plugin is enabled in the project's settings
   but not installed, which a session with `--plugin-dir` reports when that folder takes the installed plugin's place:
   `claude plugin list` shows `honsha@honsha` installed and enabled.
+- Item `261120-1219` merged into the default branch as `bcc4b86`; the default branch merged here as `811ae09`, the need
+  the strategy named. The conflicts were in `checks/profile.mjs` and its test, where both items add keys: resolved by
+  keeping both. The verification ran again after the merge.
+- The kit's checker is not available in this session, which was resumed: the check runs in a general-purpose
+  subagent given `agents/checker.md` as its instructions, with the parts of the core rules and the record template,
+  and told to use only Read, Grep and Glob.
+- Check on `811ae09`: fail, three findings.
+  - The room kept for the closing line was fixed while the line grows with the files it names: a level now gives a
+    prefix of its pieces, each file opened by a line that names it, and the closing line is counted at its real
+    length; past its room it counts the files it cannot name. The opening line names the level only, so that no list
+    of files escapes the count. A test leaves 79 files with long paths out and stays within the budget.
+  - `lessons` could name a file outside the project: the profile's reader now refuses an absolute path and a path
+    with `..`, and the workflow's section 9 says the file is inside the project.
+  - A home's folder that does not exist left two levels silent, against the strategy's risks: the technologies' and
+    the host's levels now name it, and the workflow's section 8 says so.
+- The edits of the tests' assertions were first tried through a script in a file, whose quoting lost a level of
+  escapes; they were made with the editor.
 
 ## Verification
+
+## Deviations
+
+- The approval's commit on this branch, never pushed, was replaced by one with the right trailer, where the rules ask
+  that a work branch only grows and that a mistake be corrected by a new commit. A new commit could not correct it:
+  the trailer of the wrong commit would have failed the check of the branch's commits on every later run.
 
 ## Outcome

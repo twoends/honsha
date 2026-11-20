@@ -58,6 +58,10 @@ test("refuses a stack that is not a list, a technology that could leave the less
     assert.throws(() => parseProfile(`stack: [${technology}]\n`), /is not the name of a technology/);
   }
   assert.throws(() => parseProfile("lessons:\n"), /`lessons` must name a file/);
+  for (const file of ["../LESSONS.md", "docs/../../x.md", "/etc/lessons.md", "C:/lessons.md", "\\\\server\\x.md"]) {
+    assert.throws(() => parseProfile(`lessons: '${file}'\n`), /`lessons` must name a file inside the project/, file);
+  }
+  assert.equal(parseProfile("lessons: docs/lessons.md\n").lessons, "docs/lessons.md");
 });
 
 test("reads whether the project is public, and refuses any other value", () => {

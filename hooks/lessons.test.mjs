@@ -61,7 +61,7 @@ test("the project's level gives the file its profile names, and nothing without 
     "LESSONS.md": lessonsFile("Lessons", 2),
   });
   const text = context("project", { project, home: "", host: "example-host" });
-  assert.match(text, /^Honsha lessons of the project, from LESSONS\.md:\n/);
+  assert.match(text, /^Honsha lessons of the project:\n\nFrom LESSONS\.md:\n/);
   assert.match(text, /- Lesson 2: x+\.\n$/);
   assert.equal(context("project", { project: folder({}), home: "", host: "example-host" }), "");
   const unnamed = folder({ ".hub/profile.yml": "name: example\n" });
@@ -71,7 +71,7 @@ test("the project's level gives the file its profile names, and nothing without 
 test("the technologies' level gives the home's file of each technology of the stack that has one", () => {
   const project = folder({ ".hub/profile.yml": "stack: [node, postgres]\n" });
   const text = context("technologies", { project, home: home(), host: "example-host" });
-  assert.match(text, /^Honsha lessons of the technologies, from lessons\/tech\/node\.md in the home:\n/);
+  assert.match(text, /^Honsha lessons of the technologies:\n\nFrom lessons\/tech\/node\.md in the home:\n/);
   assert.match(text, /# Technology: Node\.js/);
   assert.doesNotMatch(text, /postgres\.md/);
   const none = folder({ ".hub/profile.yml": "name: example\n" });
@@ -89,8 +89,16 @@ test("without a home, the technologies' level says why it gives nothing, and the
 
 test("the host's level gives the home's file of the machine, by its name in lower case", () => {
   const text = context("host", { project: folder({}), home: home(), host: "EXAMPLE-HOST" });
-  assert.match(text, /^Honsha lessons of the host, from lessons\/host\/example-host\.md in the home:\n/);
+  assert.match(text, /^Honsha lessons of the host:\n\nFrom lessons\/host\/example-host\.md in the home:\n/);
   assert.equal(context("host", { project: folder({}), home: home(), host: "another-host" }), "");
+});
+
+test("a home's folder that does not exist is named by the levels that need it", () => {
+  const project = folder({ ".hub/profile.yml": "stack: [node]\n" });
+  const wrong = path.join(folder({}), "no-such-home");
+  const where = { project, home: wrong, host: "example-host" };
+  assert.match(context("technologies", where), /names .*no-such-home, which is not a folder on this machine, so the/);
+  assert.match(context("host", where), /which is not a folder on this machine, so the host's lessons are not loaded/);
 });
 
 test("a level over its budget gives the lessons that fit, and names the file it left in part", () => {
@@ -104,6 +112,24 @@ test("a level over its budget gives the lessons that fit, and names the file it 
   assert.doesNotMatch(text, /- Lesson 60: /);
   const file = path.join(project, "LESSONS.md").replace(/\\/g, "\\\\");
   assert.match(text, new RegExp(`Left out, past the ${BUDGET} characters .*${file}, \\d+ of its 60 lessons`));
+});
+
+test("the budget holds however many files a level leaves out, and however long their paths", () => {
+  const deep = path.join("a-folder-with-a-long-name", "another-folder-with-a-long-name", "and-one-more-long-folder");
+  /** @type {Record<string, string>} */
+  const files = {};
+  const stack = Array.from({ length: 80 }, (_, index) => `technology-${index + 1}`);
+  for (const technology of stack) {
+    files[path.join(deep, "lessons", "tech", `${technology}.md`)] = lessonsFile(technology, 20, 100);
+  }
+  const project = folder({ ".hub/profile.yml": `stack: [${stack.join(", ")}]\n` });
+  const text = context("technologies", { project, home: path.join(folder(files), deep), host: "example-host" });
+  assert.ok(text.length <= BUDGET, `${text.length} characters`);
+  assert.match(text, /- Lesson 1: /);
+  assert.match(
+    text,
+    /Left out, past the 4000 characters a level of lessons may give: .*\d+ files?\b.*\. Read them there/,
+  );
 });
 
 test("a profile the reader refuses is named instead of passing in silence", () => {

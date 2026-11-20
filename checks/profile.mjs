@@ -101,6 +101,10 @@ export function parseProfile(text) {
     }
     if (key === "lessons") {
       if (value === "") throw new Error("profile: `lessons` must name a file");
+      // A hook gives this file to every session, so it may not lead out of the project, as a session may not.
+      if (/^([\\/]|[A-Za-z]:)/.test(value) || value.split(/[\\/]/).includes("..")) {
+        throw new Error("profile: `lessons` must name a file inside the project");
+      }
       profile.lessons = value;
     }
     if (key === "direct-commits") {
