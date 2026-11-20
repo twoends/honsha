@@ -266,16 +266,24 @@ test("judges a push in the folder that the line begins by moving to", () => {
   allowed(`cd "${bash(onWork)}" && git add . && git commit -m "Add a thing" && git push origin HEAD`, onMain);
   allowed(`pushd ${bash(onWork)} && git push`, onMain);
   allowed(`cd ${bash(onWork)} && git push 2>&1`, onMain);
+  allowed(`cd ${bash(onWork)} && git push &>/dev/null`, onMain);
+  allowed(`cd ${bash(onWork)} && git push >|/dev/null`, onMain);
   allowed(`cd ../${path.basename(onWork)} && git push`, onMain);
   allowed("cd ./nested && git push", onMain);
 });
 
-test("an & after a redirection belongs to it, and a redirection may come before the program", () => {
+test("the & or | of a redirection belongs to it, and a redirection may come before the program", () => {
   assert.deepEqual(simpleCommands("git push 2>&1 >&2", { marks: true }), [["git", "push", "2>&1", ">&2"]]);
+  assert.deepEqual(simpleCommands("git push &>/dev/null >|log &>> all", { marks: true }), [
+    ["git", "push", "&>/dev/null", ">|log", "&>>", "all"],
+  ]);
+  assert.deepEqual(simpleCommands("a&>x", { marks: true }), [["a", "&>x"]]);
   assert.deepEqual(simpleCommands("echo '>'& git push", { marks: true }), [["echo", ">"], ["&"], ["git", "push"]]);
   assert.deepEqual(simpleCommands("echo \\>& git push", { marks: true }), [["echo", ">"], ["&"], ["git", "push"]]);
+  assert.deepEqual(simpleCommands("echo '>'| git push", { marks: true }), [["echo", ">"], ["|"], ["git", "push"]]);
   refused("2>/dev/null git push origin main");
   refused(">& log git push origin main");
+  refused("&>/dev/null git push origin main");
   refused("git push origin main 2>&1");
 });
 
@@ -326,11 +334,20 @@ test("reads a move's path as the tool's shell does, and gives up where the shell
   assert.equal(readPath("/s", "/abs/x", false, "linux"), "/abs/x");
   assert.equal(readPath("D:\\s", "/c/src/repo", false, "win32"), "C:\\src\\repo");
   assert.equal(readPath("D:\\s", "/c", false, "win32"), "C:\\");
+  assert.equal(readPath("D:\\s", "/c/../c/x", false, "win32"), "C:\\x");
+  assert.equal(readPath("C:\\p\\q", "../x", false, "win32"), "C:\\p\\x");
+  // Git Bash resolves `..` before it reads the drive: these climb out of `/c` into its own root,
+  // where a folder named by one letter is a drive and any other is not.
+  assert.equal(readPath("D:\\s", "/c/../dev", false, "win32"), null);
+  assert.equal(readPath("C:\\p", "../../dev", false, "win32"), null);
+  assert.equal(readPath("C:\\p", "../../e/x", false, "win32"), "E:\\x");
+  assert.equal(readPath("\\\\server\\share", "./x", false, "win32"), null);
   assert.equal(readPath("D:\\s", "C:\\a b\\PROGRA~1", true, "win32"), "C:\\a b\\PROGRA~1");
   assert.equal(readPath("D:\\s", "sub", true, "win32"), "D:\\s\\sub");
   /** @type {[string, boolean, string][]} */
   const unsure = [
     ["sub", false, "linux"],
+    [".config", false, "linux"],
     ["sub/x", false, "win32"],
     ["/usr/x", false, "win32"],
     ["/C/x", false, "win32"],

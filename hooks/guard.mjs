@@ -15,7 +15,8 @@
 // push is judged in the session's folder, or in another one when the line begins by moving there
 // for sure: its first word is `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
 // `Push-Location`), with one path to a folder that the tool's shell cannot read as another folder
-// (no wildcard, variable or leading `~`; in Bash an absolute path or one that begins with `.`),
+// (no wildcard, variable or leading `~`; in Bash an absolute path or one whose first part is `.` or
+// `..`),
 // followed by `&&` (in PowerShell also by `;`), and every later command is one of a few programs
 // that cannot move a shell. Any other line is judged in the session's folder.
 //
@@ -110,14 +111,15 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
     if (words.length > 0) commands.push(words);
     words = [];
   };
-  // Whether the last character was a `>` or `<` outside quotes and escapes: an `&` right after one
-  // belongs to the redirection, as in `2>&1`, and does not end the command.
-  let redirection = false;
+  // The last character when it was a `>` or `<` outside quotes and escapes. An `&` right after one
+  // belongs to the redirection, as in `2>&1`, and so does a `|` after `>`, as in `>|file`; an `&`
+  // right before a `>` begins one, as in `&>file`. None of them ends the command.
+  let redirection = "";
   const text = withoutHereDocuments(line);
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
-    const afterRedirection = redirection;
-    redirection = false;
+    const after = redirection;
+    redirection = "";
     if (quote) {
       if (char === quote) quote = null;
       else if (escapes && char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1]))
@@ -128,8 +130,11 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       word ??= "";
     } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
-    } else if (char === "&" && afterRedirection) {
+    } else if ((char === "&" && after) || (char === "|" && after === ">")) {
       word = (word ?? "") + char;
+    } else if (char === "&" && text[index + 1] === ">") {
+      endWord();
+      word = char;
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
       if (marks) {
@@ -140,7 +145,7 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       endWord();
     } else {
       word = (word ?? "") + char;
-      redirection = char === ">" || char === "<";
+      if (char === ">" || char === "<") redirection = char;
     }
   }
   endCommand();
@@ -153,10 +158,10 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
  * @returns {string[]}
  */
 function program(words) {
-  // A redirection is neither the program nor an argument: `2>&1`, `>file`, and `>` or `>&` with the
-  // file as the next word. It may stand before the program as well as after it.
-  const alone = /^\d*(>>?|<)&?$/;
-  const redirection = /^\d*(>>?|<)/;
+  // A redirection is neither the program nor an argument: `2>&1`, `>file`, `&>file`, and `>`, `>&`,
+  // `>|` or `&>` with the file as the next word. It may stand before the program as well as after it.
+  const alone = /^(\d*|&)(>>|>\||>&?|<&?)$/;
+  const redirection = /^(\d*|&)[<>]/;
   let start = 0;
   while (start < words.length) {
     const word = words[start];
@@ -313,8 +318,9 @@ function target(args, powershell) {
  * The path a move's target names from `dir` as the tool's shell reads it, or null when the shell
  * could read the same words as another folder: a wildcard, a variable or a leading `~` expand; a
  * name that ends in a dot or a space is cut by Windows and kept by Git Bash; in Bash a relative path
- * is first looked for along `CDPATH`, unless it begins with `.`; and Git Bash reads a path from `/`
- * through its own mounts, so on Windows only `/c/rest`, the drive, is read.
+ * is first looked for along `CDPATH`, unless its first part is `.` or `..`; and Git Bash resolves a
+ * path in its own tree, where drive C: is the folder `/c` and the rest goes through its mounts, so on
+ * Windows only a path that ends on a drive, `/c/rest`, is read.
  * @param {string} dir
  * @param {string} where
  * @param {boolean} powershell
@@ -333,9 +339,12 @@ export function readPath(dir, where, powershell, platform = process.platform) {
     return paths.resolve(dir, where);
   }
   if (where.includes("\\") || where.includes(":")) return null;
-  if (!where.startsWith("/")) return /^\.\.?(\/|$)/.test(where) ? paths.resolve(dir, where) : null;
-  if (!windows) return paths.resolve(where);
-  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(where);
+  if (!where.startsWith("/") && !/^\.\.?(\/|$)/.test(where)) return null;
+  if (!windows) return paths.resolve(dir, where);
+  // `..` is resolved before the drive is read, so `/c/..` is Git Bash's root, not `C:\`.
+  if (!/^[A-Za-z]:[\\/]/.test(dir)) return null;
+  const tree = path.posix.resolve(`/${dir.charAt(0).toLowerCase()}/${dir.slice(3).replace(/\\/g, "/")}`, where);
+  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(tree);
   return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
 }
 
