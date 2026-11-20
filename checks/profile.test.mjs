@@ -37,8 +37,17 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     verify: [],
     commitsAddress: null,
     kinds: null,
+    public: false,
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
+});
+
+test("reads whether the project is public, and refuses any other value", () => {
+  assert.equal(parseProfile("public: true\n").public, true);
+  assert.equal(parseProfile("public: false # a private project\n").public, false);
+  for (const value of ["yes", "1", ""]) {
+    assert.throws(() => parseProfile(`public: ${value}\n`), /`public` must be true or false/);
+  }
 });
 
 test("refuses a profile that declares direct commits, whatever their value", () => {

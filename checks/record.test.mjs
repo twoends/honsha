@@ -133,7 +133,11 @@ test("the records of the kit's merged items pass", () => {
   assert.ok(current.length >= 10, `${current.length} records`);
   for (const { file, text } of current) {
     const id = path.basename(file).slice(0, 11);
-    assert.deepEqual(checkRecord(text, { file, id, kinds, template }), []);
+    // A record written before its project became public quotes its intent, and is checked in the form it was written
+    // in; the rule for a public project has cases of its own.
+    const intent = text.split(/^## /m).find((section) => section.startsWith("Intent")) ?? "";
+    const restated = !/^>/m.test(intent);
+    assert.deepEqual(checkRecord(text, { file, id, kinds, template, public: restated }), []);
   }
 });
 
@@ -188,6 +192,15 @@ test("an intent that is not quoted is named", () => {
   assert.deepEqual(problems(record({}, (t) => t.replace("> Export the orders as CSV.", "Export the orders."))), [
     `${FILE}: the intent is not quoted`,
   ]);
+});
+
+test("in a public project, an intent that quotes the person is named, and one that restates the request passes", () => {
+  const options = { file: FILE, id: ID, kinds: DEFAULT_KINDS, template, public: true };
+  assert.deepEqual(checkRecord(record(), options), [`${FILE}: the intent quotes the person in a public project`]);
+  const restated = record({}, (t) =>
+    t.replace("> Export the orders as CSV.", "The person asked for the orders as a CSV file."),
+  );
+  assert.deepEqual(checkRecord(restated, options), []);
 });
 
 test("before done, sections still to write are not missing; after it, they are", () => {
@@ -286,6 +299,13 @@ test("finds the record from the branch and reads the kinds of the profile", () =
   const other = check({ cwd: dir, env: { ...quiet, HONSHA_BRANCH: `work/${ID}-export-invoices` } });
   assert.deepEqual(other.problems, [
     `work/2026/11/${ID}-export-invoices.md: there is no record for the branch; work/2026/11 holds ${ID}-export-orders.md`,
+  ]);
+});
+
+test("reads from the profile whether the project is public", () => {
+  const dir = repository(`work/${ID}-export-orders`, { [FILE]: record(), ".hub/profile.yml": "public: true\n" });
+  assert.deepEqual(check({ cwd: dir, env: quiet }).problems, [
+    `${FILE}: the intent quotes the person in a public project`,
   ]);
 });
 

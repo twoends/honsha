@@ -4,7 +4,10 @@ A part of the Honsha core rules, which `rules/core.md` opens.
 
 ## The record
 
-- The intent is the person's words, verbatim. Later it is only extended, under "Addenda".
+- The intent is the person's words, verbatim. In a project whose profile says `public: true`, it is instead the
+  request restated in plain words in the record's language, and nothing the person said is quoted anywhere in the
+  repository, its commits or its pull requests; an approval names who gave it, when and where. Either way, the intent
+  is later only extended, under "Addenda".
 - Scope and acceptance criteria are fixed once work starts (small) or once approved (full). A change to them is
   written under "Deviations", never made silently.
 - The log is append-only and is written while the work goes on, not at the end.
