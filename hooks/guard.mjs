@@ -43,9 +43,10 @@ const LEADS = {
 // script block or an assignment, could move the shell where the guard cannot see it.
 const STILL = new Set(["git", "gh", "node", "npm", "npx"]);
 const JOINS = new Set([";", "&&", "||", "|", "&"]);
-// What Bash reads as part of a redirection when it stands right before the `>` or `<`, unquoted: a file descriptor,
-// as digits or as a `{name}` that receives a new one, or the `&` of `&>`.
-const DESCRIPTOR = String.raw`(?:\d+|\{[A-Za-z_][A-Za-z0-9_]*\}|&)`;
+// What may stand right before a `>` or `<` as part of its redirection: a file descriptor as digits, or the `&` of `&>`;
+// in the reading with braces (`judge`), also a `{…}` that names the variable of a new descriptor.
+const DESCRIPTOR = String.raw`(?:\d+|&)`;
+const BRACED = String.raw`(?:\d+|&|\{.*\})`;
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -89,15 +90,17 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
- * A redirection is a word of its own, also when it is glued to the word before it, as Bash reads it.
+ * A redirection is a word of its own, also when it is glued to the word before it, as Bash reads it;
+ * unquoted digits glued before it are its file descriptor, and with `braces` so is a `{…}`, which is
+ * otherwise a word of its own.
  * With `marks`, what separates them comes between them as a list of one word: `;`, `&&`, `||`,
  * `|`, `&`, a new line as `;`, and `(`, `)` or a backtick where a subshell may open or close.
  * With `escapes` off, as PowerShell reads a line, a backslash is a character of its word.
  * @param {string} line
- * @param {{ marks?: boolean, escapes?: boolean }} [options]
+ * @param {{ marks?: boolean, escapes?: boolean, braces?: boolean }} [options]
  * @returns {string[][]}
  */
-export function simpleCommands(line, { marks = false, escapes = true } = {}) {
+export function simpleCommands(line, { marks = false, escapes = true, braces = false } = {}) {
   /** @type {string[][]} */
   const commands = [];
   /** @type {string[]} */
@@ -106,9 +109,11 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
   let word = null;
   /** @type {string | null} */
   let quote = null;
-  const descriptor = new RegExp(`^${DESCRIPTOR}$`);
-  // Whether the word so far holds a quoted or escaped character: Bash then never reads it as a file descriptor.
+  const descriptor = new RegExp(`^${braces ? BRACED : DESCRIPTOR}$`);
+  // Whether the word so far holds a quoted or escaped character: Bash then never reads its digits as a file descriptor.
   let literal = false;
+  /** Whether the word so far belongs to the redirection that begins right after it. @param {string} text */
+  const joins = (text) => descriptor.test(text) && (!literal || text.startsWith("{"));
   const endWord = () => {
     if (word !== null) words.push(word);
     word = null;
@@ -153,9 +158,9 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       }
     } else if (/\s/.test(char)) {
       endWord();
-    } else if ((char === ">" || char === "<") && word !== null && !after && (literal || !descriptor.test(word))) {
+    } else if ((char === ">" || char === "<") && word !== null && !after && !joins(word)) {
       // A redirection begins here, and the text before it is a word of its own, unless that text belongs to the
-      // redirection (`DESCRIPTOR`). PowerShell keeps a `>` in a word without quotes, `main>x`, and begins a redirection
+      // redirection (`joins`). PowerShell keeps a `>` in a word without quotes, `main>x`, and begins a redirection
       // after one in quotes, `"main">x`; the guard reads both the Bash way, so in PowerShell too `main>x` is `main`.
       endWord();
       word = char;
@@ -170,15 +175,18 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
 }
 
 /**
- * The words of a simple command from its program on, with the program reduced to its name.
+ * The words of a simple command from its program on, with the program reduced to its name. `braces`
+ * is the reading of `simpleCommands` that gave the words.
  * @param {string[]} words
+ * @param {boolean} [braces]
  * @returns {string[]}
  */
-function program(words) {
+function program(words, braces = false) {
   // A redirection is neither the program nor an argument: `2>&1`, `>file`, `&>file`, and `>`, `>&`,
   // `>|` or `&>` with the file as the next word. It may stand before the program as well as after it.
-  const alone = new RegExp(String.raw`^${DESCRIPTOR}?(>>|>\||>&?|<&?)$`);
-  const redirection = new RegExp(`^${DESCRIPTOR}?[<>]`);
+  const prefix = braces ? BRACED : DESCRIPTOR;
+  const alone = new RegExp(String.raw`^${prefix}?(>>|>\||>&?|<&?)$`);
+  const redirection = new RegExp(`^${prefix}?[<>]`);
   let start = 0;
   while (start < words.length) {
     const word = words[start];
@@ -425,17 +433,25 @@ function lead(items, cwd, powershell) {
  */
 export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
-  const items = simpleCommands(line, { marks: true, escapes: !powershell });
-  const dir = lead(items, cwd, powershell) ?? cwd;
-  for (const words of items) {
-    const [name, ...args] = program(words);
-    if (!name) continue;
-    if (name === "git") {
-      const reason = judgeGit(args, dir);
-      if (reason) return reason;
+  // Bash reads a `{…}` right before a redirection as the variable of a new descriptor or as a word, by a rule on what
+  // it holds that the guard does not follow: a line that holds one is judged both ways, and refused if either refuses.
+  /** @param {boolean} braces */
+  const read = (braces) => simpleCommands(line, { marks: true, escapes: !powershell, braces });
+  const readings = [{ braces: false, items: read(false) }];
+  const braced = read(true);
+  if (JSON.stringify(braced) !== JSON.stringify(readings[0].items)) readings.push({ braces: true, items: braced });
+  for (const { braces, items } of readings) {
+    const dir = lead(items, cwd, powershell) ?? cwd;
+    for (const words of items) {
+      const [name, ...args] = program(words, braces);
+      if (!name) continue;
+      if (name === "git") {
+        const reason = judgeGit(args, dir);
+        if (reason) return reason;
+      }
+      const text = [name, ...args].join(" ");
+      if (patterns.some((pattern) => pattern.test(text))) return REASONS.merge();
     }
-    const text = [name, ...args].join(" ");
-    if (patterns.some((pattern) => pattern.test(text))) return REASONS.merge();
   }
   return null;
 }

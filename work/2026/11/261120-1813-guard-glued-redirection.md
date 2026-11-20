@@ -84,12 +84,35 @@ words of a line, and its tests.
     followed through `node>log`. On the guards of `d2c1674` and `88b8abb` it fails at the `{name}` assertion. Judged on
     the three guards from a checkout on `main`: both earlier ones let `git push origin {fd}>/dev/null` through, and
     this one refuses it; the line with `node>log` is refused at `88b8abb` and let through since `d2c1674`.
+- Repeated check on `2ea921e`, by `honsha:checker`: fail, one finding. Bash also reads an array's element, `{a[0]}`,
+  as the variable of a new descriptor, and the guard read it as a word.
+  - Checked in Git Bash 5.2 with `printf '%s|' W <word>>o`: `{a[0]}`, `{a[b[0]]}`, `{a[k]}`, `{a["k"]}` and
+    `{_b[1+1]}` take a descriptor, while `{a[0]x[1]}`, `{a[]}` and `{a[x]y}` are written to the file as words. What
+    Bash takes depends on what the braces hold, nesting and quotes among it, and each round found more of it; so the
+    guard no longer follows that rule.
+  - With the option `braces`, `simpleCommands` keeps every `{…}` right before a `>` or `<` in the redirection, and
+    without it as a word of its own; `program` takes a word that begins with `{…}>` as a redirection only in the
+    reading with braces. `judge` judges a line both ways when the two differ, and refuses if either refuses.
+    Whichever way Bash takes each `{…}`, it refuses nothing that both readings let through: a branch name that Bash
+    reads as a refspec is one in the reading without `braces`, where no `{…}` is left out, and a push that Bash reads
+    without a refspec has none in the reading with `braces`, where every `{…}` is.
+  - Found while reviewing this change: `program` reads a word as a redirection after quotes are removed, so since
+    `2ea921e` a quoted `{a}>` was dropped with the word after it, and `git push origin "{a}>" main`, which `88b8abb`
+    refused, was let through. The reading without braces keeps that word, and the push is refused again.
+  - The log above says the test failed on `88b8abb` at the `{name}` assertion. It fails there at its first assertion,
+    since that guard keeps `main>/dev/null` whole; the pushes hidden by `{fd}` were judged on that guard apart.
+  - The test now covers `{a[b[0]]}` and `{a["k"]}` in both readings, a push hidden by `{a[0]}` after the destination
+    and one by `{a["k"]}` before the program, both refused, `git push {1x}>/dev/null main` refused by the reading
+    without `braces`, the quoted `{a}>` refused, and `git push origin HEAD {fd}>/dev/null` let through from a work
+    branch. On the guard of `2ea921e` it fails at the `{a[b[0]]}` assertion, and judged there the pushes hidden by
+    `{a[0]}`, by `{a["k"]}` and by the quoted `{a}>` are let through.
 
 ## Deviations
 
 - The request counts `main2>&1` among the forms that hide a push to `main`. Bash reads it as the word `main2` and the
   redirection `>&1`, as the check in Git Bash above shows, so `git push origin main2>&1` pushes `main2`. The guard
   reads it so and lets it through; a test says it.
-- After the check on `d2c1674`, criterion 1 also counts as a file descriptor an unquoted `{name}` right before the `>`
-  or `<`, as Bash reads one: the checker found a push to the default branch hidden by that form, the defect the intent
-  names.
+- After the checks on `d2c1674` and `2ea921e`, criterion 1 holds for a `{…}` right before the `>` or `<` in two
+  readings: in one it belongs to the redirection, as Bash takes it when it holds a variable's name or an array's
+  element, in the other it is a word of its own, and a line is refused if either reading refuses. The checker found
+  pushes to the default branch hidden by those forms, the defect the intent names.
