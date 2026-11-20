@@ -56,7 +56,7 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, commitsAddress, kinds }` from the text of a profile.
+ * Returns `{ defaultBranch, verify, commitsAddress, kinds, public }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}

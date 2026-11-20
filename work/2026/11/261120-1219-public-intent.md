@@ -120,7 +120,19 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 - A script passed inline to `node -e` through Git Bash broke on its escapes after writing `checks/profile.mjs` and
   before `checks/record.mjs`; the rest was done with the editor. The home holds that lesson for this host and for
   Node.js, and no hook gives lessons to a session yet: item `261120-1221` does.
+- The kit's checker is not available in this session, which was resumed: the check ran in a general-purpose subagent
+  given `agents/checker.md` as its instructions, with the parts of the core rules and the record template, and told
+  to use only Read, Grep and Glob.
+- Check on `381828e`: fail, three findings. The comment of `.prettierignore` said that the intent is verbatim, and
+  the doc comment of `parseProfile` did not name `public`: both corrected. The replaced commits are declared under
+  Deviations.
 
 ## Verification
+
+## Deviations
+
+- The approval's commit on this branch, never pushed, was replaced by one with the right trailer, where the rules ask
+  that a work branch only grows and that a mistake be corrected by a new commit. A new commit could not correct it:
+  the trailer of the wrong commit would have failed the check of the branch's commits on every later run.
 
 ## Outcome
