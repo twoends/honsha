@@ -1,12 +1,38 @@
 {
-  "description": "Delivers the core rules and the record template when a session or the checker starts, refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
+  "description": "Delivers each part of the core rules and the record template, each by a hook of its own, when a session or the checker starts, refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/rules/core.md\" && printf '\\nKit directory: %s\\n\\nThe record template, templates/record.md in the kit directory:\\n\\n' \"${CLAUDE_PLUGIN_ROOT}\" && cat \"${CLAUDE_PLUGIN_ROOT}/templates/record.md\""
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/core.md"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/records.md"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/git.md"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/writing.md"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "templates/record.md"],
+            "timeout": 10
           }
         ]
       }
@@ -18,7 +44,31 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/checker-rules.mjs"],
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/core.md", "--subagent"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/records.md", "--subagent"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/git.md", "--subagent"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "rules/writing.md", "--subagent"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs", "templates/record.md", "--subagent"],
             "timeout": 10
           }
         ]

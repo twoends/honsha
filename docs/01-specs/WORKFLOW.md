@@ -21,10 +21,10 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
 ## 2. Where the rules are
 
-The rules a session follows while it works are the [core rules](../../rules/core.md), which every session of a
-project receives when it starts, together with the record template. This document points to them instead of repeating
-them, and keeps what they do not say: the reasons, the profile, the derived views, the contract of a hosting service,
-decisions, dependencies and the upkeep review.
+The rules a session follows while it works are the [core rules](../../rules/core.md), the files of `rules/` in the kit,
+which every session of a project receives when it starts, together with the record template. This document points to
+them instead of repeating them, and keeps what they do not say: the reasons, the profile, the derived views, the
+contract of a hosting service, decisions, dependencies and the upkeep review.
 
 A new rule goes where it costs least to hold:
 
@@ -32,12 +32,16 @@ A new rule goes where it costs least to hold:
   the project's `verify` list. A script checks every time and costs no context;
 - **a skill** of the kit, `skills/<name>/SKILL.md`, when only some situations need it: the worker's file names the
   skill and when to invoke it, and the skill's text enters the context only then;
-- **the core rules,** when every session needs it while it works. The checker receives them too, when it starts;
+- **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
+  too, when it starts;
 - **an agent's file,** for that agent's own procedure.
 
-A document that reaches its budget (`checks/budgets.test.mjs`; the core rules' limit in `hooks/hooks.test.mjs`)
-is answered by such a move, not by shortening its sentences: a shortened rule can lose a condition, and nothing shows
-it.
+A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
+sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
+`hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context
+any hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook.
+The total a session receives at start is a choice of what every session pays: it is raised by a work item that says
+why, or answered by moving a rule that only some situations need into a skill.
 
 ---
 

@@ -20,14 +20,77 @@ test("every file a hook refers to exists", () => {
   for (const file of files) assert.ok(fs.existsSync(`${root}/${file}`), file);
 });
 
-// Claude Code replaces hook output over 10,000 characters with a file path and a short preview,
-// which would silently take the rules out of the session's context.
-test("what a session receives at start stays under the limit for hook output", () => {
-  const command = hooks.SessionStart[0].hooks[0].command;
-  assert.match(command, /rules\/core\.md/);
-  assert.match(command, /templates\/record\.md/);
-  const size = read("rules/core.md").length + read("templates/record.md").length + command.length + root.length;
-  assert.ok(size < 9000, `${size} characters`);
+/** The files a session and the checker receive when they start: the parts of the core rules, and the template. */
+const given = [
+  ...fs
+    .readdirSync(`${root}/rules`)
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => `rules/${name}`),
+  "templates/record.md",
+].toSorted();
+
+/**
+ * What a hook prints, run as `hooks.json` writes it.
+ * @param {{ command: string, args?: string[] }} handler
+ */
+function output(handler) {
+  assert.equal(handler.command, "node");
+  const args = (handler.args ?? []).map((arg) => arg.replace("${CLAUDE_PLUGIN_ROOT}", root.replace(/[\\/]$/, "")));
+  return execFileSync(process.execPath, args, { encoding: "utf8" });
+}
+
+/**
+ * The files a list of hooks give, with what follows each file, in order.
+ * @param {any[]} list
+ */
+const files = (list) => list.map((handler) => handler.args.slice(1).join(" ")).toSorted();
+
+test("each part of the core rules, and the template, has a hook at a session's start and one for the checker alone", () => {
+  const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
+  assert.ok(hooks.SessionStart.every((/** @type {any} */ group) => group.matcher === undefined));
+  assert.equal(hooks.SubagentStart.length, 1);
+  const [checker] = hooks.SubagentStart;
+  assert.equal(checker.matcher, "^honsha:checker$");
+  for (const handler of [...start, ...checker.hooks]) {
+    assert.equal(handler.args?.[0], "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs");
+  }
+  assert.deepEqual(files(start), given);
+  assert.deepEqual(
+    files(checker.hooks),
+    given.map((file) => `${file} --subagent`),
+  );
+});
+
+test("the opening of the core rules names each of their other parts", () => {
+  const named = [...read("rules/core.md").matchAll(/`(rules\/[\w-]+\.md)`/g)].map((match) => match[1]);
+  const parts = given.filter((file) => file.startsWith("rules/") && file !== "rules/core.md");
+  assert.deepEqual([...new Set(named)].toSorted(), parts);
+});
+
+// Claude Code replaces a hook's output over 10,000 characters with a file path and a short preview, which would take
+// that part out of the context without a word: a part that reaches PART is split into two topics, never shortened.
+// TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
+// that says why, or answered by moving a rule that only some situations need into a skill.
+const PART = 9000;
+const TOTAL = 20000;
+
+test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
+  let total = 0;
+  for (const handler of hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks)) {
+    const [, file] = handler.args;
+    const text = output(handler);
+    assert.ok(text.endsWith(read(file)), file);
+    assert.ok(text.length < PART, `${file}: ${text.length} characters`);
+    total += text.length;
+  }
+  assert.ok(total <= TOTAL, `${total} characters at a session's start`);
+  for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
+    const [, file] = handler.args;
+    const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;
+    assert.equal(hookEventName, "SubagentStart");
+    assert.ok(additionalContext.endsWith(read(file)), file);
+    assert.ok(additionalContext.length < PART, `${file}: ${additionalContext.length} characters`);
+  }
 });
 
 test("the template has the front matter keys of the workflow, in order", () => {
@@ -60,20 +123,4 @@ test("the template has the front matter keys of the workflow, in order", () => {
     .filter((line) => /^[a-z-]+:/.test(line))
     .map((line) => line.split(":")[0]);
   assert.deepEqual(keys, specKeys);
-});
-
-// A SubagentStart hook adds context only from JSON, and the platform cuts what is over 10,000 characters to a file
-// path and a preview, which would leave the checker without the rules it checks against.
-test("the checker alone receives the core rules and the template when it starts, under the limit", () => {
-  const groups = hooks.SubagentStart;
-  assert.equal(groups.length, 1);
-  assert.equal(groups[0].matcher, "^honsha:checker$");
-  const [handler] = groups[0].hooks;
-  assert.deepEqual(handler.args, ["${CLAUDE_PLUGIN_ROOT}/hooks/checker-rules.mjs"]);
-  const output = execFileSync(process.execPath, [`${root}/hooks/checker-rules.mjs`], { encoding: "utf8" });
-  const { hookEventName, additionalContext } = JSON.parse(output).hookSpecificOutput;
-  assert.equal(hookEventName, "SubagentStart");
-  assert.ok(additionalContext.includes(read("rules/core.md")));
-  assert.ok(additionalContext.includes(read("templates/record.md")));
-  assert.ok(additionalContext.length < 10000, `${additionalContext.length} characters`);
 });

@@ -129,6 +129,27 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 
 ## Log
 
+- `may-start honsha`: yes. Branch cut from the kit's `main` at `a145155`.
+- `rules/core.md` split into four parts: `core.md` (the opening, Work items, Sizes, Stop conditions, Lessons),
+  `records.md`, `git.md` and `writing.md`. A script compared each section with `main`'s `rules/core.md`: the nine
+  headings and their texts are the same. Only the opening changed, which now names the other parts and says that the
+  line above each part names the kit directory; each other part opens with its own heading and one line pointing to
+  `rules/core.md`.
+- `hooks/rules.mjs` prints one file after a line that names it and the kit directory, as text or, with `--subagent`,
+  as SubagentStart JSON. A file it cannot read fails the hook with a message, so the person sees that a part is
+  missing. `hooks/hooks.json`: five SessionStart hooks and five SubagentStart hooks matched to the checker, in the
+  `args` form; `hooks/checker-rules.mjs` deleted.
+- What each hook prints, measured: `core.md` 2,930, `records.md` 1,123, `git.md` 2,449, `writing.md` 1,409, the
+  template 1,860; 9,771 at a session's start, against one output of about 8,800 before. The difference is the line
+  each hook adds and the longer opening.
+- `hooks/hooks.test.mjs`: three tests in place of the two on the old output: one hook of each kind for each file, the
+  opening naming every other part, and each hook run and measured against 9,000, with 20,000 for the start's total.
+- Docs: architecture section 3.1 (layout and the bullet on what a session receives), workflow section 2, README.
+- Live run, on this branch's working tree before the work's commit: in a scratch git repository,
+  `claude -p --plugin-dir` on the kit's clone with `claude-opus-5-5`, asked without tools for the headings it received
+  at start, listed every heading of the five files, each under its file. They came in the order `records.md`, the
+  template, `git.md`, `core.md`, `writing.md`, not that of `hooks.json`, as the hooks reference leaves open.
+
 ## Verification
 
 ## Outcome
