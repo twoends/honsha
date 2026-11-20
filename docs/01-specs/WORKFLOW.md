@@ -534,9 +534,9 @@ variables, also when they name the default branch (section 5.2), and `node check
 - It judges a push in the session's folder, or in another repository's when the line begins by moving there for sure
   (`cd <folder> && …`, in PowerShell also `;`), to a path the shell cannot read as another folder, and holds after that
   move only programs that cannot move a shell, such as `git`. In Bash such a path is absolute or its first part is `.`
-  or `..`. Any
-  other line is judged in the session's folder, so that a line it cannot follow lets through nothing it would refuse
-  there.
+  or `..`; on Windows, where Git Bash may write the session's folder through one of its mounts, a relative path with
+  `..` is not followed. Any other line is judged in the session's folder, so that a line it cannot follow lets through
+  nothing it would refuse there.
 
 ---
 

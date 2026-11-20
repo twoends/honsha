@@ -268,8 +268,10 @@ test("judges a push in the folder that the line begins by moving to", () => {
   allowed(`cd ${bash(onWork)} && git push 2>&1`, onMain);
   allowed(`cd ${bash(onWork)} && git push &>/dev/null`, onMain);
   allowed(`cd ${bash(onWork)} && git push >|/dev/null`, onMain);
-  allowed(`cd ../${path.basename(onWork)} && git push`, onMain);
   allowed("cd ./nested && git push", onMain);
+  // Git Bash may write the session's folder through one of its mounts, so on Windows `..` is not followed.
+  if (process.platform === "win32") refused(`cd ../${path.basename(onWork)} && git push`, onMain);
+  else allowed(`cd ../${path.basename(onWork)} && git push`, onMain);
 });
 
 test("the & or | of a redirection belongs to it, and a redirection may come before the program", () => {
@@ -335,13 +337,16 @@ test("reads a move's path as the tool's shell does, and gives up where the shell
   assert.equal(readPath("D:\\s", "/c/src/repo", false, "win32"), "C:\\src\\repo");
   assert.equal(readPath("D:\\s", "/c", false, "win32"), "C:\\");
   assert.equal(readPath("D:\\s", "/c/../c/x", false, "win32"), "C:\\x");
-  assert.equal(readPath("C:\\p\\q", "../x", false, "win32"), "C:\\p\\x");
-  // Git Bash resolves `..` before it reads the drive: these climb out of `/c` into its own root,
-  // where a folder named by one letter is a drive and any other is not.
+  assert.equal(readPath("D:\\s", "/c/../e/x", false, "win32"), "E:\\x");
+  assert.equal(readPath("C:\\p", "./q/x", false, "win32"), "C:\\p\\q\\x");
+  // Git Bash resolves `..` before it reads the drive, so `/c/../dev` is in its own root, not on a drive;
+  // and it may write the session's folder through a mount such as `/tmp`, from which `..` climbs elsewhere.
   assert.equal(readPath("D:\\s", "/c/../dev", false, "win32"), null);
-  assert.equal(readPath("C:\\p", "../../dev", false, "win32"), null);
-  assert.equal(readPath("C:\\p", "../../e/x", false, "win32"), "E:\\x");
-  assert.equal(readPath("\\\\server\\share", "./x", false, "win32"), null);
+  for (const where of ["..", "../x", "./q/../x"])
+    assert.equal(readPath("C:\\p\\q", where, false, "win32"), null, where);
+  // A leading `//` may name a network share.
+  assert.equal(readPath("D:\\s", "//c/x", false, "win32"), null);
+  assert.equal(readPath("/s", "//x", false, "linux"), null);
   assert.equal(readPath("D:\\s", "C:\\a b\\PROGRA~1", true, "win32"), "C:\\a b\\PROGRA~1");
   assert.equal(readPath("D:\\s", "sub", true, "win32"), "D:\\s\\sub");
   /** @type {[string, boolean, string][]} */

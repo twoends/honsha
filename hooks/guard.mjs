@@ -16,9 +16,9 @@
 // for sure: its first word is `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
 // `Push-Location`), with one path to a folder that the tool's shell cannot read as another folder
 // (no wildcard, variable or leading `~`; in Bash an absolute path or one whose first part is `.` or
-// `..`),
-// followed by `&&` (in PowerShell also by `;`), and every later command is one of a few programs
-// that cannot move a shell. Any other line is judged in the session's folder.
+// `..`, and on Windows no relative path with `..`), followed by `&&` (in PowerShell also by `;`),
+// and every later command is one of a few programs that cannot move a shell. Any other line is
+// judged in the session's folder.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -318,9 +318,11 @@ function target(args, powershell) {
  * The path a move's target names from `dir` as the tool's shell reads it, or null when the shell
  * could read the same words as another folder: a wildcard, a variable or a leading `~` expand; a
  * name that ends in a dot or a space is cut by Windows and kept by Git Bash; in Bash a relative path
- * is first looked for along `CDPATH`, unless its first part is `.` or `..`; and Git Bash resolves a
- * path in its own tree, where drive C: is the folder `/c` and the rest goes through its mounts, so on
- * Windows only a path that ends on a drive, `/c/rest`, is read.
+ * is first looked for along `CDPATH`, unless its first part is `.` or `..`; a path that begins with
+ * `//` may name a network share; and Git Bash resolves a path in its own tree, where drive C: is the
+ * folder `/c`, the rest goes through its mounts, and the session's folder may itself be written
+ * through one, such as `/tmp`. So on Windows only an absolute path that ends on a drive, `/c/rest`,
+ * and a relative path without `..` are read.
  * @param {string} dir
  * @param {string} where
  * @param {boolean} powershell
@@ -338,13 +340,12 @@ export function readPath(dir, where, powershell, platform = process.platform) {
     if (rest.includes(":") || (!windows && rest.includes("\\"))) return null;
     return paths.resolve(dir, where);
   }
-  if (where.includes("\\") || where.includes(":")) return null;
+  if (where.includes("\\") || where.includes(":") || where.startsWith("//")) return null;
   if (!where.startsWith("/") && !/^\.\.?(\/|$)/.test(where)) return null;
   if (!windows) return paths.resolve(dir, where);
+  if (!where.startsWith("/")) return where.split("/").includes("..") ? null : paths.resolve(dir, where);
   // `..` is resolved before the drive is read, so `/c/..` is Git Bash's root, not `C:\`.
-  if (!/^[A-Za-z]:[\\/]/.test(dir)) return null;
-  const tree = path.posix.resolve(`/${dir.charAt(0).toLowerCase()}/${dir.slice(3).replace(/\\/g, "/")}`, where);
-  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(tree);
+  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(path.posix.resolve(where));
   return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
 }
 
