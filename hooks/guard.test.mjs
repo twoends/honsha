@@ -260,6 +260,17 @@ test("a cd in a subshell moves nothing after it, and neither does one to a folde
   refused("cd; git push", onMain);
 });
 
+test("a move back is followed, and a cd inside backticks moves nothing after them", () => {
+  refused(`cd ${slash(onWork)} && cd - && git push`, onMain);
+  allowed(`cd ${slash(onWork)} && cd - && cd - && git push`, onMain);
+  refused(`pushd ${slash(onWork)} && popd && git push`, onMain);
+  allowed(`pushd ${slash(onWork)} && pushd ${slash(onMain)} && popd && git push`, onMain);
+  refused("popd; git push", onMain);
+  refused(`x=\`cd ${slash(onWork)} && pwd\`; git push`, onMain);
+  assert.ok(judged(`Push-Location ${onWork}; Pop-Location; git push`, onMain));
+  assert.equal(judged(`Push-Location ${onWork}; Push-Location ${onMain}; Pop-Location; git push`, onMain), null);
+});
+
 test("in PowerShell a backslash belongs to the path, and Set-Location moves as cd does", () => {
   assert.deepEqual(simpleCommands("cd C:\\a\\b; git push", { escapes: false }), [
     ["cd", "C:\\a\\b"],

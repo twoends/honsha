@@ -13,7 +13,9 @@
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
 // `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
 // push is judged in the folder it runs in: the session's, or the one that a `cd`, `pushd`,
-// `Set-Location` or `Push-Location` earlier in the same line moves to, outside a subshell.
+// `Set-Location` or `Push-Location` earlier in the same line moves to, and that a `cd -`, `popd`
+// or `Pop-Location` moves back from, outside a subshell. Where the guard cannot tell the folder,
+// it takes the session's, as it did before it followed a move.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -29,8 +31,11 @@ import { readProfile } from "../checks/profile.mjs";
 
 const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
 const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
-// The commands of Bash and PowerShell that change the folder the next commands run in.
+// The commands of Bash and PowerShell that move the next commands to another folder, those of them
+// that keep the folder they leave on a stack, and those that go back to the folder on that stack.
 const MOVES = new Set(["cd", "chdir", "pushd", "set-location", "sl", "push-location"]);
+const PUSHES = new Set(["pushd", "push-location"]);
+const POPS = new Set(["popd", "pop-location"]);
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -89,6 +94,7 @@ export function simpleCommands(line, { subshells = false, escapes = true } = {})
   let word = null;
   /** @type {string | null} */
   let quote = null;
+  let backticks = false;
   const endWord = () => {
     if (word !== null) words.push(word);
     word = null;
@@ -114,6 +120,11 @@ export function simpleCommands(line, { subshells = false, escapes = true } = {})
     } else if (subshells && (char === "(" || char === ")")) {
       endCommand();
       commands.push([char]);
+    } else if (subshells && escapes && char === "`") {
+      // In Bash a pair of backticks runs a command in a subshell, as `$(…)` does.
+      endCommand();
+      commands.push([backticks ? ")" : "("]);
+      backticks = !backticks;
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
     } else if (/\s/.test(char)) {
@@ -269,21 +280,28 @@ function mergePatterns(services = SERVICES) {
 }
 
 /**
- * The folder that a command changing it moves to from `dir`, or `dir` when the guard cannot tell
- * it: no target, the previous folder (`-`), or a target that does not exist, where the shell's
- * `cd` fails and leaves the folder as it was. `args` are the words after the command's name.
- * @param {string} dir
+ * Where a command that changes the folder goes, from its words after the command's name: a path,
+ * `-` for the folder before the last move, or null when it names none.
  * @param {string[]} args
+ * @returns {string | null}
+ */
+function target(args) {
+  for (let index = 0; index < args.length; index += 1) {
+    if (/^-(literal)?path$/i.test(args[index]) || args[index] === "--") return args[index + 1] || null;
+    if (args[index] === "-" || !args[index].startsWith("-")) return args[index];
+  }
+  return null;
+}
+
+/**
+ * The folder a path names from `dir`, or `dir` when it does not exist: there the shell's `cd`
+ * fails and leaves the folder as it was.
+ * @param {string} dir
+ * @param {string} where
  * @param {(file: string) => boolean} [exists]
  */
-export function moveTo(dir, args, exists = fs.existsSync) {
-  let target = null;
-  for (let index = 0; index < args.length && target === null; index += 1) {
-    if (/^-(literal)?path$/i.test(args[index]) || args[index] === "--") target = args[index + 1] ?? "";
-    else if (args[index] === "-" || !args[index].startsWith("-")) target = args[index];
-  }
-  if (!target || target === "-") return dir;
-  const next = gitDirectory(dir, target.replace(/^~(?=$|[\\/])/, os.homedir()), process.platform, exists);
+export function moveTo(dir, where, exists = fs.existsSync) {
+  const next = gitDirectory(dir, where.replace(/^~(?=$|[\\/])/, os.homedir()), process.platform, exists);
   return exists(next) ? next : dir;
 }
 
@@ -296,22 +314,40 @@ export function moveTo(dir, args, exists = fs.existsSync) {
  */
 export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
+  // Where the line runs now, the folder before its last move, and the stack that `pushd` keeps; a
+  // folder the guard cannot tell, such as a `popd` with nothing pushed in this line, is the
+  // session's.
   let dir = cwd;
+  /** @type {string | null} */
+  let previous = null;
   /** @type {string[]} */
+  let pushed = [];
+  /** @type {{ dir: string, previous: string | null, pushed: string[] }[]} */
   const outer = [];
   for (const words of simpleCommands(line, { subshells: true, escapes: !powershell })) {
     if (words.length === 1 && words[0] === "(") {
-      outer.push(dir);
+      outer.push({ dir, previous, pushed: [...pushed] });
       continue;
     }
     if (words.length === 1 && words[0] === ")") {
-      dir = outer.pop() ?? dir;
+      ({ dir, previous, pushed } = outer.pop() ?? { dir, previous, pushed });
       continue;
     }
     const [name, ...args] = program(words);
     if (!name) continue;
-    if (MOVES.has(name)) {
-      dir = moveTo(dir, args);
+    if (MOVES.has(name) || POPS.has(name)) {
+      const where = POPS.has(name) ? null : target(args);
+      /** @type {string} */
+      let next;
+      if (POPS.has(name)) next = pushed.pop() ?? cwd;
+      else if (where === "-") next = previous ?? cwd;
+      else if (where === null) next = cwd;
+      else next = moveTo(dir, where);
+      if (next !== dir) {
+        if (PUSHES.has(name)) pushed.push(dir);
+        previous = dir;
+        dir = next;
+      }
       continue;
     }
     if (name === "git") {
