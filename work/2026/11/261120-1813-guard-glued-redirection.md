@@ -106,6 +106,13 @@ words of a line, and its tests.
     without `braces`, the quoted `{a}>` refused, and `git push origin HEAD {fd}>/dev/null` let through from a work
     branch. On the guard of `2ea921e` it fails at the `{a[b[0]]}` assertion, and judged there the pushes hidden by
     `{a[0]}`, by `{a["k"]}` and by the quoted `{a}>` are let through.
+- Repeated check on `e11e24b`, by `honsha:checker`: fail, one finding. The entry above says that whichever way Bash
+  takes each `{…}`, it refuses nothing that both readings let through. That holds when Bash takes every `{…}` of a
+  line the same way, since one of the two readings is then its own. It does not hold when Bash takes some of them each
+  way and an option that takes a value stands among them: from a checkout on `main`,
+  `git push origin --repo {1x}>y --repo {a}>x feature` is let through, while
+  `git push origin --repo {1x} --repo feature`, the line Bash runs, is refused. The guard does not judge every mix of
+  the two (Deviations).
 
 ## Deviations
 
@@ -116,3 +123,7 @@ words of a line, and its tests.
   readings: in one it belongs to the redirection, as Bash takes it when it holds a variable's name or an array's
   element, in the other it is a word of its own, and a line is refused if either reading refuses. The checker found
   pushes to the default branch hidden by those forms, the defect the intent names.
+- A line in which Bash takes some `{…}` before a redirection as variables of new descriptors and others as words is
+  judged only in the two readings, where all of them are taken one way. Around an option that takes a value such a
+  line can hide a push to the default branch, as the check on `e11e24b` found. It is not a line written by mistake, and
+  the guard stops a mistake, not a command made to get past it (its opening comment).
