@@ -24,7 +24,7 @@ every comment, when the record is created.
 
 ## Intent
 
-<!-- Every size. The person's words, as a quote. -->
+<!-- Every size. The person's words as a quote; in a public project, the request restated (core rules, The record). -->
 
 > …
 

@@ -33,7 +33,9 @@ Each check below reports a finding for anything it finds wrong.
 
 1. **Acceptance criteria.** One by one: met, not met, or not verifiable from here, with the evidence: a file and
    line, or a passage of the diff. Read the files, do not rely on the log.
-2. **Intent.** The result does what the person asked for in the intent, not only what the criteria spell out.
+2. **Intent.** The result does what the person asked for in the intent, not only what the criteria spell out. In a
+   project whose profile says `public: true`, words of the person quoted in the diff or the record are a finding
+   (The record).
 3. **Scope.** Every change in the diff belongs to the item. For a full item, compare the diff with what the record
    puts in scope, out of scope and under boundaries. A change that departs from the scope or the criteria is a
    finding unless the record declares it under "Deviations".

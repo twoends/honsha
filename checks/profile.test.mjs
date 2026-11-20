@@ -37,6 +37,7 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     verify: [],
     commitsAddress: null,
     kinds: null,
+    public: false,
     stack: [],
     lessons: null,
   });
@@ -57,6 +58,14 @@ test("refuses a stack that is not a list, a technology that could leave the less
     assert.throws(() => parseProfile(`stack: [${technology}]\n`), /is not the name of a technology/);
   }
   assert.throws(() => parseProfile("lessons:\n"), /`lessons` must name a file/);
+});
+
+test("reads whether the project is public, and refuses any other value", () => {
+  assert.equal(parseProfile("public: true\n").public, true);
+  assert.equal(parseProfile("public: false # a private project\n").public, false);
+  for (const value of ["yes", "1", ""]) {
+    assert.throws(() => parseProfile(`public: ${value}\n`), /`public` must be true or false/);
+  }
 });
 
 test("refuses a profile that declares direct commits, whatever their value", () => {

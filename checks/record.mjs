@@ -3,10 +3,11 @@
 //   node <kit directory>/checks/record.mjs
 //
 // Run from the root of the project. The record is `work/<yyyy>/<mm>/<id>-<slug>.md` for the branch
-// `work/<id>-<slug>`; the profile gives the kinds. What is checked:
+// `work/<id>-<slug>`; the profile gives the kinds, and whether the project is public. What is checked:
 //   - the front matter has the keys of the record template, with the values its comments allow,
 //     a `kind` among the profile's kinds or the default ones, and the identifier of the branch;
-//   - every section is one the item's size keeps, and appears once; the intent is quoted;
+//   - every section is one the item's size keeps, and appears once; the intent is quoted, or, in a
+//     public project, quotes nothing;
 //   - at `in-progress`: every section the size keeps before Verification is written, the approval
 //     of a full item and the headings of its scope among them;
 //   - at `done`: every section the size keeps is written, `pr` and `model` are set,
@@ -156,9 +157,13 @@ export function readTemplate(text) {
 /**
  * The problems of a record, one line each.
  * @param {string} text
- * @param {{ file: string, id: string, kinds: Record<string, number>, template?: ReturnType<typeof readTemplate> }} options
+ * @param {{ file: string, id: string, kinds: Record<string, number>, public?: boolean,
+ *   template?: ReturnType<typeof readTemplate> }} options
  */
-export function checkRecord(text, { file, id, kinds, template = readTemplate(fs.readFileSync(TEMPLATE, "utf8")) }) {
+export function checkRecord(
+  text,
+  { file, id, kinds, public: open = false, template = readTemplate(fs.readFileSync(TEMPLATE, "utf8")) },
+) {
   /** @type {string[]} */
   const problems = [];
   /** @param {string} problem */
@@ -235,8 +240,12 @@ export function checkRecord(text, { file, id, kinds, template = readTemplate(fs.
   }
 
   const intent = named.get("Intent");
+  const lines = intent?.text.split(/\r?\n/) ?? [];
   if (!intent) say('section "Intent" is missing');
-  else if (!intent.text.split(/\r?\n/).some((line) => /^>\s*\S/.test(line) && !/^>\s*…\s*$/.test(line))) {
+  else if (open) {
+    // The rules ask a public project to restate the request: a quote would publish the person's words.
+    if (lines.some((line) => line.startsWith(">"))) say("the intent quotes the person in a public project");
+  } else if (!lines.some((line) => /^>\s*\S/.test(line) && !/^>\s*…\s*$/.test(line))) {
     say("the intent is not quoted");
   }
   if (state === "done") {
@@ -304,9 +313,11 @@ export function check({ cwd = ".", env = process.env } = {}) {
     const also = others.length > 0 ? `; ${path.dirname(file)} holds ${others.join(", ")}` : "";
     return { file, problems: [`${file}: there is no record for the branch${also}`] };
   }
-  const listed = readProfile(path.join(cwd, ".hub", "profile.yml"))?.kinds;
+  const profile = readProfile(path.join(cwd, ".hub", "profile.yml"));
+  const listed = profile?.kinds;
   const kinds = listed && Object.keys(listed).length > 0 ? listed : DEFAULT_KINDS;
-  return { file, problems: checkRecord(fs.readFileSync(path.join(cwd, file), "utf8"), { file, id, kinds }) };
+  const text = fs.readFileSync(path.join(cwd, file), "utf8");
+  return { file, problems: checkRecord(text, { file, id, kinds, public: profile?.public ?? false }) };
 }
 
 function main() {
