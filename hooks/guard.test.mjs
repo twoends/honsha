@@ -289,6 +289,48 @@ test("the & or | of a redirection belongs to it, and a redirection may come befo
   refused("git push origin main 2>&1");
 });
 
+test("a redirection glued to a word begins a word of its own, unless that word is a file descriptor", () => {
+  assert.deepEqual(simpleCommands("git push origin main>/dev/null main<x main>>log main2>&1"), [
+    ["git", "push", "origin", "main", ">/dev/null", "main", "<x", "main", ">>log", "main2", ">&1"],
+  ]);
+  assert.deepEqual(simpleCommands('a 2>&1>x 12<y "2">z \\2>w'), [["a", "2>&1", ">x", "12<y", "2", ">z", "2", ">w"]]);
+  const braces = 'a {fd}>/dev/null {a[b[0]]}<x "{fd}">y {1x}>z';
+  assert.deepEqual(simpleCommands(braces), [
+    ["a", "{fd}", ">/dev/null", "{a[b[0]]}", "<x", "{fd}", ">y", "{1x}", ">z"],
+  ]);
+  assert.deepEqual(simpleCommands(braces, { braces: true }), [
+    ["a", "{fd}>/dev/null", "{a[b[0]]}<x", "{fd}>y", "{1x}>z"],
+  ]);
+  // Bash reads `{fd}` and `{a[0]}` as the variables of new descriptors, and `{1x}` as a word: each line is refused by
+  // one of the guard's two readings.
+  for (const line of ["git push origin {fd}>/dev/null", "git push origin {a[0]}>/dev/null"]) {
+    assert.match(refused(line, onMain), /default branch `main`/);
+  }
+  for (const line of ["{fd}>/dev/null git push origin main", '{a["k"]}>/dev/null git push origin main']) {
+    assert.match(refused(line), /default branch `main`/);
+  }
+  assert.match(refused("git push {1x}>/dev/null main"), /default branch `main`/);
+  // A quoted `{a}>` is a word to Bash, and the reading without braces keeps it one.
+  assert.match(refused('git push origin "{a}>" main'), /default branch `main`/);
+  allowed("git push origin HEAD {fd}>/dev/null");
+  // The program of a later command is read without its redirection, so the line is followed into the work checkout.
+  allowed(`cd ${bash(onWork)} && git push origin HEAD && node>log x.mjs`, onMain);
+  for (const line of [
+    "git push origin main>/dev/null",
+    "git push origin main<x",
+    "git push origin main>>log",
+    "git push origin main 2>/dev/null",
+    "git push origin HEAD:main>/dev/null",
+    'git push origin "main">/dev/null',
+  ]) {
+    assert.match(refused(line), /default branch `main`/);
+  }
+  allowed("git push origin HEAD>/dev/null");
+  allowed(`git push origin ${WORK}>/dev/null`);
+  allowed("git push origin main2>&1");
+  assert.ok(judged('git push origin "main">$null', onWork));
+});
+
 test("a line the guard cannot follow for sure is judged in the session's folder", () => {
   const work = bash(onWork);
   for (const line of [
