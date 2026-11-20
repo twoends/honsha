@@ -637,12 +637,13 @@ Every project that joins an installation is assessed first. Its entry in the hom
 - **`active`:** the kit is declared on the project's default branch, so its sessions run under the core rules. Any
   work item may start; the chosen items left go on as ordinary items.
 
-Entering a project and moving it between states are mechanical, so code does them, not an agent: `hub/projects.mjs` in
-the kit, run from the home's folder by the person, the hub or an interface. Each move is a work item of the home made by
-code: the script reads the registry from the home's default branch, creates a work branch from it, and commits the
-registry's change there with the item's record, leaving the home's working tree as it is. It never pushes and never
-opens a pull request; the hub does, with the commands of the hosting service's piece (section 14). A move holds once
-the person merges its pull request: a project's state is the one on the home's default branch.
+Entering a project, moving it between states and setting its folder are mechanical, so code does them, not an agent:
+`hub/projects.mjs` in the kit, run from the home's folder by the person, the hub or an interface. Each move, and each
+change of a folder, is a work item of the home made by code: the script reads the registry from the home's default
+branch, creates a work branch from it, and commits the registry's change there with the item's record, leaving the
+home's working tree as it is. It never pushes and never opens a pull request; the hub does, with the commands of the
+hosting service's piece (section 14). Each holds once the person merges its pull request: a project's state and its
+folders are those on the home's default branch.
 
 - `add` creates the assessment's branch, with its record, ready to start, and the entry as `assessing`. The assessment
   runs on that branch, and its pull request carries the entry, so that merging it registers the project. With
@@ -652,6 +653,9 @@ the person merges its pull request: a project's state is the one on the home's d
   `adopting`; `refresh` moves it to `active` when its default branch declares the kit. Each makes a trivial item whose
   record the script writes whole, verification and outcome included; the closing commit adds what the pull request
   gives.
+- `folder` sets a registered project's folder on the host it runs on, and adds the host when the entry has none: a
+  project's clone can move to another folder, and a new host needs a folder for each project. It makes a trivial item
+  as a move does, and changes no state.
 - `check` reads the registry of a branch of the home, and fails on an entry it cannot read, an assessment with no
   record, or a project past `assessing` whose assessment is not done. The worker runs it in the home with the kit's
   other checks (`agents/worker.md`).

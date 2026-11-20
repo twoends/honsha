@@ -287,6 +287,42 @@ test("refresh commits the move to active of the projects whose default branch de
   assert.equal(git(declared, ["status", "--porcelain"]), "");
 });
 
+test("folder commits a project's folder on this host, a host's first one included, and refuses what it cannot set", () => {
+  const first = project();
+  const moved = project();
+  const dir = home({
+    [REGISTRY]: registry([["example", "active", "261130-1200", first]]),
+    "work/2026/11/261130-1200-example-assessment.md": record({ id: "261130-1200", state: "done" }),
+  });
+
+  const result = run(["folder", "example", moved], { home: dir, host, now });
+  assert.equal(result.code, 0, result.out.join("\n"));
+  assert.match(result.out[0], /^Once merged, `example` is in .+ on example-host\.$/);
+  const branch = "work/261201-0930-folder-example";
+  assert.deepEqual(parseRegistry(show(dir, branch, REGISTRY))[0].paths, { [host]: path.resolve(moved) });
+  assert.deepEqual(parseRegistry(show(dir, "main", REGISTRY))[0].paths, { [host]: first });
+  const file = "work/2026/12/261201-0930-folder-example.md";
+  assert.match(show(dir, branch, file), /^size: trivial$/m);
+  assert.match(show(dir, branch, file), /^requested-by: person$/m);
+  assert.deepEqual(recordProblems(dir, branch, file), []);
+  assert.equal(git(dir, ["symbolic-ref", "--short", "HEAD"]).trim(), "main");
+  assert.equal(git(dir, ["status", "--porcelain"]), "");
+
+  const added = run(["folder", "example", moved], { home: dir, host: "another-host", now: later });
+  assert.equal(added.code, 0, added.out.join("\n"));
+  assert.deepEqual(parseRegistry(show(dir, "work/261201-0931-folder-example", REGISTRY))[0].paths, {
+    [host]: first,
+    "another-host": path.resolve(moved),
+  });
+
+  const then = { home: dir, host, now: new Date("2026-12-01T09:32:00Z") };
+  assert.match(run(["folder", "example", first], then).out[0], /already: nothing to change/);
+  assert.match(run(["folder", "missing", moved], then).out[0], /not in the registry/);
+  assert.match(run(["folder", "example", temporary("plain-")], then).out[0], /not the folder of a git repository/);
+  assert.equal(run(["folder", "example"], then).code, 2);
+  assert.equal(workBranches(dir).split("\n").length, 2);
+});
+
 test("a move whose registry would fail the check commits nothing", () => {
   const dir = home({ [REGISTRY]: registry([["lost", "assessing", "261130-1200"]]) });
   const result = run(["add", "example", "example-owner/example", project()], { home: dir, host, now });
