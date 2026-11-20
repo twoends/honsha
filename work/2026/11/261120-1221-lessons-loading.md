@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
@@ -121,6 +121,8 @@ which file it did not find. D87 of the installation allows the item: the workflo
 and nothing performs it. The default model is enough.
 
 ## Approval
+
+Approved by the person on 2026-11-20, in the chat of the session that wrote the strategy.
 
 ## Log
 
