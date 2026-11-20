@@ -271,6 +271,15 @@ test("a move back is followed, and a cd inside backticks moves nothing after the
   assert.equal(judged(`Push-Location ${onWork}; Push-Location ${onMain}; Pop-Location; git push`, onMain), null);
 });
 
+test("after a move it cannot follow, the guard judges the push in the session's folder", () => {
+  refused(`cd ${slash(onWork)} && cd ${slash(onMain)} && cd ${slash(onMain)} && cd - && git push`, onMain);
+  refused(`pushd ${slash(onWork)} && pushd ${slash(onMain)} && popd -n && git push`, onMain);
+  refused(`pushd ${slash(onWork)} && pushd +1 && git push`, onMain);
+  assert.ok(judged(`Set-Location ${onWork}; Set-Location -; Set-Location -; git push`, onMain));
+  refused(`cd ${slash(path.join(onWork, "missing"))} && cd - && git push`, onMain);
+  allowed(`cd -; cd ${slash(onWork)} && git push`, onMain);
+});
+
 test("in PowerShell a backslash belongs to the path, and Set-Location moves as cd does", () => {
   assert.deepEqual(simpleCommands("cd C:\\a\\b; git push", { escapes: false }), [
     ["cd", "C:\\a\\b"],

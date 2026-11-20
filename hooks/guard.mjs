@@ -12,10 +12,10 @@
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
 // `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
-// push is judged in the folder it runs in: the session's, or the one that a `cd`, `pushd`,
-// `Set-Location` or `Push-Location` earlier in the same line moves to, and that a `cd -`, `popd`
-// or `Pop-Location` moves back from, outside a subshell. Where the guard cannot tell the folder,
-// it takes the session's, as it did before it followed a move.
+// push is judged in the folder it runs in: the session's, or the one that the moves earlier in
+// the same line, outside a subshell, leave it in: `cd`, `pushd`, `Set-Location` and
+// `Push-Location` to a folder that exists, Bash's `cd -`, and `popd` and `Pop-Location` without
+// options. After any other move, the guard cannot tell the folder and takes the session's.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -281,28 +281,52 @@ function mergePatterns(services = SERVICES) {
 
 /**
  * Where a command that changes the folder goes, from its words after the command's name: a path,
- * `-` for the folder before the last move, or null when it names none.
+ * `-` for Bash's folder before the last move, `pop` for the top of the stack, or null for any
+ * form the guard does not follow: no target, an option it does not know, a stack's position such
+ * as `+1`, or PowerShell's `-` and `+`, which walk a history the guard cannot see.
+ * @param {string} name
  * @param {string[]} args
+ * @param {boolean} powershell
  * @returns {string | null}
  */
-function target(args) {
+function target(name, args, powershell) {
+  if (POPS.has(name)) return args.length === 0 ? "pop" : null;
+  /** @type {string | null} */
+  let found = null;
   for (let index = 0; index < args.length; index += 1) {
-    if (/^-(literal)?path$/i.test(args[index]) || args[index] === "--") return args[index + 1] || null;
-    if (args[index] === "-" || !args[index].startsWith("-")) return args[index];
+    const arg = args[index];
+    if (/^-(literal)?path$/i.test(arg) || arg === "--") {
+      if (found !== null || index + 2 !== args.length) return null;
+      found = args[index + 1];
+      index += 1;
+    } else if (arg === "-" && !powershell && name !== "pushd" && args.length === 1) {
+      return "-";
+    } else if (/^[-+]/.test(arg) && !/^-[LP]$/.test(arg)) {
+      return null;
+    } else if (/^[-+]/.test(arg)) {
+      continue;
+    } else if (found !== null) {
+      return null;
+    } else {
+      found = arg;
+    }
   }
-  return null;
+  return found;
 }
 
 /**
- * The folder a path names from `dir`, or `dir` when it does not exist: there the shell's `cd`
- * fails and leaves the folder as it was.
- * @param {string} dir
+ * The folder a path names from `dir`, or null when the guard cannot tell it: from a folder it does
+ * not know, or a target that does not exist, where `cd` fails or finds the folder another way.
+ * @param {string | null} dir
  * @param {string} where
  * @param {(file: string) => boolean} [exists]
  */
 export function moveTo(dir, where, exists = fs.existsSync) {
-  const next = gitDirectory(dir, where.replace(/^~(?=$|[\\/])/, os.homedir()), process.platform, exists);
-  return exists(next) ? next : dir;
+  const expanded = where.replace(/^~(?=$|[\\/])/, os.homedir());
+  const absolute = path.isAbsolute(expanded) || /^[A-Za-z]:[\\/]/.test(expanded);
+  if (dir === null && !absolute) return null;
+  const next = gitDirectory(dir ?? os.homedir(), expanded, process.platform, exists);
+  return exists(next) ? next : null;
 }
 
 /**
@@ -314,19 +338,20 @@ export function moveTo(dir, where, exists = fs.existsSync) {
  */
 export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
-  // Where the line runs now, the folder before its last move, and the stack that `pushd` keeps; a
-  // folder the guard cannot tell, such as a `popd` with nothing pushed in this line, is the
-  // session's.
+  // Where the line runs now, the folder before its last move, and the stack that `pushd` fills in
+  // this line. Each is null once the guard cannot tell it; a push is then judged in the session's
+  // folder, so that a move the guard does not follow lets through nothing it would refuse there.
+  /** @type {string | null} */
   let dir = cwd;
   /** @type {string | null} */
   let previous = null;
-  /** @type {string[]} */
+  /** @type {(string | null)[] | null} */
   let pushed = [];
-  /** @type {{ dir: string, previous: string | null, pushed: string[] }[]} */
+  /** @type {{ dir: string | null, previous: string | null, pushed: (string | null)[] | null }[]} */
   const outer = [];
   for (const words of simpleCommands(line, { subshells: true, escapes: !powershell })) {
     if (words.length === 1 && words[0] === "(") {
-      outer.push({ dir, previous, pushed: [...pushed] });
+      outer.push({ dir, previous, pushed: pushed && [...pushed] });
       continue;
     }
     if (words.length === 1 && words[0] === ")") {
@@ -336,22 +361,20 @@ export function judge(line, { cwd = ".", services, powershell = false } = {}) {
     const [name, ...args] = program(words);
     if (!name) continue;
     if (MOVES.has(name) || POPS.has(name)) {
-      const where = POPS.has(name) ? null : target(args);
-      /** @type {string} */
-      let next;
-      if (POPS.has(name)) next = pushed.pop() ?? cwd;
-      else if (where === "-") next = previous ?? cwd;
-      else if (where === null) next = cwd;
-      else next = moveTo(dir, where);
-      if (next !== dir) {
-        if (PUSHES.has(name)) pushed.push(dir);
-        previous = dir;
-        dir = next;
-      }
+      const where = target(name, args, powershell);
+      const from = dir;
+      if (where === "pop") dir = pushed && pushed.length > 0 ? (pushed.pop() ?? null) : null;
+      else if (where === "-") dir = previous;
+      else if (where === null) dir = null;
+      else dir = moveTo(dir, where);
+      if (where === null || dir === null) pushed = null;
+      else if (PUSHES.has(name)) pushed?.push(from);
+      // A move the guard cannot follow may have failed, and then the shell keeps its earlier `-`.
+      previous = dir === null ? null : from;
       continue;
     }
     if (name === "git") {
-      const reason = judgeGit(args, dir);
+      const reason = judgeGit(args, dir ?? cwd);
       if (reason) return reason;
     }
     const text = [name, ...args].join(" ");
