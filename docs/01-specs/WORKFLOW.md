@@ -532,9 +532,10 @@ variables, also when they name the default branch (section 5.2), and `node check
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
 - It judges a push in the session's folder, or in another repository's when the line begins by moving there for sure
-  (`cd <folder> && …`, in PowerShell also `;`) and holds after that move only programs that cannot move a shell, such
-  as `git`. Any other line is judged in the session's folder, so that a line it cannot follow lets through nothing it
-  would refuse there.
+  (`cd <folder> && …`, in PowerShell also `;`), to a path the shell cannot read as another folder, and holds after that
+  move only programs that cannot move a shell, such as `git`. In Bash such a path is absolute or begins with `.`. Any
+  other line is judged in the session's folder, so that a line it cannot follow lets through nothing it would refuse
+  there.
 
 ---
 

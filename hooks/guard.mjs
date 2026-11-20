@@ -14,9 +14,10 @@
 // `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
 // push is judged in the session's folder, or in another one when the line begins by moving there
 // for sure: its first word is `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
-// `Push-Location`), with one path to a folder as that tool's shell reads it, followed by `&&` (in
-// PowerShell also by `;`), and every later command is one of a few programs that cannot move a
-// shell. Any other line is judged in the session's folder.
+// `Push-Location`), with one path to a folder that the tool's shell cannot read as another folder
+// (no wildcard, variable or leading `~`; in Bash an absolute path or one that begins with `.`),
+// followed by `&&` (in PowerShell also by `;`), and every later command is one of a few programs
+// that cannot move a shell. Any other line is judged in the session's folder.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -24,7 +25,6 @@
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -110,9 +110,14 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
     if (words.length > 0) commands.push(words);
     words = [];
   };
+  // Whether the last character was a `>` or `<` outside quotes and escapes: an `&` right after one
+  // belongs to the redirection, as in `2>&1`, and does not end the command.
+  let redirection = false;
   const text = withoutHereDocuments(line);
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
+    const afterRedirection = redirection;
+    redirection = false;
     if (quote) {
       if (char === quote) quote = null;
       else if (escapes && char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1]))
@@ -123,6 +128,8 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       word ??= "";
     } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
+    } else if (char === "&" && afterRedirection) {
+      word = (word ?? "") + char;
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
       if (marks) {
@@ -133,6 +140,7 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       endWord();
     } else {
       word = (word ?? "") + char;
+      redirection = char === ">" || char === "<";
     }
   }
   endCommand();
@@ -145,18 +153,24 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
  * @returns {string[]}
  */
 function program(words) {
+  // A redirection is neither the program nor an argument: `2>&1`, `>file`, and `>` or `>&` with the
+  // file as the next word. It may stand before the program as well as after it.
+  const alone = /^\d*(>>?|<)&?$/;
+  const redirection = /^\d*(>>?|<)/;
   let start = 0;
-  while (start < words.length && (/^[A-Za-z_][A-Za-z0-9_]*=/.test(words[start]) || WRAPPERS.has(words[start]))) {
-    start += 1;
+  while (start < words.length) {
+    const word = words[start];
+    if (alone.test(word)) start += 2;
+    else if (redirection.test(word) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(word) || WRAPPERS.has(word)) start += 1;
+    else break;
   }
   if (start >= words.length) return [];
   const file = words[start].replace(/\\/g, "/").split("/").pop() ?? "";
   const name = file.replace(/\.exe$/i, "").toLowerCase();
   const rest = [];
   for (let index = start + 1; index < words.length; index += 1) {
-    // A redirection is not an argument: `2>`, `>file`, and `>` with the file as the next word.
-    if (/^\d*(>>?|<)$/.test(words[index])) index += 1;
-    else if (!/^\d*(>>?|<)/.test(words[index])) rest.push(words[index]);
+    if (alone.test(words[index])) index += 1;
+    else if (!redirection.test(words[index])) rest.push(words[index]);
   }
   return [name, ...rest];
 }
@@ -296,18 +310,53 @@ function target(args, powershell) {
 }
 
 /**
- * The folder a path names from `dir` as the tool's shell reads it, or null when it is not a folder:
- * there the move fails. Only Bash reads `/c/rest` as a drive.
+ * The path a move's target names from `dir` as the tool's shell reads it, or null when the shell
+ * could read the same words as another folder: a wildcard, a variable or a leading `~` expand; a
+ * name that ends in a dot or a space is cut by Windows and kept by Git Bash; in Bash a relative path
+ * is first looked for along `CDPATH`, unless it begins with `.`; and Git Bash reads a path from `/`
+ * through its own mounts, so on Windows only `/c/rest`, the drive, is read.
+ * @param {string} dir
+ * @param {string} where
+ * @param {boolean} powershell
+ * @param {string} [platform]
+ * @returns {string | null}
+ */
+export function readPath(dir, where, powershell, platform = process.platform) {
+  const windows = platform === "win32";
+  const paths = windows ? path.win32 : path.posix;
+  if (!/^[\p{L}\p{N} _.~\-/\\:]+$/u.test(where) || where.startsWith("~")) return null;
+  if (where.split(/[\\/]/).some((part) => part !== "." && part !== ".." && /[. ]$/.test(part))) return null;
+  if (powershell) {
+    // A colon only in a drive that begins an absolute path: `C:rest` starts from the drive's own folder.
+    const rest = windows ? where.replace(/^[A-Za-z]:(?=[\\/])/, "") : where;
+    if (rest.includes(":") || (!windows && rest.includes("\\"))) return null;
+    return paths.resolve(dir, where);
+  }
+  if (where.includes("\\") || where.includes(":")) return null;
+  if (!where.startsWith("/")) return /^\.\.?(\/|$)/.test(where) ? paths.resolve(dir, where) : null;
+  if (!windows) return paths.resolve(where);
+  const drive = /^\/([a-z])(?:\/(.*))?$/.exec(where);
+  return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
+}
+
+/**
+ * The folder a move goes to from `dir`, or null when the guard cannot be sure of it: the path is one
+ * that `readPath` gives up on, or not a folder the shell may enter, so the move fails, or it names
+ * another folder when `..` is read through the real folder rather than through `dir` as written, as
+ * a shell that resolves links does.
  * @param {string} dir
  * @param {string} where
  * @param {boolean} powershell
  */
 export function moveTo(dir, where, powershell) {
-  const expanded = where.replace(/^~(?=$|[\\/])/, os.homedir());
-  const paths = process.platform === "win32" ? path.win32 : path.posix;
-  const next = powershell ? paths.resolve(dir, expanded) : gitDirectory(dir, expanded);
+  const next = readPath(dir, where, powershell);
+  if (next === null) return null;
   try {
-    return fs.statSync(next).isDirectory() ? next : null;
+    const real = readPath(fs.realpathSync.native(dir), where, powershell);
+    if (real === null || fs.realpathSync.native(real) !== fs.realpathSync.native(next)) return null;
+    if (!fs.statSync(next).isDirectory()) return null;
+    fs.accessSync(next, fs.constants.X_OK);
+    return next;
   } catch {
     return null;
   }
