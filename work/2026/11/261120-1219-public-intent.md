@@ -103,6 +103,24 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 
 ## Log
 
+- `may-start honsha`: yes. Branch cut from the kit's `main` at `a845b46`.
+- The approval's first commit, on this branch and on item `261120-1221`'s, carried a placeholder for the trailer: a
+  heredoc in quotes left a variable as written, and `checks/commits.mjs` was not run after the commit, as the
+  repository's lessons ask. Neither commit was pushed; each was replaced by one with the right trailer before the
+  first push, the one point where these branches did not only grow.
+- `checks/profile.mjs` reads `public`, `true` or `false`, and throws on any other value; a profile without it is
+  private. `checks/record.mjs` takes the option: in a public project a line of the intent that begins with `>` fails;
+  elsewhere the check is as before. Its runner reads the option from the profile.
+- Tests: in a public project a quoted intent fails and a restated one passes; the runner reads the key from the
+  profile; the profile reads the key, its default and the values it refuses. The test of the kit's merged records
+  checks each in the form its intent was written in, since every record before this one quotes the person and the
+  rewrite of the history restates them.
+- The rule in `rules/records.md`, the template's comment, the checker's step 2, the worker's step 1, the workflow's
+  sections 5 and 9, and `public: true` in the kit's profile.
+- A script passed inline to `node -e` through Git Bash broke on its escapes after writing `checks/profile.mjs` and
+  before `checks/record.mjs`; the rest was done with the editor. The home holds that lesson for this host and for
+  Node.js, and no hook gives lessons to a session yet: item `261120-1221` does.
+
 ## Verification
 
 ## Outcome

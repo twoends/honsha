@@ -4,6 +4,7 @@ language: en
 stack: [node]
 default-branch: main
 merge-deploys: false
+public: true
 verify:
   - npx --no-install prettier --check .
   - npx --no-install oxlint

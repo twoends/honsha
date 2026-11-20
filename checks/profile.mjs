@@ -11,6 +11,7 @@
 //     address: '@example\.org$'
 //   kinds:
 //     feature: 10
+//   public: true
 //
 // A value can be bare or in quotes. A regular expression is best written in single quotes, where
 // YAML keeps a backslash as it is.
@@ -21,7 +22,7 @@ const BLANK = /^\s*(#.*)?$/;
 
 /**
  * @typedef {{ defaultBranch: string | null, verify: string[],
- *   commitsAddress: string | null, kinds: Record<string, number> | null }} Profile
+ *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean }} Profile
  */
 
 /**
@@ -63,7 +64,7 @@ function block(lines, start, test) {
 export function parseProfile(text) {
   const lines = text.split(/\r?\n/);
   /** @type {Profile} */
-  const profile = { defaultBranch: null, verify: [], commitsAddress: null, kinds: null };
+  const profile = { defaultBranch: null, verify: [], commitsAddress: null, kinds: null, public: false };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
     if (!top) return;
@@ -96,6 +97,10 @@ export function parseProfile(text) {
       } else if (value !== "{}") {
         throw new Error("profile: `commits` must be a map with the key `address`");
       }
+    }
+    if (key === "public") {
+      if (value !== "true" && value !== "false") throw new Error("profile: `public` must be true or false");
+      profile.public = value === "true";
     }
     if (key === "kinds") {
       if (value === "{}") {

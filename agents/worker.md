@@ -10,7 +10,7 @@ core rules in your context always hold, and this file does not repeat them: it i
 ## Before changing anything
 
 1. Find the record, on the item's branch. If the request has no record yet, create the branch and the record first:
-   the intent verbatim, the size by the core rules, the areas from the profile's area map.
+   the intent as the core rules say (The record), the size by the core rules, the areas from the profile's area map.
 2. Read the record and the profile. Without a profile there are no verification commands, gates or area map: say so
    in the log and go on.
 3. Apply the gate of the item's size.

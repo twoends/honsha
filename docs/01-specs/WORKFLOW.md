@@ -124,8 +124,8 @@ extended instead.
 
 ## 5. Procedure
 
-1. **Capture.** A record is created with the intent verbatim. It is an `idea` or `ready` in the home's backlog, where
-   the hub captures it at once (section 5.2), or it starts at once.
+1. **Capture.** A record is created with the intent as the core rules say (The record). It is an `idea` or `ready` in
+   the home's backlog, where the hub captures it at once (section 5.2), or it starts at once.
 2. **Size and areas.** Proposed from the core rules (Sizes) and the profile's area map.
 3. **Start.** A branch is created in the project and the record moves into it; one in the backlog is taken from there
    (section 5.2).
@@ -256,6 +256,7 @@ language: en # documents and records; English when omitted
 stack: [node, postgres, docker]
 default-branch: main
 merge-deploys: true
+public: false
 areas:
   backend: { paths: ["src/**"] }
   deploy: { paths: ["deploy/**", ".github/**"] }
@@ -282,6 +283,9 @@ legacy:
 ```
 
 - `language` sets the language of the project's documents and records (core rules, Work items).
+- `public: true` says that the project's repository is public, which the kit cannot learn from a hosting service: its
+  records restate the request and quote nothing the person said (core rules, The record). A profile without it is
+  private.
 - `stack` lists the technologies whose lessons the project's sessions load (section 8).
 - `areas` maps each area of the project to its paths; an item's areas are proposed from it (section 5). An area named
   in a record's `areas` can have a rule pack: the skill `honsha:area-<name>`. A session that works on the item loads
