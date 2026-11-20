@@ -105,11 +105,10 @@ work/                  the kit's own work records
   invoked as `honsha:area-<name>`.
 - A session in a project cannot read the kit's files without a permission, because they lie outside the project.
   What every session needs is therefore put into its context when it starts: the core rules, in parts of one topic
-  each, and the record template, each file by a hook of its own. The platform caps each hook's output at 10,000
-  characters and replaces a longer one with a file path and a short preview, so a test of the kit runs each hook and
-  keeps its output under 9,000; a part that reaches that is split in two, never shortened. The total a session
-  receives at start has a budget in the same test, a choice of what every session pays. The checker, a subagent,
-  receives the same files when it starts, from hooks matched to it alone.
+  each, and the record template, each file by a hook of its own, since the platform caps each hook's output at
+  10,000 characters and replaces a longer one with a file path and a short preview. What a part near that cap, or a
+  full total, calls for is in [WORKFLOW.md](WORKFLOW.md), section 2. The checker, a subagent, receives the same files
+  when it starts, from hooks matched to it alone.
 
 ### 3.2 Home (one per user, private)
 

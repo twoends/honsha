@@ -149,6 +149,13 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
   `claude -p --plugin-dir` on the kit's clone with `claude-opus-5-5`, asked without tools for the headings it received
   at start, listed every heading of the five files, each under its file. They came in the order `records.md`, the
   template, `git.md`, `core.md`, `writing.md`, not that of `hooks.json`, as the hooks reference leaves open.
+- The kit's checker is not available in this session, which was resumed: the check ran in a general-purpose subagent
+  given `agents/checker.md` as its instructions, with the parts of the core rules and the record template, and told
+  to use only Read, Grep and Glob.
+- Check on `e9df54a`: fail, one finding. The architecture restated what a full part calls for, with another threshold
+  than the workflow's section 2; it now points there. Two points the check could not verify are closed as well: a
+  test runs the hook on a part that cannot be read and finds the failure and its message, and the README's line on
+  Git Bash names the hooks that still run through a shell, which the start hooks no longer do.
 
 ## Verification
 

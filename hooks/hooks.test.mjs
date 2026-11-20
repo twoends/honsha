@@ -93,6 +93,20 @@ test("each hook gives its whole file under the limit for one output, and a sessi
   }
 });
 
+test("a part that cannot be read fails its hook with a message, so that the person sees it is missing", () => {
+  const args = [`${root}/hooks/rules.mjs`, "rules/missing.md"];
+  const options = { encoding: /** @type {const} */ ("utf8"), stdio: /** @type {any} */ (["ignore", "pipe", "pipe"]) };
+  assert.throws(
+    () => execFileSync(process.execPath, args, options),
+    (/** @type {any} */ error) => {
+      assert.equal(error.status, 1);
+      assert.equal(error.stdout, "");
+      assert.match(error.stderr, /rules\/missing\.md could not be read, so the session lacks that part/);
+      return true;
+    },
+  );
+});
+
 test("the template has the front matter keys of the workflow, in order", () => {
   const frontMatter = read("templates/record.md").split("---")[1];
   const keys = frontMatter

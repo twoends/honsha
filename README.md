@@ -37,7 +37,8 @@ the workflow, section 14.
   or macOS (the kit's checks do run on Linux, in its pipeline), a session in the terminal interface, a session of the
   desktop application with the kit installed, a project other than the kit whose profile has verification commands and
   gates, what happens after a compaction, and the project setting that starts new worktrees from the current branch.
-- git. On Windows, Git for Windows: the hooks run through Git Bash.
+- git. On Windows, Git for Windows: a hook written as a shell command, such as git's `pre-push` and the hook of the
+  kit's own settings, runs through Git Bash.
 - Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
   runs no install scripts.
