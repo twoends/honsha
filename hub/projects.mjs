@@ -4,14 +4,16 @@
 //   node <kit directory>/hub/projects.mjs add <name> <repository> <folder> [--assessment <id>]
 //   node <kit directory>/hub/projects.mjs choose <name>
 //   node <kit directory>/hub/projects.mjs refresh
+//   node <kit directory>/hub/projects.mjs folder <name> <folder>
 //   node <kit directory>/hub/projects.mjs check
 //   node <kit directory>/hub/projects.mjs may-start <name> <record>
 //
 // Every step here is mechanical, so no agent takes it: an interface can run the same commands.
 //
-// The home is a project, so a move is a work item of the home, made by code. `add`, `choose` and
-// `refresh` read the registry from the home's default branch, create a work branch from it, and
-// commit there the registry's change with the item's record. They do it in a temporary worktree,
+// The home is a project, so a move is a work item of the home, made by code; so is a change of a
+// project's folder, which `folder` makes. `add`, `choose`, `refresh` and `folder` read the registry
+// from the home's default branch, create a work branch from it, and commit there the registry's
+// change with the item's record. They do it in a temporary worktree,
 // so that the home's own working tree and branch, where a session may be working, stay as they
 // are. None of them pushes or opens a pull request: the hub does, with the commands of the hosting
 // service's piece. A move holds once its pull request is merged, which is why `may-start` reads
@@ -399,8 +401,8 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
     if (problems.length > 0) return { code: 1, out: problems };
     return { code: 0, out: [`${REGISTRY} is readable, and the assessment of every project has its record.`] };
   }
-  if (!["add", "choose", "refresh", "may-start"].includes(command)) {
-    return { code: 2, out: ["Commands: add, choose, refresh, check, may-start."] };
+  if (!["add", "choose", "refresh", "folder", "may-start"].includes(command)) {
+    return { code: 2, out: ["Commands: add, choose, refresh, folder, check, may-start."] };
   }
   const base = defaultRef(home);
   const files = commitFiles(home, base);
@@ -509,6 +511,33 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
       record: record({ title, requestedBy: "check", command: "refresh", outcome: out }),
     });
     return { code: result.code, out: [...out, ...result.out] };
+  }
+
+  if (command === "folder") {
+    const [folder] = rest;
+    if (!name || !folder) return { code: 2, out: ["Usage: folder <name> <folder>."] };
+    if (!project) return { code: 1, out: [`\`${name}\` is not in the registry on the home's ${base}.`] };
+    if (!fs.existsSync(path.join(folder, ".git")))
+      return { code: 1, out: [`${folder} is not the folder of a git repository.`] };
+    const resolved = path.resolve(folder);
+    if (project.paths[host] === resolved) {
+      return { code: 1, out: [`\`${name}\` is in ${resolved} on ${host} already: nothing to change.`] };
+    }
+    if (taken(home, files, id)) return busy;
+    project.paths[host] = resolved;
+    const title = `Set the folder of ${name} on ${host}`;
+    const outcome = `Once merged, \`${name}\` is in ${resolved} on ${host}.`;
+    const result = commitMove(home, {
+      base,
+      files,
+      id,
+      slug: `folder-${name}`,
+      title,
+      projects,
+      record: record({ title, requestedBy: "person", command: args.join(" "), outcome: [outcome] }),
+    });
+    if (result.code === 0) result.out.unshift(outcome);
+    return result;
   }
 
   const [file] = rest;

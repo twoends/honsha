@@ -82,6 +82,14 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 
 ## Log
 
+- `may-start honsha`: yes. Branch cut from the kit's `main` at `3339df0`.
+- `hub/projects.mjs`: the command `folder`, after `refresh`, with the usage line, the list of commands and the header's
+  account of the commands that commit a work item. It refuses before `taken` is asked, so a refusal never says that
+  an item exists already.
+- `hub/projects.test.mjs`: one test, with two clones of a project; the second run of `folder`, on another host, starts
+  from the default branch, where the first branch is not merged, so it shows the host added beside the first.
+- Workflow, section 20: the paragraph on what code does names the folder, and the list of commands has `folder`.
+
 ## Verification
 
 ## Outcome
