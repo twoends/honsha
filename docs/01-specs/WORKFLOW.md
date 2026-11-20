@@ -40,8 +40,9 @@ A document that reaches its budget (`checks/budgets.test.mjs`) is answered by su
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
 `hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context
 any hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook.
-The total a session receives at start is a choice of what every session pays: it is raised by a work item that says
-why, or answered by moving a rule that only some situations need into a skill.
+The total a session receives at start, the lessons of section 8 counted at their budget, is a choice of what every
+session pays: it is raised by a work item that says why, or answered by moving a rule that only some situations need
+into a skill.
 
 ---
 
@@ -232,8 +233,15 @@ once:
 | Kit        | Every user of the kit                   | "Never batch a restart with the edit of the file it loads"      | The kit's rules                            | A work item on the kit   |
 
 - **Loading.** A session receives the project's lessons, the lessons of each technology in the profile's `stack`, and
-  the lessons of the host it runs on. Nothing else is loaded, so a project never carries lessons for tools it does not
-  use.
+  the lessons of the host it runs on, whose file is named by the machine's name in lower case. Nothing else is loaded,
+  so a project never carries lessons for tools it does not use. A hook of the kit gives each of the three levels when
+  the session starts (`hooks/lessons.mjs`). The home's folder on the machine is the plugin's setting `home`, which
+  Claude Code asks for when the plugin is enabled and shows among its settings; without it a session receives only
+  its project's lessons, and is told why when its profile has a `stack`.
+- **Budget.** Each level gives at most 4,000 characters, about fifteen lessons. A level with more gives the lessons
+  that fit and names each file it left in part, and the session tells the person. A full level is answered by this
+  section's other moves: a lesson of general worth is promoted to the kit, one tied to a version is reviewed at the
+  tool's upgrade, one that no longer holds is deleted. The budget is raised only by a work item that says why.
 - **Technology lessons are the cross-project memory.** A lesson learned on one project is available to every other
   project that declares the same technology, from the next session.
 - **Version.** A lesson tied to a version says so in its text ("with version 2.0 of …"). When the radar records an

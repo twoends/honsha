@@ -126,6 +126,30 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 
 ## Log
 
+- `may-start honsha`: yes. Branch cut from the kit's `main` at `a845b46`.
+- The approval's first commit carried a placeholder for the trailer and was replaced before the first push, as item
+  `261120-1219`'s log tells; it is declared under Deviations.
+- `checks/profile.mjs` reads `stack`, inline or as a list, and `lessons`. A technology names a file of the home, so a
+  name that could lead out of the lessons' folder is refused, as is an empty `lessons`.
+- `hooks/lessons.mjs <level>` gives the project's, the technologies' or the host's lessons, after a line that names
+  the level and its files, each file's head and then its lessons while they fit in 4,000 characters, 400 of them kept
+  for the closing line that names, by its full path, each file left in part. A profile the reader refuses is named
+  instead of being passed over; a file that cannot be read fails the hook with a message. `hooks/hooks.json`: three
+  SessionStart hooks. `.claude-plugin/plugin.json`: the setting `home`, of type `directory`, not required;
+  `claude plugin validate .` accepts it.
+- Tests: `hooks/lessons.test.mjs` for each level, a missing profile, file or home, a level over its budget, a profile
+  the reader refuses, and the hook run with the platform's variables; `hooks/hooks.test.mjs` for the three lessons
+  hooks and for the total of 25,000 with the lessons counted at their budget; `checks/profile.test.mjs` for the two
+  keys.
+- Docs: the workflow's section 8 (Loading, and a new bullet on the budget) and its section 2 on the total, the
+  architecture's section 3.1, the README's table and requirements.
+- Live run, on this branch's working tree before the work's commit: in the kit's clone, `claude -p --plugin-dir` on
+  the clone with `claude-opus-5-5`, with the home's folder given to the hooks as `CLAUDE_PLUGIN_OPTION_HOME`, asked
+  without tools for the lessons it received. It named the three levels with their files, the project's two lessons,
+  the technology's one and the host's one. The run also printed that the plugin is enabled in the project's settings
+  but not installed, which a session with `--plugin-dir` reports when that folder takes the installed plugin's place:
+  `claude plugin list` shows `honsha@honsha` installed and enabled.
+
 ## Verification
 
 ## Outcome

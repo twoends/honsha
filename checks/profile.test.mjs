@@ -37,8 +37,26 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     verify: [],
     commitsAddress: null,
     kinds: null,
+    stack: [],
+    lessons: null,
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
+});
+
+test("reads the stack, inline or as a list, and the file of the project's lessons", () => {
+  const inline = parseProfile("stack: [node, 'postgres', docker] # the tools\nlessons: MEMORY.md\n");
+  assert.deepEqual(inline.stack, ["node", "postgres", "docker"]);
+  assert.equal(inline.lessons, "MEMORY.md");
+  assert.deepEqual(parseProfile("stack:\n  - node\n  - c++\n").stack, ["node", "c++"]);
+  assert.deepEqual(parseProfile("stack: []\n").stack, []);
+});
+
+test("refuses a stack that is not a list, a technology that could leave the lessons' folder, and an empty lessons", () => {
+  assert.throws(() => parseProfile("stack: node\n"), /`stack` must be a list/);
+  for (const technology of ["../secrets", "a/b", ".hidden"]) {
+    assert.throws(() => parseProfile(`stack: [${technology}]\n`), /is not the name of a technology/);
+  }
+  assert.throws(() => parseProfile("lessons:\n"), /`lessons` must name a file/);
 });
 
 test("refuses a profile that declares direct commits, whatever their value", () => {
