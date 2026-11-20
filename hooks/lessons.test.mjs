@@ -114,6 +114,19 @@ test("a level over its budget gives the lessons that fit, and names the file it 
   assert.match(text, new RegExp(`Left out, past the ${BUDGET} characters .*${file}, \\d+ of its 60 lessons`));
 });
 
+test("a level gives one lesson fewer rather than leave a file it cuts unnamed", () => {
+  // The room left after the lessons that fit is too short for the file's name, by a few characters.
+  for (const size of [100, 105, 110, 115, 120]) {
+    const project = folder({
+      ".hub/profile.yml": "lessons: LESSONS.md\n",
+      "LESSONS.md": lessonsFile("Lessons", 60, size),
+    });
+    const text = context("project", { project, home: "", host: "example-host" });
+    assert.ok(text.length <= BUDGET, `${size}: ${text.length} characters`);
+    assert.ok(text.includes(`${path.join(project, "LESSONS.md")}, `), `${size}: the file is not named`);
+  }
+});
+
 test("the budget holds however many files a level leaves out, and however long their paths", () => {
   const deep = path.join("a-folder-with-a-long-name", "another-folder-with-a-long-name", "and-one-more-long-folder");
   /** @type {Record<string, string>} */

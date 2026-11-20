@@ -240,9 +240,11 @@ once:
   its project's lessons, and is told why when its profile has a `stack`. A setting that names no folder on the
   machine is named in the same way.
 - **Budget.** Each level gives at most 4,000 characters, about fifteen lessons. A level with more gives the lessons
-  that fit and names each file it left in part, and the session tells the person. A full level is answered by this
-  section's other moves: a lesson of general worth is promoted to the kit, one tied to a version is reviewed at the
-  tool's upgrade, one that no longer holds is deleted. The budget is raised only by a work item that says why.
+  that fit and names each file it left in part, with its path, giving fewer lessons to make room for the names; only
+  a level whose names cannot fit even without lessons counts the files it cannot name. The session tells the person.
+  A full level is answered by this section's other moves: a lesson of general worth is promoted to the kit, one tied
+  to a version is reviewed at the tool's upgrade, one that no longer holds is deleted. The budget is raised only by a
+  work item that says why.
 - **Technology lessons are the cross-project memory.** A lesson learned on one project is available to every other
   project that declares the same technology, from the next session.
 - **Version.** A lesson tied to a version says so in its text ("with version 2.0 of …"). When the radar records an

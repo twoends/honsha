@@ -5,9 +5,10 @@
 //
 // The project's lessons are the file that `lessons` names in its profile. The technologies' and the host's are in the
 // home, whose folder on this machine is the plugin's setting `home`: the platform gives it to the hook as
-// CLAUDE_PLUGIN_OPTION_HOME. A level gives at most BUDGET characters. One that has more gives the lessons that fit and
-// names each file it left in part, so that nothing is left out without a word, and no output nears the platform's cap
-// on a hook's output, which would replace it with a preview.
+// CLAUDE_PLUGIN_OPTION_HOME. A level gives at most BUDGET characters, so that no output nears the platform's cap on a
+// hook's output, which would replace it with a preview. One that has more gives the lessons that fit and names, with
+// its path, each file it left in part, giving fewer lessons to make room for the names, so that nothing is left out
+// without a word; only when even no lessons leave room for every name does it count the files it cannot name.
 
 import fs from "node:fs";
 import os from "node:os";
@@ -74,8 +75,8 @@ export function split(text) {
 const files = (count) => `${count} file${count === 1 ? "" : "s"}`;
 
 /**
- * The line that names what a level left out, kept within `room` characters: past it, the files it cannot name are
- * counted instead.
+ * The line that names what a level left out, within `room` characters when it can be, and whether it names every
+ * file: past the room, the files it cannot name are counted instead.
  * @param {string[]} left
  * @param {number} room
  */
@@ -85,9 +86,9 @@ function closing(left, room) {
   for (let named = left.length; named > 0; named -= 1) {
     const rest = left.length - named;
     const line = `${start}${left.slice(0, named).join("; ")}${rest === 0 ? "" : `; and ${files(rest)} more`}${end}`;
-    if (line.length <= room) return line;
+    if (line.length <= room) return { line, every: rest === 0 };
   }
-  return `${start}${files(left.length)} of this level, in whole or in part${end}`;
+  return { line: `${start}${files(left.length)} of this level, in whole or in part${end}`, every: false };
 }
 
 /**
@@ -130,15 +131,20 @@ export function context(level, where) {
       return [];
     });
     const body = header + given.map((piece) => piece.text).join("");
-    return left.length === 0 ? body : body + closing(left, BUDGET - body.length);
+    if (left.length === 0) return { text: body, every: true };
+    const { line, every } = closing(left, BUDGET - body.length);
+    return { text: body + line, every };
   };
-  let count = pieces.length;
-  let out = render(count);
-  while (out.length > BUDGET && count > 0) {
-    count -= 1;
-    out = render(count);
+  // The most lessons whose closing line names every file left out; failing that, the most that fit at all.
+  /** @type {string | null} */
+  let fallback = null;
+  for (let count = pieces.length; count >= 0; count -= 1) {
+    const { text, every } = render(count);
+    if (text.length > BUDGET) continue;
+    if (every) return text;
+    fallback ??= text;
   }
-  return out;
+  return fallback ?? render(0).text;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

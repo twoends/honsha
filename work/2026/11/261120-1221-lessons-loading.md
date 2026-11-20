@@ -166,6 +166,16 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
     the host's levels now name it, and the workflow's section 8 says so.
 - The edits of the tests' assertions were first tried through a script in a file, whose quoting lost a level of
   escapes; they were made with the editor.
+- Live run again on `758b2a4`, as before: the session named the three levels by their opening lines, each with its
+  `From` line and the number of its lessons: the host's one, the technology's one and the project's two.
+- Repeated check on `758b2a4`: fail, one finding. The closing line could count a file where one lesson fewer left
+  room for its name: a level now gives the most lessons whose closing line names every file left out, and counts the
+  files only when even no lessons leave room for every name, which is declared under Deviations. The hook's opening
+  comment and the workflow's section 8 say it. A test gives the case at five sizes of lesson; it fails on the code
+  before this fix.
+- Through this host's shell, a heredoc with a quoted delimiter also turns a pair of backslashes into one, which the
+  home's lesson for this host does not say. A lesson about the machine belongs to the home: it is reported to the
+  person.
 
 ## Verification
 
@@ -174,5 +184,8 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 - The approval's commit on this branch, never pushed, was replaced by one with the right trailer, where the rules ask
   that a work branch only grows and that a mistake be corrected by a new commit. A new commit could not correct it:
   the trailer of the wrong commit would have failed the check of the branch's commits on every later run.
+- Criterion 3 asks that a level name each file it left in part, with its path. When the names cannot fit even with
+  no lessons given, because a level leaves out many files or their paths are long, the closing line names those that
+  fit and counts the rest: the budget, on which the total at start rests, comes first.
 
 ## Outcome
