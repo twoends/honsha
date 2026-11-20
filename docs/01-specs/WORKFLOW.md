@@ -531,9 +531,9 @@ variables, also when they name the default branch (section 5.2), and `node check
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
-- It judges a push in the folder it runs in: the session's, or the one that the `cd`, `pushd` and `popd` earlier in the
-  same line, outside a subshell, leave it in, so that a push in another repository is judged by that repository's
-  branch. After a move it cannot follow, it takes the session's folder.
+- It judges a push in the session's folder, or in another repository's when the line begins by moving there for sure
+  (`cd <folder> && …`, in PowerShell also `;`) and nothing after that move could move again. Any other line is judged
+  in the session's folder, so that a line it cannot follow lets through nothing it would refuse there.
 
 ---
 

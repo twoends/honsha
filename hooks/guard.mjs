@@ -12,10 +12,12 @@
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
 // `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
-// push is judged in the folder it runs in: the session's, or the one that the moves earlier in
-// the same line, outside a subshell, leave it in: `cd`, `pushd`, `Set-Location` and
-// `Push-Location` to a folder that exists, Bash's `cd -`, and `popd` and `Pop-Location` without
-// options. After any other move, the guard cannot tell the folder and takes the session's.
+// push is judged in the session's folder, or in another one when the line begins by moving there
+// for sure: a `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
+// `Push-Location`) to one folder that exists, followed by `&&` (in PowerShell also by `;`), with
+// nothing after it that could move again: another such command, a subshell, a brace group, a
+// shell keyword, or a script or a string the line runs. A line the guard cannot follow so is
+// judged in the session's folder.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -31,11 +33,43 @@ import { readProfile } from "../checks/profile.mjs";
 
 const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
 const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
-// The commands of Bash and PowerShell that move the next commands to another folder, those of them
-// that keep the folder they leave on a stack, and those that go back to the folder on that stack.
-const MOVES = new Set(["cd", "chdir", "pushd", "set-location", "sl", "push-location"]);
-const PUSHES = new Set(["pushd", "push-location"]);
-const POPS = new Set(["popd", "pop-location"]);
+// The moves a line may begin with, in each tool's shell.
+const LEADS = {
+  bash: new Set(["cd", "pushd"]),
+  powershell: new Set(["cd", "chdir", "sl", "set-location", "pushd", "push-location"]),
+};
+// What, after that move, could take the line to another folder: the moves of both shells, what runs a
+// script or a string, and the keywords and braces of a compound command.
+const UNFOLLOWED = new Set([
+  ...LEADS.powershell,
+  "popd",
+  "pop-location",
+  "source",
+  ".",
+  "eval",
+  "invoke-expression",
+  "iex",
+  "invoke-command",
+  "icm",
+  "{",
+  "}",
+  "!",
+  "if",
+  "then",
+  "else",
+  "elif",
+  "fi",
+  "for",
+  "foreach",
+  "while",
+  "until",
+  "do",
+  "done",
+  "case",
+  "esac",
+  "select",
+  "function",
+]);
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -79,13 +113,14 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
- * With `subshells`, a lone `(` or `)` marks where a subshell opens and closes. With `escapes` off,
- * as PowerShell reads a line, a backslash is a character of its word.
+ * With `marks`, what separates them comes between them as a list of one word: `;`, `&&`, `||`,
+ * `|`, `&`, a new line as `;`, and `(`, `)` or a backtick where a subshell may open or close.
+ * With `escapes` off, as PowerShell reads a line, a backslash is a character of its word.
  * @param {string} line
- * @param {{ subshells?: boolean, escapes?: boolean }} [options]
+ * @param {{ marks?: boolean, escapes?: boolean }} [options]
  * @returns {string[][]}
  */
-export function simpleCommands(line, { subshells = false, escapes = true } = {}) {
+export function simpleCommands(line, { marks = false, escapes = true } = {}) {
   /** @type {string[][]} */
   const commands = [];
   /** @type {string[]} */
@@ -94,7 +129,6 @@ export function simpleCommands(line, { subshells = false, escapes = true } = {})
   let word = null;
   /** @type {string | null} */
   let quote = null;
-  let backticks = false;
   const endWord = () => {
     if (word !== null) words.push(word);
     word = null;
@@ -117,16 +151,12 @@ export function simpleCommands(line, { subshells = false, escapes = true } = {})
       word ??= "";
     } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
-    } else if (subshells && (char === "(" || char === ")")) {
-      endCommand();
-      commands.push([char]);
-    } else if (subshells && escapes && char === "`") {
-      // In Bash a pair of backticks runs a command in a subshell, as `$(…)` does.
-      endCommand();
-      commands.push([backticks ? ")" : "("]);
-      backticks = !backticks;
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
+      if (marks) {
+        const pair = (char === "&" || char === "|") && text[index + 1] === char;
+        commands.push([pair ? char + text[(index += 1)] : char === "\n" ? ";" : char]);
+      }
     } else if (/\s/.test(char)) {
       endWord();
     } else {
@@ -280,53 +310,47 @@ function mergePatterns(services = SERVICES) {
 }
 
 /**
- * Where a command that changes the folder goes, from its words after the command's name: a path,
- * `-` for Bash's folder before the last move, `pop` for the top of the stack, or null for any
- * form the guard does not follow: no target, an option it does not know, a stack's position such
- * as `+1`, or PowerShell's `-` and `+`, which walk a history the guard cannot see.
- * @param {string} name
+ * The one folder that the words after a move's name name: a lone path, or the one after `-Path` or
+ * `-LiteralPath`; null for any other form, such as an option, `-`, a stack's position or no target.
  * @param {string[]} args
- * @param {boolean} powershell
  * @returns {string | null}
  */
-function target(name, args, powershell) {
-  if (POPS.has(name)) return args.length === 0 ? "pop" : null;
-  /** @type {string | null} */
-  let found = null;
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (/^-(literal)?path$/i.test(arg) || arg === "--") {
-      if (found !== null || index + 2 !== args.length) return null;
-      found = args[index + 1];
-      index += 1;
-    } else if (arg === "-" && !powershell && name !== "pushd" && args.length === 1) {
-      return "-";
-    } else if (/^[-+]/.test(arg) && !/^-[LP]$/.test(arg)) {
-      return null;
-    } else if (/^[-+]/.test(arg)) {
-      continue;
-    } else if (found !== null) {
-      return null;
-    } else {
-      found = arg;
-    }
-  }
-  return found;
+function target(args) {
+  if (args.length === 1 && !/^[-+]/.test(args[0])) return args[0];
+  if (args.length === 2 && /^-(literal)?path$/i.test(args[0])) return args[1];
+  return null;
 }
 
 /**
- * The folder a path names from `dir`, or null when the guard cannot tell it: from a folder it does
- * not know, or a target that does not exist, where `cd` fails or finds the folder another way.
- * @param {string | null} dir
+ * The folder a path names from `dir`, or null when it does not exist: there the move fails, or the
+ * shell finds the folder another way.
+ * @param {string} dir
  * @param {string} where
  * @param {(file: string) => boolean} [exists]
  */
 export function moveTo(dir, where, exists = fs.existsSync) {
-  const expanded = where.replace(/^~(?=$|[\\/])/, os.homedir());
-  const absolute = path.isAbsolute(expanded) || /^[A-Za-z]:[\\/]/.test(expanded);
-  if (dir === null && !absolute) return null;
-  const next = gitDirectory(dir ?? os.homedir(), expanded, process.platform, exists);
+  const next = gitDirectory(dir, where.replace(/^~(?=$|[\\/])/, os.homedir()), process.platform, exists);
   return exists(next) ? next : null;
+}
+
+/**
+ * The folder the rest of a line runs in when it begins by moving there for sure, or null: its first
+ * command is a move to one folder that exists, joined by `&&` (in PowerShell also by `;`) to the
+ * rest, in which nothing could move again.
+ * @param {string[][]} items the line's simple commands and the marks between them
+ * @param {string} cwd
+ * @param {boolean} powershell
+ */
+function lead(items, cwd, powershell) {
+  const [first, join, ...rest] = items;
+  if (!first || !join || (join[0] !== "&&" && !(powershell && join[0] === ";"))) return null;
+  const [name, ...args] = program(first);
+  if (!(powershell ? LEADS.powershell : LEADS.bash).has(name)) return null;
+  const where = target(args);
+  if (where === null) return null;
+  const opens = rest.some((words) => words.length === 1 && ["(", ")", "`"].includes(words[0]));
+  if (opens || rest.some((words) => UNFOLLOWED.has(program(words)[0] ?? ""))) return null;
+  return moveTo(cwd, where);
 }
 
 /**
@@ -338,43 +362,13 @@ export function moveTo(dir, where, exists = fs.existsSync) {
  */
 export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
-  // Where the line runs now, the folder before its last move, and the stack that `pushd` fills in
-  // this line. Each is null once the guard cannot tell it; a push is then judged in the session's
-  // folder, so that a move the guard does not follow lets through nothing it would refuse there.
-  /** @type {string | null} */
-  let dir = cwd;
-  /** @type {string | null} */
-  let previous = null;
-  /** @type {(string | null)[] | null} */
-  let pushed = [];
-  /** @type {{ dir: string | null, previous: string | null, pushed: (string | null)[] | null }[]} */
-  const outer = [];
-  for (const words of simpleCommands(line, { subshells: true, escapes: !powershell })) {
-    if (words.length === 1 && words[0] === "(") {
-      outer.push({ dir, previous, pushed: pushed && [...pushed] });
-      continue;
-    }
-    if (words.length === 1 && words[0] === ")") {
-      ({ dir, previous, pushed } = outer.pop() ?? { dir, previous, pushed });
-      continue;
-    }
+  const items = simpleCommands(line, { marks: true, escapes: !powershell });
+  const dir = lead(items, cwd, powershell) ?? cwd;
+  for (const words of items) {
     const [name, ...args] = program(words);
     if (!name) continue;
-    if (MOVES.has(name) || POPS.has(name)) {
-      const where = target(name, args, powershell);
-      const from = dir;
-      if (where === "pop") dir = pushed && pushed.length > 0 ? (pushed.pop() ?? null) : null;
-      else if (where === "-") dir = previous;
-      else if (where === null) dir = null;
-      else dir = moveTo(dir, where);
-      if (where === null || dir === null) pushed = null;
-      else if (PUSHES.has(name)) pushed?.push(from);
-      // A move the guard cannot follow may have failed, and then the shell keeps its earlier `-`.
-      previous = dir === null ? null : from;
-      continue;
-    }
     if (name === "git") {
-      const reason = judgeGit(args, dir ?? cwd);
+      const reason = judgeGit(args, dir);
       if (reason) return reason;
     }
     const text = [name, ...args].join(" ");

@@ -243,41 +243,41 @@ const slash = (dir) => dir.replace(/\\/g, "/");
  */
 const judged = (line, cwd) => judge(line, { cwd, services: pieces, powershell: true });
 
-test("judges a push in the folder that a cd earlier in the line moves to", () => {
+test("judges a push in the folder that the line begins by moving to", () => {
   refused(`cd ${slash(onMain)} && git push`, onWork);
   allowed(`cd ${slash(onWork)} && git push`, onMain);
-  allowed(`cd "${slash(onWork)}"; git push origin HEAD`, onMain);
+  allowed(`cd "${slash(onWork)}" && git add . && git commit -m "Add a thing" && git push origin HEAD`, onMain);
   allowed(`pushd ${slash(onWork)} && git push`, onMain);
-  refused(`cd ${slash(onWork)} && cd ${slash(onMain)} && git push`, onMain);
 });
 
-test("a cd in a subshell moves nothing after it, and neither does one to a folder it cannot find", () => {
-  refused(`(cd ${slash(onWork)} && git status); git push`, onMain);
-  allowed(`(cd ${slash(onWork)} && git push)`, onMain);
-  refused(`x=$(cd ${slash(onWork)} && pwd); git push`, onMain);
-  refused(`cd ${slash(path.join(onWork, "missing"))}; git push`, onMain);
-  refused("cd -; git push", onMain);
-  refused("cd; git push", onMain);
-});
-
-test("a move back is followed, and a cd inside backticks moves nothing after them", () => {
-  refused(`cd ${slash(onWork)} && cd - && git push`, onMain);
-  allowed(`cd ${slash(onWork)} && cd - && cd - && git push`, onMain);
-  refused(`pushd ${slash(onWork)} && popd && git push`, onMain);
-  allowed(`pushd ${slash(onWork)} && pushd ${slash(onMain)} && popd && git push`, onMain);
-  refused("popd; git push", onMain);
-  refused(`x=\`cd ${slash(onWork)} && pwd\`; git push`, onMain);
-  assert.ok(judged(`Push-Location ${onWork}; Pop-Location; git push`, onMain));
-  assert.equal(judged(`Push-Location ${onWork}; Push-Location ${onMain}; Pop-Location; git push`, onMain), null);
-});
-
-test("after a move it cannot follow, the guard judges the push in the session's folder", () => {
-  refused(`cd ${slash(onWork)} && cd ${slash(onMain)} && cd ${slash(onMain)} && cd - && git push`, onMain);
-  refused(`pushd ${slash(onWork)} && pushd ${slash(onMain)} && popd -n && git push`, onMain);
-  refused(`pushd ${slash(onWork)} && pushd +1 && git push`, onMain);
-  assert.ok(judged(`Set-Location ${onWork}; Set-Location -; Set-Location -; git push`, onMain));
-  refused(`cd ${slash(path.join(onWork, "missing"))} && cd - && git push`, onMain);
-  allowed(`cd -; cd ${slash(onWork)} && git push`, onMain);
+test("a line the guard cannot follow for sure is judged in the session's folder", () => {
+  const work = slash(onWork);
+  for (const line of [
+    `cd ${work}; git push`,
+    `cd ${work} & git push`,
+    `cd ${work} | git push`,
+    `cd ${work} || git push`,
+    `cd ${slash(path.join(onWork, "missing"))} && git push`,
+    "cd - && git push",
+    "cd && git push",
+    `cd -P ${work} && git push`,
+    `pushd -P ${work} && git push`,
+    `pushd +1 && git push`,
+    `cd ${work} && cd - && git push`,
+    `cd ${work} && cd ${slash(onMain)} && git push`,
+    `pushd ${work} && popd && git push`,
+    `cd ${work} && { cd ${slash(onMain)}; } && git push`,
+    `cd ${work} && if true; then cd ${slash(onMain)}; fi && git push`,
+    `cd ${work} && source ./back.sh && git push`,
+    `cd ${work} && eval "cd ${slash(onMain)}" && git push`,
+    `cd ${work} && (cd ${slash(onMain)}) && git push`,
+    `cd ${work} && x=\`cd ${slash(onMain)}\` && git push`,
+    `(cd ${work} && git push)`,
+    `x=$(cd ${work} && pwd); git push`,
+    `Set-Location ${work} && git push`,
+  ]) {
+    refused(line, onMain);
+  }
 });
 
 test("in PowerShell a backslash belongs to the path, and Set-Location moves as cd does", () => {
@@ -293,6 +293,15 @@ test("in PowerShell a backslash belongs to the path, and Set-Location moves as c
   assert.equal(judged(`Set-Location -Path "${onWork}"; git push`, onMain), null);
   assert.equal(judged(`cd ${onWork}; git push`, onMain), null);
   assert.ok(judged(`sl ${onMain}; git push`, onWork));
+  for (const line of [
+    `Set-Location -P ${onWork}; git push`,
+    `Set-Location ${onWork}; Set-Location -; git push`,
+    `Push-Location ${onWork}; Pop-Location; git push`,
+    `Set-Location ${onWork}; Invoke-Expression "cd ${onMain}"; git push`,
+    `Set-Location ${onWork}; foreach ($x in 1) { cd ${onMain} }; git push`,
+  ]) {
+    assert.ok(judged(line, onMain), `let through: ${line}`);
+  }
   const passed = hook(call(`Set-Location ${onWork}; git push`, { tool_name: "PowerShell", cwd: onMain }));
   assert.equal(passed.status, 0, passed.stderr);
 });
