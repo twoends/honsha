@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: trivial
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 31
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -26,4 +26,8 @@ was created. Asked on 2026-11-20, in the chat of a session, choosing among the n
 
 ## Verification
 
+On `4981d10`: `node checks/verify.mjs`, the 7 commands of the profile: passed.
+
 ## Outcome
+
+The architecture says that the kit's repository is public, as it is.
