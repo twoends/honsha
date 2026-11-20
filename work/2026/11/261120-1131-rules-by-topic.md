@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 33
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -156,7 +156,96 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
   than the workflow's section 2; it now points there. Two points the check could not verify are closed as well: a
   test runs the hook on a part that cannot be read and finds the failure and its message, and the README's line on
   Git Bash names the hooks that still run through a shell, which the start hooks no longer do.
+- Live run of the checker, after `a083f61`: in the same scratch repository, `claude -p --plugin-dir` with
+  `claude-opus-5-5` and only the Agent tool allowed, told to invoke `honsha:checker` and to ask it, without tools, for
+  the headings it received at start. The session's transcript holds the call to `honsha:checker`, and the subagent's
+  transcript holds the outputs of the five SubagentStart hooks; its answer listed every heading of the five files,
+  each under its file, and no part missing.
 
 ## Verification
 
+On `a083f61`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+### Earlier checker reports
+
+On `e9df54a`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. The rule for a full part is stated in two places, with different thresholds.
+   - `docs/01-specs/ARCHITECTURE.md:109-111` says the test keeps each output "under 9,000; a part that reaches that is
+     split in two, never shortened".
+   - `docs/01-specs/WORKFLOW.md:41-42` says "a part that nears that limit [10,000] is split into two topics, each with
+     its hook".
+   - Documents says a rule is stated in one place and other documents point there. The strategy (step 5) gives what a
+     full file calls for to the workflow's section 2.
+   - Fix: the architecture points to the workflow, section 2, instead of restating the rule.
+
+### Checker report
+
+A repeated check of the changes since `e9df54a`, on `a083f61`. The record's last log line and its Verification are
+not committed yet.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Core rules in files of one topic each, word for word except the ties between parts: met. See `rules/core.md:1-8`,
+   plus `rules/records.md:3`, `rules/git.md:3` and `rules/writing.md:3`. None of these files changed since `e9df54a`,
+   and the last check found nothing in them.
+2. Each part and the template reach a session and the checker through a hook of their own, and
+   `hooks/checker-rules.mjs` is gone: met. `hooks/hooks.json:4-76` has five SessionStart hooks and five SubagentStart
+   hooks matched to `^honsha:checker$`. No `hooks/checker-rules.mjs` exists. The captured answer of the checker's live
+   run lists every heading of the five files, each under its file.
+3. A test fails on an output reaching 9,000, a start total over 20,000, a missing hook, or a hook naming a missing
+   file: met. See `hooks/hooks.test.mjs:16-21`, `48-62` and `77-94` (`text.length < PART`, `total <= TOTAL`). The new
+   test at `hooks/hooks.test.mjs:96-108` runs the hook on a part that cannot be read. It expects exit status 1, empty
+   stdout, and the message that `hooks/rules.mjs:40` writes.
+4. A live session names every section heading of the files: not verifiable. It is a live run, and the record's log
+   (lines 154-157) reports its answer.
+5. The architecture's section 3.1, the workflow's section 2 and the README say how the rules reach a session and what
+   a full part and a full total call for: met. `docs/01-specs/ARCHITECTURE.md:106-111` now points to
+   `docs/01-specs/WORKFLOW.md`, section 2, which holds this at lines 39-44. The README covers it at `README.md:13-14`
+   and `README.md:18`.
+6. The profile's `verify` passes: met. The record's Verification gives all 7 commands as passed on `a083f61`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order. The last report's finding is fixed: `docs/01-specs/ARCHITECTURE.md:106-111` no
+  longer states a threshold for a full part and points to the workflow, section 2. The new line at `README.md:40-41`
+  is true of what the repository holds: `.githooks/pre-push` and the hook in `.claude/settings.json` are shell
+  commands, and every hook in `hooks/hooks.json` uses the `args` form.
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 4. A session cannot be started from here, so only the log reports its answer. The diff since `e9df54a`
+  touches none of `rules/`, `hooks/hooks.json` or `hooks/rules.mjs`.
+- That the captured answer in the last log line came from `honsha:checker` through its SubagentStart hooks. Only the
+  answer itself was received, and it matches the headings of the five files. The two transcripts that the log line
+  names were not received.
+
 ## Outcome
+
+The core rules reach every session and the checker in four parts of one topic each, with the record template, each
+by a hook of its own, so the platform's cap holds for each part and not for all of them together. A test runs every
+hook against 9,000 characters for a part and 20,000 for everything at a session's start, which is 9,771 today. A part
+that nears the cap is split into two topics; the total is raised only by a work item that says why. Loading the
+lessons, which no hook does yet, is the next growth of what a session receives, and its own item.
