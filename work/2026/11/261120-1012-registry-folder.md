@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
@@ -77,6 +77,8 @@ Risk: a folder given by mistake is committed as given; the person reads the reco
 merging, as for `add`. The default model is enough: the change is one branch of `run` and its test.
 
 ## Approval
+
+Approved by the person on 2026-11-20, in the chat of the session that wrote the strategy.
 
 ## Log
 
