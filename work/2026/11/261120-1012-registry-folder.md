@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 32
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -89,7 +89,68 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 - `hub/projects.test.mjs`: one test, with two clones of a project; the second run of `folder`, on another host, starts
   from the default branch, where the first branch is not merged, so it shows the host added beside the first.
 - Workflow, section 20: the paragraph on what code does names the folder, and the list of commands has `folder`.
+- The kit's checker is not available in this session, which was resumed: the check ran in a general-purpose subagent
+  given `agents/checker.md` as its instructions, with the core rules and the record template, and told to use only
+  Read, Grep and Glob.
 
 ## Verification
 
+On `d7c22c4`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+### Checker report
+
+On `d7c22c4`, a full check, the first on this item, with the record's Verification written but not yet committed.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. `folder <name> <folder>` reads the registry from the home's default branch, sets the resolved folder on this host
+   (adding the host if the entry has none), commits it with a trivial record on a new work branch, and leaves the
+   working tree as it is: met. In `hub/projects.mjs`, lines 407-409 read the registry from the default branch
+   (`commitFiles(home, base)`). Line 522 resolves the folder and line 527 sets it for the host. Lines 530-538 call
+   `commitMove` with the `moveRecord` record, which is `size: trivial`, and that commits in a temporary worktree
+   (lines 377-381). The test covers this in `hub/projects.test.mjs:298-316`: the new branch, the default branch
+   unchanged, HEAD still on `main`, and a clean status.
+2. Refuses a project not in the registry, a folder that is not a git repository, and a folder the entry already gives
+   on this host, and then commits nothing: met. In `hub/projects.mjs:519-525`, all three refusals return before
+   `taken` and `commitMove`. `hub/projects.test.mjs:319-323` covers each refusal and asserts that only the two work
+   branches exist.
+3. A test covers changing a folder, adding a host, and each refusal: met. In `hub/projects.test.mjs`, lines 298-309
+   change the folder, lines 311-316 add a host, and lines 319-322 cover the refusals and the usage error.
+4. Section 20 and the script's list of commands name it: met. In `docs/01-specs/WORKFLOW.md`, lines 640-646 and
+   656-658 do. In `hub/projects.mjs`, the usage line (7), the header (13-16) and the commands message (404-405) do.
+5. The profile's `verify` passes: met as recorded. Verification lists all 7 commands passing on `d7c22c4`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order. Formatting is covered by `prettier --check .`, lint by `oxlint`, types by
+  `tsc -p .` (checkJs over `**/*.mjs`), and tests by `node --test` over the hooks, checks, hub and services tests.
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- I could not check the record as it stood at the strategy commit `a3cf879`: whether its state was
+  `awaiting-approval` then, and which log lines each commit added. The diff holds only the branch's end state, and git
+  cannot be read from here.
+
 ## Outcome
+
+`hub/projects.mjs folder <name> <folder>` sets a registered project's folder on the host it runs on, a host's first
+one included, as a trivial work item of the home made by code; section 20 names it. Once this is merged, the hub runs
+it in the home for the kit, whose folder in the registry no longer exists, and a home item names it in `CLAUDE.md`.
