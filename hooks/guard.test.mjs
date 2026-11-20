@@ -230,6 +230,53 @@ test("a push that deletes the default branch is refused as a deletion", () => {
   }
 });
 
+/**
+ * A path with forward slashes, as a Bash line writes it on any system.
+ * @param {string} dir
+ */
+const slash = (dir) => dir.replace(/\\/g, "/");
+
+/**
+ * The guard's reason for a line as the PowerShell tool runs it.
+ * @param {string} line
+ * @param {string} cwd
+ */
+const judged = (line, cwd) => judge(line, { cwd, services: pieces, powershell: true });
+
+test("judges a push in the folder that a cd earlier in the line moves to", () => {
+  refused(`cd ${slash(onMain)} && git push`, onWork);
+  allowed(`cd ${slash(onWork)} && git push`, onMain);
+  allowed(`cd "${slash(onWork)}"; git push origin HEAD`, onMain);
+  allowed(`pushd ${slash(onWork)} && git push`, onMain);
+  refused(`cd ${slash(onWork)} && cd ${slash(onMain)} && git push`, onMain);
+});
+
+test("a cd in a subshell moves nothing after it, and neither does one to a folder it cannot find", () => {
+  refused(`(cd ${slash(onWork)} && git status); git push`, onMain);
+  allowed(`(cd ${slash(onWork)} && git push)`, onMain);
+  refused(`x=$(cd ${slash(onWork)} && pwd); git push`, onMain);
+  refused(`cd ${slash(path.join(onWork, "missing"))}; git push`, onMain);
+  refused("cd -; git push", onMain);
+  refused("cd; git push", onMain);
+});
+
+test("in PowerShell a backslash belongs to the path, and Set-Location moves as cd does", () => {
+  assert.deepEqual(simpleCommands("cd C:\\a\\b; git push", { escapes: false }), [
+    ["cd", "C:\\a\\b"],
+    ["git", "push"],
+  ]);
+  assert.deepEqual(simpleCommands("cd C:\\a\\b; git push"), [
+    ["cd", "C:ab"],
+    ["git", "push"],
+  ]);
+  assert.equal(judged(`Set-Location ${onWork}; git push`, onMain), null);
+  assert.equal(judged(`Set-Location -Path "${onWork}"; git push`, onMain), null);
+  assert.equal(judged(`cd ${onWork}; git push`, onMain), null);
+  assert.ok(judged(`sl ${onMain}; git push`, onWork));
+  const passed = hook(call(`Set-Location ${onWork}; git push`, { tool_name: "PowerShell", cwd: onMain }));
+  assert.equal(passed.status, 0, passed.stderr);
+});
+
 const none = () => false;
 /**
  * A Windows path as Git Bash writes it: `C:\x` as `/c/x`.

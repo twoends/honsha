@@ -531,6 +531,8 @@ variables, also when they name the default branch (section 5.2), and `node check
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
+- It judges a push in the folder it runs in: the session's, or the one that a `cd` earlier in the same line moves to,
+  outside a subshell, so that a push in another repository is judged by that repository's branch.
 
 ---
 

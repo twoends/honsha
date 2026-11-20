@@ -11,7 +11,9 @@
 //     (`services/<name>/merge-commands.json`).
 //
 // The rules about pushes are plain git and hold on any hosting service. The default branch is
-// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say.
+// `default-branch` of `.hub/profile.yml`; `main` and `master` when the profile does not say. A
+// push is judged in the folder it runs in: the session's, or the one that a `cd`, `pushd`,
+// `Set-Location` or `Push-Location` earlier in the same line moves to, outside a subshell.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -19,6 +21,7 @@
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -26,6 +29,8 @@ import { readProfile } from "../checks/profile.mjs";
 
 const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
 const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
+// The commands of Bash and PowerShell that change the folder the next commands run in.
+const MOVES = new Set(["cd", "chdir", "pushd", "set-location", "sl", "push-location"]);
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -69,10 +74,13 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
+ * With `subshells`, a lone `(` or `)` marks where a subshell opens and closes. With `escapes` off,
+ * as PowerShell reads a line, a backslash is a character of its word.
  * @param {string} line
+ * @param {{ subshells?: boolean, escapes?: boolean }} [options]
  * @returns {string[][]}
  */
-export function simpleCommands(line) {
+export function simpleCommands(line, { subshells = false, escapes = true } = {}) {
   /** @type {string[][]} */
   const commands = [];
   /** @type {string[]} */
@@ -95,13 +103,17 @@ export function simpleCommands(line) {
     const char = text[index];
     if (quote) {
       if (char === quote) quote = null;
-      else if (char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1])) word += text[(index += 1)];
+      else if (escapes && char === "\\" && quote === '"' && '"\\$`'.includes(text[index + 1]))
+        word += text[(index += 1)];
       else word += char;
     } else if (char === "'" || char === '"') {
       quote = char;
       word ??= "";
-    } else if (char === "\\" && index + 1 < text.length) {
+    } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
+    } else if (subshells && (char === "(" || char === ")")) {
+      endCommand();
+      commands.push([char]);
     } else if (char === "\n" || ";|&()`".includes(char)) {
       endCommand();
     } else if (/\s/.test(char)) {
@@ -257,18 +269,53 @@ function mergePatterns(services = SERVICES) {
 }
 
 /**
- * The reason to refuse the command line, or null when the guard lets it through.
+ * The folder that a command changing it moves to from `dir`, or `dir` when the guard cannot tell
+ * it: no target, the previous folder (`-`), or a target that does not exist, where the shell's
+ * `cd` fails and leaves the folder as it was. `args` are the words after the command's name.
+ * @param {string} dir
+ * @param {string[]} args
+ * @param {(file: string) => boolean} [exists]
+ */
+export function moveTo(dir, args, exists = fs.existsSync) {
+  let target = null;
+  for (let index = 0; index < args.length && target === null; index += 1) {
+    if (/^-(literal)?path$/i.test(args[index]) || args[index] === "--") target = args[index + 1] ?? "";
+    else if (args[index] === "-" || !args[index].startsWith("-")) target = args[index];
+  }
+  if (!target || target === "-") return dir;
+  const next = gitDirectory(dir, target.replace(/^~(?=$|[\\/])/, os.homedir()), process.platform, exists);
+  return exists(next) ? next : dir;
+}
+
+/**
+ * The reason to refuse the command line, or null when the guard lets it through. `powershell`
+ * reads the line as the PowerShell tool runs it, where a backslash belongs to a path.
  * @param {string} line
- * @param {{ cwd?: string, services?: string }} [options]
+ * @param {{ cwd?: string, services?: string, powershell?: boolean }} [options]
  * @returns {string | null}
  */
-export function judge(line, { cwd = ".", services } = {}) {
+export function judge(line, { cwd = ".", services, powershell = false } = {}) {
   const patterns = mergePatterns(services);
-  for (const words of simpleCommands(line)) {
+  let dir = cwd;
+  /** @type {string[]} */
+  const outer = [];
+  for (const words of simpleCommands(line, { subshells: true, escapes: !powershell })) {
+    if (words.length === 1 && words[0] === "(") {
+      outer.push(dir);
+      continue;
+    }
+    if (words.length === 1 && words[0] === ")") {
+      dir = outer.pop() ?? dir;
+      continue;
+    }
     const [name, ...args] = program(words);
     if (!name) continue;
+    if (MOVES.has(name)) {
+      dir = moveTo(dir, args);
+      continue;
+    }
     if (name === "git") {
-      const reason = judgeGit(args, cwd);
+      const reason = judgeGit(args, dir);
       if (reason) return reason;
     }
     const text = [name, ...args].join(" ");
@@ -280,7 +327,8 @@ export function judge(line, { cwd = ".", services } = {}) {
 function main() {
   const input = JSON.parse(fs.readFileSync(0, "utf8"));
   if (input.hook_event_name !== "PreToolUse" || typeof input.tool_input?.command !== "string") return 0;
-  const reason = judge(input.tool_input.command, { cwd: input.cwd || "." });
+  const powershell = input.tool_name === "PowerShell";
+  const reason = judge(input.tool_input.command, { cwd: input.cwd || ".", powershell });
   if (!reason) return 0;
   process.stderr.write(`${reason}\n`);
   return 2;
