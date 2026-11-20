@@ -339,7 +339,8 @@ test("reads a move's path as the tool's shell does, and gives up where the shell
   assert.equal(readPath("D:\\s", "/c/src/repo", false, "win32"), "C:\\src\\repo");
   assert.equal(readPath("D:\\s", "/c", false, "win32"), "C:\\");
   assert.equal(readPath("C:\\p", "./q/x", false, "win32"), "C:\\p\\q\\x");
-  // A `..` after a named part is entered through a link by a shell that follows links.
+  // A `..` is read only at the start of a relative path: after a named part, a shell that follows
+  // links enters it through the link, and one rule holds for `./..` as for every other path.
   /** @type {[string, boolean, string][]} */
   const climbs = [
     ["/a/link/../x", false, "linux"],

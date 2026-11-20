@@ -315,15 +315,17 @@ function target(args, powershell) {
 }
 
 /**
- * The path a move's target names from `dir` as the tool's shell reads it, or null when the shell
- * could read the same words as another folder: a wildcard, a variable or a leading `~` expand; a
- * name that ends in a dot or a space is cut by Windows and kept by Git Bash; a `..` after a named
- * part climbs out of that part, which a shell that follows links enters through the link; in Bash a
- * relative path is first looked for along `CDPATH`, unless its first part is `.` or `..`; a path
- * that begins with `//` may name a network share; and Git Bash resolves a path in its own tree,
- * where drive C: is the folder `/c`, the rest goes through its mounts, and the session's folder may
- * itself be written through one, such as `/tmp`. So on Windows a Bash path is read only without
- * `..`: an absolute path that ends on a drive, `/c/rest`, or a relative one such as `./rest`.
+ * The path a move's target names from `dir` as the tool's shell reads it, or null when the guard
+ * gives up on it. It gives up where the shell could read the same words as another folder: a
+ * wildcard, a variable or a leading `~` expand; a name that ends in a dot or a space is cut by
+ * Windows and kept by Git Bash; in Bash a relative path is first looked for along `CDPATH`, unless
+ * its first part is `.` or `..`; a path that begins with `//` may name a network share; and Git Bash
+ * resolves a path in its own tree, where drive C: is the folder `/c`, the rest goes through its
+ * mounts, and the session's folder may itself be written through one, such as `/tmp`. It also gives
+ * up on a `..` anywhere but at the start of a relative path, one rule for every path, since a `..`
+ * after a named part is entered through a link by a shell that follows links. So on Windows a Bash
+ * path is read only without `..`: an absolute path that ends on a drive, `/c/rest`, or a relative one
+ * such as `./rest`.
  * @param {string} dir
  * @param {string} where
  * @param {boolean} powershell
