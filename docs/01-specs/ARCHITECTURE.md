@@ -85,8 +85,8 @@ work/                  the kit's own work records
 .hub/profile.yml       the kit's own profile
 ```
 
-- It is distributed as a Claude Code plugin from the kit's own repository, private until published. The repository
-  is its own marketplace: the plugin is the repository root.
+- It is distributed as a Claude Code plugin from the kit's own repository, which is public. The repository is its own
+  marketplace: the plugin is the repository root.
 - Every repository that runs under the kit, the kit's own included, declares that marketplace from the repository on
   its hosting service, with automatic updates. A host registers one source for a marketplace's name, for all its
   projects, so a second source, such as a clone's folder, would replace the first for every one of them. A session
