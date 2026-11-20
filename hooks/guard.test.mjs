@@ -333,17 +333,28 @@ test("a line the guard cannot follow for sure is judged in the session's folder"
 test("reads a move's path as the tool's shell does, and gives up where the shell could read another folder", () => {
   assert.equal(readPath("/s", "./sub", false, "linux"), "/s/sub");
   assert.equal(readPath("/s/t", "../x", false, "linux"), "/s/x");
+  assert.equal(readPath("/s/t", "../..", false, "linux"), "/");
   assert.equal(readPath("/s", "/abs/x", false, "linux"), "/abs/x");
+  assert.equal(readPath("D:\\s\\t", "..\\x", true, "win32"), "D:\\s\\x");
   assert.equal(readPath("D:\\s", "/c/src/repo", false, "win32"), "C:\\src\\repo");
   assert.equal(readPath("D:\\s", "/c", false, "win32"), "C:\\");
-  assert.equal(readPath("D:\\s", "/c/../c/x", false, "win32"), "C:\\x");
-  assert.equal(readPath("D:\\s", "/c/../e/x", false, "win32"), "E:\\x");
   assert.equal(readPath("C:\\p", "./q/x", false, "win32"), "C:\\p\\q\\x");
-  // Git Bash resolves `..` before it reads the drive, so `/c/../dev` is in its own root, not on a drive;
-  // and it may write the session's folder through a mount such as `/tmp`, from which `..` climbs elsewhere.
-  assert.equal(readPath("D:\\s", "/c/../dev", false, "win32"), null);
-  for (const where of ["..", "../x", "./q/../x"])
+  // A `..` after a named part is entered through a link by a shell that follows links.
+  /** @type {[string, boolean, string][]} */
+  const climbs = [
+    ["/a/link/../x", false, "linux"],
+    ["./a/../x", false, "linux"],
+    ["./..", false, "linux"],
+    ["C:\\a\\..\\x", true, "win32"],
+  ];
+  for (const [where, powershell, platform] of climbs) {
+    assert.equal(readPath("/s", where, powershell, platform), null, where);
+  }
+  // Git Bash resolves `..` before it reads the drive, so `/c/..` is its own root, not `C:\`; and it may write the
+  // session's folder through a mount such as `/tmp`, from which `..` climbs elsewhere.
+  for (const where of ["/c/../c/x", "..", "../x"]) {
     assert.equal(readPath("C:\\p\\q", where, false, "win32"), null, where);
+  }
   // A leading `//` may name a network share.
   assert.equal(readPath("D:\\s", "//c/x", false, "win32"), null);
   assert.equal(readPath("/s", "//x", false, "linux"), null);

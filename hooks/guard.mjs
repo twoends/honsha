@@ -15,10 +15,10 @@
 // push is judged in the session's folder, or in another one when the line begins by moving there
 // for sure: its first word is `cd` or `pushd` (in PowerShell also `Set-Location`, `sl`, `chdir` or
 // `Push-Location`), with one path to a folder that the tool's shell cannot read as another folder
-// (no wildcard, variable or leading `~`; in Bash an absolute path or one whose first part is `.` or
-// `..`, and on Windows no relative path with `..`), followed by `&&` (in PowerShell also by `;`),
-// and every later command is one of a few programs that cannot move a shell. Any other line is
-// judged in the session's folder.
+// (no wildcard, variable or leading `~`, and `..` only at the start of a relative path; in Bash an
+// absolute path or one whose first part is `.` or `..`, and on Windows no `..` at all), followed by
+// `&&` (in PowerShell also by `;`), and every later command is one of a few programs that cannot
+// move a shell. Any other line is judged in the session's folder.
 //
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
@@ -317,12 +317,13 @@ function target(args, powershell) {
 /**
  * The path a move's target names from `dir` as the tool's shell reads it, or null when the shell
  * could read the same words as another folder: a wildcard, a variable or a leading `~` expand; a
- * name that ends in a dot or a space is cut by Windows and kept by Git Bash; in Bash a relative path
- * is first looked for along `CDPATH`, unless its first part is `.` or `..`; a path that begins with
- * `//` may name a network share; and Git Bash resolves a path in its own tree, where drive C: is the
- * folder `/c`, the rest goes through its mounts, and the session's folder may itself be written
- * through one, such as `/tmp`. So on Windows only an absolute path that ends on a drive, `/c/rest`,
- * and a relative path without `..` are read.
+ * name that ends in a dot or a space is cut by Windows and kept by Git Bash; a `..` after a named
+ * part climbs out of that part, which a shell that follows links enters through the link; in Bash a
+ * relative path is first looked for along `CDPATH`, unless its first part is `.` or `..`; a path
+ * that begins with `//` may name a network share; and Git Bash resolves a path in its own tree,
+ * where drive C: is the folder `/c`, the rest goes through its mounts, and the session's folder may
+ * itself be written through one, such as `/tmp`. So on Windows a Bash path is read only without
+ * `..`: an absolute path that ends on a drive, `/c/rest`, or a relative one such as `./rest`.
  * @param {string} dir
  * @param {string} where
  * @param {boolean} powershell
@@ -333,7 +334,10 @@ export function readPath(dir, where, powershell, platform = process.platform) {
   const windows = platform === "win32";
   const paths = windows ? path.win32 : path.posix;
   if (!/^[\p{L}\p{N} _.~\-/\\:]+$/u.test(where) || where.startsWith("~")) return null;
-  if (where.split(/[\\/]/).some((part) => part !== "." && part !== ".." && /[. ]$/.test(part))) return null;
+  const parts = where.split(/[\\/]/);
+  if (parts.some((part) => part !== "." && part !== ".." && /[. ]$/.test(part))) return null;
+  const named = parts.findIndex((part) => part !== "..");
+  if (named >= 0 && parts.slice(named).includes("..")) return null;
   if (powershell) {
     // A colon only in a drive that begins an absolute path: `C:rest` starts from the drive's own folder.
     const rest = windows ? where.replace(/^[A-Za-z]:(?=[\\/])/, "") : where;
@@ -343,8 +347,8 @@ export function readPath(dir, where, powershell, platform = process.platform) {
   if (where.includes("\\") || where.includes(":") || where.startsWith("//")) return null;
   if (!where.startsWith("/") && !/^\.\.?(\/|$)/.test(where)) return null;
   if (!windows) return paths.resolve(dir, where);
-  if (!where.startsWith("/")) return where.split("/").includes("..") ? null : paths.resolve(dir, where);
-  // `..` is resolved before the drive is read, so `/c/..` is Git Bash's root, not `C:\`.
+  if (parts.includes("..")) return null;
+  if (!where.startsWith("/")) return paths.resolve(dir, where);
   const drive = /^\/([a-z])(?:\/(.*))?$/.exec(path.posix.resolve(where));
   return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
 }
