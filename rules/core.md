@@ -1,8 +1,11 @@
 # Honsha core rules
 
-This project is run with the Honsha workflow. These rules, with the record template after them, hold in every session
-and are enough for ordinary work. For a case they do not cover, read `docs/01-specs/WORKFLOW.md` in the kit directory
-named after them; it lies outside the project, so reading it can need a permission.
+This project is run with the Honsha workflow. Its core rules come in parts, each given whole when a session starts,
+together with the record template: this one, on work items, sizes, stop conditions and lessons; `rules/records.md`,
+on the record; `rules/git.md`, on commits, branches and delivery; and `rules/writing.md`, on comments and documents.
+Together they hold in every session and are enough for ordinary work. For a case they do not cover, read
+`docs/01-specs/WORKFLOW.md` in the kit directory, which the line above each part names; it lies outside the project,
+so reading it can need a permission.
 
 ## Work items
 
@@ -24,66 +27,6 @@ named after them; it lies outside the project, so reading it can need a permissi
 - A full item stops once its strategy is written: the record's state becomes `awaiting-approval` and the person is
   asked.
 - Work that turns out larger than its size stops, takes the larger size and its gate, and gets a deviation.
-
-## The record
-
-- The intent is the person's words, verbatim. Later it is only extended, under "Addenda".
-- Scope and acceptance criteria are fixed once work starts (small) or once approved (full). A change to them is
-  written under "Deviations", never made silently.
-- The log is append-only and is written while the work goes on, not at the end.
-- Verification holds the verification commands with their results and the checker's reports, nothing else. Only the
-  last report stays in full; an earlier one keeps its verdict and findings. What follows a check goes into the log.
-- `effort` in the front matter is written by a hook; nobody fills it in by hand. `model` is written by the session
-  that finishes the item, when it writes the outcome: its own model identifier, exactly as the platform states it.
-- State, lists and history are read from the records' front matter. No index or status file is kept by hand.
-
-## Commits and branches
-
-- A commit message is one plain imperative sentence in English. It gets a body only when the reason is not in the
-  record. A convention of the project's own is stated in the project's rules.
-- Every commit on a work branch ends with the trailer `Work-Item: <id>`.
-- An item makes as few commits as it can. Small or trivial: the work with its record, then one closing commit. Full:
-  the record with its strategy, then its approval, two commits that hold only the record, since no other file changes
-  before the approval is committed; then the work and one closing commit. The closing commit holds the verification,
-  the checker's report, the outcome and the pull request's number together.
-- The work is split into more than one commit only where its parts are separate enough to be reviewed one at a time.
-  A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their own.
-- A work branch only grows: no amend, no rebase, no squash. A mistake is corrected by a new commit.
-- A work branch is brought up to date only on a conflict, a need or a request, by merging the default branch into
-  it. The verification commands run again, and the checker on what changed.
-
-## Comments
-
-In code and in every other file of the project:
-
-- A comment says why, not what: the reason, a constraint, a trap. What the code does is read from the code.
-- No history: no "changed for", no dates, no mention of earlier versions or of finished work items. History is in
-  the records and in git.
-- No code left commented out. Git keeps it.
-- A TODO names the identifier of the record that will do it: `TODO(<id>): …`. A TODO without one is not written.
-
-## Documents
-
-- A document says what holds now. What a change replaces is deleted, not kept beside the new text with a note; an
-  entry of a list that no longer holds is deleted, one that holds in part is rewritten, and the entry that deletes
-  another may name its identifier once. An identifier is never reused. Git and the records keep the history.
-  Exceptions: records, which follow their own rules; notes of a past discussion kept as such; documents listed under
-  `legacy` in the profile.
-- A rule is stated in one place; another document that needs it points there. The exception is an agent's file that
-  must check a rule its agent does not otherwise receive. A record copies nothing that another document holds.
-
-## Delivery
-
-- The default branch changes only through pull requests, and the person merges them, with a merge commit unless the
-  project's rules name another method. The one exception: the kit's script `hub/backlog.mjs` pushes the records of the
-  home's backlog there without a pull request, in commits that only add or remove one file under `backlog/`. A session
-  never merges, never pushes to the default branch, never force-pushes and never skips a push's hooks; a guard of the
-  kit refuses those commands.
-  A session that finds a merged branch deletes it, with its worktrees, locally and on the hosting service.
-- The record travels in the same pull request as the change. The pull request's description comes from the record:
-  intent, what changed, verification evidence, checker report, deviations.
-- Before delivery the profile's verification commands run. For small and full items the checker, `honsha:checker`,
-  then compares the result with the record from a fresh context.
 
 ## Stop conditions
 

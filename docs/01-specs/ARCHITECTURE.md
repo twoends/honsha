@@ -71,7 +71,7 @@ Indicative layout:
 
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
-rules/core.md          the few always-on rules
+rules/                 the always-on rules, in parts of one topic each
 skills/                workflow, triage, radar, status, one pack per area, the worker's situational procedures
 agents/                worker, reader, checker
 hooks/                 session and checker start; the guard on shell commands; write the effort level into records
@@ -104,10 +104,11 @@ work/                  the kit's own work records
 - An area pack is written only when a real work item needs it. A pack is the skill `area-<name>` of the kit,
   invoked as `honsha:area-<name>`.
 - A session in a project cannot read the kit's files without a permission, because they lie outside the project.
-  What every session needs is therefore put into its context when it starts: the core rules and the record
-  template. Together they stay under 9,000 characters, which a test of the kit enforces, below the platform's limit
-  of 10,000 for what a hook can deliver. The checker, a subagent, receives the same when it starts, from a hook
-  matched to it alone.
+  What every session needs is therefore put into its context when it starts: the core rules, in parts of one topic
+  each, and the record template, each file by a hook of its own, since the platform caps each hook's output at
+  10,000 characters and replaces a longer one with a file path and a short preview. What a part near that cap, or a
+  full total, calls for is in [WORKFLOW.md](WORKFLOW.md), section 2. The checker, a subagent, receives the same files
+  when it starts, from hooks matched to it alone.
 
 ### 3.2 Home (one per user, private)
 
