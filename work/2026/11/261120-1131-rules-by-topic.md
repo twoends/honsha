@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
@@ -124,6 +124,8 @@ a defect, the core rules that can no longer grow without shortening, which secti
 default model is enough: the change moves text and writes one small script.
 
 ## Approval
+
+Approved by the person on 2026-11-20, in the chat of the session that wrote the strategy.
 
 ## Log
 
