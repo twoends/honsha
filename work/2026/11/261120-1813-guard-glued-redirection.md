@@ -44,8 +44,8 @@ is a word of its own. The work starts once pull request 36, which rewrites the s
 whether the word so far holds a quoted or escaped character, since Bash reads `"2">x` and `\2>x` as the word `2`
 followed by a redirection. `program` already leaves a word that begins a redirection out of the arguments, so the
 destination of the push is the word before it. `simpleCommands` reads the lines of both tools; PowerShell's own reading
-is checked before the change and the choice for it written in the log. The item is small: one function and its
-tests, and the guard can only refuse more than before.
+is checked before the change and the choice for it written in the log. The item is small: the guard's reading of the
+words of a line, and its tests.
 
 ## Log
 
@@ -68,9 +68,28 @@ tests, and the guard can only refuse more than before.
   one in PowerShell, and `HEAD>/dev/null`, a work branch's name with `>/dev/null` and `main2>&1` let through. On the
   guard of `88b8abb` it fails at its first assertion, and each of its refusals but `main 2>/dev/null` fails there
   too; the guard's other 21 tests pass on both.
+- Check on `d2c1674`, by `honsha:checker`: fail, two findings.
+  - The change also lets through lines the guard refused, while the Strategy, the log above on PowerShell and a
+    comment in `simpleCommands` said it could only refuse more. A later command such as `node>log x.mjs` is now read
+    as the program `node`, so a line that begins by moving to a folder is followed with it; and an unanchored merge
+    pattern of a hosting service's piece no longer matches the file of a redirection, as in `echo done>…/merge`. Both
+    are read as Bash reads them. The Strategy and the comment no longer say it.
+  - Bash also reads an unquoted `{name}` right before a `>` or `<` as a file descriptor: it opens a new one and stores
+    its number in `name`. So `git push origin {fd}>/dev/null` pushes the current branch, and the guard let it through
+    from a checkout on `main`, before this item as well. Checked in Git Bash 5.2: `printf '%s|' A {fd}>/dev/null`
+    prints `A|` and sets `fd`, while `"{fd}">out` and `{1x}>out` write the word to the file. `DESCRIPTOR` in
+    `hooks/guard.mjs` names what stands before a `>` or `<` as part of its redirection, digits, a `{name}` or the `&`
+    of `&>`, and both `simpleCommands` and `program` read it. Criterion 1 is extended (Deviations).
+  - The test also covers `{name}`, a push it hid refused after the destination and before the program, and a line
+    followed through `node>log`. On the guards of `d2c1674` and `88b8abb` it fails at the `{name}` assertion. Judged on
+    the three guards from a checkout on `main`: both earlier ones let `git push origin {fd}>/dev/null` through, and
+    this one refuses it; the line with `node>log` is refused at `88b8abb` and let through since `d2c1674`.
 
 ## Deviations
 
 - The request counts `main2>&1` among the forms that hide a push to `main`. Bash reads it as the word `main2` and the
   redirection `>&1`, as the check in Git Bash above shows, so `git push origin main2>&1` pushes `main2`. The guard
   reads it so and lets it through; a test says it.
+- After the check on `d2c1674`, criterion 1 also counts as a file descriptor an unquoted `{name}` right before the `>`
+  or `<`, as Bash reads one: the checker found a push to the default branch hidden by that form, the defect the intent
+  names.

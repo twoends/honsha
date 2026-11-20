@@ -43,6 +43,9 @@ const LEADS = {
 // script block or an assignment, could move the shell where the guard cannot see it.
 const STILL = new Set(["git", "gh", "node", "npm", "npx"]);
 const JOINS = new Set([";", "&&", "||", "|", "&"]);
+// What Bash reads as part of a redirection when it stands right before the `>` or `<`, unquoted: a file descriptor,
+// as digits or as a `{name}` that receives a new one, or the `&` of `&>`.
+const DESCRIPTOR = String.raw`(?:\d+|\{[A-Za-z_][A-Za-z0-9_]*\}|&)`;
 const GIT_OPTIONS_WITH_VALUE = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"]);
 const PUSH_OPTIONS_WITH_VALUE = new Set(["-o", "--push-option", "--receive-pack", "--exec", "--repo"]);
 
@@ -103,6 +106,7 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
   let word = null;
   /** @type {string | null} */
   let quote = null;
+  const descriptor = new RegExp(`^${DESCRIPTOR}$`);
   // Whether the word so far holds a quoted or escaped character: Bash then never reads it as a file descriptor.
   let literal = false;
   const endWord = () => {
@@ -149,11 +153,10 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       }
     } else if (/\s/.test(char)) {
       endWord();
-    } else if ((char === ">" || char === "<") && word !== null && !after && (literal || !/^(\d+|&)$/.test(word))) {
-      // A redirection begins here, and the text before it is a word of its own, unless that text is a file
-      // descriptor, unquoted digits as in `2>&1`, or the `&` of `&>`. PowerShell keeps a `>` in a word without quotes,
-      // `main>x`, and begins a redirection after one in quotes, `"main">x`: read the Bash way there too, such a word
-      // can only make the guard refuse a push of a branch whose name holds a `>`.
+    } else if ((char === ">" || char === "<") && word !== null && !after && (literal || !descriptor.test(word))) {
+      // A redirection begins here, and the text before it is a word of its own, unless that text belongs to the
+      // redirection (`DESCRIPTOR`). PowerShell keeps a `>` in a word without quotes, `main>x`, and begins a redirection
+      // after one in quotes, `"main">x`; the guard reads both the Bash way, so in PowerShell too `main>x` is `main`.
       endWord();
       word = char;
       redirection = char;
@@ -174,8 +177,8 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
 function program(words) {
   // A redirection is neither the program nor an argument: `2>&1`, `>file`, `&>file`, and `>`, `>&`,
   // `>|` or `&>` with the file as the next word. It may stand before the program as well as after it.
-  const alone = /^(\d*|&)(>>|>\||>&?|<&?)$/;
-  const redirection = /^(\d*|&)[<>]/;
+  const alone = new RegExp(String.raw`^${DESCRIPTOR}?(>>|>\||>&?|<&?)$`);
+  const redirection = new RegExp(`^${DESCRIPTOR}?[<>]`);
   let start = 0;
   while (start < words.length) {
     const word = words[start];

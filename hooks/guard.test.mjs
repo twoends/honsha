@@ -294,6 +294,13 @@ test("a redirection glued to a word begins a word of its own, unless that word i
     ["git", "push", "origin", "main", ">/dev/null", "main", "<x", "main", ">>log", "main2", ">&1"],
   ]);
   assert.deepEqual(simpleCommands('a 2>&1>x 12<y "2">z \\2>w'), [["a", "2>&1", ">x", "12<y", "2", ">z", "2", ">w"]]);
+  assert.deepEqual(simpleCommands('a {fd}>/dev/null {g}<x "{fd}">y {1x}>z'), [
+    ["a", "{fd}>/dev/null", "{g}<x", "{fd}", ">y", "{1x}", ">z"],
+  ]);
+  assert.match(refused("git push origin {fd}>/dev/null", onMain), /default branch `main`/);
+  assert.match(refused("{fd}>/dev/null git push origin main"), /default branch `main`/);
+  // The program of a later command is read without its redirection, so the line is followed into the work checkout.
+  allowed(`cd ${bash(onWork)} && git push origin HEAD && node>log x.mjs`, onMain);
   for (const line of [
     "git push origin main>/dev/null",
     "git push origin main<x",
