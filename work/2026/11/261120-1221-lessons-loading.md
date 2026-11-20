@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 35
+model: claude-opus-5-5
 effort: null
 checks: []
 ---
@@ -179,6 +179,137 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
 
 ## Verification
 
+On `3ffc0b9`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+### Earlier checker reports
+
+On `811ae09`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Criterion 3 is not met.
+   - `hooks/lessons.mjs:22` and `95` reserve 400 characters for the closing line at line 115.
+   - That line's fixed words take 129 characters. Each entry after them is an absolute path followed by ", all of it"
+     or ", N of its M lessons" (lines 102 and 112).
+   - Once the entries pass about 270 characters, the output passes 4,000. Example: a technologies level whose first
+     file fills the room and that leaves four more files out, each named by a path of about 70 characters.
+   - Line 101 also counts 2 characters for the 3 that line 105 adds.
+   - The test over budget has a single file in a short temporary path (`hooks/lessons.test.mjs:96-107`), so it does
+     not catch this.
+   - The total of criterion 4 assumes each level stays within 4,000.
+
+   Fix: count the closing line's real length against the budget before giving lessons.
+
+2. Intent: the project's level reads whatever file `lessons` names, including a path that leads out of the project.
+   - `checks/profile.mjs:102-105` accepts any non-empty value, and `hooks/lessons.mjs:39-40` joins it to the project's
+     folder.
+   - So `lessons: ../<path>` makes the hook put a file outside the repository into the session's context at every
+     start. A session needs a permission to read outside its project (`docs/01-specs/ARCHITECTURE.md:106`).
+   - The project's lessons belong to the repository: the file is changed "in the same pull request"
+     (`rules/core.md:45-46`; `docs/01-specs/WORKFLOW.md:230`).
+   - The item already refuses the same escape for a technology's name (`checks/profile.mjs:24-25` and `99-100`; record
+     log, lines 132-133).
+
+   Fix: refuse a `lessons` value that leads out of the project.
+
+3. Intent: a mistyped home makes the technologies' and the host's levels go silent.
+   - The approved strategy's Risks (record, lines 119-120) say that a path given wrongly leaves those levels without
+     lessons, "with the hook's line saying which file it did not find".
+   - The result gives nothing whenever no file exists (`hooks/lessons.mjs:88` and `94`), whether or not the home's
+     folder itself exists. So with a mistyped `home`, both levels say nothing.
+   - Criterion 2's "a level with no file gives nothing" does not ask for silence when the home's folder is missing.
+
+   Fix: when the home's folder does not exist, those levels say so in one line.
+
+On `758b2a4`, a repeated check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Criterion 3 is not met. The closing line can name no file and no path, even when a single file is left out.
+   - **How it happens.** `closing` (`hooks/lessons.mjs:82-91`) first tries the line that names the files. When that
+     line does not fit, it returns a bare count such as "1 file of this level, in whole or in part", without checking
+     `room` (line 90). `context` keeps the first output that fits within the budget (lines 135-140). So the level
+     keeps one more lesson rather than the file's name.
+   - **Example.** A project's `LESSONS.md` with an absolute path of 45 characters holds
+     `lessonsFile("Lessons", 60, 110)`. After 30 lessons, 173 characters are left. The line that names the file takes
+     196; the count takes 170. The output ends at 3,997 characters with a count that names neither the file nor a
+     path for "there". With one lesson fewer, the file's name would fit.
+   - **Undeclared change.** Past the room, the line counts the files instead of naming each with its path (lines
+     85-87). That changes criterion 3. The log says so (record, lines 161-162), but Deviations does not.
+   - **Documents.** `docs/01-specs/WORKFLOW.md:242-243` and the hook's opening comment (`hooks/lessons.mjs:8-9`)
+     still say that a level names each file it left in part.
+   - **Tests.** The tests do not catch it. In `hooks/lessons.test.mjs:104-115` the room happens to fit the name. In
+     `117-133` a count is accepted.
+
+   Fix: give fewer lessons until the closing line names every file left out, and declare under Deviations any count
+   kept for when even that cannot fit.
+
+### Checker report
+
+A repeated check of the changes since `758b2a4`, on `3ffc0b9`, with Verification not yet committed. The last report's
+one finding is fixed:
+
+- **How it happened.** `hooks/lessons.mjs:138-147` now gives the most lessons whose closing line names every file
+  left out. It falls back to a count only when no number of lessons allows that. `closing` reports whether it named
+  every file (lines 83-92).
+- **Undeclared change.** The count is now declared under Deviations (record, lines 264-266).
+- **Documents.** The hook's opening comment (`hooks/lessons.mjs:8-11`) and `docs/01-specs/WORKFLOW.md:242-244` now
+  say this.
+- **Tests.** `hooks/lessons.test.mjs:117-128` tests the case. At size 110, 173 characters are left after 30 lessons,
+  and the line that names the file needs 151 plus the path's length. So the code before the fix returned the count,
+  as the log says. The test at lines 130-146 still accepts a count, but its 80 files with long paths are the declared
+  case.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. Three hooks give the three levels, each opening with a line that names it: outside the changes since `758b2a4`;
+   no finding in the last report.
+2. Home from a `directory` setting; one line when no home is set; nothing for a level with no file: outside the
+   changes since `758b2a4`; no finding in the last report.
+3. Each level under 4,000 characters, and every file left out named with its path: met. Each file is named by its
+   absolute path (`hooks/lessons.mjs:129-130`, `88`). The budget holds at line 143. The level gives fewer lessons
+   until every name fits (lines 138-147). The count kept for when even no lessons leave room is declared under
+   Deviations.
+4. Total of 25,000 with the lessons' budgets counted: outside the changes since `758b2a4`; no finding in the last
+   report.
+5. Tests cover each level, the missing cases, a level over its budget and the profile's keys: met. The new case is in
+   `hooks/lessons.test.mjs:117-128`.
+6. A live session names the lessons of the three levels: met, as recorded on `758b2a4` (record, Log, lines 169-170).
+   The changes since then touch only a level over its budget, which that run does not reach.
+7. Workflow sections 8 and 2, architecture section 3.1 and README: met for this diff, at
+   `docs/01-specs/WORKFLOW.md:242-247`. The other documents are not in the diff.
+8. The profile's `verify` passes: met, on `3ffc0b9` (record, Verification, lines 182-190).
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Deviations
 
 - The approval's commit on this branch, never pushed, was replaced by one with the right trailer, where the rules ask
@@ -189,3 +320,8 @@ Approved by the person on 2026-11-20, in the chat of the session that wrote the 
   fit and counts the rest: the budget, on which the total at start rests, comes first.
 
 ## Outcome
+
+Every session receives, at its start, the lessons of its project, of the technologies of its profile's `stack` and of
+its host, each level by a hook of its own and within 4,000 characters, the home's folder coming from the plugin's
+setting `home`. The total at start is 25,000 characters, the lessons counted at their budget. Each machine sets
+`home` once; until then a session receives its project's lessons only, and says why.
