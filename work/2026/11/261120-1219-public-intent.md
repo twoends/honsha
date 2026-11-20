@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-20
 updated: 2026-11-20
@@ -98,6 +98,8 @@ whole content. D87 of the installation allows the item: it fixes a defect, a rul
 public repository. The default model is enough.
 
 ## Approval
+
+Approved by the person on 2026-11-20, in the chat of the session that wrote the strategy.
 
 ## Log
 
