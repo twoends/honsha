@@ -86,6 +86,7 @@ function withoutHereDocuments(line) {
 /**
  * Splits a command line into its simple commands, each a list of words. Quotes are honoured, so
  * the text of a message is one word; variables and other expansions are left as they are written.
+ * A redirection is a word of its own, also when it is glued to the word before it, as Bash reads it.
  * With `marks`, what separates them comes between them as a list of one word: `;`, `&&`, `||`,
  * `|`, `&`, a new line as `;`, and `(`, `)` or a backtick where a subshell may open or close.
  * With `escapes` off, as PowerShell reads a line, a backslash is a character of its word.
@@ -102,9 +103,12 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
   let word = null;
   /** @type {string | null} */
   let quote = null;
+  // Whether the word so far holds a quoted or escaped character: Bash then never reads it as a file descriptor.
+  let literal = false;
   const endWord = () => {
     if (word !== null) words.push(word);
     word = null;
+    literal = false;
   };
   const endCommand = () => {
     endWord();
@@ -128,8 +132,10 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
     } else if (char === "'" || char === '"') {
       quote = char;
       word ??= "";
+      literal = true;
     } else if (escapes && char === "\\" && index + 1 < text.length) {
       word = (word ?? "") + text[(index += 1)];
+      literal = true;
     } else if ((char === "&" && after) || (char === "|" && after === ">")) {
       word = (word ?? "") + char;
     } else if (char === "&" && text[index + 1] === ">") {
@@ -143,6 +149,14 @@ export function simpleCommands(line, { marks = false, escapes = true } = {}) {
       }
     } else if (/\s/.test(char)) {
       endWord();
+    } else if ((char === ">" || char === "<") && word !== null && !after && (literal || !/^(\d+|&)$/.test(word))) {
+      // A redirection begins here, and the text before it is a word of its own, unless that text is a file
+      // descriptor, unquoted digits as in `2>&1`, or the `&` of `&>`. PowerShell keeps a `>` in a word without quotes,
+      // `main>x`, and begins a redirection after one in quotes, `"main">x`: read the Bash way there too, such a word
+      // can only make the guard refuse a push of a branch whose name holds a `>`.
+      endWord();
+      word = char;
+      redirection = char;
     } else {
       word = (word ?? "") + char;
       if (char === ">" || char === "<") redirection = char;

@@ -289,6 +289,27 @@ test("the & or | of a redirection belongs to it, and a redirection may come befo
   refused("git push origin main 2>&1");
 });
 
+test("a redirection glued to a word begins a word of its own, unless that word is a file descriptor", () => {
+  assert.deepEqual(simpleCommands("git push origin main>/dev/null main<x main>>log main2>&1"), [
+    ["git", "push", "origin", "main", ">/dev/null", "main", "<x", "main", ">>log", "main2", ">&1"],
+  ]);
+  assert.deepEqual(simpleCommands('a 2>&1>x 12<y "2">z \\2>w'), [["a", "2>&1", ">x", "12<y", "2", ">z", "2", ">w"]]);
+  for (const line of [
+    "git push origin main>/dev/null",
+    "git push origin main<x",
+    "git push origin main>>log",
+    "git push origin main 2>/dev/null",
+    "git push origin HEAD:main>/dev/null",
+    'git push origin "main">/dev/null',
+  ]) {
+    assert.match(refused(line), /default branch `main`/);
+  }
+  allowed("git push origin HEAD>/dev/null");
+  allowed(`git push origin ${WORK}>/dev/null`);
+  allowed("git push origin main2>&1");
+  assert.ok(judged('git push origin "main">$null', onWork));
+});
+
 test("a line the guard cannot follow for sure is judged in the session's folder", () => {
   const work = bash(onWork);
   for (const line of [
