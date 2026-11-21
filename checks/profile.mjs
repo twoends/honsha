@@ -7,6 +7,8 @@
 //   default-branch: main
 //   verify:
 //     - npm run check
+//   setup:
+//     - npm ci --ignore-scripts
 //   commits:
 //     address: '@example\.org$'
 //   kinds:
@@ -21,11 +23,12 @@
 import fs from "node:fs";
 
 const BLANK = /^\s*(#.*)?$/;
+const ITEM = /^\s*-\s+(.*)$/;
 // A technology names a file of the home's lessons, so it may not lead out of their folder.
 const TECHNOLOGY = /^[A-Za-z0-9][\w.+-]*$/;
 
 /**
- * @typedef {{ defaultBranch: string | null, verify: string[],
+ * @typedef {{ defaultBranch: string | null, verify: string[], setup: string[],
  *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean,
  *   stack: string[], lessons: string | null }} Profile
  */
@@ -61,7 +64,7 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, commitsAddress, kinds, public, stack, lessons }` from the text of a profile.
+ * Returns `{ defaultBranch, verify, setup, commitsAddress, kinds, public, stack, lessons }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -72,6 +75,7 @@ export function parseProfile(text) {
   const profile = {
     defaultBranch: null,
     verify: [],
+    setup: [],
     commitsAddress: null,
     kinds: null,
     public: false,
@@ -113,15 +117,21 @@ export function parseProfile(text) {
         "profile: `direct-commits` no longer exists: the default branch changes only through pull requests, in every repository",
       );
     }
-    if (key === "verify") {
+    if (key === "verify" || key === "setup") {
+      const form = `profile: \`${key}\` must be a list with one command on each line`;
+      /** @type {string[]} */
+      let commands = [];
       if (value === "") {
-        profile.verify = block(lines, index, /^\s*-\s+(.*)$/).map((match) => scalar(match[1]));
+        commands = block(lines, index, ITEM).map((match) => scalar(match[1]));
+        // An indented line that is no item would end the list where it stands, and a command left out of it would be
+        // skipped with no word: the reader refuses it.
+        const after = lines.slice(index + 1).find((next) => !BLANK.test(next) && !ITEM.test(next));
+        if (after !== undefined && /^\s/.test(after)) throw new Error(form);
       } else if (value !== "[]") {
-        throw new Error("profile: `verify` must be a list with one command on each line");
+        throw new Error(form);
       }
-      if (profile.verify.some((command) => command === "")) {
-        throw new Error("profile: `verify` holds an empty command");
-      }
+      if (commands.some((command) => command === "")) throw new Error(`profile: \`${key}\` holds an empty command`);
+      profile[key] = commands;
     }
     if (key === "commits") {
       const inline = /^\{\s*address:\s*(.+?)\s*\}$/.exec(value);

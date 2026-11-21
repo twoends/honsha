@@ -119,8 +119,47 @@ one held; this record states the same strategy in general words.
 
 - 2026-11-21: the branch is made again from the default branch, at the person's request. The first one held, in its
   record and in a commit's log, details of the pilot and of this computer that the kit's gate keeps out, and a branch
-  only grows.
+  only grows. The work is the first branch's as its two checks left it, with every finding they made fixed; this
+  branch gets a check of its own.
+- 2026-11-21: worked in worktrees of the kit's clone, `.claude/worktrees/`. No `--setup` ran before the first commit:
+  the kit's packages were found in the clone's `node_modules` above the worktree, which an item's worktree elsewhere
+  would not have.
+- 2026-11-21: `checks/profile.mjs` reads `setup` through the same code as `verify`, so the two keys accept and refuse
+  the same forms, and it refuses for both an indented line that is no item, which would end the list there and skip
+  the commands after it in silence. `checks/verify.mjs` takes `--setup` before or after the profile's path.
+- 2026-11-21: the template's budget goes from 4,000 to 4,400 characters: it holds every key with what it holds, and it
+  was at 3,949 before `setup`, whose comment says when it runs, in which shell, and that an install runs its packages'
+  scripts unless told not to.
+- 2026-11-21: the worker's step runs `--setup` before the item's first commit in a folder, in "Before changing
+  anything", and `honsha:parallel-parts` says the same for a part's worktree.
+- 2026-11-21: the pipeline's contract in the workflow names `setup` first, and so does the opening comment of
+  `project.yml`. The wiring still installs Node.js, and Claude Code when its caller asks, but none of the project's
+  packages itself.
+- 2026-11-21: the change reaches 16 existing files, against the strategy's estimate of about nine: the tests of the
+  reader and the runner, the two pipelines and the kit's profile count with the documents.
+- 2026-11-21: the home's item that adds `setup` to its profile is `261121-2109` of the home, approved by the person
+  the same day.
+- 2026-11-21: live check (criterion 7), with this worktree's `checks/verify.mjs`:
+  - a scratch project in the scratchpad, whose lockfile in a subfolder installs a local package with a command, and
+    whose git `pre-commit` hook runs that command. In a new worktree a commit failed, the hook finding no packages;
+    `verify.mjs --setup` passed; the commit then passed, and `verify.mjs` passed;
+  - a scratch clone of the pilot, in an ignored folder of the kit's clone, with a profile written in the clone only,
+    whose `setup` installs the pilot's packages from their subfolder without install scripts, and whose `verify` runs
+    the pilot's own check. Setup ran in the clone; then the command that the pilot's own instructions give installed
+    its git hooks, since its packages install none. In a new worktree a commit failed, its hook finding no packages;
+    `verify.mjs --setup` passed; the commit then passed. `verify.mjs` ran the pilot's check, which failed at its lint:
+    this computer refuses to run a program that step needs, in the pilot's own folder too. A matter of the host,
+    reported to the person.
 
 ## Verification
+
+## Deviations
+
+- Criterion 7, the clone of the pilot: its `setup` installed without install scripts, as the pipeline installs
+  (`honsha:dependencies`), with two options that only quiet npm; and its check did not pass, since it fails on this
+  computer at a step that the host refuses to run whatever the kit does, in the pilot's own folder too. The check as
+  a whole is left to the pilot's own pipeline.
+- Criterion 1 is met by a reader that refuses an indented line that is no item for `verify` too: the two keys share
+  their reading.
 
 ## Outcome

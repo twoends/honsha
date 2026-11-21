@@ -23,7 +23,7 @@ const budgets = {
   "agents/hub.md": 6000,
   "agents/worker.md": 5800,
   "agents/checker.md": 7600,
-  "templates/profile.yml": 4000,
+  "templates/profile.yml": 4400,
   "docs/01-specs/WORKFLOW.md": 35000,
   "docs/01-specs/INTERFACE.md": 9000,
 };

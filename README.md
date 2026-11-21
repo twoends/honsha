@@ -43,8 +43,8 @@ of a service's piece (workflow, The hosting service).
 - Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - The plugin's setting `home`, the folder of the installation's home on the machine, which Claude Code asks for when
   the plugin is enabled. Without it a session receives its project's lessons only (workflow, Lessons).
-- For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
-  runs no install scripts.
+- For a change to the kit, its development tools, which `node checks/verify.mjs --setup` installs at the versions in
+  `package-lock.json`, with no install scripts.
 - A command-line client for the service that hosts the repositories, to open pull requests and to read them. The
   piece of that service names it.
 
@@ -97,14 +97,15 @@ a clone without the hook is caught too; the name of the machine's user only the 
 ## Checking a change to the kit
 
 ```
-npm ci
+node checks/verify.mjs --setup
 node checks/verify.mjs
 ```
 
-It runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types
-with TypeScript checking the JavaScript files, the tests, `claude plugin validate .`, and the checks of the branch's
-record and commits. The same list runs on every pull request and every push to `main`, on Linux and on Windows.
-`npm ci` is needed once, and again when `package-lock.json` changes.
+The first command runs the profile's `setup`, which installs the development tools from the lockfile without their
+install scripts: it is needed once in each clone or worktree, and again when `package-lock.json` changes. The second
+runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types with
+TypeScript checking the JavaScript files, the tests, `claude plugin validate .`, and the checks of the branch's record
+and commits. Both run on every pull request and every push to `main`, on Linux and on Windows.
 
 The validator warns that the plugin has no version, which is deliberate (O10; architecture, Open design points). It also
 remarks that there is no licence and no icon, which matters only for a submission to the public plugin directory.

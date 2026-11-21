@@ -1,11 +1,11 @@
-# Runs the kit's checks and a project's `verify` commands on the project's pull requests and on each push to its
-# default branch.
+# Prepares a project's checkout with its profile's `setup` commands, then runs the kit's checks and the project's
+# `verify` commands, on the project's pull requests and on each push to its default branch.
 #
 # A project's own workflow calls this one; the caller file is shown in services/github/README.md,
 # under "Checks on pull requests and on the default branch", and what the wiring has to do is the
 # contract (workflow, Checks on pull requests and on the default branch). The commands are the ones
-# the worker runs (agents/worker.md, Verification, step 1); they are not repeated here beyond their
-# order.
+# the worker runs in a new worktree and at its verification (agents/worker.md); they are not repeated
+# here beyond their order.
 
 name: project
 
@@ -59,9 +59,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-      - name: Install the project's tools from its lockfile, without install scripts
-        if: hashFiles('project/package-lock.json') != ''
-        run: npm ci --ignore-scripts
+      # The profile says what a fresh checkout of the project needs, wherever its packages are: the pipeline installs
+      # none of the project's packages itself.
+      - name: Prepare the checkout with the setup commands of the profile
+        run: node ../kit/checks/verify.mjs --setup
       - name: Install Claude Code
         if: inputs.claude-code != ''
         env:

@@ -52,8 +52,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
-      - name: Install the development tools from the lockfile, without install scripts
-        run: npm ci --ignore-scripts
+      - name: Prepare the checkout with the setup commands of the profile
+        run: node checks/verify.mjs --setup
       - name: Install Claude Code, for the plugin validator
         run: npm install --global @anthropic-ai/claude-code@2.1.325
       - name: Run the verification commands of the profile

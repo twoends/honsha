@@ -10,7 +10,8 @@ configuration, and each part can be verified on its own. Parts that fail this te
 separately. Verification and the checker run once, on the integrated result.
 
 1. Run such parts in separate worktrees, each on a local branch cut from the tip of the item's branch and never
-   pushed, named `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one.
+   pushed, named `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one. Each worktree is a new
+   checkout, so `checks/verify.mjs --setup` runs in it before the part's first commit, as in the item's.
 2. Merge the parts into the item's branch.
 3. Remove their branches and worktrees.
 4. Write in the log which parts ran in parallel and how they were integrated.

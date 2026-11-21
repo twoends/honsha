@@ -11,15 +11,49 @@ import { run } from "./verify.mjs";
 
 const script = fileURLToPath(new URL("./verify.mjs", import.meta.url));
 
-/** @param {string | null} profile */
-function runner(profile) {
+/**
+ * @param {string | null} profile
+ * @param {string[]} [flags]
+ */
+function runner(profile, flags = []) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-verify-"));
   const file = path.join(dir, "profile.yml");
   if (profile !== null) fs.writeFileSync(file, profile);
-  const result = spawnSync(process.execPath, [script, file], { cwd: dir, encoding: "utf8" });
+  const result = spawnSync(process.execPath, [script, ...flags, file], { cwd: dir, encoding: "utf8" });
   fs.rmSync(dir, { recursive: true, force: true });
   return result;
 }
+
+const both = [
+  "verify:",
+  "  - node -e \"console.log('verified')\"",
+  "setup:",
+  "  - node -e \"console.log('first')\"",
+  "  - node -e \"console.log('second')\"",
+  "",
+].join("\n");
+
+test("with --setup it runs the profile's setup commands in order, and not its verification commands", () => {
+  const result = runner(both, ["--setup"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /first[^]*second/);
+  assert.doesNotMatch(result.stdout, /verified/);
+  assert.match(result.stdout, /All 2 setup commands passed/);
+  const plain = runner(both);
+  assert.match(plain.stdout, /verified/);
+  assert.doesNotMatch(plain.stdout, /first/);
+});
+
+test("with --setup it stops at the first command that fails, and says so when there are none", () => {
+  const failing = runner('setup:\n  - node -e "process.exit(4)"\n  - node -e "console.log(40 + 2)"\n', ["--setup"]);
+  assert.equal(failing.status, 1);
+  assert.doesNotMatch(failing.stdout, /42/);
+  assert.match(failing.stdout, /failed \(exit code 4\)[^]*Setup failed/);
+  const none = runner("verify:\n  - npm run check\n", ["--setup"]);
+  assert.equal(none.status, 0);
+  assert.match(none.stdout, /lists no setup commands/);
+  assert.equal(runner(null, ["--setup"]).status, 1);
+});
 
 test("runs the commands in order and stops at the first that fails", () => {
   /** @type {string[]} */

@@ -35,6 +35,7 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
   assert.deepEqual(parseProfile("name: example-project\n"), {
     defaultBranch: null,
     verify: [],
+    setup: [],
     commitsAddress: null,
     kinds: null,
     public: false,
@@ -42,6 +43,14 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     lessons: null,
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
+});
+
+test("reads the setup commands as the verification commands, one on each line, apart from them", () => {
+  const text = 'setup:\n  - npm ci --prefix app\n  - "npm run build" # then the build\nverify:\n  - npm test\n';
+  const profile = parseProfile(text);
+  assert.deepEqual(profile.setup, ["npm ci --prefix app", "npm run build"]);
+  assert.deepEqual(profile.verify, ["npm test"]);
+  assert.deepEqual(parseProfile("setup: []\n").setup, []);
 });
 
 test("reads the stack, inline or as a list, and the file of the project's lessons", () => {
@@ -93,6 +102,13 @@ test("refuses a form it does not read, instead of passing in silence", () => {
   assert.throws(() => parseProfile("verify: [npm run check]\n"), /verify/);
   assert.throws(() => parseProfile("verify: npm run check\n"), /verify/);
   assert.throws(() => parseProfile("verify:\n  - \n"), /empty command/);
+  assert.throws(() => parseProfile("setup: [npm ci]\n"), /`setup` must be a list/);
+  assert.throws(() => parseProfile("setup: npm ci\n"), /`setup` must be a list/);
+  assert.throws(() => parseProfile("setup:\n  - \n"), /`setup` holds an empty command/);
+  // An indented line that is no item would end the list there, and the commands after it would not run.
+  assert.throws(() => parseProfile("setup:\n  npm ci --prefix app\n"), /`setup` must be a list/);
+  assert.throws(() => parseProfile("verify:\n  - npm test\n  npm run lint\n"), /`verify` must be a list/);
+  assert.deepEqual(parseProfile("verify:\n  - npm test\n  # a note\n\ngates:\n  - one\n").verify, ["npm test"]);
   assert.throws(() => parseProfile("commits: yes\n"), /commits/);
   assert.throws(() => parseProfile("commits:\n  address: '('\n"), /regular expression/);
 });
@@ -110,6 +126,7 @@ test("the profile's template is one the reader accepts, with every key the reade
   assert.deepEqual(profile, {
     defaultBranch: "main",
     verify: ["npm run check"],
+    setup: ["npm ci --ignore-scripts"],
     commitsAddress: "@example\\.org$",
     kinds: { feature: 10, fix: 5, upkeep: 5 },
     public: false,
@@ -123,6 +140,7 @@ test("the kit's own profile is one the reader accepts", () => {
   assert.ok(profile);
   assert.equal(profile.defaultBranch, "main");
   assert.ok(profile.verify.length > 0);
+  assert.deepEqual(profile.setup, ["npm ci --ignore-scripts"]);
   assert.ok(profile.commitsAddress);
 });
 

@@ -239,9 +239,11 @@ once:
 ## Profile
 
 `.hub/profile.yml` in each project. The template `templates/profile.yml` holds every key, with what it holds;
-`checks/profile.mjs` reads the keys the kit's scripts use, and refuses a form it cannot read. Per-project customisation
-is limited to this file and to the project's own rules. The procedure, sizes, states and record format are not
-customised.
+`checks/profile.mjs` reads the keys the kit's scripts use, and refuses a form it cannot read. Two keys are commands:
+`verify`, which every verification runs, and `setup`, which prepares a fresh checkout for them once, in an item's
+worktree and in the pipeline alike, so that what a project needs installed is written in one place and not guessed.
+Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
+record format are not customised.
 
 ---
 
@@ -338,10 +340,12 @@ default branch. It meets this contract.
    every push to the default branch itself, which takes the merges and the backlog's direct commits (workflow, The
    backlog): those commits pass through no pull request, so they are checked there. Every push gets its own run, since
    each checks only the commits it added.
-2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the kit's
-   own repository: the check of the record, on a pull request only, since it belongs to a work branch; the check of the
-   commits, and the registry's check where the project's root holds a registry. Then the `verify` commands, as the
-   profile writes them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
+2. **What it runs.** First the `setup` commands of the profile, which prepare the checkout: of the project's own
+   packages, it installs only what they install.
+   Then the kit's checks, from the kit's default branch, or from the branch under check in the kit's own repository:
+   the check of the record, on a pull request only, since it belongs to a work branch; the check of the commits, and
+   the registry's check where the project's root holds a registry. Then the `verify` commands, as the profile writes
+   them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
    merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise, and on
    the pushed commit for a push; the piece says which.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
@@ -355,7 +359,8 @@ default branch. It meets this contract.
    seeing the result.
 6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
 
-In the kit, `node checks/verify.mjs` runs the `verify` list of a profile; `node checks/commits.mjs` reads the three
+In the kit, `node checks/verify.mjs` runs the `verify` list of a profile, and with `--setup` its `setup` list, which the
+wiring runs first; `node checks/commits.mjs` reads the three
 variables, also when they name the default branch (workflow, The backlog), and `node checks/record.mjs` reads
 `HONSHA_BRANCH`.
 
