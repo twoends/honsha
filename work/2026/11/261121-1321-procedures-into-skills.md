@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
@@ -174,6 +174,8 @@ topic: once the rules leave it, its reader is a person or a session that changes
 **Parallel parts.** None: the moves and the references change the same files. The default model is enough.
 
 ## Approval
+
+Approved by the person on 2026-11-21, in the chat of the session that wrote the strategy.
 
 ## Log
 
