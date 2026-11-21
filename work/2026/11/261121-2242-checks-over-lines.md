@@ -51,6 +51,11 @@ record with a long entry with the kit's own Prettier and runs the check on the r
   lines, with a comma after `what`. On that output the record check as merged reports that the entry is not
   `{ due: YYYY-MM-DD, what: … }`, and this branch's reports nothing about `checks`. The sample was removed from the
   home at once.
+- 2026-11-21: the work's commit ran before `node checks/verify.mjs --setup`, which passed after it: the worktree lies
+  in the kit's clone, whose `node_modules` above it the formatter and the git hooks found.
+- 2026-11-21: the check on `9d92aef` failed with one finding: a line with no dash after a closed entry went on that
+  entry and passed unseen, where the check as merged refused it. The fix starts an entry of its own after a closed
+  brace, with tests for such a line with a date and without one. The home's formatted entry still passes.
 
 ## Verification
 

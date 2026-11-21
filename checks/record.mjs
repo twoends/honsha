@@ -70,7 +70,9 @@ export function parseRecord(text) {
 /**
  * The entries of a list in the front matter, each with its lines joined by single spaces: an entry starts at a line
  * that begins with `- `. A formatter writes a mapping in braces that passes its width over several lines, with a comma
- * after its last value, and an entry so written is the same value as one on a single line.
+ * after its last value, and an entry so written is the same value as one on a single line. A line goes on the entry
+ * before it only while that entry's braces are open: after a closed one it is an entry of its own, read and judged as
+ * one.
  * @param {string[]} lines the lines that follow the list's key
  */
 export function entriesOf(lines) {
@@ -78,8 +80,9 @@ export function entriesOf(lines) {
   const entries = [];
   for (const line of lines) {
     const text = line.trim();
-    if (text.startsWith("- ") || entries.length === 0) entries.push(text);
-    else entries[entries.length - 1] += ` ${text}`;
+    const last = entries.at(-1);
+    if (text.startsWith("- ") || last === undefined || last.endsWith("}")) entries.push(text);
+    else entries[entries.length - 1] = `${last} ${text}`;
   }
   return entries;
 }

@@ -188,6 +188,9 @@ test("a deferred check may take several lines, as Prettier writes one past its w
     `  - {\n      due: soon,\n      what: "${long}",\n    }\n`,
     `  - {\n      what: "${long}",\n    }\n`,
     `  - {\n      due: 2026-11-22,\n      what: "${long}",\n`,
+    // A line with no dash after a closed entry is an entry of its own, not the end of the one before.
+    `  - { due: 2026-11-22, what: "x" }\n    { due: soon, what: "y" }\n`,
+    `  - { due: 2026-11-22, what: "x" }\n    { due: 2026-12-01, what: "y" }\n`,
   ];
   for (const entries of broken) {
     assert.deepEqual(problems(withChecks(entries)), [
