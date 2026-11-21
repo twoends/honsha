@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
@@ -209,6 +209,9 @@ enough.
 script and its test. The measure will mark the item over its kind's expectation, for that reason.
 
 ## Approval
+
+Approved by the person on 2026-11-21, in the chat of the session that wrote the strategy: this item now, on its own,
+as a defect fix of kind `fix`.
 
 ## Log
 
