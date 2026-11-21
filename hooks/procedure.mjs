@@ -1,13 +1,14 @@
-// Gives a session, when it starts, the procedure it follows: the worker's, `agents/worker.md`, to a session that runs
-// as no agent and whose folder is not in the main working tree of a home. `hooks.json` runs it at each start.
+// Gives a session that runs as no agent, when it starts, the procedure it follows: the hub's, `agents/hub.md`, in the
+// main working tree of a home, and the worker's, `agents/worker.md`, anywhere else. `hooks.json` runs it at each start.
 //
 //   node hooks/procedure.mjs < the hook's input
 //
 // The platform makes an agent's file the system prompt only of a session started as that agent, and the sessions that
-// an application or another session starts run as none: without this hook, the worker's procedure would reach them
-// only if they read the file. A session that runs as an agent, which the hook's input names in `agent_type`, has its
-// agent's file as its prompt already. The main working tree of a home, a repository holding `registry.yml` at its
-// root, is the hub's; the home's items run in its linked worktrees, where a session gets the worker's procedure.
+// an application or another session starts run as none: without this hook, a procedure would reach them only if they
+// read its file, and every installation would write the hub's in its home. A session that runs as an agent, which the
+// hook's input names in `agent_type`, has its agent's file as its prompt already. The main working tree of a home, a
+// repository holding `registry.yml` at its root (interface, Files), is the hub's; the home's items run in its linked
+// worktrees, where a session gets the worker's procedure.
 //
 // The condition is neither a work branch nor a linked worktree: a session that an application starts in a worktree is
 // on a branch that the application names until it cuts the item's, and a session in a project's own folder that is
@@ -21,6 +22,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const kit = fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]$/, "");
 
 export const WORKER = "agents/worker.md";
+export const HUB = "agents/hub.md";
 const REGISTRY = "registry.yml";
 
 /**
@@ -47,7 +49,7 @@ export function inHome(dir) {
 export function procedure(input) {
   if (typeof input.agent_type === "string" && input.agent_type !== "") return null;
   const dir = typeof input.cwd === "string" && input.cwd !== "" ? input.cwd : process.cwd();
-  return inHome(dir) ? null : WORKER;
+  return inHome(dir) ? HUB : WORKER;
 }
 
 /**
@@ -62,7 +64,7 @@ export function context(file) {
   const name = /^name:\s*(\S+)/m.exec(front?.[1] ?? "")?.[1] ?? path.basename(file, ".md");
   const body = front ? text.slice(front[0].length) : text;
   const what = `The procedure of honsha:${name}, ${file} in the kit directory ${kit}`;
-  return `${what}, which this session follows for a work item:\n\n${body}`;
+  return `${what}, which this session follows${file === WORKER ? " for a work item" : ""}:\n\n${body}`;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
@@ -74,9 +76,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     input = null;
   }
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
-    // Without its input the hook cannot tell an agent's session or the hub's from a worker's, so it gives nothing; the
-    // person sees that the procedure is missing.
-    process.stderr.write("Honsha: the hook's input could not be read, so the session lacks the worker's procedure.\n");
+    // Without its input the hook cannot tell an agent's session, the hub's and a worker's apart, so it gives nothing;
+    // the person sees that the procedure is missing.
+    process.stderr.write("Honsha: the hook's input could not be read, so the session lacks its procedure.\n");
     process.exitCode = 1;
   } else {
     const file = procedure(/** @type {{ cwd?: unknown, agent_type?: unknown }} */ (input));

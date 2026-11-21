@@ -7,7 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { WORKER, context, inHome, procedure } from "./procedure.mjs";
+import { HUB, WORKER, context, inHome, procedure } from "./procedure.mjs";
 
 const script = fileURLToPath(new URL("./procedure.mjs", import.meta.url));
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-procedure-"));
@@ -63,32 +63,56 @@ test("a session that runs as no agent gets the worker's procedure in a project a
   assert.equal(inHome(home.worktree), false);
 });
 
-test("a session in a home's main working tree gets nothing, from any folder of it", () => {
+test("a folder outside git is in no home, so a session there that runs as no agent gets the worker's procedure", () => {
+  const outside = path.join(scratch, "outside");
+  fs.mkdirSync(outside);
+  // The scratch folder is not in a repository, so git finds none above this folder.
+  assert.throws(() => git(outside, ["rev-parse", "--show-toplevel"]));
+  assert.equal(inHome(outside), false);
+  assert.equal(procedure({ cwd: outside }), WORKER);
+});
+
+test("a session in a home's main working tree gets the hub's procedure, from any folder of it", () => {
   assert.equal(inHome(home.main), true);
-  assert.equal(procedure({ cwd: home.main }), null);
-  assert.equal(procedure({ cwd: path.join(home.main, "notes") }), null);
+  assert.equal(procedure({ cwd: home.main }), HUB);
+  assert.equal(procedure({ cwd: path.join(home.main, "notes") }), HUB);
 });
 
 test("a session that runs as an agent gets nothing, wherever it is", () => {
-  for (const agent of ["honsha:worker", "example-agent"]) {
+  for (const agent of ["honsha:worker", "honsha:hub", "example-agent"]) {
     assert.equal(procedure({ cwd: project.main, agent_type: agent }), null);
     assert.equal(procedure({ cwd: project.worktree, agent_type: agent }), null);
+    assert.equal(procedure({ cwd: home.main, agent_type: agent }), null);
   }
 });
 
 test("the hook gives a line that names the agent, the file and the kit directory, then the file's body", () => {
   const kit = fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]$/, "");
-  const text = fs.readFileSync(new URL(`../${WORKER}`, import.meta.url), "utf8");
-  const body = text.slice(text.indexOf("\n---", 3) + 4).replace(/^\r?\n+/, "");
-  const given = context(WORKER);
-  assert.ok(given.startsWith(`The procedure of honsha:worker, ${WORKER} in the kit directory ${kit}, `), given);
-  assert.ok(given.endsWith(`:\n\n${body}`));
-  assert.ok(!given.includes("\ndescription:"));
+  for (const [file, name] of [
+    [WORKER, "worker"],
+    [HUB, "hub"],
+  ]) {
+    const text = fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+    const body = text.slice(text.indexOf("\n---", 3) + 4).replace(/^\r?\n+/, "");
+    const given = context(file);
+    assert.ok(given.startsWith(`The procedure of honsha:${name}, ${file} in the kit directory ${kit}, `), given);
+    assert.ok(given.endsWith(`:\n\n${body}`));
+    assert.ok(!given.includes("\ndescription:"));
+  }
 
-  const result = run(JSON.stringify({ hook_event_name: "SessionStart", cwd: project.worktree }));
-  assert.equal(result.status, 0);
-  assert.equal(result.stdout, given);
-  for (const input of [{ cwd: home.main }, { cwd: project.main, agent_type: "honsha:worker" }]) {
+  for (const [cwd, file] of [
+    [project.worktree, WORKER],
+    [home.worktree, WORKER],
+    [home.main, HUB],
+  ]) {
+    const result = run(JSON.stringify({ hook_event_name: "SessionStart", cwd }));
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, context(file));
+  }
+  for (const input of [
+    { cwd: project.main, agent_type: "honsha:worker" },
+    { cwd: home.main, agent_type: "honsha:hub" },
+  ]) {
     const quiet = run(JSON.stringify({ hook_event_name: "SessionStart", ...input }));
     assert.equal(quiet.status, 0);
     assert.equal(quiet.stdout, "");
@@ -100,6 +124,6 @@ test("a hook input that cannot be read gives nothing and tells the person", () =
     const result = run(input);
     assert.equal(result.status, 1, input);
     assert.equal(result.stdout, "");
-    assert.match(result.stderr, /the session lacks the worker's procedure/);
+    assert.match(result.stderr, /the session lacks its procedure/);
   }
 });

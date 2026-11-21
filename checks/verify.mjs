@@ -1,10 +1,9 @@
-// Runs the verification commands of a project's profile, one after the other.
+// Runs the verification commands of a project's profile, one after the other; its command is in the kit's interface
+// (interface, Commands).
 //
-//   node checks/verify.mjs [path of the profile]
-//
-// The commands are the `verify` list of `.hub/profile.yml`. Each runs in the current directory,
-// through the default shell of the platform, so a command is written to work in that shell. The
-// first command that fails stops the run, and the exit code is 1.
+// The commands are the `verify` list of the profile, `.hub/profile.yml` unless the command names another. Each runs
+// in the current directory, through the default shell of the platform, so a command is written to work in that shell.
+// The first command that fails stops the run, and the exit code is 1.
 //
 // A worker, a person at a terminal and the wiring of a hosting service all run this one list.
 

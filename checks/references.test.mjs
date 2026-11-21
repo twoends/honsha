@@ -1,6 +1,7 @@
-// Every reference to a part of the workflow or of the architecture names its heading, as `(workflow, The backlog)`,
-// the way the core rules' parts are cited. A number would keep pointing at whatever section comes to hold it once a
-// section is added or removed, and nothing would show it; a name that no heading carries any more fails here.
+// Every reference to a part of the workflow, the architecture or the interface names its heading, as
+// `(workflow, The backlog)`, the way the core rules' parts are cited. A number would keep pointing at whatever section
+// comes to hold it once a section is added or removed, and nothing would show it; a name that no heading carries any
+// more fails here.
 // Records keep the references they were written with, as history, so `work/` is not read.
 
 import assert from "node:assert/strict";
@@ -10,7 +11,11 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const DOCUMENTS = { workflow: "docs/01-specs/WORKFLOW.md", architecture: "docs/01-specs/ARCHITECTURE.md" };
+const DOCUMENTS = {
+  workflow: "docs/01-specs/WORKFLOW.md",
+  architecture: "docs/01-specs/ARCHITECTURE.md",
+  interface: "docs/01-specs/INTERFACE.md",
+};
 // This file is skipped too: its own tests hold references that name no heading, on purpose.
 const SKIP = new Set([".git", ".claude", "node_modules", "work", "package-lock.json", "references.test.mjs"]);
 const READ = /\.(md|mjs|ya?ml|json)$/;
@@ -50,9 +55,9 @@ export function references(text) {
   for (const group of fold(text).matchAll(/\(([^()]*)\)/g)) {
     let document = null;
     for (const part of group[1].split(";").map((item) => item.trim())) {
-      const named = /^(workflow|architecture|core rules), (.+)$/.exec(part);
+      const named = /^(workflow|architecture|interface|core rules), (.+)$/.exec(part);
       if (named) document = named[1];
-      if (document === "workflow" || document === "architecture") {
+      if (document !== null && document in DOCUMENTS) {
         found.push({ document, name: named ? named[2] : part });
       }
     }
@@ -92,6 +97,10 @@ test("headings are read outside fenced code, and folding joins a wrapped referen
       { document: "workflow", name: "Merging" },
     ],
   );
+  assert.deepEqual(references("(interface, Commands; The registry)"), [
+    { document: "interface", name: "Commands" },
+    { document: "interface", name: "The registry" },
+  ]);
   assert.deepEqual(references("(core rules, Sizes; Delivery) and f(a; b)"), []);
   assert.deepEqual(numbered("as section 5.2 says, and sections 8\n# and 2"), ["section 5.2", "sections 8"]);
   assert.deepEqual(numbered("for the guard (14.3), in two steps (2) of version 1.94.0"), ["(14.3)"]);
@@ -114,7 +123,7 @@ for (const [name, list] of Object.entries(named)) {
   });
 }
 
-test("every reference to the workflow or the architecture names one of its headings, and none cites a number", () => {
+test("every reference to one of these documents names one of its headings, and none cites a number", () => {
   const problems = [];
   for (const file of files(root)) {
     const text = fs.readFileSync(file, "utf8");

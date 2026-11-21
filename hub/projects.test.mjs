@@ -155,6 +155,10 @@ test("the registry is read back as it is written, and a line in another shape st
     },
   ];
   assert.deepEqual(parseRegistry(formatRegistry(projects)), projects);
+  // The file is the installation's, so its header cites the kit's interface, the one part of the kit it may cite.
+  assert.ok(
+    formatRegistry(projects).startsWith("# Written by the kit's hub/projects.mjs (interface, The registry).\n"),
+  );
   assert.deepEqual(parseRegistry("projects: []\n"), []);
   assert.throws(() => parseRegistry(`${formatRegistry(projects)}  extra: yes\n`), /line \d+: not in the shape/);
   assert.throws(() => parseRegistry(formatRegistry(projects).replace("adopting", "paused")), /the state `paused`/);
@@ -223,6 +227,7 @@ test("add with an existing report takes it as the assessment, in a trivial item 
   assert.equal(parseRegistry(show(dir, branch, REGISTRY))[0].assessment, "261130-1200");
   assert.match(show(dir, branch, file), /^size: trivial$/m);
   assert.match(show(dir, branch, file), /^project: example-home$/m);
+  assert.ok(show(dir, branch, file).includes("the change to `registry.yml` (interface, The registry)."));
   assert.deepEqual(recordProblems(dir, branch, file), []);
 
   const missing = run(["add", "other", "example-owner/other", folder, "--assessment", "261130-1300"], {

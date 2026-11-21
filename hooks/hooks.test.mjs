@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { BUDGET, LEVELS } from "./lessons.mjs";
+import { HUB, WORKER, context } from "./procedure.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 /** @param {string} file */
@@ -87,9 +88,10 @@ test("the opening of the core rules names each of their other parts", () => {
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
 // that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
 // budget, since their files are the installation's and the hook that gives them keeps each level under it. The total
-// holds the worker's procedure too, which a session of a project that runs as no agent receives, as a session started
-// as the worker receives the same file as its system prompt: it counts at its file's budget, so that the file can grow
-// to that budget without reaching the total.
+// holds the procedure too that a session which runs as no agent receives, the hub's in a home's main working tree and
+// the worker's anywhere else, as a session started as that agent receives the same file as its system prompt: a
+// session receives one of the two, and each counts at its file's budget, so that the file can grow to that budget
+// without reaching the total.
 const PART = 9000;
 const TOTAL = 29000;
 
@@ -103,15 +105,20 @@ test("each hook gives its whole file under the limit for one output, and a sessi
     total += text.length;
   }
   const lessons = LEVELS.length * BUDGET;
-  const procedure = output(procedures[0], { hook_event_name: "SessionStart", cwd: root });
-  assert.ok(procedure.length < PART, `the worker's procedure: ${procedure.length} characters`);
-  const budget = Number(/"agents\/worker\.md": (\d+)/.exec(read("checks/budgets.test.mjs"))?.[1]);
-  assert.ok(budget > 0, "the budget of agents/worker.md in checks/budgets.test.mjs");
-  const worker = procedure.slice(0, procedure.indexOf("\n\n") + 2).length + budget;
-  assert.ok(
-    total + lessons + worker <= TOTAL,
-    `${total} characters of rules, ${lessons} of lessons and ${worker} of the worker's procedure at a session's start`,
-  );
+  // The kit is no home, so a session in it that runs as no agent gets the worker's procedure.
+  assert.equal(output(procedures[0], { hook_event_name: "SessionStart", cwd: root }), context(WORKER));
+  for (const file of [WORKER, HUB]) {
+    const procedure = context(file);
+    assert.ok(procedure.length < PART, `${file}: ${procedure.length} characters`);
+    const listed = new RegExp(`"${file.replace(/[./]/g, "\\$&")}": (\\d+)`).exec(read("checks/budgets.test.mjs"));
+    const budget = Number(listed?.[1]);
+    assert.ok(budget > 0, `the budget of ${file} in checks/budgets.test.mjs`);
+    const counted = procedure.slice(0, procedure.indexOf("\n\n") + 2).length + budget;
+    assert.ok(
+      total + lessons + counted <= TOTAL,
+      `${total} characters of rules, ${lessons} of lessons and ${counted} of ${file} at a session's start`,
+    );
+  }
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
     const [, file] = handler.args;
     const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;

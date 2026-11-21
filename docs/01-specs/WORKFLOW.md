@@ -37,17 +37,18 @@ A new rule goes where it costs least to hold:
   receives, and the profile;
 - **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
   too, when it starts;
-- **an agent's file,** for that agent's own procedure. The worker's file reaches a session that runs as no agent, by a
-  hook at its start, outside the main working tree of a home, which is the hub's: a session started as an agent has
-  that agent's file as its system prompt, and the sessions that an application or another session starts run as none.
+- **an agent's file,** for that agent's own procedure. A session that runs as no agent receives one by a hook at its
+  start: the hub's in the main working tree of a home, so that no installation writes it, and the worker's anywhere
+  else. A session started as an agent has that agent's file as its system prompt, and the sessions that an
+  application or another session starts run as none.
 
 A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
 `hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context any
 hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook. The
-total a session receives at start, the lessons and the worker's procedure counted at their budgets (workflow,
-Lessons), is a choice of what every session pays: it is raised by a work item that says why, or answered by moving a
-rule that only some situations need into a skill.
+total a session receives at start, the lessons and the hub's or the worker's procedure counted at their budgets
+(workflow, Lessons), is a choice of what every session pays: it is raised by a work item that says why, or answered by
+moving a rule that only some situations need into a skill.
 
 ---
 
@@ -171,12 +172,12 @@ Delivery). Code keeps the exception narrow, not trust.
 
 `hub/backlog.mjs` in the kit, run from the home's folder, does both moves:
 
-- `add <project> <file>` captures a record. It reads the registry from the home's default branch after a fetch, and
+- `add` captures a record. It reads the registry from the home's default branch after a fetch, and
   refuses a project that is not there, a file that is not a record of that project in the state `idea`, `ready` or
   `dropped` and named `<id>-<slug>.md`, and a record the backlog holds already. It commits the file in a temporary
   worktree of the default branch's tip, with the trailer `Backlog: <id>`, and pushes it before it returns, so that the
   capture is on the hosting service and the person does nothing for it.
-- `take <project> <id>` removes the record in the same way when the item starts, and prints it for the session that
+- `take` removes the record in the same way when the item starts, and prints it for the session that
   creates the item in its project.
 
 Neither touches the home's working tree. When a push is refused because the default branch moved in the meantime, the
@@ -394,6 +395,9 @@ its own rules. What the checker reviews of them is in `agents/checker.md`.
   record that copies another document grows with every item and says nothing new.
 - The records' own rules are given with the record (workflow, The record); a project's earlier documents are listed
   under `legacy` in its profile (`templates/profile.yml`).
+- An installation's documents cite only the kit's interface (`docs/01-specs/INTERFACE.md`), because the kit's other
+  documents are rewritten as it grows: a section that moves or goes leaves a citation of it pointing at nothing, and
+  nothing in the installation shows it.
 
 ---
 
