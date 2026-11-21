@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 43
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -150,8 +150,91 @@ one held; this record states the same strategy in general words.
     `verify.mjs --setup` passed; the commit then passed. `verify.mjs` ran the pilot's check, which failed at its lint:
     this computer refuses to run a program that step needs, in the pilot's own folder too. A matter of the host,
     reported to the person.
+- 2026-11-21: in this worktree, after the work's commit, `node checks/verify.mjs --setup`: `npm ci --ignore-scripts`
+  passed.
+- 2026-11-21: the home's item `261121-2109` is in the home's pull request #18; this item merges after it. That item's
+  log reads the home's profile with this branch's reader: `verify` as before, and `setup` as `npm ci --ignore-scripts`.
+  The kit's own profile is read by this branch's tests too: neither profile of the installation's two registered
+  projects has an indented line that is no item in a list of commands, which the reader now refuses.
 
 ## Verification
+
+On `0393398`, `node checks/verify.mjs`, which runs the profile's `verify`: passed.
+
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 181 tests, 181
+  passed.
+- `claude plugin validate .`: passed, with the warning that the manifests carry no version.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: the 3 commits of the branch follow the rules.
+
+### Checker report, on `0393398`
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. `checks/profile.mjs` reads `setup` as a list, refuses other forms and an empty command, gives an empty list when
+   the key is absent, with tests, and the template says what the key holds: met. The code is at `checks/profile.mjs:78`
+   and `:120-135`. The tests are at `checks/profile.test.mjs:38`, `:48-54`, `:105-110`, `:129` and `:143`. The template
+   text is at `templates/profile.yml:34-38`.
+2. `verify.mjs --setup` runs the commands in order, stops at the first failure with exit code 1, and says so in a line
+   with exit code 0 when there are none, with tests: met. The code is at `checks/verify.mjs:44-62` and the tests at
+   `checks/verify.test.mjs:36-56`.
+3. `project.yml` runs `--setup` before the kit's checks and `verify`, and no longer runs `npm ci` itself: met. The step
+   is at `.github/workflows/project.yml:64-65`, ahead of the steps at `:71-80`, and the file contains no `npm ci`.
+4. The worker runs `--setup` before its first commit, writes it in the log, and stays within its budget: met. The step
+   is at `agents/worker.md:16-17`. The budget is 5800 (`checks/budgets.test.mjs:24`); I count about 5,300 characters
+   in the file.
+5. The kit's profile lists `npm ci --ignore-scripts` under `setup`, and `verify.yml` runs it through `--setup`: met, at
+   `.hub/profile.yml:16-17` and `.github/workflows/verify.yml:55-56`.
+6. The template, the interface, the GitHub piece, the workflow, the assessment and the README say what holds now: met.
+   - `templates/profile.yml:34-36`.
+   - `docs/01-specs/INTERFACE.md:42`; the interface leaves the profile's keys to the template, which it names at `:52`.
+   - `services/github/README.md:161-165`.
+   - `docs/01-specs/WORKFLOW.md:242-244`, `:343-344` and `:362-363`.
+   - `skills/assessment/SKILL.md:16-18`.
+   - `README.md:46-47` and `:99-108`.
+7. The live check on a scratch project and on a scratch clone of the pilot: not verifiable from here. Both lived
+   outside the repository, and only the log describes them (record lines 142-152). The pilot's own check did not pass,
+   so that part of the criterion is not met as written. The record declares this under "Deviations", so it is not a
+   finding.
+8. The `project.yml` job on the item's pull request passes through `--setup`: not verifiable. The pull request is not
+   open yet.
+9. The profile's `verify` passes: met, as recorded under "Verification" on `0393398`.
+
+- **Intent:** in order
+- **Scope:** in order
+  - `skills/parallel-parts/SKILL.md:13-14` follows the approved strategy ("The worker").
+  - The template's budget rise (`checks/budgets.test.mjs:26`) is needed for criterion 1, and the log gives the reason.
+  - The stricter reading of `verify` is declared under "Deviations".
+- **Comments and documents:** in order
+- **Gates:** in order. All four are met for the kit's files the diff changes. The record speaks of the pilot, the home
+  and the host without naming any of them, as merged records do.
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 7: the scratch project and the clone of the pilot were outside the repository.
+- Criterion 8: it can only be checked once the pull request is open.
+- The home's item `261121-2109` must merge before this one (record lines 46 and 95-97). Whether it has merged is in
+  another repository. The log (lines 140-141) names the item, not its pull request, although the strategy ("Order")
+  says the log names the pull request.
+- Whether the record is now free of the pilot details the person asked to remove: the first branch is not part of this
+  check. The record still says three things about the pilot (lines 24, 146-152 and 171-174):
+  - its packages live in a subfolder;
+  - they install no git hooks of their own;
+  - its lint step does not run on this host.
+- The reader now also refuses, under `verify`, an indented line that is not an item. Whether an existing installation's
+  profile, the home's included, has such a line cannot be read from here: those profiles are in other repositories.
 
 ## Deviations
 
@@ -163,3 +246,9 @@ one held; this record states the same strategy in general words.
   their reading.
 
 ## Outcome
+
+A project's profile names under `setup` what a fresh checkout needs for its checks and its own git hooks, wherever its
+packages are. `checks/verify.mjs --setup` runs it: the worker in each new worktree before its first commit, and the
+shared pipeline before the kit's checks, in place of its own install from a root lockfile. The kit's own profile and
+pipeline use it. Criterion 8 is the `project` job among this pull request's checks. The item merges after the home's
+pull request #18 and after the kit's #42.
