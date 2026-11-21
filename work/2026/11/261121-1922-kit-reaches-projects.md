@@ -188,6 +188,10 @@ Approved by the person on 2026-11-21, with design A, in the chat of the session 
   long, so a session there keeps the kit only once the plugin is installed for the user on the host. That install
   changes the user's own settings, which an item does not do on its own: the pull request asks the person to run it
   before merging, and the boundary holds once it is run.
+- 2026-11-21: the install for the user waits for the merge instead. Before it, the marketplace gives the kit as merged
+  now, whose hooks act in every folder, so every session of the user, in the person's other projects too, would
+  receive the rules, the worker's procedure and the guard. Right after the merge it gives this item's kit. A session
+  started in the kit's clone between the merge and the install lacks the kit; the pull request says so.
 
 ## Verification
 
@@ -288,6 +292,6 @@ anywhere else it gives nothing and refuses nothing. No project holds a file for 
 get the core rules, the procedure and the guard from its first item, adoption included. A project is `active` once the
 items chosen from its assessment, which `choose` now writes into the registry, are merged as done or dropped. The
 worker cuts its branch and the checker's comparison from the default branch on the hosting service, and the hub
-reads the home from it. Before the merge the person installs the plugin for the user on this computer, so that the
-kit's clone and the home keep the kit; after it, an item of the home drops its declaration. The deferred check in
-`checks`, due 2026-11-28, looks at the desktop application once the plugin is installed so.
+reads the home from it. Right after the merge the plugin is installed for the user on this computer, so that the
+kit's clone keeps the kit, and an item of the home drops its declaration. The deferred check in `checks`, due
+2026-11-28, looks at the desktop application once the plugin is installed so.
