@@ -1,6 +1,6 @@
 ---
 name: worker
-description: Executes one Honsha work item, from its record to an open pull request. Run it as the main session of the item (claude --agent honsha:worker) on the item's branch or worktree, not as a subagent.
+description: Executes one Honsha work item, from its record to an open pull request. A session of a project that runs as no agent receives this procedure when it starts; starting the session with claude --agent honsha:worker makes it the system prompt instead. Never run it as a subagent.
 model: opus
 ---
 

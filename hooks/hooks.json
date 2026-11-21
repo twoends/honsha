@@ -1,5 +1,5 @@
 {
-  "description": "Delivers each part of the core rules and the record template, each by a hook of its own, when a session or the checker starts, the lessons of the project, its technologies and the host when a session starts, and the hub's procedure when a session starts in a home's own folder; refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
+  "description": "Delivers each part of the core rules and the record template, each by a hook of its own, when a session or the checker starts; the lessons of the project, its technologies and the host when a session starts, and, to a session that runs as no agent, the hub's procedure in a home's main working tree and the worker's anywhere else; refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
   "hooks": {
     "SessionStart": [
       {
@@ -55,7 +55,7 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/hub.mjs"],
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/procedure.mjs"],
             "timeout": 10
           }
         ]
