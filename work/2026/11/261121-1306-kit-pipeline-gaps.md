@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
@@ -155,6 +155,8 @@ files where a fix expects 4, since it closes two gaps, which meet in verify.yml 
 reason it has no parallel parts.
 
 ## Approval
+
+Approved by the person on 2026-11-21, in the chat of the session that wrote the strategy.
 
 ## Log
 
