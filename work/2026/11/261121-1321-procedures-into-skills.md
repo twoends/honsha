@@ -1,6 +1,6 @@
 ---
 id: 261121-1321
-title: Give sessions the assessment's procedure and the rules on dependencies as skills
+title: Give every session the workflow's rules it applies, and keep the workflow to reasons and specifications
 project: honsha
 type: change
 size: full
@@ -26,119 +26,160 @@ gives the workflow a size limit, and replaces with a pointer to the code the imp
 comments already state. Asked on 2026-11-21, in the session of the kit's readiness review, after the person observed
 that a workflow of about 44,000 characters risks losing pieces once projects start using it.
 
+### Addenda
+
+2026-11-21, before the approval, on the first strategy (`f809f1d`), which kept the workflow's headings, numbers and
+sections and stayed away from files another item changes, so that what depends on them would not have to change. The
+person asked for no such workaround while the kit is still in full development: the change is designed as it should
+be, and every reference, document and file it affects, in the kit and in the home, changes with it.
+
 ## Scope and acceptance criteria
 
 ### In scope
 
-- `skills/assessment/SKILL.md`: what an assessment reads and its report, today's workflow 20.1 and 20.2.
-- `skills/dependencies/SKILL.md`: the rules on dependencies, today's workflow 17.
-- The workflow's sections 17 and 20, which keep the reasons, the registry's states and the scripts, and point to the
-  skills; its section 2, which names the two skills among the situational procedures.
-- `agents/worker.md`: when to invoke each skill.
-- `hub/projects.mjs` and its test: the record that `add` writes names the assessment's skill.
-- `rules/writing.md`: the exception that lets a file restate a rule its reader does not otherwise receive covers a
-  skill as well as an agent's file.
-- The workflow's sections 8 (the lessons' budget) and 14.3 (how the guard follows a move to another folder): the rule
-  stays, the mechanics are left to the comments of `hooks/lessons.mjs` and `hooks/guard.mjs`.
-- `checks/budgets.test.mjs`: budgets for the two skills and for the workflow.
-- The README's row on `skills/`.
+- Every rule of the workflow that a session applies, moved to where that session receives it: the core rules, an
+  agent's file, a skill or a template. The destination of each section is in the strategy.
+- New skills `honsha:assessment`, `honsha:dependencies` and `honsha:review`; the skill `honsha:parallel-parts` made
+  whole.
+- A template of the profile, `templates/profile.yml`, read by the profile's reader in a test.
+- The workflow kept to the reasons, the specifications of the kit's own mechanisms and pointers, its headings without
+  numbers, the example of a small item removed.
+- Every reference to a part of the workflow or of the architecture, in the kit's files outside `work/`, written by the
+  heading's name, with a test that fails on one that names no heading.
+- `agents/worker.md`, `hub/projects.mjs` and its test, the kit's profile, `checks/budgets.test.mjs`, the README, the
+  architecture and every other file whose references or text the moves change.
+- The lesson of the person's correction, in `LESSONS.md`.
 
 ### Out of scope
 
-- What any rule requires: the steps of an assessment, its report and the rules on dependencies stay as they are; only
-  where they live changes.
-- The workflow's section 16 on decisions, which the record's own sections already give a place to, and its other
-  sections' length.
-- Splitting the workflow into several files: once these rules move, no session needs to read it to do its work.
-- The workflow's sections 14.1 and 14.2 and `services/github/`, which the open item `261121-1306` changes.
-- The home, whose `CLAUDE.md` and monthly review name the sections 17 and 20: both sections stay, so the references
-  hold.
+- What any rule requires: the rules move and are pointed to, none is changed, added or dropped.
+- The core rules' parts, which every session already receives.
+- The home and the installation's monthly review task, which change in their own items after this one is merged (see
+  the strategy, "After the merge").
+- Splitting the workflow into several files: once the rules leave it, no session needs it to do its work.
 
 ### Boundaries
 
-- No rule is dropped. The log names, for each paragraph that leaves the workflow, where it went.
-- A reference to the sections 17 or 20 anywhere in the kit still finds there what it cites, or is updated.
+- No rule is dropped: the log names, for each paragraph that leaves the workflow, where it went.
+- A skill, a template and the workflow say nothing about a user, a project or an installation.
 - The core rules' parts stay within the limits of `hooks/hooks.test.mjs`.
 
 ### Acceptance criteria
 
-1. `skills/assessment/SKILL.md` holds today's 20.1 and 20.2 word for word, apart from pointers. Each step whose
-   criterion another section states has that criterion written in the skill, with the section named, so that a session
-   needs only the skill, the project and the hosting service's piece to run the assessment.
-2. `skills/dependencies/SKILL.md` holds the five rules of today's section 17 word for word, apart from pointers.
-3. The workflow's section 17 keeps why dependencies are handled this way and points to its skill; section 20 keeps the
-   states, the scripts and why, and points to its skill; 20.1 and 20.2 are gone from it. Section 2 names both skills.
-4. `agents/worker.md` says to invoke `honsha:assessment` for an item that assesses a project, and
-   `honsha:dependencies` for an item that changes a dependency or answers a vulnerability report. It stays within its
-   budget of 5,800 characters.
-5. The record that `hub/projects.mjs add` writes names the skill `honsha:assessment` in place of the workflow's section
-   20, and its test checks that text.
-6. `rules/writing.md` lets a skill, as an agent's file, restate a rule its reader does not otherwise receive.
-7. Sections 8 and 14.3 state their rules and point to `hooks/lessons.mjs` and `hooks/guard.mjs` for how the code
-   applies them; each sentence removed there is already in that file's comments.
-8. `checks/budgets.test.mjs` holds `skills/assessment/SKILL.md` at 6,000 characters, `skills/dependencies/SKILL.md` at
-   3,000 and `docs/01-specs/WORKFLOW.md` at 42,000, and its comment says why the workflow has a budget.
-9. The README's row on `skills/` names the four skills.
-10. A session started with `claude -p --plugin-dir` on this branch, in a scratch repository, lists both skills, and
-    after invoking `honsha:assessment` names its ten steps.
-11. The profile's `verify` passes.
+1. Every rule of the workflow that a session applies reaches it through the core rules, an agent's file, a skill or a
+   template, as the strategy's table says; the workflow keeps the reasons, the specifications of the kit's mechanisms
+   and pointers to where each rule is.
+2. `honsha:assessment` holds what an assessment reads and its report. Where a step checks a criterion that another
+   file holds, it names that file, which is read whole: the profile's template, the hosting service's piece, the skill
+   `honsha:dependencies`.
+3. `honsha:dependencies` holds the rules that a work item applies when it changes a dependency or answers a
+   vulnerability report.
+4. `honsha:review` holds the periodic review: vulnerabilities, ordinary updates, radar dates, deferred checks past
+   their date with no outcome, lessons to review, the upkeep of documents and the measures.
+5. `honsha:parallel-parts` holds the whole of parallel work: the test, the limits and the case of two separate
+   requests in one project, and its description names both the worker and the hub.
+6. `templates/profile.yml` holds every key of a profile, each with what it holds in a comment, the area packs and
+   `legacy` included; `checks/profile.test.mjs` reads it with `readProfile`.
+7. `agents/worker.md` says when to invoke `honsha:assessment` and `honsha:dependencies`, points to the profile's
+   template, and names the pack of an area as the skill `honsha:area-<name>`. It stays within its budget.
+8. The record that `hub/projects.mjs add` writes names `honsha:assessment`, and its test checks that text.
+9. The kit's profile has the gate that the kit's documents cite no entry of a decision log.
+10. The workflow's and the architecture's headings carry no numbers. Every reference to one of their headings, in the
+    kit's files outside `work/`, reads `(workflow, <heading>)` or `(architecture, <heading>)`, and a test fails on a
+    reference that names no heading of that document, or on a reference by number.
+11. The example of a small item is gone from the workflow. The lessons' budget and the guard's reading of a move to
+    another folder are stated as rules there, with their mechanics left to the comments of `hooks/lessons.mjs` and
+    `hooks/guard.mjs`, which already hold them.
+12. `checks/budgets.test.mjs` holds each skill at 6,000 characters, the profile's template at 4,000, and the workflow
+    at its size after this change rounded up to the next thousand plus 2,000; its comment says why each has one.
+13. The README and the architecture list the new skills and the profile's template.
+14. `LESSONS.md` holds the lesson of the person's correction.
+15. A session started with `claude -p --plugin-dir` on this branch, in a scratch repository, lists the five skills of
+    the kit and, after invoking `honsha:assessment`, names its ten steps.
+16. The profile's `verify` passes.
 
 ## Strategy
 
-**Why.** The core rules reach every session by hooks and the situational procedures reach the worker as skills, but
-two sets of rules that sessions need live only in the workflow, which no session receives. The rules on dependencies
-(the 7-day wait, the same-day fix of a vulnerability, automatic pull requests off, the vulnerability report at each
-change of the lockfile) appear in no rule, agent or skill: a worker that updates a package meets them only if it
-decides to open a 44,724-character file. The assessment, the first step of every project that joins, is pointed to by
-the record `add` writes, but its ten steps and its report send the session to the sections 8, 9, 11, 14.1, 14.2, 17,
-18 and 19 and to the architecture's 3.3. A session that skims there skips a step. This is a defect of the kit, the rules
-it states for sessions not reaching them, so D87 of the installation lets the item start; the person decides.
+**The defect.** The workflow says that the rules a session follows are in the core rules, and that it keeps only what
+they do not say: the reasons, the specifications of the kit's mechanisms (section "Where the rules are"). Many rules
+that sessions apply stayed in it, and no session receives it. The rules on dependencies are in no rule, agent or
+skill; the assessment sends its session to ten other sections; the profile's keys, the limits on parallel work and the
+name of an area's pack reach no worker; the gate on citing a decision log reaches no checker. D87 of the installation
+lets the item start, since it fixes a defect of the kit; the person decides.
 
-**The skills.** As `honsha:parallel-parts` and `honsha:branch-update` are: a `SKILL.md` with a `name` and a
-`description` that says when it applies, whose text the platform puts in the context whole when it is invoked.
+**Where each part goes.**
 
-- `honsha:assessment` holds 20.1 and 20.2. Where a step checks a criterion that another section states, the skill
-  writes the criterion in a line, with the section in brackets: what `verify` must cover (section 9), when and what
-  the pipeline runs (14.2), the settings (14.1), what pinned dependencies are (17), what declaring the kit means
-  (architecture, 3.3), where a lesson belongs (8), what `legacy` holds (11), the default kinds (19). Its commands stay
-  in the hosting service's piece and in `checks/measures.mjs`, which it names.
-- `honsha:dependencies` holds the five rules of section 17.
+| Part of the workflow today                     | Goes to                                                                                   |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Parallel work: the test, the limits, the cases | `honsha:parallel-parts`, made whole; the workflow keeps why                               |
+| Lessons: the budget's mechanics                | `hooks/lessons.mjs`, whose comments hold them; the rule stays                             |
+| Lessons: version, promotion, a full level      | `honsha:review`                                                                           |
+| Profile: its keys and what each holds          | `templates/profile.yml`; the workflow keeps why and what a project may not customise      |
+| Projects with earlier documents                | `honsha:assessment` and the template's `legacy`; the section goes                         |
+| Example: a small item                          | Deleted: the template, `checks/record.mjs` and the kit's own records show the same        |
+| The guard: what move it follows                | `hooks/guard.mjs`, whose comments hold it; the rule stays                                 |
+| Decisions: the kit's documents cite no log     | A gate of the kit's profile; the rest stays, as the specification of a decision log       |
+| Dependencies                                   | `honsha:dependencies` for an item, `honsha:review` for the review; the workflow keeps why |
+| Upkeep review                                  | `honsha:review`; the workflow keeps why                                                   |
+| Assessing a project: what is read, the report  | `honsha:assessment`; the section keeps the registry's states, the scripts and why         |
 
-**The design chosen.** Restating each criterion in the assessment's skill copies a line from another section, which
-the core rules allow only to an agent's file that must check a rule its agent does not otherwise receive. A skill is
-in the same position: it is the procedure an agent follows, and its reader receives no workflow. So the exception is
-extended to a skill, in one clause of `rules/writing.md`; naming the section beside each copied criterion lets the
-upkeep review compare them. Left out: pointers instead of copies, which keep today's scattering; moving the whole of
-section 20 into the skill, which would take the registry's states away from the hub and the scripts that cite them.
+The rest stays: key facts, where the rules are, work items, the record, the procedure, the backlog, stop conditions,
+deferred checks, the lessons' levels and loading, derived views, the reasons on commits and branches, the hosting
+service's contract, comments and documents, measures.
 
-**The workflow.** Sections 17 and 20 keep their headings, so the references to them in the kit's other documents and
-in the home still hold. Section 17 keeps, in a few lines, why the rules are as they are, and points to the skill;
-section 20 keeps the states, the scripts and the reasons, and points to the skill for the assessment itself. In
-section 8, the sentence on how a full level makes room for the names of the files it leaves out gives way to a
-pointer to `hooks/lessons.mjs`; in section 14.3, the paths and shells the guard follows give way to a pointer to
-`hooks/guard.mjs`. Both files' opening comments already say this. Measured today, the paragraphs that move hold about
-6,200 characters, and their pointers take back about 1,000: the workflow should come to about 39,500.
+**The skills.** As `honsha:parallel-parts` and `honsha:branch-update` are: a `SKILL.md` whose `description` says when
+it applies, whose text the platform gives whole when it is invoked. A skill points to another file only when that file
+is read whole and is about one subject: the profile's template, the hosting service's piece, another skill. Nothing is
+copied, so no exception to "a rule is stated in one place" is needed. `honsha:review` is generic: the folders of an
+installation, its radar and its decisions stay in the home and in the task that runs the review.
 
-**The budgets.** The two skills at about 1,500 and 1,000 characters above their expected size; the workflow at 42,000,
-which leaves room for the item `261121-1306`. The workflow is not read at every start, so its budget's reason is a
-different one: nothing else stops its growth, which went from 17,507 to 44,724 characters in five days.
+**References by name.** Today 85 references in the kit and about 15 in the home cite a section by its number, so
+removing one section moves every number after it. A reference by the heading's name, as the core rules' parts are
+cited, survives a section added or removed. The headings lose their numbers, and `checks/references.test.mjs` reads the
+kit's files outside `work/`: it fails on a reference whose heading the document does not have, and on a reference by
+number. Records keep the numbers they were written with, as history.
+
+**Commits.** Two, reviewable one at a time: first the references by name with their test, which change no rule; then
+the moves, the skills, the template and the budgets, with the log naming where each paragraph went.
+
+**The budgets.** Six thousand characters for a skill, where the longest, the assessment's, should hold about 4,000;
+four thousand for the profile's template. The workflow's budget comes from its size once the moves are made, about 33,000 characters by
+today's measures, since nothing else stops its growth, which went from 17,507 to 44,724 characters in five days.
+
+**After the merge.** Two changes outside this repository, each the person's to approve:
+
+- A work item of the home: `CLAUDE.md`, whose dispatch invokes `honsha:parallel-parts` before a second item starts in
+  a project with one running and whose follow-up runs the deferred checks that are due; the references by name in its
+  other documents; the same lesson as here.
+- The installation's monthly review task, outside every repository: today it names a kit folder that no longer
+  exists and repeats the review's steps. It becomes the two folders of this PC and the instruction to invoke
+  `honsha:review`, read-only, reporting in Italian.
 
 **Live check.** In a scratch repository, `claude -p --plugin-dir` on this branch, asked which skills of the kit it has
 and, after invoking `honsha:assessment`, which steps it holds.
 
-**Measures.** Seven existing files against the six of `upkeep`: the record that `add` writes is tested, so its test
-changes with it.
+**Measures.** About twenty existing files against the six of `upkeep`: the references are in every document of the
+kit, once. The measure will mark the item over its kind's expectation, for that reason.
 
-**Risks.** A restated criterion can drift from its section: the section named beside it is the upkeep review's
-handle. A skill the worker does not invoke changes nothing: the record that `add` writes names it, and the worker's
-file says when. The item `261121-1306` is open and changes section 14.2 and `services/github/`: this item stays out
-of both and changes only the last bullet of 14.3; if a conflict comes anyway, `honsha:branch-update` resolves it.
+**Risks.** The item `261121-1306`, open as pull request 38, changes the hosting service's contract and the GitHub
+piece: once it is merged, the default branch is merged here, as `honsha:branch-update` says, before the work touches
+those files, so that the work builds on its text. A skill whose description does not match the situation is not invoked: the record that `add` writes and
+the worker's file name the skills, and the live check reads the descriptions. A large diff tires the check: the two
+commits and the log's map of each move keep it readable. About twice a full item.
 
-**Parallel parts.** None: the files are few and depend on one another's wording. The default model is enough.
+**Alternatives left out.** Copying into the assessment's skill the criteria other sections state, with the exception
+for agents' files extended to skills: it keeps two statements of each rule. Splitting the workflow into files of one
+topic: once the rules leave it, its reader is a person or a session that changes the kit, who reads it whole.
+
+**Parallel parts.** None: the moves and the references change the same files. The default model is enough.
 
 ## Approval
 
 ## Log
+
+- 2026-11-21: the first strategy, `f809f1d`, kept the workflow's sections, headings and numbers, and avoided the files
+  of item `261121-1306`, only so that what depends on them would not change. The person asked for the change to be
+  designed as it should be; scope, criteria and strategy are rewritten before the approval.
 
 ## Verification
 
