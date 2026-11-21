@@ -5,16 +5,17 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 41
+model: claude-opus-5-5
 effort: xhigh
-checks: []
+checks:
+  - { due: 2026-11-28, what: "Once this item is merged and the plugin updated: a session that the desktop application starts in a worktree of a project holds, from its first message, the passage that begins `The procedure of honsha:worker`, and holds it again after a compaction; a session opened in a home's own folder holds none." }
 ---
 
 ## Intent
@@ -250,4 +251,85 @@ as a defect fix of kind `fix`.
 
 ## Verification
 
+On `3e1ddfc`, Windows 11, Node.js 26: `node checks/verify.mjs` passed all 7 commands: Prettier, oxlint, TypeScript,
+170 tests, the plugin validator, `node checks/record.mjs` ("The record work/2026/11/261121-1554-worker-at-start.md
+has the shape the rules ask for.") and `node checks/commits.mjs` ("The 4 commits of the branch follow the rules.").
+On `0278c6d`, before the fixes, the same 7 commands had passed.
+
+### Earlier checker reports
+
+On `0278c6d`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. `README.md:58-59` says a session receives the worker's procedure when it starts, "after the core rules". The kit states the opposite: hooks of one event run in parallel and their outputs come in no stated order.
+   - It says so in `hooks/rules.mjs:19-20` and `hooks/procedure.mjs:54-55`, and in the record's Strategy ("What the hook gives").
+   - That is why each output names itself.
+   - The README therefore states an order that does not hold. Drop "after the core rules", or say "besides".
+2. In `docs/01-specs/WORKFLOW.md:48-50`, the edited paragraph was not rewrapped.
+   - Line 49 runs to about 152 characters. It is the only prose line in `docs/01-specs/` over the 120 the documents wrap to (`.prettierrc.json`, `printWidth: 120`).
+   - Prettier keeps prose wrapping as written, so the verify run does not catch it.
+3. The log says an input that is not a JSON object gives nothing and a message, with exit code 1 (record lines 226-227). The code does not do that for an array.
+   - `hooks/procedure.mjs:76` tests `typeof input !== "object" || input === null`, and a JSON array passes that test.
+   - So an input such as `[]` gives the worker's procedure for `process.cwd()`, with exit code 0.
+   - The tests (`hooks/procedure.test.mjs:443`) try `""`, `"not json"`, `"null"` and `"3"`, and no array.
+
+### Checker report
+
+On `3e1ddfc`, a repeated check of the changes since `0278c6d`, with the record's Verification not yet committed.
+
+**Verdict:** pass
+
+All three findings of the last report, on `0278c6d`, are fixed:
+
+- Finding 1: `README.md:58-60` now says "besides the core rules".
+- Finding 2: `docs/01-specs/WORKFLOW.md:48-50` is wrapped again, and its longest new line is 116 characters.
+- Finding 3: `hooks/procedure.mjs:76` now refuses an array, and `hooks/procedure.test.mjs:99` tries `"[]"` and `'[{"cwd":"."}]'`.
+
+**Acceptance criteria**
+
+1. Worker's procedure to a session that runs as no agent, outside a home's main working tree; nothing otherwise: met. This diff does not change it, and `hooks/procedure.mjs:47-51` treats an object input the same as before.
+2. Input that cannot be read gives nothing and tells the person: met. `hooks/procedure.mjs:76-80` now covers arrays too, and `hooks/procedure.test.mjs:98-105` tests them.
+3. Tests cover the six kinds of session: met. This diff does not change it (`hooks/procedure.test.mjs:59-96`).
+4. Relation to `261121-1509`: met. `origin/main` is still at `b26e7bc`, so the second branch of the criterion applies, and `hooks/procedure.test.mjs:66-70` covers it. This diff does not change it.
+5. Output limit and the total of 29,000 with its reason: met. This diff does not change it, since `hooks/hooks.test.mjs` and the worker's file are not in the diff.
+6. Worker's description, body unchanged, within budget: met. This diff does not change it.
+7. README, architecture and workflow say how the procedure reaches a session and on which model: met, at `README.md:58-63` and `docs/01-specs/WORKFLOW.md:40-50`.
+8. Trial in scratch repositories with `claude -p --plugin-dir`: met, by the trial recorded in the log (record lines 238-244). The change at `hooks/procedure.mjs:76` leaves an object input as it was.
+9. `checks` declares the trial in the desktop application: not verifiable. The front matter still has `checks: []` (record line 17), and the declaration goes with the outcome.
+10. The profile's `verify` passes: met, on `3e1ddfc` (record lines 253-256).
+
+- **Intent:** in order. The diff quotes nothing the person said (`public: true`).
+- **Scope:** in order. The diff touches only `README.md`, `docs/01-specs/WORKFLOW.md`, `hooks/procedure.mjs`, `hooks/procedure.test.mjs` and the record, all in scope.
+- **Comments and documents:** in order. The diff adds no comment. The README change states what holds now, and the workflow change only rewraps the paragraph.
+- **Gates:** in order. On this diff all four gates are met:
+  - no hosting service is named;
+  - there is nothing about a user, project or installation;
+  - the script changes together with its test;
+  - no decision-log entry is cited in a document of the kit.
+- **Verification evidence:** in order. All seven `verify` commands are recorded as passing on `3e1ddfc`, `checks/record.mjs` and `checks/commits.mjs` among them. Covers formatting (Prettier), lint (oxlint), types (tsc) and tests (`node --test` over `hooks/`, `checks/`, `hub/` and `services/`).
+- **Record:** in order.
+- **Commits:** in order. `3e1ddfc` "Say that the procedure comes besides the core rules, wrap the workflow's paragraph, and refuse an array as the hook's input":
+  - it is one imperative sentence and carries `Work-Item: 261121-1554`;
+  - it is a commit of its own for the fix the checker asked for;
+  - its addresses match the profile's `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 9: `checks` is still empty. Whether the deferred check is declared can only be seen in the closing commit.
+- Whether the earlier report's verdict and findings in Verification (record lines 260-276) are copied unchanged. The earlier report itself is not available here to compare.
+
 ## Outcome
+
+A session of a project that runs as no agent receives the worker's procedure when it starts, from the hook
+`hooks/procedure.mjs`, besides the core rules: in a project's own folder, in its worktrees and in a home's worktrees. A
+session started as an agent has that agent's file as its system prompt and gets nothing from the hook; a session in a
+home's main working tree, the hub's, gets nothing either, and item `261121-1509` gives it the hub's procedure from the
+same script. No settings file names an agent. A session's start is counted at 29,000 characters at most. Whether the
+desktop application delivers the procedure, and again after a compaction, is the deferred check due 2026-11-28.
