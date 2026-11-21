@@ -63,6 +63,15 @@ test("a session that runs as no agent gets the worker's procedure in a project a
   assert.equal(inHome(home.worktree), false);
 });
 
+test("a folder outside git is in no home, so a session there that runs as no agent gets the worker's procedure", () => {
+  const outside = path.join(scratch, "outside");
+  fs.mkdirSync(outside);
+  // The scratch folder is not in a repository, so git finds none above this folder.
+  assert.throws(() => git(outside, ["rev-parse", "--show-toplevel"]));
+  assert.equal(inHome(outside), false);
+  assert.equal(procedure({ cwd: outside }), WORKER);
+});
+
 test("a session in a home's main working tree gets the hub's procedure, from any folder of it", () => {
   assert.equal(inHome(home.main), true);
   assert.equal(procedure({ cwd: home.main }), HUB);
