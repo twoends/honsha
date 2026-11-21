@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
@@ -139,7 +139,13 @@ merges the default branch first.
 
 ## Approval
 
+Approved by the person on 2026-11-21, with design A, in the chat of the session that wrote the strategy.
+
 ## Log
+
+- 2026-11-21: before approving, the person asked whether the item is needed when the installation's goal is the
+  always-on host. Every part is needed there too, the fresh bases more than on a computer; only the registry's test
+  and the cost in other sessions concern a personal computer. `6598c72` added that to the strategy.
 
 ## Verification
 
