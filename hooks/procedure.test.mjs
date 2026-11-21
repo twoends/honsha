@@ -96,7 +96,7 @@ test("the hook gives a line that names the agent, the file and the kit directory
 });
 
 test("a hook input that cannot be read gives nothing and tells the person", () => {
-  for (const input of ["", "not json", "null", "3"]) {
+  for (const input of ["", "not json", "null", "3", "[]", '[{"cwd":"."}]']) {
     const result = run(input);
     assert.equal(result.status, 1, input);
     assert.equal(result.stdout, "");

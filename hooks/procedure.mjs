@@ -73,7 +73,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   } catch {
     input = null;
   }
-  if (typeof input !== "object" || input === null) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
     // Without its input the hook cannot tell an agent's session or the hub's from a worker's, so it gives nothing; the
     // person sees that the procedure is missing.
     process.stderr.write("Honsha: the hook's input could not be read, so the session lacks the worker's procedure.\n");

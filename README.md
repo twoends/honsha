@@ -56,8 +56,8 @@ claude --plugin-dir <path to this repository>
 ```
 
 A session started so in a project, or started there by an application or by another session, receives the worker's
-procedure when it starts, after the core rules, and runs on the model it was started with. In the main working tree of
-a home, a repository holding `registry.yml` at its root, it does not: that folder is the hub's.
+procedure when it starts, besides the core rules, and runs on the model it was started with. In the main working tree
+of a home, a repository holding `registry.yml` at its root, it does not: that folder is the hub's.
 
 Started as the worker, a session has the worker's file as its system prompt, in place of the platform's, and runs on
 Opus unless it is started with another model (`--model`):

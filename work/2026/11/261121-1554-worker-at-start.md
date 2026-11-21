@@ -242,6 +242,11 @@ as a defect fix of kind `fix`.
   one output held the worker's procedure, and the session said it held it. A session in the home's main working
   tree: none held it, and the session said so. A session with `--agent honsha:worker`: none held it; the session said
   its system prompt holds the worker's opening sentence and not the platform's instructions.
+- The full check on `0278c6d` failed with three findings, all inside the scope, fixed: the README said that the
+  procedure comes after the core rules, while hooks of one event come in no stated order, and now says besides them;
+  a paragraph of the workflow left unwrapped is wrapped again; and an input that is a JSON array gave the procedure
+  for the hook's own folder, so the hook now refuses an array as it refuses any input that is not an object, and the
+  test tries two arrays.
 
 ## Verification
 

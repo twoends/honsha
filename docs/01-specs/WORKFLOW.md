@@ -46,8 +46,8 @@ sentences: a shortened rule can lose a condition, and nothing shows it. The core
 `hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context any
 hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook. The
 total a session receives at start, the lessons and the worker's procedure counted at their budgets (workflow,
-Lessons), is a choice of what every session pays: it is raised by a work item that says why, or answered by moving a rule that only some situations need
-into a skill.
+Lessons), is a choice of what every session pays: it is raised by a work item that says why, or answered by moving a
+rule that only some situations need into a skill.
 
 ---
 
