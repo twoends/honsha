@@ -38,6 +38,16 @@ test("lets placeholder addresses through", () => {
   }
 });
 
+test("lets through an address that the allowed pattern matches, and no other", () => {
+  const own = at("someone", "own.provider.io");
+  const allowed = /@own\.provider\.io$/;
+  assert.deepEqual(personal(`from ${own}`, [], allowed), []);
+  assert.deepEqual(personal(`from ${own}`), [{ line: 1, kind: "an e-mail address" }]);
+  assert.deepEqual(personal(`from ${at("someone", "mail.provider.io")}`, [], allowed), [
+    { line: 1, kind: "an e-mail address" },
+  ]);
+});
+
 test("does not take a version, a plugin or a pinned action for an address", () => {
   for (const text of [
     "tool@2.1.325",
