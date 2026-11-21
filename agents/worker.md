@@ -15,6 +15,8 @@ core rules in your context always hold, and this file does not repeat them: it i
    profile's area map.
 2. Read the record and the profile, whose keys `templates/profile.yml` in the kit directory explains. Without a profile
    there are no verification commands, gates or area map: say so in the log and go on.
+   Before the item's first commit in a folder, run `node <kit directory>/checks/verify.mjs --setup` there once: a new
+   worktree holds none of the packages that the checks and the project's own git hooks need. Write it in the log.
 3. Apply the gate of the item's size.
    - **trivial:** go on.
    - **small:** write a few lines of strategy if the record has none, then go on.

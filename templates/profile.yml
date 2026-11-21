@@ -31,6 +31,11 @@ areas:
 # cover.
 verify:
   - npm run check
+# The commands that prepare a fresh checkout for `verify` and for the project's own git hooks, in the same list form
+# and the same default shell: `checks/verify.mjs --setup` runs them once in each new checkout, an item's worktree or
+# the pipeline's. Left out, nothing is installed. An install runs its packages' scripts unless told not to.
+setup:
+  - npm ci --ignore-scripts
 # The project's quality gates. The checker reports each as met, not met or not verifiable.
 gates:
   - tests added or updated

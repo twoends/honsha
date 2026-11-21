@@ -13,6 +13,8 @@ verify:
   - claude plugin validate .
   - node checks/record.mjs
   - node checks/commits.mjs
+setup:
+  - npm ci --ignore-scripts
 gates:
   - the rules name no hosting service
   - nothing about a user, a user's project or an installation
