@@ -37,7 +37,8 @@ A new rule goes where it costs least to hold:
   receives, and the profile;
 - **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
   too, when it starts;
-- **an agent's file,** for that agent's own procedure.
+- **an agent's file,** for that agent's own procedure. The hub's also reaches, by a hook, a session opened in a home's
+  own folder, so that no installation writes it.
 
 A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in

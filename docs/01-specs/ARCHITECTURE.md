@@ -7,7 +7,8 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 
 - **Host:** one always-on Linux VPS. It holds clones of the kit, the home and every registered project. A first
   installation can run on the person's own computer; nothing in the design depends on which machine it is.
-- **Hub:** a long-lived Claude Code session whose working directory is the home repository.
+- **Hub:** a long-lived Claude Code session whose working directory is the home repository, with the procedure of the
+  kit's agent `honsha:hub`.
 - **Channels:** a messaging app for capture, quick questions, approvals and notifications; the Claude app and a board
   page for everything longer.
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
@@ -23,19 +24,19 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 
 ## Components
 
-| Component        | Role                                                                                                                     | Built from                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Host             | Runs everything; reachable without any personal device                                                                   | Linux VPS                                                        |
-| Hub session      | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself        | Claude Code session with the kit loaded                          |
-| Messaging        | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only          | Claude Code Channels (research preview)                          |
-| App access       | Full conversations with the hub and with any worker, from phone or browser                                               | Remote Control in server mode                                    |
-| Worker           | Executes one work item in a worktree of its project and opens the pull request                                           | Background session (research preview)                            |
-| Reader           | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access | Subagent defined in the kit                                      |
-| Checker          | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only                | Subagent defined in the kit                                      |
-| Scheduler        | Starts timed runs: checks that are due, radar reviews, proactive research                                                | Timers on the host (custom, small)                               |
-| Board            | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                | Page generated from the index and session state (custom, small)  |
-| Index            | Answers "which records" questions for the hub and the board: metadata of every record and full-text search               | A SQLite file built from the records by a script (custom, small) |
-| Hosting identity | Pushes branches and opens pull requests in the registered repositories; never merges                                     | An account or token on the hosting service                       |
+| Component        | Role                                                                                                                     | Built from                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Host             | Runs everything; reachable without any personal device                                                                   | Linux VPS                                                          |
+| Hub session      | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself        | The kit's agent `honsha:hub`, in a Claude Code session in the home |
+| Messaging        | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only          | Claude Code Channels (research preview)                            |
+| App access       | Full conversations with the hub and with any worker, from phone or browser                                               | Remote Control in server mode                                      |
+| Worker           | Executes one work item in a worktree of its project and opens the pull request                                           | Background session (research preview)                              |
+| Reader           | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access | Subagent defined in the kit                                        |
+| Checker          | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only                | Subagent defined in the kit                                        |
+| Scheduler        | Starts timed runs: checks that are due, radar reviews, proactive research                                                | Timers on the host (custom, small)                                 |
+| Board            | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                | Page generated from the index and session state (custom, small)    |
+| Index            | Answers "which records" questions for the hub and the board: metadata of every record and full-text search               | A SQLite file built from the records by a script (custom, small)   |
+| Hosting identity | Pushes branches and opens pull requests in the registered repositories; never merges                                     | An account or token on the hosting service                         |
 
 ```mermaid
 flowchart LR
@@ -74,8 +75,8 @@ The template, shared by every installation. Indicative layout:
 .claude-plugin/        plugin manifest and marketplace manifest
 rules/                 the always-on rules, in parts of one topic each
 skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review
-agents/                worker, reader, checker
-hooks/                 session and checker start; the guard on shell commands; write the effort level into records
+agents/                hub, worker, reader, checker
+hooks/                 session and checker start, and the hub's procedure in a home; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
 hub/                   the hub's code: the registry of projects, the moves between their states, the backlog
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
@@ -139,6 +140,11 @@ requests that the person merges. The hub changes it only through work items, its
 scripts included; a report is one of them, and its record holds the answer. The one exception is the backlog: the
 kit's script pushes each record there and takes it out without a pull request, in commits that do nothing else (core
 rules, Delivery; workflow, The backlog).
+
+The home holds no instructions for the hub. A session opened in its own folder receives the procedure of the kit's
+agent `honsha:hub` when it starts, from a hook of the kit; a session in a worktree of the home, where the home's own
+items run, does not. The installation's choices that the hub applies, such as the language it chats in, are entries
+of `decisions.md`.
 
 ### Project
 

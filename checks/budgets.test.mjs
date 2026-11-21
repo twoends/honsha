@@ -19,6 +19,7 @@ const root = new URL("..", import.meta.url);
  */
 /** @type {Record<string, number>} */
 const budgets = {
+  "agents/hub.md": 6000,
   "agents/worker.md": 5800,
   "agents/checker.md": 7600,
   "templates/profile.yml": 4000,

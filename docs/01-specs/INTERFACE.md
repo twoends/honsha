@@ -16,8 +16,9 @@ are rewritten as the kit grows; this one changes only as "Changes to the interfa
 
 ## Agents and skills
 
-- Agents: `honsha:worker`, which takes one work item from its record to an open pull request, and `honsha:checker`,
-  which verifies a finished item against its record.
+- Agents: `honsha:hub`, the hub of an installation, whose procedure a session opened in a home's own folder receives
+  when it starts; `honsha:worker`, which takes one work item from its record to an open pull request; and
+  `honsha:checker`, which verifies a finished item against its record.
 - Skills: `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts` and
   `honsha:review`. The description of each says when it applies.
 - The pack of an area: the skill `honsha:area-<name>`, for the area of that name in a project's profile.
@@ -59,8 +60,8 @@ What the kit reads or writes in a project and in a home, by its path from the re
   the marketplace and enables the plugin.
 - In the home, besides what every project holds: the registry, `registry.yml`; the backlog,
   `backlog/<project>/<id>-<slug>.md`; the lessons of a technology, `lessons/tech/<technology>.md`, and those of a host,
-  `lessons/host/<host>.md`, named by the machine's name in lower case; `settings.yml`, whose `max-workers` caps the
-  workers on a host.
+  `lessons/host/<host>.md`, named by the machine's name in lower case; the decision log, `decisions.md`, whose choices
+  the hub applies; `settings.yml`, whose `max-workers` caps the workers on a host.
 - A repository that holds `registry.yml` at its root is a home.
 
 ## The registry

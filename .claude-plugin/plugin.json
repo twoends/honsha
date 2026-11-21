@@ -1,6 +1,6 @@
 {
   "name": "honsha",
-  "description": "A workflow for running software projects with AI agents: core rules, work-item records, a worker and a checker.",
+  "description": "A workflow for running software projects with AI agents: core rules, work-item records, a hub, a worker and a checker.",
   "author": {
     "name": "Honsha"
   },

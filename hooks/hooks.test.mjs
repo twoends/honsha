@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { context as hubContext } from "./hub.mjs";
 import { BUDGET, LEVELS } from "./lessons.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -49,6 +50,7 @@ const files = (list) => list.map((handler) => handler.args.slice(1).join(" ")).t
 
 const RULES = "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs";
 const LESSONS = "${CLAUDE_PLUGIN_ROOT}/hooks/lessons.mjs";
+const HUB = "${CLAUDE_PLUGIN_ROOT}/hooks/hub.mjs";
 const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
 const rulesAtStart = start.filter((/** @type {any} */ handler) => handler.args?.[0] === RULES);
 
@@ -65,10 +67,12 @@ test("each part of the core rules, and the template, has a hook at a session's s
   );
 });
 
-test("each level of lessons has a hook at a session's start, and nothing else starts there", () => {
+test("each level of lessons and the hub's procedure have a hook at a session's start, and nothing else does", () => {
   const lessons = start.filter((/** @type {any} */ handler) => handler.args?.[0] === LESSONS);
   assert.deepEqual(files(lessons), LEVELS.toSorted());
-  assert.equal(rulesAtStart.length + lessons.length, start.length);
+  const hub = start.filter((/** @type {any} */ handler) => handler.args?.[0] === HUB);
+  assert.equal(hub.length, 1);
+  assert.equal(rulesAtStart.length + lessons.length + hub.length, start.length);
 });
 
 test("the opening of the core rules names each of their other parts", () => {
@@ -82,8 +86,11 @@ test("the opening of the core rules names each of their other parts", () => {
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
 // that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
 // budget, since their files are the installation's and the hook that gives them keeps each level under it.
+// A session in a home's own folder, the hub, also receives the hub's procedure: only that session pays for it, so it
+// is counted on top of TOTAL, at the budget of its file, as the lessons are counted at theirs.
 const PART = 9000;
 const TOTAL = 25000;
+const HUB_FILE = 6000;
 
 test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
   let total = 0;
@@ -96,6 +103,9 @@ test("each hook gives its whole file under the limit for one output, and a sessi
   }
   const lessons = LEVELS.length * BUDGET;
   assert.ok(total + lessons <= TOTAL, `${total} characters of rules and ${lessons} of lessons at a session's start`);
+  const hub = hubContext().length;
+  assert.ok(hub < PART, `the hub's procedure: ${hub} characters`);
+  assert.ok(total + lessons + hub <= TOTAL + HUB_FILE, `${total + lessons + hub} characters at the hub's start`);
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
     const [, file] = handler.args;
     const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;
