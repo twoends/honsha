@@ -95,8 +95,8 @@ node checks/verify.mjs
 
 It runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types
 with TypeScript checking the JavaScript files, the tests, `claude plugin validate .`, and the checks of the branch's
-record and commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and
-again when `package-lock.json` changes.
+record and commits. The same list runs on every pull request and every push to `main`, on Linux and on Windows.
+`npm ci` is needed once, and again when `package-lock.json` changes.
 
 The validator warns that the plugin has no version, which is deliberate (architecture, O10). It also remarks that
 there is no licence and no icon, which matters only for a submission to the public plugin directory.

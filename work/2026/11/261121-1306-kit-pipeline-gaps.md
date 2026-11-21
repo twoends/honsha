@@ -167,6 +167,11 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   and passes having read nothing. With a base of zeros it fails: git cannot read the range.
 - The patterns of `checks/public.mjs`, with no names, over each of the 251 commits that `main` reaches, run with the
   `commitFindings` of `checks/pushed.mjs` from a script outside the repository: no finding.
+- `.github/workflows/verify.yml` runs on a push to `main` too. The three variables are in the workflow's `env` and
+  follow the event, and the group of a push is its commit. The `project` job's comment names both of its paths.
+  `services/github/README.md` says that the kit's file runs on both events, that project.yml's path for a push runs at
+  each merge of the kit, and that the kit's file sets the variables as project.yml does; `README.md` says that the
+  verification runs on every push to `main`.
 
 ## Verification
 
