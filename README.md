@@ -28,8 +28,8 @@ specific to a user, a project or an installation lives in that user's separate h
 
 ## Hosting service
 
-The kit's rules name no hosting service; a user of a service other than GitHub writes its piece from the contract in
-the workflow, section 14.
+The kit's rules name no hosting service; a user of a service other than GitHub writes its piece from the contract
+of a service's piece (workflow, The hosting service).
 
 ## Requirements
 
@@ -41,7 +41,7 @@ the workflow, section 14.
   kit's own settings, runs through Git Bash.
 - Node.js 26 or later, for the hook scripts and the checks. The plugin installs no packages.
 - The plugin's setting `home`, the folder of the installation's home on the machine, which Claude Code asks for when
-  the plugin is enabled. Without it a session receives its project's lessons only (workflow, section 8).
+  the plugin is enabled. Without it a session receives its project's lessons only (workflow, Lessons).
 - For a change to the kit, its development tools: `npm ci`, which installs the versions in `package-lock.json` and
   runs no install scripts.
 - A command-line client for the service that hosts the repositories, to open pull requests and to read them. The
@@ -66,10 +66,10 @@ The worker runs on Opus unless the session is started with another model (`--mod
 ## Working on the kit
 
 The repository declares its own marketplace and enables its plugin in `.claude/settings.json`, from the repository on
-its hosting service and with automatic updates, as every project does (architecture, section 3.1). A session opened
+its hosting service and with automatic updates, as every project does (architecture, Kit). A session opened
 in a clone runs under the kit as merged: the core rules at start, the guard, the effort hook, the core rules given to
 the checker when it starts, and the skills. The platform reads that file only in a folder you trust. Each clone
-installs the plugin once, as the architecture says in section 3.3.
+installs the plugin once, as the architecture says (architecture, Project).
 
 A change to a hook, the rules or an agent is not in force until it is merged. To try it before, start the session
 with `claude --plugin-dir <the clone>`, which takes the place of the declared plugin for that session. If the merged
@@ -98,7 +98,7 @@ with TypeScript checking the JavaScript files, the tests, `claude plugin validat
 record and commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and
 again when `package-lock.json` changes.
 
-The validator warns that the plugin has no version, which is deliberate (architecture, O10). It also remarks that
+The validator warns that the plugin has no version, which is deliberate (O10; architecture, Open design points). It also remarks that
 there is no licence and no icon, which matters only for a submission to the public plugin directory.
 
 ## Documents
@@ -109,6 +109,6 @@ there is no licence and no icon, which matters only for a submission to the publ
   and branches, the hosting service, comments and documents, decisions, dependencies, the upkeep review, measures.
 
 The rules every session receives are the files of `rules/`, opened by `rules/core.md`; the workflow points to them
-and gives their reasons. Identifiers such as O02 are the open design points of the architecture, section 9. Why a rule
+and gives their reasons. Identifiers such as O02 are open design points (architecture, Open design points). Why a rule
 is as it is can be read in the document where a reason helps, or in the record of the change that made it, under
 `work/`.

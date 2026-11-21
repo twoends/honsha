@@ -1,5 +1,5 @@
 // The home's backlog: the records kept for later, one file each under `backlog/<project>/` on the home's default
-// branch (workflow, section 5.2). Run from the home's folder:
+// branch (workflow, The backlog). Run from the home's folder:
 //
 //   node <kit directory>/hub/backlog.mjs add <project> <file>
 //   node <kit directory>/hub/backlog.mjs take <project> <id>

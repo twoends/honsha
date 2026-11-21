@@ -182,6 +182,16 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
 - 2026-11-21: the first strategy, `f809f1d`, kept the workflow's sections, headings and numbers, and avoided the files
   of item `261121-1306`, only so that what depends on them would not change. The person asked for the change to be
   designed as it should be; scope, criteria and strategy are rewritten before the approval.
+- The pull request 38 of item `261121-1306` is still open at the approval, so the work starts on the files it does not
+  change, and the default branch is merged here once it is merged.
+- References by name, the first commit. The workflow's and the architecture's headings lost their numbers; the
+  architecture's "Kit", "Home" and "Project" also lost the words in brackets, which moved to each section's first
+  line. 88 references in 11 files now name a heading: the two specifications, the README, `LESSONS.md`, the GitHub
+  piece, the two pipeline files, `hub/projects.mjs`, `hub/backlog.mjs`, `checks/commits.mjs` and `hooks/lessons.mjs`.
+  Where the new reference repeated the document's name, as in "in the workflow (workflow, …)", the sentence was
+  reworded. `hooks/hooks.test.mjs` read the record's front matter from the workflow by the heading "4.1 Front
+  matter", and now reads it by its name. `checks/references.test.mjs` is new: it fails on a reference that names no
+  heading of its document, on a reference by number and on a numbered or repeated heading.
 
 ## Verification
 

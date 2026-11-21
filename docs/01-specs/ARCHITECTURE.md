@@ -1,9 +1,9 @@
 # Architecture
 
-Identifiers such as O02 are the open design points of section 9; identifiers such as A1 are the assumptions of
-section 8. Terms are defined in the [vision](../00-vision/VISION.md) glossary.
+Identifiers such as O02 are the open design points (architecture, Open design points); identifiers such as A1 are the
+assumptions (architecture, Assumptions to verify). Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
-## 1. Key facts
+## Key facts
 
 - **Host:** one always-on Linux VPS. It holds clones of the kit, the home and every registered project. A first
   installation can run on the person's own computer; nothing in the design depends on which machine it is.
@@ -12,15 +12,15 @@ section 8. Terms are defined in the [vision](../00-vision/VISION.md) glossary.
   page for everything longer.
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
 - **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own.
-  The files are the source of truth, not the query engine: questions go through a derived index (section 3.4).
+  The files are the source of truth, not the query engine: questions go through a derived index (architecture, Files and index).
 - **Outputs:** branches and pull requests, on the service that hosts the repositories, which each installation
-  chooses ([WORKFLOW.md](WORKFLOW.md), section 14). Sessions never merge (section 6).
+  chooses (workflow, The hosting service). Sessions never merge (architecture, Security).
 - **Built from:** native Claude Code features first. Custom code is limited to a scheduler, an index and a board, and to
   replacing a native piece only where it proves inadequate.
 
 ---
 
-## 2. Components
+## Components
 
 | Component        | Role                                                                                                                     | Built from                                                       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
@@ -61,13 +61,13 @@ flowchart LR
 
 ---
 
-## 3. Repositories
+## Repositories
 
 Three kinds. The split between the first two is what keeps a user's content out of the template.
 
-### 3.1 Kit (template, shared)
+### Kit
 
-Indicative layout:
+The template, shared by every installation. Indicative layout:
 
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
@@ -93,8 +93,8 @@ work/                  the kit's own work records
   therefore runs under the kit as merged; an unmerged change to the kit is tried in a session started with
   `--plugin-dir`, as the kit's README says.
 - The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
-  one, it would stay on its copy until the version changes (O10, section 9).
-- What a piece of `services/<name>/` holds is in [WORKFLOW.md](WORKFLOW.md), section 14; the wiring of the checks
+  one, it would stay on its copy until the version changes (O10; architecture, Open design points).
+- What a piece of `services/<name>/` holds is the contract of a service's piece (workflow, The hosting service); the wiring of the checks
   sits where its service reads it.
 - The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the
   type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
@@ -107,36 +107,38 @@ work/                  the kit's own work records
   What every session needs is therefore put into its context when it starts: the core rules, in parts of one topic
   each, and the record template, each file by a hook of its own, since the platform caps each hook's output at
   10,000 characters and replaces a longer one with a file path and a short preview. What a part near that cap, or a
-  full total, calls for is in [WORKFLOW.md](WORKFLOW.md), section 2. The checker, a subagent, receives the same files
+  full total, calls for is said with the places a rule can go (workflow, Where the rules are). The checker, a subagent, receives the same files
   when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
-  `home` names ([WORKFLOW.md](WORKFLOW.md), section 8).
+  `home` names (workflow, Lessons).
 
-### 3.2 Home (one per user, private)
+### Home
+
+One per user, private.
 
 ```
-registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, section 20)
+registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, Assessing a project)
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
-decisions.md           choices about this installation and standing preferences, those in force (workflow, section 16)
+decisions.md           choices about this installation and standing preferences, those in force (workflow, Decisions)
 inbox/                 one file per item received, with its verdict
-backlog/               work items not yet started, per project; written by hub/backlog.mjs (workflow, section 5.2)
+backlog/               work items not yet started, per project; written by hub/backlog.mjs (workflow, The backlog)
 radar/                 one file per tool
 work/                  the home's work items: reports with their answers, outcomes of deferred checks, moves in the registry
 lessons/tech/          one file per technology, shared by every project that uses it
 lessons/host/          one file per host
-.hub/profile.yml       the home's profile, as a project's (section 3.3)
+.hub/profile.yml       the home's profile, as a project's (architecture, Project)
 ```
 
 The home is a project like any other: the kit is declared in it, and its default branch changes only through pull
 requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
 scripts included; a report is one of them, and its record holds the answer. The one exception is the backlog: the
 kit's script pushes each record there and takes it out without a pull request, in commits that do nothing else (core
-rules, Delivery; workflow, section 5.2).
+rules, Delivery; workflow, The backlog).
 
-### 3.3 Project (each registered repository)
+### Project
 
-What the kit adds to a project:
+Each registered repository. What the kit adds to a project:
 
 ```
 .hub/profile.yml       language, stack, areas with their paths, verification commands, quality gates, data sources, playbooks
@@ -147,8 +149,7 @@ CLAUDE.md              short; names the profile and anything truly project-speci
 ```
 
 The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the
-default branch, while the parts of a work item start from the item's branch ([WORKFLOW.md](WORKFLOW.md), section
-13.6). The declaration of the marketplace is the same in every project and on every host (section 3.1); the piece of
+default branch, while the parts of a work item start from the item's branch (workflow, Branches of parallel parts). The declaration of the marketplace is the same in every project and on every host (architecture, Kit); the piece of
 the hosting service gives its source.
 
 The declaration makes the marketplace known; each clone of a project installs the plugin once, with
@@ -158,7 +159,7 @@ restores it, so that no change to the file is committed by mistake.
 
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 
-### 3.4 Files and index
+### Files and index
 
 **Files are the source of truth.** Every record is a Markdown file in git: readable, diffable, reviewable in a pull
 request, usable without any service running.
@@ -195,9 +196,9 @@ milliseconds. It is built with the board.
 
 ---
 
-## 4. Flows
+## Flows
 
-### 4.1 Evaluate
+### Evaluate
 
 1. An item arrives by message. The hub writes it to `inbox/` as received.
 2. The reader fetches what official means allow and returns a summary. If the subject cannot be identified, the
@@ -213,33 +214,33 @@ Proactive research is the same flow started by the scheduler, with items marked 
 proposes a few items a day at most (three by default) and notifies only Adopt and Trial verdicts; the rest is on the
 board. Both limits are settings in the home.
 
-### 4.2 Ask
+### Ask
 
-- **Status and history.** The hub queries the index (section 3.4) and reads only the records it returns. Nothing is
+- **Status and history.** The hub queries the index (architecture, Files and index) and reads only the records it returns. Nothing is
   indexed by hand.
 - **Operations questions** ("how did sales go last week"). The hub starts a read-only session in the project, which uses
   the data sources and playbooks named in the profile. The answer is stored as a report record.
 
-### 4.3 Dispatch
+### Dispatch
 
 1. The hub identifies the project. One request is one work item and one pull request: the hub proposes its size and
    areas and creates the record in a new branch of the project (taken from the backlog with `hub/backlog.mjs take` if it
    was there). Parts of the request that are independent are run in parallel by the worker and integrated before
-   verification ([WORKFLOW.md](WORKFLOW.md), section 5.1). Separate requests that are independent of each other run at
+   verification (workflow, Parallel work). Separate requests that are independent of each other run at
    the same time, within the limits of the host and the project.
 2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
 4. The checker verifies the result. Its report goes into the record and the pull request.
 5. The pull request is opened and the person is notified. The person merges.
 
-### 4.4 Scheduled
+### Scheduled
 
 The scheduler starts three kinds of run: checks whose date has come, written in the front matter of closed items;
 reviews of radar entries; proactive research. All of them go through the hub and leave records.
 
 ---
 
-## 5. Native first
+## Native first
 
 | Need                            | First version                     | Replaced by custom code if                                     |
 | ------------------------------- | --------------------------------- | -------------------------------------------------------------- |
@@ -254,14 +255,14 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ---
 
-## 6. Security
+## Security
 
 1. **Untrusted content goes through the reader.** Pages, transcripts and third-party repositories are read by an agent
    with read-only tools and no secrets. What it returns is data, never instructions.
 2. **Only allowlisted senders** can talk to the hub.
 3. **Sessions never merge.** The rules and the kit's guard keep every session from merging, from pushing to the
-   default branch and from force-pushing, on any service; what the guard does not stop is in
-   [WORKFLOW.md](WORKFLOW.md), section 14.3. A hosting service may add protection of its own. Deploy credentials are
+   default branch and from force-pushing, on any service; what the guard does not stop is said
+   with the guard (workflow, The guard). A hosting service may add protection of its own. Deploy credentials are
    not on the host.
 4. **Project data is read-only.** Credentials for a project's data live on the host outside any repository and are
    given only to sessions of that project.
@@ -273,7 +274,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ---
 
-## 7. Models
+## Models
 
 - Everything that needs judgement runs on a strong model: the hub, workers, the checker. The default is Opus. The
   strongest model is used when the work is too complex for the default: for a full item the strategy says so, and
@@ -289,7 +290,7 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ---
 
-## 8. Assumptions to verify
+## Assumptions to verify
 
 | ID  | Assumption                                                                                                                 | If false                                                                  |
 | --- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -306,14 +307,14 @@ Windows A3 is tried as it is, and falls back to WSL2 or waits for the host.
 
 ---
 
-## 9. Open design points
+## Open design points
 
-| ID  | Point                                                                 | Direction                                                                                                                                                               |
-| --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives                                                                             |
-| O06 | Board access: a private network, or a public address with a login     | A private network by default; the tool is chosen in each installation's radar                                                                                           |
-| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design; chosen in each installation's radar                                                                                                        |
-| O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once; or, with no version, pin the installation that must wait to a tag or a commit (section 3.1) |
+| ID  | Point                                                                 | Direction                                                                                                                                                                     |
+| --- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| O02 | Which credential timed runs use: the subscription login or an API key | An API key for anything started by a timer; the subscription for sessions the person drives                                                                                   |
+| O06 | Board access: a private network, or a public address with a login     | A private network by default; the tool is chosen in each installation's radar                                                                                                 |
+| O07 | Speech-to-text for voice notes: on the host or through a service      | No constraint in the design; chosen in each installation's radar                                                                                                              |
+| O10 | Whether and when the plugin and marketplace manifests get a version   | Add one when a change to the kit must not reach every installation at once; or, with no version, pin the installation that must wait to a tag or a commit (architecture, Kit) |
 
 Points that concern one installation only (which host, which provider, when to order it, where personal documents
 live) are not recorded here. They belong in that installation's home.
