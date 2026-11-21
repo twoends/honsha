@@ -16,10 +16,11 @@
 // into records, and would carry it on.
 //
 // `--range` checks instead each commit after HONSHA_BASE up to HONSHA_HEAD, the variables that the
-// wiring of a hosting service gives (workflow, section 14.2), all that HONSHA_HEAD reaches when the
-// base is all zeros, since such a push creates the branch. It runs in the kit's pipeline, where the
-// commits are published already and the system's user is the runner's: so it looks for the
-// patterns only, and the name stays with the hook of the clone that pushes.
+// wiring of a hosting service gives (workflow, Checks on pull requests and on the default branch),
+// all that HONSHA_HEAD reaches when the base is all zeros, since such a push creates the branch. It
+// runs in the kit's pipeline, where the commits are published already and the system's user is the
+// runner's: so it looks for the patterns only, and the name stays with the hook of the clone that
+// pushes.
 //
 // `--install` sets `core.hooksPath` to `.githooks` in the clone that holds this script, unless some
 // level of git's configuration sets it already. It is run when a session starts in the kit's clone
