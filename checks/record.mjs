@@ -4,7 +4,8 @@
 // Run from the root of the project. The record is `work/<yyyy>/<mm>/<id>-<slug>.md` for the branch
 // `work/<id>-<slug>`; the profile gives the kinds, and whether the project is public. What is checked:
 //   - the front matter has the keys of the record template, with the values its comments allow,
-//     a `kind` among the profile's kinds or the default ones, and the identifier of the branch;
+//     a `kind` among the profile's kinds or the default ones, and the identifier of the branch; an
+//     entry of `checks` may take several lines, as a formatter writes a long one;
 //   - every section is one the item's size keeps, and appears once; the intent is quoted, or, in a
 //     public project, quotes nothing;
 //   - at `in-progress`: every section the size keeps before Verification is written, the approval
@@ -64,6 +65,23 @@ export function parseRecord(text) {
     } else if (last && line.trim() !== "") last.more.push(line);
   }
   return { fields, body: match[2] };
+}
+
+/**
+ * The entries of a list in the front matter, each with its lines joined by single spaces: an entry starts at a line
+ * that begins with `- `. A formatter writes a mapping in braces that passes its width over several lines, with a comma
+ * after its last value, and an entry so written is the same value as one on a single line.
+ * @param {string[]} lines the lines that follow the list's key
+ */
+export function entriesOf(lines) {
+  /** @type {string[]} */
+  const entries = [];
+  for (const line of lines) {
+    const text = line.trim();
+    if (text.startsWith("- ") || entries.length === 0) entries.push(text);
+    else entries[entries.length - 1] += ` ${text}`;
+  }
+  return entries;
 }
 
 /** @param {string} raw */
@@ -196,7 +214,9 @@ export function checkRecord(
   if (fields.has("areas") && !/^\[.*\]$/.test(value("areas"))) say("`areas` is not a list in brackets");
   const checks = fields.get("checks");
   if (checks) {
-    const entries = checks.more.map((line) => /^\s*-\s*\{\s*due:\s*(\S+?),\s*what:\s*(.+?)\s*\}\s*$/.exec(line));
+    const entries = entriesOf(checks.more).map((entry) =>
+      /^-\s*\{\s*due:\s*(\S+?),\s*what:\s*(.+?),?\s*\}$/.exec(entry),
+    );
     if (checks.value !== "[]" && !(checks.value === "" && entries.length > 0)) {
       say("`checks` is neither `[]` nor a list of `{ due: YYYY-MM-DD, what: … }`");
     } else if (entries.some((entry) => !entry || !DATE.test(entry[1]))) {
