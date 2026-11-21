@@ -110,6 +110,6 @@ remarks that there is no licence and no icon, which matters only for a submissio
   contract, decisions, measures, how a project joins an installation.
 
 The rules every session receives are the files of `rules/`, opened by `rules/core.md`; the rules only some situations
-need are in `skills/` and `templates/`. The workflow points to them and gives their reasons. Identifiers such as O02 are open design points (architecture, Open design points). Why a rule
-is as it is can be read in the document where a reason helps, or in the record of the change that made it, under
-`work/`.
+need are in `skills/` and `templates/`. The workflow points to them and gives their reasons. Identifiers such as O02
+are open design points (architecture, Open design points). Why a rule is as it is can be read in the document where a
+reason helps, or in the record of the change that made it, under `work/`.

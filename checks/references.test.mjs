@@ -61,11 +61,12 @@ export function references(text) {
 }
 
 /**
- * Words that cite a section by its number.
+ * Words that cite a section by its number: "section 5.2", "§ 5", or a bare number of a subsection in brackets,
+ * "(14.3)". A bare number with no dot in brackets is left alone: "(1)" or "(5)" is as often a count as a section.
  * @param {string} text
  */
 export function numbered(text) {
-  return [...fold(text).matchAll(/\bsections? \d[\d.]*|§\s*\d/gi)].map((match) => match[0]);
+  return [...fold(text).matchAll(/\bsections? \d[\d.]*|§\s*\d|\(\d+(?:\.\d+)+\)/gi)].map((match) => match[0]);
 }
 
 /** @param {string} folder @returns {string[]} */
@@ -93,6 +94,7 @@ test("headings are read outside fenced code, and folding joins a wrapped referen
   );
   assert.deepEqual(references("(core rules, Sizes; Delivery) and f(a; b)"), []);
   assert.deepEqual(numbered("as section 5.2 says, and sections 8\n# and 2"), ["section 5.2", "sections 8"]);
+  assert.deepEqual(numbered("for the guard (14.3), in two steps (2) of version 1.94.0"), ["(14.3)"]);
 });
 
 const named = Object.fromEntries(

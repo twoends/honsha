@@ -229,7 +229,30 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
 - Live run on the working tree before this commit: in a new repository, `claude -p --plugin-dir` on this checkout
   listed `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts` and
   `honsha:review`, and after invoking `honsha:assessment` named its ten steps, from "Profile" to "Open points".
+- The checker's full check on `833df8f` failed with seven findings, all inside the scope. Fixed:
+  1. The two references by number left in "What the piece of a service says" name their headings, and `numbered` in
+     `checks/references.test.mjs` also finds a dotted number in brackets, with a test.
+  2. Splitting work whenever its parts are independent, without being asked, and fanning out every search and review
+     moved to `agents/worker.md`; the workflow keeps why.
+  3. The exception to the wait on new versions, which `honsha:review` had taken from the installation's monthly task,
+     is gone: it is a decision of the installation, and stays there.
+  4. The two placements that depart from the strategy's table are declared under Deviations.
+  5. Each rule stated twice keeps one place: what follows a deferred check, in the workflow; the raising of a lessons'
+     budget, the promotion of a lesson and ordinary updates as one item, in `honsha:review`; what an assessment is, in
+     `honsha:assessment`. "Where the rules are" now says that the workflow's key facts sum up rules.
+  6. The three lines over 120 characters are wrapped. The log line above that says such lines were wrapped by hand is
+     wrong twice: a script in the scratchpad wrapped them, and it left these three.
+  7. `name` and `description` have their comments in the template, whose opening no longer says that every key but
+     `name` may be left out.
 
 ## Verification
+
+## Deviations
+
+- The strategy's table sends the version of a lesson to `honsha:review`. The rule that a lesson tied to a version
+  names it went to the core rules (Lessons) instead, since any session may write a lesson and only the review reviews
+  one; the core rules' parts, which the scope leaves out, change by that clause.
+- Existing lessons files went to `honsha:assessment`, step 6, not to `honsha:review`: they are read when a project
+  adopts the kit, which is the assessment.
 
 ## Outcome

@@ -26,7 +26,9 @@ core rules in your context always hold, and this file does not repeat them: it i
 
 - Stay inside the scope. What the record does not ask for is not done, however useful it looks.
 - Write in the log what was done, what was found, what was decided and why.
-- Before splitting the work into parts that run in parallel, invoke the skill `honsha:parallel-parts`.
+- Split the work into parts that run in parallel whenever they are independent, without being asked, and fan out
+  every search, exploration, piece of research and review. Before splitting, invoke the skill
+  `honsha:parallel-parts`, which holds the test.
 - For an item that assesses a project, invoke the skill `honsha:assessment`; for one that adds, removes or updates a
   dependency, changes a lockfile or answers a vulnerability report, `honsha:dependencies`.
 - At a stop condition, write the reason in the log, commit the record and tell the person; do not guess a way around

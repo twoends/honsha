@@ -2,9 +2,10 @@
 # default branch.
 #
 # A project's own workflow calls this one; the caller file is shown in services/github/README.md,
-# under "Checks on pull requests and on the default branch", and what the wiring has to do is the contract
-# (workflow, Checks on pull requests and on the default branch). The commands are the ones the worker runs (agents/worker.md, Verification, step 1);
-# they are not repeated here beyond their order.
+# under "Checks on pull requests and on the default branch", and what the wiring has to do is the
+# contract (workflow, Checks on pull requests and on the default branch). The commands are the ones
+# the worker runs (agents/worker.md, Verification, step 1); they are not repeated here beyond their
+# order.
 
 name: project
 

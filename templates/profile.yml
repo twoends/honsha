@@ -1,7 +1,9 @@
-# The profile of a project: this file, filled in, at `.hub/profile.yml` in the project's root. Every key but `name`
-# may be left out, and then takes the default its comment names. `checks/profile.mjs` reads the keys the kit's scripts
-# use and refuses a form it cannot read. The values below are examples.
+# The profile of a project: this file, filled in, at `.hub/profile.yml` in the project's root. A key left out takes
+# the default its comment names, where it has one. `checks/profile.mjs` reads the keys the kit's scripts use and
+# refuses a form it cannot read. The values below are examples.
+# The project's name, the one the home's registry gives it.
 name: example-project
+# What the project is, in one line.
 description: One line on what the project is.
 # The language of the project's documents and records (core rules, Work items). English when left out.
 language: en

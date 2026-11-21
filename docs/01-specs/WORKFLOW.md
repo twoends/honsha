@@ -23,9 +23,9 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 
 The rules a session follows while it works are the [core rules](../../rules/core.md), the files of `rules/` in the kit,
 which every session of a project receives when it starts, together with the record template. A rule that only some
-sessions apply reaches them through a skill of the kit, a template or an agent's file. This document states none of
-them: it points to them, and keeps what no session needs while it works, the reasons, and the specifications of the
-kit's own mechanisms, for whoever changes the kit.
+sessions apply reaches them through a skill of the kit, a template or an agent's file. Apart from the summary of its
+key facts, this document states none of them: it points to them, and keeps what no session needs while it works, the
+reasons, and the specifications of the kit's own mechanisms, for whoever changes the kit.
 
 A new rule goes where it costs least to hold:
 
@@ -152,10 +152,11 @@ A trivial item goes from step 3 to step 5.
 
 ### Parallel work
 
-Work is split and run in parallel whenever its parts are independent. Nobody has to ask for it. A split is never
-forced: the gain exists only where no coordination is needed. Searching, exploring, researching and reviewing always
-fan out. The test, the limits, and how parts and separate requests run are in the skill `honsha:parallel-parts`, which
-the worker invokes before it splits an item and the hub before it starts an item in a project where another runs.
+Independent parts that run at once arrive sooner and cost no more, so nobody has to ask for them; a split is never
+forced, since the gain exists only where no coordination is needed. When to split and to fan out is in the worker's
+file (`agents/worker.md`). The test, the limits, and how parts and separate requests run are in the skill
+`honsha:parallel-parts`, which the worker invokes before it splits an item and the hub before it starts an item in a
+project where another runs.
 
 ### The backlog
 
@@ -224,13 +225,10 @@ once:
   its project's lessons, and is told why when its profile has a `stack`. A setting that names no folder on the
   machine is named in the same way.
 - **Budget.** Each level gives at most 4,000 characters, about fifteen lessons. A level with more gives the lessons
-  that fit and names the files it left in part (`hooks/lessons.mjs` says how), and the session tells the person. A
-  level that fills is answered at the periodic review (`honsha:review`); its budget is raised only by a work item that
-  says why.
+  that fit and names the files it left in part (`hooks/lessons.mjs` says how), and the session tells the person. The
+  periodic review answers a level that fills (`honsha:review`).
 - **Technology lessons are the cross-project memory.** A lesson learned on one project is available to every other
   project that declares the same technology, from the next session.
-- **Promotion.** Technology and host lessons accumulate in the home, which is personal, so the kit receives one only
-  once it has proved generally valid and been reviewed, through a work item on the kit.
 
 ---
 
@@ -313,14 +311,16 @@ no protection at all: what a service adds beyond that is a further stop, never s
 
 1. **The commands** that open a pull request, read its number, its state and the results of its checks, and show who
    merged it.
-2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (14.3).
+2. **The commands that merge a pull request,** as patterns in `merge-commands.json`, for the guard to refuse (workflow,
+   The guard).
 3. **The settings the rules rely on:** pull requests are merged with the method the core rules name (Delivery), merged
    branches are deleted, and, where the service has them, alerts on vulnerable dependencies are on without automatic
    pull requests (workflow, Dependencies).
 4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
    forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
    cannot merge.
-5. **The wiring of the checks** (14.2), and what it costs on that service.
+5. **The wiring of the checks** (workflow, Checks on pull requests and on the default branch), and what it costs on
+   that service.
 6. **The source of the kit's marketplace** that a repository declares (architecture, Kit), and the command
    that moves a host's registration of it to that source.
 
@@ -418,8 +418,8 @@ know the current rules.
 A dependency is code the project runs without having written it. So it is pinned, so that a build installs what was
 checked; its known vulnerabilities are looked for and fixed at once; and any other new version waits a few days, so
 that a release withdrawn or found compromised early is not taken. The rules are in the skill `honsha:dependencies`,
-which a work item invokes when it changes a dependency or answers a vulnerability report. Ordinary updates come
-together from the periodic review (`honsha:review`), as one work item, so that they do not interrupt other work.
+which a work item invokes when it changes a dependency or answers a vulnerability report. Ordinary updates are left
+to the periodic review (`honsha:review`), so that they do not interrupt other work.
 
 ---
 
@@ -459,10 +459,8 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
 
 ## Joining an installation
 
-Every project that joins an installation is assessed first: an assessment reads the project against the kit's rules
-and proposes the work that would close each gap. It is a small report item of the home (workflow, Types) and changes
-nothing in the project; the person chooses which of its proposed items start. What it reads and the report it writes
-are in the skill `honsha:assessment`.
+Every project that joins an installation is assessed first (`honsha:assessment`), so that its gaps against the kit's
+rules are known, and the work that closes them is chosen by the person, before any other work starts in it.
 
 A project's entry in the home's registry (architecture, Home) says where it stands, and so what work may start in it:
 
