@@ -1,7 +1,8 @@
 # GitHub
 
 This folder is the kit's piece for GitHub: everything that is specific to that hosting service, kept apart from the
-rules. What a piece has to say is in [WORKFLOW.md](../../docs/01-specs/WORKFLOW.md), section 14.
+rules. What a piece has to say is the contract in [the workflow](../../docs/01-specs/WORKFLOW.md) (workflow, The hosting
+service).
 
 Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
 on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
@@ -38,7 +39,7 @@ gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-m
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge
 ```
 
-The first command sets them; the second reads them, as an assessment does (WORKFLOW.md, section 20). A free account
+The first command sets them; the second reads them, as an assessment does (`honsha:assessment`). A free account
 has these settings.
 
 Two things on the site are not used:
@@ -47,7 +48,7 @@ Two things on the site are not used:
   verification again (the core rules, "Commits and branches"). "Update with rebase" would also rewrite the branch.
 - **Squash and rebase in the merge menu,** which the first setting removes.
 
-For dependencies (WORKFLOW.md, section 17):
+For dependencies (workflow, Dependencies):
 
 - **Dependabot alerts on,** as the further stop between reviews. GitHub reports a dependency with a known
   vulnerability on the repository, and notifies as the account's notification settings say. The package manager's own
@@ -71,7 +72,7 @@ In the account of whoever merges:
 ## Declaring the kit
 
 Every repository that runs under the kit, the kit's own included, declares its marketplace from the kit's repository
-on GitHub, in `.claude/settings.json` (architecture, section 3.1):
+on GitHub, in `.claude/settings.json` (architecture, Kit):
 
 ```json
 {
@@ -99,11 +100,11 @@ Tried with a private repository: the command replaces the registration for every
 
 - **In a private repository of a free account nothing on GitHub stops an account that can write** from pushing to the
   default branch or from merging: branch protection and rulesets are not there. The kit's guard is the stop
-  (WORKFLOW.md, section 14.3).
+  (workflow, The guard).
 - **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
   works the same with them: they add a stop on the server and change no rule. In the home, the account that the
-  backlog's script pushes with must be allowed to push to the default branch (WORKFLOW.md, section 5.2), and nothing
+  backlog's script pushes with must be allowed to push to the default branch (workflow, The backlog), and nothing
   else may be.
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
@@ -148,7 +149,7 @@ caller's Actions settings allow reusable workflows, which they do by default. pr
 caller's own token, which reads its own repository and any public one but no other private one: a project calls it
 from a public repository of the kit, and the kit calls it from its own repository whatever its visibility.
 
-It answers the contract of WORKFLOW.md, section 14.2, in this way.
+It answers the contract for the checks (workflow, Checks on pull requests and on the default branch) in this way.
 
 1. **When.** In a project's file and in the kit's alike, on the `pull_request` event for the default branch: when a pull
    request is opened and at every push to its branch. A newer run cancels an older one of the same pull request. And on

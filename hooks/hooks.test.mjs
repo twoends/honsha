@@ -143,7 +143,7 @@ test("the template has the front matter keys of the workflow, in order", () => {
     "effort",
     "checks",
   ]);
-  const spec = read("docs/01-specs/WORKFLOW.md").split("### 4.1 Front matter")[1].split("```")[1];
+  const spec = read("docs/01-specs/WORKFLOW.md").split("### Front matter")[1].split("```")[1];
   const specKeys = spec
     .split("\n")
     .filter((line) => /^[a-z-]+:/.test(line))

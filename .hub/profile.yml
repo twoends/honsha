@@ -17,6 +17,7 @@ gates:
   - the rules name no hosting service
   - nothing about a user, a user's project or an installation
   - a script comes with its test
+  - a document of the kit cites no entry of a decision log: it states the rule, with its reason where the reason helps
 kinds: # the most existing files a change of each kind is expected to touch
   gate: 1
   rule: 3

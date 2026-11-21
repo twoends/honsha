@@ -1,9 +1,10 @@
 # Runs the kit's verification commands, the workflow that projects call and the check of personal content on the kit
 # itself: on every pull request to the default branch and on every push to it.
 #
-# This file is the GitHub wiring of the checks: what it has to do is in docs/01-specs/WORKFLOW.md,
-# section 14.2, and how it does it on GitHub is in services/github/README.md. The commands are
-# the `verify` list of .hub/profile.yml; they are not repeated here.
+# This file is the GitHub wiring of the checks: what it has to do is the contract
+# (workflow, Checks on pull requests and on the default branch), and how it does it on GitHub is in
+# services/github/README.md. The commands are the `verify` list of .hub/profile.yml; they are not
+# repeated here.
 
 name: verify
 

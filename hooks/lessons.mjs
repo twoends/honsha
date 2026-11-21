@@ -1,5 +1,5 @@
 // Gives one level of lessons to a session when it starts: the project's, those of the technologies its profile lists
-// under `stack`, or the host's (workflow, section 8). `hooks.json` runs it once for each level.
+// under `stack`, or the host's (workflow, Lessons). `hooks.json` runs it once for each level.
 //
 //   node hooks/lessons.mjs project | technologies | host
 //

@@ -11,8 +11,8 @@ core rules in your context always hold, and this file does not repeat them: it i
 
 1. Find the record, on the item's branch. If the request has no record yet, create the branch and the record first:
    the intent as the core rules say (The record), the size by the core rules, the areas from the profile's area map.
-2. Read the record and the profile. Without a profile there are no verification commands, gates or area map: say so
-   in the log and go on.
+2. Read the record and the profile, whose keys `templates/profile.yml` in the kit directory explains. Without a profile
+   there are no verification commands, gates or area map: say so in the log and go on.
 3. Apply the gate of the item's size.
    - **trivial:** go on.
    - **small:** write a few lines of strategy if the record has none, then go on.
@@ -20,13 +20,17 @@ core rules in your context always hold, and this file does not repeat them: it i
      `awaiting-approval`, commit the record, ask the person and stop. An approval the person gives is written into
      the record and committed. If the record holds one, go on.
 4. Set the state to `in-progress`.
-5. Load the pack of each of the item's areas. Write in the log an area that has none.
+5. Load the pack of each of the item's areas, the skill `honsha:area-<name>`. Write in the log an area that has none.
 
 ## While working
 
 - Stay inside the scope. What the record does not ask for is not done, however useful it looks.
 - Write in the log what was done, what was found, what was decided and why.
-- Before splitting the work into parts that run in parallel, invoke the skill `honsha:parallel-parts`.
+- Split the work into parts that run in parallel whenever they are independent, without being asked, and fan out
+  every search, exploration, piece of research and review. Before splitting, invoke the skill
+  `honsha:parallel-parts`, which holds the test.
+- For an item that assesses a project, invoke the skill `honsha:assessment`; for one that adds, removes or updates a
+  dependency, changes a lockfile or answers a vulnerability report, `honsha:dependencies`.
 - At a stop condition, write the reason in the log, commit the record and tell the person; do not guess a way around
   it.
 - Update the specifications the change affects as part of the work, before the verification.

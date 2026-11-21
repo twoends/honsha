@@ -14,7 +14,7 @@
 //
 // On the default branch itself, its own commits are read, those of its first parents: a merge brings a pull
 // request, whose commits were checked on its branch, and any other commit was pushed there directly. The only
-// direct commit accepted is a capture of the backlog (workflow, section 5.2): the trailer `Backlog: <id>`, and one
+// direct commit accepted is a capture of the backlog (workflow, The backlog): the trailer `Backlog: <id>`, and one
 // record added or removed under `backlog/<project>/`, named by that identifier. This reading assumes that pull
 // requests are merged with a merge commit: a squashed or rebased one would look like a direct commit.
 //

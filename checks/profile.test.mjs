@@ -105,6 +105,19 @@ test("a missing file is no profile", () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test("the profile's template is one the reader accepts, with every key the reader reads", () => {
+  const profile = readProfile(new URL("../templates/profile.yml", import.meta.url));
+  assert.deepEqual(profile, {
+    defaultBranch: "main",
+    verify: ["npm run check"],
+    commitsAddress: "@example\\.org$",
+    kinds: { feature: 10, fix: 5, upkeep: 5 },
+    public: false,
+    stack: ["node", "postgres", "docker"],
+    lessons: "LESSONS.md",
+  });
+});
+
 test("the kit's own profile is one the reader accepts", () => {
   const profile = readProfile(new URL("../.hub/profile.yml", import.meta.url));
   assert.ok(profile);
