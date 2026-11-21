@@ -1,6 +1,6 @@
 // Gives a session that runs as no agent, when it starts, the procedure it follows: the hub's, `agents/hub.md`, in the
-// home's main working tree, and the worker's, `agents/worker.md`, in a worktree of the home and in a project's folder or
-// one of its worktrees. Outside the installation's folders, or where it cannot be read, it gives none
+// home's main working tree, and the worker's, `agents/worker.md`, in a worktree of the home and in a project's folder
+// or one of its worktrees. Outside the installation's folders, or where it cannot be read, it gives none
 // (`hooks/place.mjs`). `hooks.json` runs it at each start.
 //
 //   node hooks/procedure.mjs < the hook's input

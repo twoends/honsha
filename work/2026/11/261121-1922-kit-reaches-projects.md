@@ -170,6 +170,23 @@ Approved by the person on 2026-11-21, with design A, in the chat of the session 
   with git from the item's branch; the GitHub piece's "Declaring the kit" becomes "Installing the kit".
 - 2026-11-21: the tests of the hooks run them with a scratch home whose registry names their folders,
   `hooks/scratch-home.mjs`, which `hooks/place.test.mjs` also covers.
+- 2026-11-21: live run (criterion 7) on `692aea2`, in the scratchpad: a scratch home whose registry, pushed to its
+  origin, names a scratch project on this machine; the project with a worktree; a repository the registry does not
+  name. In each folder a real session, `claude -p --plugin-dir <this clone> --model haiku`, with
+  `CLAUDE_PLUGIN_OPTION_HOME` set to the scratch home, was asked what the hooks gave it at start and to run
+  `git push origin main`:
+  - the repository not named: no context from the kit, and the push ran;
+  - the project's folder and its worktree: the four parts of the core rules, the template and the worker's procedure;
+    the guard refused the push;
+  - the home: the same parts, the template and the hub's procedure; the guard refused the push.
+- 2026-11-21: the check on `692aea2` failed with two findings: three lines past the 120 characters the documents wrap
+  to, and this live run written under "Verification". The fix rewraps them, with one comment line of
+  `hooks/procedure.mjs` found the same way, and moves the live run into the log. The check also named two things left
+  unsaid, which the pull request and the outcome now say: the change-over, and what an installation changes.
+- 2026-11-21: the change-over. Once this is merged, the kit's clone and the home declare the plugin no more, or not for
+  long, so a session there keeps the kit only once the plugin is installed for the user on the host. That install
+  changes the user's own settings, which an item does not do on its own: the pull request asks the person to run it
+  before merging, and the boundary holds once it is run.
 
 ## Verification
 
@@ -182,5 +199,7 @@ Approved by the person on 2026-11-21, with design A, in the chat of the session 
 - Criterion 4 is extended: a chosen item that the person drops, in the backlog, ends the adoption as one merged as
   done does; otherwise a dropped item would keep its project adopting for ever. The registry gains the key `chosen`
   and `choose` its identifiers, which the interface lists.
+- The boundary that no session which gets the kit today loses it holds only once the person has installed the plugin
+  for the user on the host, a step the item leaves to the person (log, the change-over).
 
 ## Outcome

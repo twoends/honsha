@@ -27,9 +27,9 @@ with, and what may start in which project. Read the registry the same way; the k
   merge registers the project, and from then on its sessions receive the kit. After the person has taken the report's
   decisions and chosen its items, capture each chosen item in the backlog with the assessment as its `source`, then
   run `choose` with their identifiers; after the merge of a chosen item, `refresh`; when a project's clone is in
-  another folder, or this host has none for it, `folder`. Each commits its change on a branch of its own with a trivial record: push it,
-  open its pull request, then make the record's closing commit with `pr`, `model` and the state `done`. A move holds
-  once the person merges it.
+  another folder, or this host has none for it, `folder`. Each commits its change on a branch of its own with a
+  trivial record: push it, open its pull request, then make the record's closing commit with `pr`, `model` and the
+  state `done`. A move holds once the person merges it.
 - **Dispatch.** A request for work in a project becomes a record from the kit's template, its intent as the core rules
   say, with its size, kind and areas, and its `source` where it has one, in a file outside the repositories. Run
   `node <kit>/hub/projects.mjs may-start` on it, and start nothing that it or the decision log refuses. Before an item

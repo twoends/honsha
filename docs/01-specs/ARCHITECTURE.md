@@ -124,8 +124,9 @@ work/                  the kit's own work records
   files when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
   `home` names (workflow, Lessons). A session that runs as no agent receives a procedure too, from a hook of its own:
-  the hub's in the home's main working tree, the worker's in the home's worktrees and in the projects. The sessions that an application or another
-  session starts run as no agent, and a session started as an agent has that agent's file as its system prompt.
+  the hub's in the home's main working tree, the worker's in the home's worktrees and in the projects. The sessions
+  that an application or another session starts run as no agent, and a session started as an agent has that agent's
+  file as its system prompt.
 
 ### Home
 
@@ -146,10 +147,10 @@ lessons/host/          one file per host
 ```
 
 The home is a project like any other: the kit acts in it as in every project, and its default branch changes only
-through pull requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
-scripts included; a report is one of them, and its record holds the answer. The one exception is the backlog: the
-kit's script pushes each record there and takes it out without a pull request, in commits that do nothing else (core
-rules, Delivery; workflow, The backlog).
+through pull requests that the person merges. The hub changes it only through work items, its own writes and those of
+the kit's scripts included; a report is one of them, and its record holds the answer. The one exception is the
+backlog: the kit's script pushes each record there and takes it out without a pull request, in commits that do nothing
+else (core rules, Delivery; workflow, The backlog).
 
 The home holds no instructions for the hub. A session opened in its own folder receives the procedure of the kit's
 agent `honsha:hub` when it starts, from a hook of the kit; a session in a worktree of the home, where the home's own
