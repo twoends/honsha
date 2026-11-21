@@ -108,10 +108,14 @@ and the project's files must change to adopt the kit, which is what the person o
 
 **Fresh bases.** Whatever the design: the worker fetches and cuts the item's branch from `origin/<default branch>`,
 since a worktree may start from a main folder that lags; the checker's files compare with the same ref; the hub
-fetches the home before reading `decisions.md` and the registry, and reads them from that ref.
+fetches the home before reading `decisions.md` and the registry, and reads them from that ref. On the always-on host
+(architecture, Key facts) nobody works in the main folders, so without the fetch every base would lag.
 
 **The cost of A in every session.** Each of the nine hooks at a session's start spends a git call or two to find the
-folder's place, about 30 ms each on this host, in every session of the user, also outside Honsha. The guard runs before each shell command
+folder's place, about 30 ms each as measured on Windows. On the always-on host, whose dedicated user (architecture,
+Security) runs only Honsha's sessions, every folder is the home's or a project's, and the test only confirms it. On a
+personal computer, where an installation can run first (architecture, Key facts), the cost also falls on the person's
+other sessions, and there the test is what keeps the kit out of them. The guard runs before each shell command
 everywhere, so its first test is the cheapest: a folder outside every registered one ends the hook before it parses
 the command. The plugin's skills and agents are listed in every session, a few hundred tokens of descriptions; the
 platform gives no way to hide them.
