@@ -37,15 +37,17 @@ A new rule goes where it costs least to hold:
   receives, and the profile;
 - **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
   too, when it starts;
-- **an agent's file,** for that agent's own procedure.
+- **an agent's file,** for that agent's own procedure. The worker's file reaches a session that runs as no agent, by a
+  hook at its start, outside the main working tree of a home, which is the hub's: a session started as an agent has
+  that agent's file as its system prompt, and the sessions that an application or another session starts run as none.
 
 A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
 `hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context any
 hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook. The
-total a session receives at start, the lessons counted at their budget (workflow, Lessons), is a choice of what every
-session pays: it is raised by a work item that says why, or answered by moving a rule that only some situations need
-into a skill.
+total a session receives at start, the lessons and the worker's procedure counted at their budgets (workflow,
+Lessons), is a choice of what every session pays: it is raised by a work item that says why, or answered by moving a
+rule that only some situations need into a skill.
 
 ---
 
@@ -135,7 +137,8 @@ extended instead.
    (workflow, The backlog).
 4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written and the item stops for the
    approval, as the core rules say (Sizes; Commits and branches).
-5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas.
+5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas: a
+   session that receives the worker's procedure when it starts, or one started as the worker (`agents/worker.md`).
 6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
    verification commands. For small and full items the checker then compares the result with the record and the
    profile's gates, from a fresh context and without write access (`agents/checker.md`).
