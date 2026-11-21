@@ -160,6 +160,8 @@ one held; this record states the same strategy in general words.
   order asks: two conflicts, each resolved by keeping both sides. In `honsha:parallel-parts`, a part's worktree is
   made with git from the item's branch, as #42 says, and `--setup` runs in it, as this item says. In the README's
   requirements, the setting `home` reads as #42 left it, and the development tools as this item installs them.
+- 2026-11-21: on the merge `3af8088`, `node checks/verify.mjs --setup` and then the profile's `verify` ran again:
+  passed, with 190 tests. The repeated check of the merge found that this log did not say so; this line does.
 
 ## Verification
 
