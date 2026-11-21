@@ -7,10 +7,12 @@ this one changes only as "Changes to the interface" says.
 
 ## The plugin
 
-- The marketplace `honsha`, and its plugin `honsha`, enabled as `honsha@honsha`. Where a repository declares the
-  marketplace from, and how a clone installs the plugin, are in the piece of its hosting service,
-  `services/<name>/README.md`.
-- The plugin's setting `home`: the folder of the installation's home on the machine.
+- The marketplace `honsha`, and its plugin `honsha`, enabled as `honsha@honsha` and installed once on each host, for
+  the user that runs the installation's sessions. The commands, and the marketplace's source, are in the piece of the
+  hosting service, `services/<name>/README.md`.
+- The plugin's setting `home`, which it requires: the folder of the installation's home on the machine. The kit acts
+  only in the sessions of the home's folder, of the folders that the registry gives the projects on this host, and of
+  their worktrees.
 - The kit directory: the folder where the platform keeps the installed plugin. The line above each part of the core
   rules that a session receives at start names it.
 
@@ -30,7 +32,7 @@ refuses, is in its script's opening comment. A check that fails exits with a cod
 
 ```
 node <kit directory>/hub/projects.mjs add <name> <repository> <folder> [--assessment <id>]
-node <kit directory>/hub/projects.mjs choose <name>
+node <kit directory>/hub/projects.mjs choose <name> [<id>...]
 node <kit directory>/hub/projects.mjs refresh
 node <kit directory>/hub/projects.mjs folder <name> <folder>
 node <kit directory>/hub/projects.mjs check
@@ -56,13 +58,12 @@ hooks, which the plugin runs.
 What the kit reads or writes in a project and in a home, by its path from the repository's root:
 
 - In every project: the profile, `.hub/profile.yml`; a work item's record, `work/<yyyy>/<mm>/<id>-<slug>.md`, on the
-  branch `work/<id>-<slug>`; the file that the profile names under `lessons`; `.claude/settings.json`, which declares
-  the marketplace and enables the plugin.
+  branch `work/<id>-<slug>`; the file that the profile names under `lessons`.
 - In the home, besides what every project holds: the registry, `registry.yml`; the backlog,
   `backlog/<project>/<id>-<slug>.md`; the lessons of a technology, `lessons/tech/<technology>.md`, and those of a host,
   `lessons/host/<host>.md`, named by the machine's name in lower case; the decision log, `decisions.md`, whose choices
   the hub applies; `settings.yml`, whose `max-workers` caps the workers on a host.
-- A repository that holds `registry.yml` at its root is a home.
+- The home is the repository whose folder the plugin's setting `home` names; it holds `registry.yml` at its root.
 
 ## The registry
 
@@ -75,12 +76,15 @@ projects:
     repository: example-owner/example-shop
     paths:
       example-host: '/srv/projects/example-shop'
-    state: assessing
+    state: adopting
     assessment: 261201-0930
+    chosen: [261202-1000, 261202-1005]
 ```
 
 A project has a folder on each host, by the name the system gives the host. Its state is `assessing`, `adopting` or
-`active`, and `assessment` is the identifier of its assessment's record.
+`active`, and `assessment` is the identifier of its assessment's record. `chosen`, written by `choose` and kept after
+it, lists the identifiers of the items chosen from the assessment; a project `adopting` has it, an empty list when no
+item was chosen.
 
 ## Checks and their wiring
 

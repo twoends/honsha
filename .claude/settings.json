@@ -1,16 +1,4 @@
 {
-  "extraKnownMarketplaces": {
-    "honsha": {
-      "source": { "source": "github", "repo": "twoends/honsha" },
-      "autoUpdate": true
-    }
-  },
-  "enabledPlugins": {
-    "honsha@honsha": true
-  },
-  "worktree": {
-    "baseRef": "head"
-  },
   "hooks": {
     "SessionStart": [
       {

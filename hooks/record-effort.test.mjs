@@ -1,6 +1,6 @@
 // Run with: node --test hooks/
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,14 +8,21 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { stamp } from "./record-effort.mjs";
+import { scratchHome } from "./scratch-home.mjs";
 
 const script = fileURLToPath(new URL("./record-effort.mjs", import.meta.url));
 const template = fileURLToPath(new URL("../templates/record.md", import.meta.url));
 
+/**
+ * A repository holding a record. The hook writes only in an installation's folders, so the repository is a home: the
+ * hook runs with it as the plugin's setting `home` unless a test says otherwise.
+ */
 function sandbox() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-test-"));
-  const record = path.join(root, "repo", "work", "2026", "11", "261116-1432-export-orders.md");
+  const repo = path.join(root, "repo");
+  const record = path.join(repo, "work", "2026", "11", "261116-1432-export-orders.md");
   fs.mkdirSync(path.dirname(record), { recursive: true });
+  execFileSync("git", ["init", "-q", repo]);
   fs.copyFileSync(template, record);
   return { root, record };
 }
@@ -25,9 +32,10 @@ function sandbox() {
  * @param {NodeJS.ProcessEnv} [env]
  */
 function hook(input, env = {}) {
+  const cwd = typeof input === "object" && input !== null && "cwd" in input ? String(input.cwd) : "";
   const result = spawnSync(process.execPath, [script], {
     input: typeof input === "string" ? input : JSON.stringify(input),
-    env: { ...process.env, CLAUDE_EFFORT: "", ...env },
+    env: { ...process.env, CLAUDE_EFFORT: "", CLAUDE_PLUGIN_OPTION_HOME: cwd, ...env },
     encoding: "utf8",
   });
   assert.equal(result.status, 0, result.stderr);
@@ -35,6 +43,7 @@ function hook(input, env = {}) {
 }
 
 /**
+ * The input of an edit of `file`, made by a session in the repository of the sandbox that holds it.
  * @param {string} file
  * @param {Record<string, unknown>} [extra]
  */
@@ -44,6 +53,7 @@ const edited = (file, extra = {}) => ({
   tool_name: "Edit",
   tool_input: { file_path: file },
   effort: { level: "high" },
+  cwd: path.resolve(file, "..", "..", "..", ".."),
   ...extra,
 });
 
@@ -126,6 +136,18 @@ test("ignores files that are not records", () => {
   assert.equal(hook(edited(noKey)), "");
   assert.equal(fs.readFileSync(elsewhere, "utf8"), fs.readFileSync(template, "utf8"));
   assert.equal(fs.readFileSync(noKey, "utf8"), noKeyText);
+});
+
+test("writes nothing outside the installation's folders, or where the installation cannot be read", () => {
+  const { record } = sandbox();
+  const elsewhere = scratchHome([]);
+  try {
+    assert.equal(hook(edited(record), { CLAUDE_PLUGIN_OPTION_HOME: elsewhere.home }), "");
+    assert.equal(hook(edited(record), { CLAUDE_PLUGIN_OPTION_HOME: "" }), "");
+    assert.equal(key(record, "effort"), key(template, "effort"));
+  } finally {
+    elsewhere.remove();
+  }
 });
 
 test("ignores other hook events", () => {

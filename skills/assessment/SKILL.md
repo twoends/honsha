@@ -23,8 +23,9 @@ In this order. A step that finds the project in order says so in a line; a gap i
    rely on": the merge method, merged branches deleted, alerts on vulnerable dependencies.
 4. **Dependencies,** against the skill `honsha:dependencies`: pinned with a lockfile and installed without install
    scripts; the package manager's vulnerability report and its list of outdated dependencies.
-5. **The kit declared in the repository,** as the piece shows under "Declaring the kit", so that sessions get the
-   core rules, the guard and the effort hook.
+5. **What the project ignores:** its `.gitignore` holds `.claude/worktrees/`, where the platform makes its worktrees,
+   and `.honsha-checker.*`, the checker's input files, which hold a diff; otherwise a commit may take them up. The kit
+   needs no other file in the project: its sessions receive it once the project is registered.
 6. **The project's own rules,** such as `CLAUDE.md`, for anything that conflicts with the core rules; earlier
    documents to list under `legacy`, as the template says; an existing lessons file, for entries that belong at
    another level: only lessons about this repository stay in it (core rules, Lessons).
@@ -46,8 +47,8 @@ The record of an assessment has the sections of a small item, from the template.
 - **Outcome:** the findings, in one table: number, finding, proposed item, size and kind, estimated cost. A finding
   with no item says why: a decision only the person can take, or nothing to do now and the review that watches it.
   After the table, one paragraph lists what was read and found in order; then the state in a few lines, the proposed
-  order of the items, the one that declares the kit in the project's repository first, and the decisions waiting for
-  the person.
+  order of the items, and the decisions waiting for the person. The items the person chooses wait in the home's
+  backlog until they start, and the project is active once each is merged as done or dropped.
 
 The size and kind of a proposed item follow the core rules (Sizes) and the project's `kinds`, or the defaults the
 template names. Its cost is a multiple of a typical item of that size, from `checks/measures.mjs` run on the project;

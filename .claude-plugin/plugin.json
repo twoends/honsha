@@ -8,8 +8,8 @@
     "home": {
       "type": "directory",
       "title": "Honsha home",
-      "description": "The folder of this installation's home repository on this machine, which holds the lessons of technologies and of hosts that sessions receive when they start.",
-      "required": false
+      "description": "The folder of this installation's home repository on this machine. Its registry says which folders are the home's and its projects', the only ones where the kit acts, and it holds the lessons of technologies and of hosts that sessions receive when they start.",
+      "required": true
     }
   }
 }

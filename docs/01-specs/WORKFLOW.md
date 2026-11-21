@@ -38,9 +38,9 @@ A new rule goes where it costs least to hold:
 - **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
   too, when it starts;
 - **an agent's file,** for that agent's own procedure. A session that runs as no agent receives one by a hook at its
-  start: the hub's in the main working tree of a home, so that no installation writes it, and the worker's anywhere
-  else. A session started as an agent has that agent's file as its system prompt, and the sessions that an
-  application or another session starts run as none.
+  start: the hub's in the home's main working tree, so that no installation writes it, and the worker's in the home's
+  worktrees and in the projects. A session started as an agent has that agent's file as its system prompt, and the
+  sessions that an application or another session starts run as none.
 
 A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
@@ -327,8 +327,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
    cannot merge.
 5. **The wiring of the checks** (workflow, Checks on pull requests and on the default branch), and what it costs on
    that service.
-6. **The source of the kit's marketplace** that a repository declares (architecture, Kit), and the command
-   that moves a host's registration of it to that source.
+6. **The source of the kit's marketplace** that a host installs the plugin from (architecture, Kit), with the commands
+   that install it and that move a host's registration of the marketplace to that source.
 
 ### Checks on pull requests and on the default branch
 
@@ -377,6 +377,8 @@ variables, also when they name the default branch (workflow, The backlog), and `
 - It judges a push in the session's folder, or in another repository's when the line begins by moving there in a way
   it can be sure of, which `hooks/guard.mjs` names. Any other line is judged in the session's folder, so that a line
   it cannot follow lets through nothing it would refuse there.
+- It judges only in a session of the installation's folders, as the kit's other hooks act only there (architecture,
+  Kit), and in a session whose folder it cannot place because the home's registry cannot be read.
 
 ---
 
@@ -477,10 +479,14 @@ rules are known, and the work that closes them is chosen by the person, before a
 A project's entry in the home's registry (architecture, Home) says where it stands, and so what work may start in it:
 
 - **`assessing`:** the person has decided that the project joins. Only its assessment runs.
-- **`adopting`:** the person has taken the decisions of the assessment's report and chosen its proposed items. Only
-  those items start, each with the assessment's identifier as its `source`, in the order the report proposes.
-- **`active`:** the kit is declared on the project's default branch, so its sessions run under the core rules. Any
-  work item may start; the chosen items left go on as ordinary items.
+- **`adopting`:** the person has taken the decisions of the assessment's report and chosen its proposed items, each
+  waiting in the home's backlog with the assessment's identifier as its `source`, and the registry names them. Only
+  those items start, in the order the report proposes.
+- **`active`:** every chosen item is merged as done on the project's default branch, or dropped in the backlog. Any
+  work item may start.
+
+The kit reaches a project's sessions from the merge of its entry, whatever its state: they run under the core rules
+and the guard while it is assessed and adopted too (architecture, Kit).
 
 Entering a project, moving it between states and setting its folder are mechanical, so code does them, not an agent:
 `hub/projects.mjs` in the kit, run from the home's folder by the person, the hub or an interface. Each move, and each
@@ -495,9 +501,9 @@ state and its folders are those on the home's default branch.
   `--assessment <id>` it takes a report already on the home's default branch instead, for a project assessed before it
   was added, in a trivial item of its own.
 - `choose`, once the assessment is merged as done and the person has chosen its items, moves the project to
-  `adopting`; `refresh` moves it to `active` when its default branch declares the kit. Each makes a trivial item whose
-  record the script writes whole, verification and outcome included; the closing commit adds what the pull request
-  gives.
+  `adopting`, with the identifiers of the chosen items; `refresh` moves it to `active` once they are all done or
+  dropped, read from the project's default branch and the backlog. Each makes a trivial item whose record the script
+  writes whole, verification and outcome included; the closing commit adds what the pull request gives.
 - `folder` sets a registered project's folder on the host it runs on, and adds the host when the entry has none: a
   project's clone can move to another folder, and a new host needs a folder for each project. It makes a trivial item
   as a move does, and changes no state.

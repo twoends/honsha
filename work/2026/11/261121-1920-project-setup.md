@@ -156,6 +156,10 @@ one held; this record states the same strategy in general words.
   log reads the home's profile with this branch's reader: `verify` as before, and `setup` as `npm ci --ignore-scripts`.
   The kit's own profile is read by this branch's tests too: neither profile of the installation's two registered
   projects has an indented line that is no item in a list of commands, which the reader now refuses.
+- 2026-11-21: the person merged the home's #18 and the kit's #42. The default branch is merged here, as the strategy's
+  order asks: two conflicts, each resolved by keeping both sides. In `honsha:parallel-parts`, a part's worktree is
+  made with git from the item's branch, as #42 says, and `--setup` runs in it, as this item says. In the README's
+  requirements, the setting `home` reads as #42 left it, and the development tools as this item installs them.
 
 ## Verification
 

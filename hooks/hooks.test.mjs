@@ -2,11 +2,15 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import { test } from "node:test";
+import os from "node:os";
+import path from "node:path";
+import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { BUDGET, LEVELS } from "./lessons.mjs";
+import { trees } from "./place.mjs";
 import { HUB, WORKER, context } from "./procedure.mjs";
+import { scratchHome } from "./scratch-home.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 /** @param {string} file */
@@ -15,6 +19,9 @@ const hooks = JSON.parse(read("hooks/hooks.json")).hooks;
 const handlers = Object.values(hooks)
   .flat()
   .flatMap((group) => group.hooks);
+// The hooks act only in an installation's folders, so the kit's clone is a project of a scratch home for these tests.
+const installation = scratchHome([trees(root)?.main ?? root]);
+after(installation.remove);
 
 test("every file a hook refers to exists", () => {
   const text = handlers.map((handler) => [handler.command, ...(handler.args ?? [])].join(" ")).join(" ");
@@ -33,14 +40,16 @@ const given = [
 ].toSorted();
 
 /**
- * What a hook prints, run as `hooks.json` writes it, with `input` as the hook's input.
+ * What a hook prints, run as `hooks.json` writes it, with `input` as the hook's input: by default a session in the
+ * kit's clone, a project of the scratch home.
  * @param {{ command: string, args?: string[] }} handler
  * @param {object} [input]
+ * @param {NodeJS.ProcessEnv} [env]
  */
-function output(handler, input) {
+function output(handler, input = { hook_event_name: "SessionStart", cwd: root }, env = installation.env) {
   assert.equal(handler.command, "node");
   const args = (handler.args ?? []).map((arg) => arg.replace("${CLAUDE_PLUGIN_ROOT}", root.replace(/[\\/]$/, "")));
-  return execFileSync(process.execPath, args, { encoding: "utf8", input: input ? JSON.stringify(input) : "" });
+  return execFileSync(process.execPath, args, { encoding: "utf8", input: JSON.stringify(input), env });
 }
 
 /**
@@ -88,10 +97,10 @@ test("the opening of the core rules names each of their other parts", () => {
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
 // that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
 // budget, since their files are the installation's and the hook that gives them keeps each level under it. The total
-// holds the procedure too that a session which runs as no agent receives, the hub's in a home's main working tree and
-// the worker's anywhere else, as a session started as that agent receives the same file as its system prompt: a
-// session receives one of the two, and each counts at its file's budget, so that the file can grow to that budget
-// without reaching the total.
+// holds the procedure too that a session which runs as no agent receives, the hub's in the home's main working tree and
+// the worker's in its worktrees and the projects, as a session started as that agent receives the same file as its
+// system prompt: a session receives one of the two, and each counts at its file's budget, so that the file can grow to
+// that budget without reaching the total.
 const PART = 9000;
 const TOTAL = 29000;
 
@@ -105,7 +114,7 @@ test("each hook gives its whole file under the limit for one output, and a sessi
     total += text.length;
   }
   const lessons = LEVELS.length * BUDGET;
-  // The kit is no home, so a session in it that runs as no agent gets the worker's procedure.
+  // The kit's clone is a project of the scratch home, so a session in it that runs as no agent gets the worker's.
   assert.equal(output(procedures[0], { hook_event_name: "SessionStart", cwd: root }), context(WORKER));
   for (const file of [WORKER, HUB]) {
     const procedure = context(file);
@@ -121,16 +130,46 @@ test("each hook gives its whole file under the limit for one output, and a sessi
   }
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
     const [, file] = handler.args;
-    const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;
+    const input = { hook_event_name: "SubagentStart", agent_type: "honsha:checker", cwd: root };
+    const { hookEventName, additionalContext } = JSON.parse(output(handler, input)).hookSpecificOutput;
     assert.equal(hookEventName, "SubagentStart");
     assert.ok(additionalContext.endsWith(read(file)), file);
     assert.ok(additionalContext.length < PART, `${file}: ${additionalContext.length} characters`);
   }
 });
 
+test("outside the installation's folders no hook at a session's start gives anything", () => {
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-outside-"));
+  try {
+    execFileSync("git", ["init", "-q", outside]);
+    const elsewhere = path.join(os.tmpdir(), "honsha-no-such-folder");
+    for (const handler of start) {
+      for (const cwd of [outside, elsewhere]) {
+        assert.equal(output(handler, { hook_event_name: "SessionStart", cwd }), "", handler.args.join(" "));
+      }
+    }
+  } finally {
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test("where the installation cannot be read, the opening part says so in its place, and no other hook gives anything", () => {
+  const unset = { ...process.env, CLAUDE_PLUGIN_OPTION_HOME: "" };
+  for (const handler of start) {
+    const text = output(handler, undefined, unset);
+    if (handler.args[1] === "rules/core.md") {
+      assert.match(text, /^Honsha: the plugin's setting `home` is not set on this machine, so the kit cannot tell/);
+    } else assert.equal(text, "", handler.args.join(" "));
+  }
+});
+
 test("a part that cannot be read fails its hook with a message, so that the person sees it is missing", () => {
   const args = [`${root}/hooks/rules.mjs`, "rules/missing.md"];
-  const options = { encoding: /** @type {const} */ ("utf8"), stdio: /** @type {any} */ (["ignore", "pipe", "pipe"]) };
+  const options = {
+    encoding: /** @type {const} */ ("utf8"),
+    input: JSON.stringify({ hook_event_name: "SessionStart", cwd: root }),
+    env: installation.env,
+  };
   assert.throws(
     () => execFileSync(process.execPath, args, options),
     (/** @type {any} */ error) => {
