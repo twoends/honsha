@@ -32,13 +32,14 @@ const given = [
 ].toSorted();
 
 /**
- * What a hook prints, run as `hooks.json` writes it.
+ * What a hook prints, run as `hooks.json` writes it, with `input` as the hook's input.
  * @param {{ command: string, args?: string[] }} handler
+ * @param {object} [input]
  */
-function output(handler) {
+function output(handler, input) {
   assert.equal(handler.command, "node");
   const args = (handler.args ?? []).map((arg) => arg.replace("${CLAUDE_PLUGIN_ROOT}", root.replace(/[\\/]$/, "")));
-  return execFileSync(process.execPath, args, { encoding: "utf8" });
+  return execFileSync(process.execPath, args, { encoding: "utf8", input: input ? JSON.stringify(input) : "" });
 }
 
 /**
@@ -49,8 +50,10 @@ const files = (list) => list.map((handler) => handler.args.slice(1).join(" ")).t
 
 const RULES = "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs";
 const LESSONS = "${CLAUDE_PLUGIN_ROOT}/hooks/lessons.mjs";
+const PROCEDURE = "${CLAUDE_PLUGIN_ROOT}/hooks/procedure.mjs";
 const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
 const rulesAtStart = start.filter((/** @type {any} */ handler) => handler.args?.[0] === RULES);
+const procedures = start.filter((/** @type {any} */ handler) => handler.args?.[0] === PROCEDURE);
 
 test("each part of the core rules, and the template, has a hook at a session's start and one for the checker alone", () => {
   assert.ok(hooks.SessionStart.every((/** @type {any} */ group) => group.matcher === undefined));
@@ -65,10 +68,12 @@ test("each part of the core rules, and the template, has a hook at a session's s
   );
 });
 
-test("each level of lessons has a hook at a session's start, and nothing else starts there", () => {
+test("each level of lessons, and the procedure, has a hook at a session's start, and nothing else starts there", () => {
   const lessons = start.filter((/** @type {any} */ handler) => handler.args?.[0] === LESSONS);
   assert.deepEqual(files(lessons), LEVELS.toSorted());
-  assert.equal(rulesAtStart.length + lessons.length, start.length);
+  assert.equal(procedures.length, 1);
+  assert.deepEqual(procedures[0].args, [PROCEDURE]);
+  assert.equal(rulesAtStart.length + lessons.length + procedures.length, start.length);
 });
 
 test("the opening of the core rules names each of their other parts", () => {
@@ -81,9 +86,12 @@ test("the opening of the core rules names each of their other parts", () => {
 // that part out of the context without a word: a part that reaches PART is split into two topics, never shortened.
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
 // that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
-// budget, since their files are the installation's and the hook that gives them keeps each level under it.
+// budget, since their files are the installation's and the hook that gives them keeps each level under it. The total
+// holds the worker's procedure too, which a session of a project that runs as no agent receives, as a session started
+// as the worker receives the same file as its system prompt: it counts at its file's budget, so that the file can grow
+// to that budget without reaching the total.
 const PART = 9000;
-const TOTAL = 25000;
+const TOTAL = 29000;
 
 test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
   let total = 0;
@@ -95,7 +103,15 @@ test("each hook gives its whole file under the limit for one output, and a sessi
     total += text.length;
   }
   const lessons = LEVELS.length * BUDGET;
-  assert.ok(total + lessons <= TOTAL, `${total} characters of rules and ${lessons} of lessons at a session's start`);
+  const procedure = output(procedures[0], { hook_event_name: "SessionStart", cwd: root });
+  assert.ok(procedure.length < PART, `the worker's procedure: ${procedure.length} characters`);
+  const budget = Number(/"agents\/worker\.md": (\d+)/.exec(read("checks/budgets.test.mjs"))?.[1]);
+  assert.ok(budget > 0, "the budget of agents/worker.md in checks/budgets.test.mjs");
+  const worker = procedure.slice(0, procedure.indexOf("\n\n") + 2).length + budget;
+  assert.ok(
+    total + lessons + worker <= TOTAL,
+    `${total} characters of rules, ${lessons} of lessons and ${worker} of the worker's procedure at a session's start`,
+  );
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {
     const [, file] = handler.args;
     const { hookEventName, additionalContext } = JSON.parse(output(handler)).hookSpecificOutput;

@@ -111,7 +111,9 @@ work/                  the kit's own work records
   is said with the places a rule can go (workflow, Where the rules are). The checker, a subagent, receives the same
   files when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
-  `home` names (workflow, Lessons).
+  `home` names (workflow, Lessons). A session that runs as no agent, outside the main working tree of a home, which is
+  the hub's, receives the worker's procedure too, from a hook of its own: the sessions that an application or another
+  session starts run as no agent, and a session started as an agent has that agent's file as its system prompt.
 
 ### Home
 
@@ -285,7 +287,9 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 - A cheaper model is fixed only for mechanical steps: the reader's extraction and summarising, searching, bulk
   formatting.
 - The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table. A model
-  given when a session is started overrides the definition.
+  given when a session is started overrides the definition. A session that receives the worker's procedure at start,
+  and does not run as the worker, runs on the model it was started with: the person's choice in the application, or
+  the one that the hub gives an item's session when it starts it.
 - Each record holds the model and the effort level of the session that did the work, so the choice can be reviewed
   later with data. Who writes each is in the core rules (The record): the effort level reaches a hook after an edit,
   the model reaches no hook. The policy is revisited with that data, or when usage limits are reached.

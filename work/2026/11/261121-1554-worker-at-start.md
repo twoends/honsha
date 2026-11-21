@@ -218,6 +218,30 @@ as a defect fix of kind `fix`.
 - 2026-11-21: the branch is cut from the default branch after a fetch, at `b26e7bc`, the merge of pull request 39.
   Read the record of item `261121-1509` on its branch, and measured what a session receives at start from the kit's
   hooks (Strategy, Budgets). The means of starting a session that this session's tools offer take no agent.
+- 2026-11-21: approved; the work starts. Item `261121-1509` is not on the default branch, nor pushed, so this item's
+  script is the one that item extends (criterion 4): `hooks/procedure.mjs` returns the file of the procedure a session
+  receives, the worker's or none, and gives nothing in a home's main working tree.
+- The main working tree is told from a linked worktree by git, `rev-parse --path-format=absolute` of the git
+  directory and the common one, which are the same only in the main working tree; a folder outside a repository, or
+  one that git cannot read, is no home's. An input that is not a JSON object gives nothing and a message, with exit
+  code 1, as the hook of the core rules does for a part it cannot read.
+- The hook gives the worker's file without its front matter, after a line naming `honsha:worker`, the file and the kit
+  directory, read from the file's `name`. It is the fourth kind of hook at a session's start, so the test that nothing
+  else starts there counts it.
+- `hooks/hooks.test.mjs` counts the procedure at its file's budget, which it reads from `checks/budgets.test.mjs`, so
+  that the number is stated once. Measured in this worktree: 10,424 characters of rules and template, 12,000 of
+  lessons at their budget, a line of 196 and the budget of 5,800, 28,420 against the total of 29,000. The hook's whole
+  output is 4,907 characters, under the limit for one output.
+- The worker's description, the README's row of `hooks/` and "Trying it", the architecture's Kit and Models, the
+  workflow's "Where the rules are" and Procedure say how the procedure reaches a session and on which model it runs.
+  The worker's file is 5,034 characters, within its budget of 5,800; no step of its body changed.
+- Trial of criterion 8, Claude Code 2.1.325, `claude -p --plugin-dir` on this branch with `--output-format stream-json
+  --verbose --include-hook-events`, whose events carry each hook's output, in scratch repositories in the scratchpad,
+  each with a linked worktree, one of them holding `registry.yml`. Nine hooks answered at each start, all with exit
+  code 0. A session in the project's main working tree, in its linked worktree and in the home's linked worktree:
+  one output held the worker's procedure, and the session said it held it. A session in the home's main working
+  tree: none held it, and the session said so. A session with `--agent honsha:worker`: none held it; the session said
+  its system prompt holds the worker's opening sentence and not the platform's instructions.
 
 ## Verification
 
