@@ -69,32 +69,25 @@ In the account of whoever merges:
 - **"Keep my email addresses private".** A merge made on the site is authored with the account's noreply address when it
   is on, and with the address chosen in the merge dialog when it is off. The committer of such a merge is GitHub itself.
 
-## Declaring the kit
+## Installing the kit
 
-Every repository that runs under the kit, the kit's own included, declares its marketplace from the kit's repository
-on GitHub, in `.claude/settings.json` (architecture, Kit):
+Each host installs the plugin once, for the user that runs the installation's sessions, from the kit's repository on
+GitHub (architecture, Kit); no project holds a file for it:
 
-```json
-{
-  "extraKnownMarketplaces": {
-    "honsha": {
-      "source": { "source": "github", "repo": "<owner>/<repository of the kit>" },
-      "autoUpdate": true
-    }
-  },
-  "enabledPlugins": { "honsha@honsha": true },
-  "worktree": { "baseRef": "head" }
-}
 ```
+claude plugin marketplace add <owner>/<repository of the kit> --scope user
+claude plugin install honsha@honsha --scope user
+```
+
+Claude Code asks for the plugin's setting `home` when the plugin is enabled, and keeps it under `pluginConfigs` in the
+user's settings. A marketplace other than the official one is not updated automatically until it is set to be: in
+`/plugin`, under Marketplaces, or with `"autoUpdate": true` on its entry under `extraKnownMarketplaces` in the user's
+settings, `~/.claude/settings.json`.
 
 A private repository of the kit is read with the machine's git credentials, which `gh auth setup-git` sets. A host
-whose registration of the marketplace comes from another source, such as a clone's folder, moves it once:
-
-```
-claude plugin marketplace add <owner>/<repository of the kit>
-```
-
-Tried with a private repository: the command replaces the registration for every project of the host, and says so.
+whose registration of the marketplace comes from another source, such as a clone's folder, moves it once with the
+first command. Tried without `--scope` with a private repository: the command replaces the registration for every
+project of the host, and says so.
 
 ## What GitHub enforces, and what it does not
 

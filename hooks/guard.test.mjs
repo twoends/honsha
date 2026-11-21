@@ -8,6 +8,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { gitDirectory, judge, readPath, simpleCommands } from "./guard.mjs";
+import { scratchHome } from "./scratch-home.mjs";
 
 const script = fileURLToPath(new URL("./guard.mjs", import.meta.url));
 const WORK = "work/261116-1432-export-orders";
@@ -55,6 +56,9 @@ function repository(branch = WORK, profile = null) {
 
 const onWork = repository();
 const onMain = repository("main");
+// The guard judges only in an installation's folders: as a hook, it runs with a scratch home that registers these two.
+const installation = scratchHome([onWork, onMain]);
+after(installation.remove);
 
 // The piece of an invented hosting service, so that these tests name no real one. The commands of
 // a real service are tested in its own piece.
@@ -516,11 +520,15 @@ test("reads the merge commands of every piece, and none when there is no piece",
   assert.equal(judge("tracker merge 12", { cwd: onWork, services: path.join(services, "missing") }), null);
 });
 
-/** @param {unknown} input */
-function hook(input) {
+/**
+ * @param {unknown} input
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+function hook(input, env = installation.env) {
   return spawnSync(process.execPath, [script], {
     input: typeof input === "string" ? input : JSON.stringify(input),
     encoding: "utf8",
+    env,
   });
 }
 
@@ -557,5 +565,28 @@ test("never fails on input it does not understand", () => {
     assert.equal(result.status, 0);
     assert.equal(result.stderr, "");
   }
-  assert.equal(hook(call("git push origin main", { cwd: path.join(os.tmpdir(), "no-such-folder") })).status, 2);
+  assert.equal(hook(call("git push origin main", { cwd: path.join(onWork, "no-such-folder") })).status, 2);
+});
+
+test("as a hook it lets every command through outside the installation's folders, before reading it", () => {
+  const unregistered = repository("main");
+  for (const command of ["git push origin main", "git push --force", "forge merge 12", "gh pr merge 41"]) {
+    for (const cwd of [unregistered, path.join(os.tmpdir(), "honsha-no-such-folder")]) {
+      const result = hook(call(command, { cwd }));
+      assert.equal(result.status, 0, `${command} in ${cwd}`);
+      assert.equal(result.stderr, "");
+    }
+  }
+});
+
+test("as a hook it judges as in a project where the installation cannot be read, and says why", () => {
+  const unregistered = repository("main");
+  const unset = { ...process.env, CLAUDE_PLUGIN_OPTION_HOME: "" };
+  const stopped = hook(call("git push origin main", { cwd: unregistered }), unset);
+  assert.equal(stopped.status, 2);
+  assert.match(
+    stopped.stderr,
+    /update the default branch `main`\..* It judged this folder as a project's, since the plugin's setting `home` is not set on this machine\.\n$/,
+  );
+  assert.equal(hook(call(`git push -u origin ${WORK}`, { cwd: unregistered }), unset).status, 0);
 });

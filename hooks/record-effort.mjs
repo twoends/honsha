@@ -8,11 +8,14 @@
 // `model` is not written here. No hook event carries the model of a session started without a
 // terminal interface, so the session that finishes the item writes its own model identifier.
 //
-// The script never gets in a session's way: on any error it exits 0 and changes nothing.
+// It writes only in a session of the installation's folders (`hooks/place.mjs`). The script never gets in a session's
+// way: on any error it exits 0 and changes nothing.
 
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+
+import { inside, placeOf, readInput } from "./place.mjs";
 
 const RECORD_PATH = /(^|\/)work\/\d{4}\/\d{2}\/\d{6}-\d{4}-[^/]+\.md$/;
 const FRONT_MATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
@@ -36,11 +39,12 @@ export function stamp(text, level) {
 }
 
 function main() {
-  const input = JSON.parse(fs.readFileSync(0, "utf8"));
-  if (input.hook_event_name !== "PostToolUse" || input.agent_id) return;
+  const input = readInput();
+  if (input?.hook_event_name !== "PostToolUse" || input.agent_id) return;
   if (!input.tool_input?.file_path) return;
   const file = path.resolve(input.cwd || ".", input.tool_input.file_path);
   if (!RECORD_PATH.test(file.replace(/\\/g, "/"))) return;
+  if (!inside(placeOf(input))) return;
   const text = fs.readFileSync(file, "utf8");
   const next = stamp(text, input.effort?.level || process.env.CLAUDE_EFFORT);
   if (next === null || next === text) return;

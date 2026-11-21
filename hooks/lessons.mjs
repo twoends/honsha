@@ -16,6 +16,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { readProfile } from "../checks/profile.mjs";
+import { inside, session } from "./place.mjs";
 
 export const LEVELS = ["project", "technologies", "host"];
 export const BUDGET = 4000;
@@ -153,7 +154,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     const project = process.env.CLAUDE_PROJECT_DIR || process.cwd();
     const home = process.env.CLAUDE_PLUGIN_OPTION_HOME || "";
     try {
-      process.stdout.write(context(level, { project, home, host: os.hostname() }));
+      // Outside the installation's folders, or where it cannot be read, a session gets no lessons
+      // (`hooks/place.mjs`); the opening part of the core rules says why in the second case.
+      if (inside(session().at)) process.stdout.write(context(level, { project, home, host: os.hostname() }));
     } catch {
       // The session starts all the same, but the person sees that a level of lessons is missing.
       process.stderr.write(`Honsha lessons: the lessons of the ${level} could not be read.\n`);

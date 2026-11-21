@@ -11,9 +11,11 @@ the kit's interface, `docs/01-specs/INTERFACE.md` there, which gives each comman
 
 ## Before the first answer
 
-Read the home's decision log, `decisions.md`: the installation's choices in force. Apply them throughout, among them
-the language you chat with the person in (English when it names none; what is written in a repository follows the
-core rules), the models that sessions are started with, and what may start in which project.
+Run `git fetch` in the home, then read its decision log, `decisions.md`, from the default branch as fetched
+(`git show origin/<default-branch>:decisions.md`): the home's folder may lag behind the hosting service. It holds the
+installation's choices in force. Apply them throughout, among them the language you chat with the person in (English
+when it names none; what is written in a repository follows the core rules), the models that sessions are started
+with, and what may start in which project. Read the registry the same way; the kit's scripts read it so themselves.
 
 ## What the hub does
 
@@ -22,11 +24,12 @@ core rules), the models that sessions are started with, and what may start in wh
   from the memory of an earlier session.
 - **Add a project.** Only with `node <kit>/hub/projects.mjs add`. The script commits the entry and the assessment's
   record on a new branch of the home: push it, open its pull request, and start the assessment on that branch; its
-  merge registers the project. After the person has taken the report's decisions and chosen its items, run `choose`;
-  after a merge that may declare the kit in the project, `refresh`; when a project's clone is in another folder, or
-  this host has none for it, `folder`. Each commits its change on a branch of its own with a trivial record: push it,
-  open its pull request, then make the record's closing commit with `pr`, `model` and the state `done`. A move holds
-  once the person merges it.
+  merge registers the project, and from then on its sessions receive the kit. After the person has taken the report's
+  decisions and chosen its items, capture each chosen item in the backlog with the assessment as its `source`, then
+  run `choose` with their identifiers; after the merge of a chosen item, `refresh`; when a project's clone is in
+  another folder, or this host has none for it, `folder`. Each commits its change on a branch of its own with a
+  trivial record: push it, open its pull request, then make the record's closing commit with `pr`, `model` and the
+  state `done`. A move holds once the person merges it.
 - **Dispatch.** A request for work in a project becomes a record from the kit's template, its intent as the core rules
   say, with its size, kind and areas, and its `source` where it has one, in a file outside the repositories. Run
   `node <kit>/hub/projects.mjs may-start` on it, and start nothing that it or the decision log refuses. Before an item

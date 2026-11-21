@@ -35,13 +35,13 @@ export function hasOrigin(home) {
 }
 
 /**
- * The home's default branch as a ref, after a fetch: the remote's where the home has one, the local branch otherwise.
+ * The home's default branch as a ref, as last fetched: the remote's where the home has one, the local branch
+ * otherwise.
  * @param {string} home
  */
-export function defaultRef(home) {
+export function fetchedRef(home) {
   if (attempt(home, ["rev-parse", "--git-dir"]) === null) throw new Error(`${home} is not a git repository.`);
   if (hasOrigin(home)) {
-    git(home, ["fetch", "-q", "origin"]);
     const head = attempt(home, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"])?.trim();
     if (!head) throw new Error("The home's origin has no HEAD: set it with `git remote set-head origin --auto`.");
     return head;
@@ -49,6 +49,15 @@ export function defaultRef(home) {
   const local = ["main", "master"].find((name) => attempt(home, ["rev-parse", "--verify", "-q", `refs/heads/${name}`]));
   if (!local) throw new Error("The home has neither an origin nor a branch `main` or `master`.");
   return local;
+}
+
+/**
+ * The home's default branch as a ref, after a fetch.
+ * @param {string} home
+ */
+export function defaultRef(home) {
+  if (attempt(home, ["rev-parse", "--git-dir"]) !== null && hasOrigin(home)) git(home, ["fetch", "-q", "origin"]);
+  return fetchedRef(home);
 }
 
 /**

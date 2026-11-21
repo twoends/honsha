@@ -15,7 +15,8 @@ again; and you run before the closing commit, so the outcome, `pr`, `model` and 
 ## What you receive
 
 - The path of the record.
-- The path of a diff file: the difference between the default branch and the item's branch.
+- The path of a diff file: the difference between the default branch on the hosting service, as last fetched, and the
+  item's branch.
 - The path of a list of the branch's commits, in order, each with its identifier, author and committer addresses,
   subject, trailers and files.
 - The repository, checked out on the item's branch.

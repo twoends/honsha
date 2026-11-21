@@ -16,6 +16,12 @@
 // home. In a project, the script runs `git fetch` and reads the default branch, which leaves the
 // working tree as it is.
 //
+// `choose` takes the identifiers of the items that the person chose from the assessment's report, each a record
+// waiting in the home's backlog of the project with the assessment as its `source`, and writes them into the entry as
+// `chosen`. `refresh` moves to `active` a project whose chosen items are each merged as done on its default branch or
+// dropped in the backlog: the kit reaches a registered project's sessions from its first item, so what ends the
+// adoption is the work chosen to close its gaps.
+//
 // The registry is written by this script alone, in the one shape that the interface gives and that
 // the script reads back strictly (interface, The registry).
 
@@ -37,7 +43,10 @@ const KIT = new URL("..", import.meta.url);
 // A report merged before its home ran as a project stays where it was written, as a project's earlier documents do.
 const RECORD_FOLDERS = ["work", "reports"];
 
-/** @typedef {{ name: string, repository: string, paths: Record<string, string>, state: string, assessment: string }} Project */
+/**
+ * @typedef {{ name: string, repository: string, paths: Record<string, string>, state: string, assessment: string,
+ *   chosen?: string[] }} Project
+ */
 /** @typedef {{ read: (file: string) => string | null, list: (folder: string) => string[] }} Files */
 
 /** @param {string} raw */
@@ -77,7 +86,14 @@ export function parseRegistry(text) {
     } else if (current && key) {
       inPaths = key[1] === "paths" && key[2] === undefined;
       if (!inPaths && key[2] === undefined) fail();
-      if (!inPaths) current[key[1]] = unquote(key[2] ?? "");
+      if (key[1] === "chosen") {
+        const list = /^\[(.*)\]$/.exec(key[2] ?? "")?.[1];
+        if (list === undefined) fail();
+        current.chosen = (list ?? "")
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean);
+      } else if (!inPaths) current[key[1]] = unquote(key[2] ?? "");
     } else if (current && inPaths && host) {
       current.paths[host[1]] = unquote(host[2]);
     } else fail();
@@ -105,6 +121,7 @@ export function formatRegistry(projects) {
     lines.push(`  - name: ${project.name}`, `    repository: ${project.repository}`, "    paths:");
     for (const [host, folder] of Object.entries(project.paths)) lines.push(`      ${host}: ${quote(folder)}`);
     lines.push(`    state: ${project.state}`, `    assessment: ${project.assessment}`);
+    if (project.chosen) lines.push(`    chosen: [${project.chosen.join(", ")}]`);
   }
   return `${lines.join("\n")}\n`;
 }
@@ -300,6 +317,14 @@ export function checkRegistry(files) {
   for (const project of projects) {
     if (seen.has(project.name)) problems.push(`${REGISTRY}: \`${project.name}\` is written twice`);
     seen.add(project.name);
+    if (project.state === "adopting" && !project.chosen) {
+      problems.push(
+        `${REGISTRY}: \`${project.name}\` is adopting, but the items chosen from its assessment are not written`,
+      );
+    }
+    for (const id of project.chosen ?? []) {
+      if (!ID.test(id)) problems.push(`${REGISTRY}: \`${id}\`, chosen for \`${project.name}\`, is not an identifier`);
+    }
     if (!ID.test(project.assessment)) {
       problems.push(`${REGISTRY}: the assessment of \`${project.name}\` is not an identifier`);
       continue;
@@ -317,22 +342,30 @@ export function checkRegistry(files) {
 }
 
 /**
- * Whether the kit's plugin is enabled on a project's default branch, after a fetch.
- * @param {string} folder
+ * The path of a record in the home's backlog of a project, from the root of the home, or null.
+ * @param {Files} files
+ * @param {string} project
+ * @param {string} id
  */
-export function kitDeclared(folder) {
-  git(folder, ["fetch", "-q", "origin"]);
-  const head = git(folder, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]).trim();
-  let settings;
-  try {
-    settings = JSON.parse(git(folder, ["show", `${head}:.claude/settings.json`]));
-  } catch {
-    return false;
-  }
-  const plugin = JSON.parse(fs.readFileSync(new URL(".claude-plugin/plugin.json", KIT), "utf8")).name;
-  return Object.entries(settings?.enabledPlugins ?? {}).some(
-    ([key, on]) => key.startsWith(`${plugin}@`) && on === true,
-  );
+function inBacklog(files, project, id) {
+  return files.list(`backlog/${project}`).find((file) => path.posix.basename(file).startsWith(`${id}-`)) ?? null;
+}
+
+/**
+ * The items chosen from a project's assessment that are not finished yet: neither merged as done on the project's
+ * default branch, read after a fetch, nor dropped in the home's backlog.
+ * @param {Project} project
+ * @param {string} folder the project's folder on this host
+ * @param {Files} home the files of the home's default branch
+ */
+export function unfinished(project, folder, home) {
+  const done = commitFiles(folder, defaultRef(folder));
+  return (project.chosen ?? []).filter((id) => {
+    if (recordState(done, id) === "done") return false;
+    const kept = inBacklog(home, project.name, id);
+    const text = kept ? home.read(kept) : null;
+    return text === null || field(text, "state") !== "dropped";
+  });
 }
 
 /**
@@ -450,10 +483,25 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
     if (state !== "done") {
       return { code: 1, out: [`The assessment ${project.assessment} is ${state ?? "missing"}, not done.`] };
     }
+    // Each chosen item waits in the backlog, so that what the adoption holds is written before any of it starts.
+    const refused = rest.flatMap((item, index) => {
+      if (!ID.test(item) || rest.indexOf(item) !== index) return [`\`${item}\` is not one identifier of a record.`];
+      const kept = inBacklog(files, project.name, item);
+      const text = kept ? files.read(kept) : null;
+      if (text === null) return [`No record ${item} in the home's backlog of \`${name}\` on ${base}.`];
+      if (field(text, "source") !== project.assessment) {
+        return [`The record ${item} does not have the assessment ${project.assessment} as its source.`];
+      }
+      if (!["idea", "ready"].includes(field(text, "state") ?? "")) return [`The record ${item} is not to be done.`];
+      return [];
+    });
+    if (refused.length > 0) return { code: 1, out: [...refused, "Nothing was committed."] };
     if (taken(home, files, id)) return busy;
     project.state = "adopting";
+    project.chosen = rest;
     const title = `Move ${name} to adopting`;
-    const outcome = `Once merged, \`${name}\` is adopting: only the items whose source is ${project.assessment} start.`;
+    const items = rest.length > 0 ? `the chosen items ${rest.join(", ")}` : "the chosen items, none here";
+    const outcome = `Once merged, \`${name}\` is adopting: only the items whose source is ${project.assessment} start, and \`refresh\` makes it active once ${items} are merged as done.`;
     const result = commitMove(home, {
       base,
       files,
@@ -474,12 +522,19 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
       const folder = each.paths[host];
       if (!folder || !fs.existsSync(folder)) {
         out.push(`\`${each.name}\` has no folder on this host: left adopting.`);
-      } else if (kitDeclared(folder)) {
+        continue;
+      }
+      if (!each.chosen) {
+        out.push(`\`${each.name}\` stays adopting: the items chosen from its assessment are not written.`);
+        continue;
+      }
+      const left = unfinished(each, folder, files);
+      if (left.length === 0) {
         each.state = "active";
         moved.push(each.name);
-        out.push(`\`${each.name}\` is active once merged: its default branch declares the kit.`);
+        out.push(`\`${each.name}\` is active once merged: every item chosen from its assessment is done or dropped.`);
       } else {
-        out.push(`\`${each.name}\` stays adopting: its default branch does not declare the kit yet.`);
+        out.push(`\`${each.name}\` stays adopting: ${left.join(", ")} not yet merged as done, nor dropped.`);
       }
     }
     if (moved.length === 0) return { code: 0, out: [...out, "Nothing moved, so nothing was committed."] };

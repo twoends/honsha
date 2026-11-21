@@ -9,10 +9,17 @@
 //
 // A subagent does not get a session's start context, and reading the kit directory from a project needs a permission
 // that a plugin's subagent may be refused; the platform adds a SubagentStart hook's context only from JSON output.
+//
+// Outside the installation's folders the hook gives nothing (`hooks/place.mjs`). Where the installation cannot be
+// read, the hook of the opening part, `rules/core.md`, gives one line that says so in its place, and the others give
+// nothing, so that the session can tell the person once.
 
 import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { session, unknown } from "./place.mjs";
+
+const OPENING = "rules/core.md";
 const kit = fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]$/, "");
 
 /**
@@ -29,12 +36,17 @@ export function context(file) {
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const [file, flag] = process.argv.slice(2);
   try {
-    const text = context(file);
-    process.stdout.write(
-      flag === "--subagent"
-        ? JSON.stringify({ hookSpecificOutput: { hookEventName: "SubagentStart", additionalContext: text } })
-        : text,
-    );
+    const { at } = session();
+    let text = "";
+    if (at.kind === "unknown") text = file === OPENING ? unknown(at.reason) : "";
+    else if (at.kind !== "outside") text = context(file);
+    if (text !== "") {
+      process.stdout.write(
+        flag === "--subagent"
+          ? JSON.stringify({ hookSpecificOutput: { hookEventName: "SubagentStart", additionalContext: text } })
+          : text,
+      );
+    }
   } catch {
     // The session starts all the same, but the person sees that a part of the rules is missing.
     process.stderr.write(`Honsha: ${file ?? "no file"} could not be read, so the session lacks that part.\n`);

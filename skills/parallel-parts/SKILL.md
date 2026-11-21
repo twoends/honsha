@@ -10,7 +10,9 @@ configuration, and each part can be verified on its own. Parts that fail this te
 separately. Verification and the checker run once, on the integrated result.
 
 1. Run such parts in separate worktrees, each on a local branch cut from the tip of the item's branch and never
-   pushed, named `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one.
+   pushed, named `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one. Make each with
+   `git worktree add -b <part's branch> <folder> HEAD` from the item's worktree, and give the part's agent its folder:
+   a worktree that the platform makes for an agent starts from the default branch, without the item's commits.
 2. Merge the parts into the item's branch.
 3. Remove their branches and worktrees.
 4. Write in the log which parts ran in parallel and how they were integrated.

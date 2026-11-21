@@ -64,11 +64,10 @@ function clone(prefix, files) {
 }
 
 /**
- * A project's clone, whose default branch holds `settings` as `.claude/settings.json` when given.
- * @param {object} [settings]
+ * A project's clone, whose default branch holds `files`.
+ * @param {Record<string, string>} [files]
  */
-const project = (settings) =>
-  clone("honsha-project-", settings ? { ".claude/settings.json": JSON.stringify(settings) } : {});
+const project = (files = {}) => clone("honsha-project-", files);
 
 /**
  * A home's clone, whose default branch holds `files`.
@@ -155,6 +154,20 @@ test("the registry is read back as it is written, and a line in another shape st
     },
   ];
   assert.deepEqual(parseRegistry(formatRegistry(projects)), projects);
+  const chosen = [
+    { ...projects[0], chosen: ["261201-0940", "261201-0941"] },
+    { ...projects[0], chosen: [] },
+  ];
+  assert.match(formatRegistry(chosen), /\n {4}chosen: \[261201-0940, 261201-0941\]\n[^]*\n {4}chosen: \[\]\n$/);
+  assert.deepEqual(parseRegistry(formatRegistry(chosen)), chosen);
+  assert.throws(() => parseRegistry(formatRegistry(chosen).replace("[]", "none")), /line \d+: not in the shape/);
+  // The interface shows the shape, so its example is one the script reads.
+  const shown = fs.readFileSync(new URL("../docs/01-specs/INTERFACE.md", import.meta.url), "utf8");
+  const example = /## The registry[^]*?```\n([^]*?)```/.exec(shown)?.[1] ?? "";
+  assert.deepEqual(
+    parseRegistry(example).map((each) => each.chosen),
+    [["261202-1000", "261202-1005"]],
+  );
   // The file is the installation's, so its header cites the kit's interface, the one part of the kit it may cite.
   assert.ok(
     formatRegistry(projects).startsWith("# Written by the kit's hub/projects.mjs (interface, The registry).\n"),
@@ -249,15 +262,37 @@ test("choose waits for the assessment to be merged and done, then commits the mo
   assert.match(refused.out[0], /is ready, not done/);
 
   const report = "work/2026/12/261201-0930-example-assessment.md";
-  onMain(dir, { [report]: fs.readFileSync(path.join(dir, report), "utf8").replace("state: ready", "state: done") });
-  const chosen = run(["choose", "example"], { home: dir, host, now: later });
+  onMain(dir, {
+    [report]: fs.readFileSync(path.join(dir, report), "utf8").replace("state: ready", "state: done"),
+    "backlog/example/261201-0940-profile.md": record({ id: "261201-0940", state: "ready", source: "261201-0930" }),
+    "backlog/example/261201-0941-other.md": record({ id: "261201-0941", state: "ready", source: "261130-0000" }),
+  });
+  /** @param {string[]} ids */
+  const choose = (ids) => run(["choose", "example", ...ids], { home: dir, host, now: later });
+  for (const [ids, reason] of [
+    [["261201-0942"], /No record 261201-0942 in the home's backlog of `example`/],
+    [["261201-0941"], /does not have the assessment 261201-0930 as its source/],
+    [["261201-0940", "261201-0940"], /is not one identifier of a record/],
+    [["profile"], /is not one identifier of a record/],
+  ]) {
+    const refusal = choose(/** @type {string[]} */ (ids));
+    assert.equal(refusal.code, 1);
+    assert.match(refusal.out.join("\n"), /** @type {RegExp} */ (reason));
+    assert.equal(workBranches(dir), "work/261201-0930-example-assessment");
+  }
+  const chosen = choose(["261201-0940"]);
   assert.equal(chosen.code, 0, chosen.out.join("\n"));
   const branch = "work/261201-0931-choose-example";
-  assert.equal(parseRegistry(show(dir, branch, REGISTRY))[0].state, "adopting");
+  assert.deepEqual(parseRegistry(show(dir, branch, REGISTRY))[0], {
+    ...parseRegistry(show(dir, "main", REGISTRY))[0],
+    state: "adopting",
+    chosen: ["261201-0940"],
+  });
   assert.equal(parseRegistry(show(dir, "main", REGISTRY))[0].state, "assessing");
   const file = "work/2026/12/261201-0931-choose-example.md";
   assert.match(show(dir, branch, file), /^requested-by: person$/m);
-  assert.match(show(dir, branch, file), /^> `hub\/projects\.mjs choose example`$/m);
+  assert.match(show(dir, branch, file), /^> `hub\/projects\.mjs choose example 261201-0940`$/m);
+  assert.match(show(dir, branch, file), /active once the chosen items 261201-0940 are merged as done/);
   assert.deepEqual(recordProblems(dir, branch, file), []);
 
   merge(dir, branch);
@@ -266,16 +301,36 @@ test("choose waits for the assessment to be merged and done, then commits the mo
   assert.equal(run(["choose", "missing"], { home: dir, host, now }).code, 1);
 });
 
-test("refresh commits the move to active of the projects whose default branch declares the kit", () => {
-  const declared = project({ enabledPlugins: { "honsha@honsha": true } });
-  const plain = project({ enabledPlugins: { "honsha@honsha": false } });
+test("refresh commits the move to active of the projects whose chosen items are all merged as done or dropped", () => {
+  const item = (/** @type {string} */ id, /** @type {string} */ state) => ({
+    [`work/2026/11/${id}-item.md`]: record({ id, state, source: "261130-1200" }),
+  });
+  const finished = project({ ...item("261130-1210", "done"), ...item("261130-1211", "done") });
+  const going = project(item("261130-1220", "done"));
+  // A record left in progress on the default branch is not merged as done: its pull request is not.
+  const stale = project(item("261130-1230", "in-progress"));
+  const dropped = project(item("261130-1240", "done"));
+  const none = project();
+  /** @type {import("./projects.mjs").Project[]} */
+  const entries = [
+    ["finished", finished, ["261130-1210", "261130-1211"]],
+    ["going", going, ["261130-1220", "261130-1221"]],
+    ["stale", stale, ["261130-1230"]],
+    ["dropped", dropped, ["261130-1240", "261130-1241"]],
+    ["none", none, []],
+  ].map(([name, folder, chosen]) => ({
+    name: String(name),
+    repository: `example-owner/${name}`,
+    paths: { [host]: String(folder) },
+    state: "adopting",
+    assessment: "261130-1200",
+    ...(chosen ? { chosen: /** @type {string[]} */ (chosen) } : {}),
+  }));
   const dir = home({
-    [REGISTRY]: registry([
-      ["declared", "adopting", "261130-1200", declared],
-      ["plain", "adopting", "261130-1300", plain],
-    ]),
-    "work/2026/11/261130-1200-declared-assessment.md": record({ id: "261130-1200", state: "done" }),
-    "work/2026/11/261130-1300-plain-assessment.md": record({ id: "261130-1300", state: "done" }),
+    [REGISTRY]: formatRegistry(entries),
+    "work/2026/11/261130-1200-assessment.md": record({ id: "261130-1200", state: "done" }),
+    "backlog/going/261130-1221-later.md": record({ id: "261130-1221", state: "ready", source: "261130-1200" }),
+    "backlog/dropped/261130-1241-not-now.md": record({ id: "261130-1241", state: "dropped", source: "261130-1200" }),
   });
 
   const elsewhere = run(["refresh"], { home: dir, host: "another-host", now });
@@ -285,13 +340,35 @@ test("refresh commits the move to active of the projects whose default branch de
 
   const result = run(["refresh"], { home: dir, host, now });
   assert.equal(result.code, 0, result.out.join("\n"));
+  const out = result.out.join("\n");
+  assert.match(out, /`going` stays adopting: 261130-1221 not yet merged as done, nor dropped\./);
+  assert.match(out, /`stale` stays adopting: 261130-1230 not yet/);
   const branch = "work/261201-0930-refresh";
   const states = Object.fromEntries(parseRegistry(show(dir, branch, REGISTRY)).map((each) => [each.name, each.state]));
-  assert.deepEqual(states, { declared: "active", plain: "adopting" });
+  assert.deepEqual(states, {
+    finished: "active",
+    going: "adopting",
+    stale: "adopting",
+    dropped: "active",
+    none: "active",
+  });
   const file = "work/2026/12/261201-0930-refresh.md";
   assert.match(show(dir, branch, file), /^requested-by: check$/m);
   assert.deepEqual(recordProblems(dir, branch, file), []);
-  assert.equal(git(declared, ["status", "--porcelain"]), "");
+  assert.equal(git(finished, ["status", "--porcelain"]), "");
+
+  // An entry adopting with no chosen items written stays so, and fails the registry's check.
+  const unwritten = home({
+    [REGISTRY]: registry([["unwritten", "adopting", "261130-1200", project()]]),
+    "work/2026/11/261130-1200-assessment.md": record({ id: "261130-1200", state: "done" }),
+  });
+  const kept = run(["refresh"], { home: unwritten, host, now });
+  assert.match(
+    kept.out.join("\n"),
+    /`unwritten` stays adopting: the items chosen from its assessment are not written\./,
+  );
+  assert.equal(workBranches(unwritten), "");
+  assert.match(run(["check"], { home: unwritten }).out.join("\n"), /`unwritten` is adopting, but the items chosen/);
 });
 
 test("folder commits a project's folder on this host, a host's first one included, and refuses what it cannot set", () => {
