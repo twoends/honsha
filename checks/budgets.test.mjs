@@ -14,6 +14,8 @@ const root = new URL("..", import.meta.url);
  * - The profile's template is read whenever a profile is written or read for what a key holds.
  * - The workflow is read by whoever changes the kit, not by a session at work; nothing else stops its growth, and a
  *   rule that a session applies belongs elsewhere (workflow, Where the rules are).
+ * - The interface is read by whoever writes an installation's files. It is a list that points to where each thing is
+ *   specified, and a list that grows past its budget is taking in specifications that belong elsewhere.
  */
 /** @type {Record<string, number>} */
 const budgets = {
@@ -21,6 +23,7 @@ const budgets = {
   "agents/checker.md": 7600,
   "templates/profile.yml": 4000,
   "docs/01-specs/WORKFLOW.md": 35000,
+  "docs/01-specs/INTERFACE.md": 9000,
 };
 const SKILL = 6000;
 

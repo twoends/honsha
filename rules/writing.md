@@ -21,3 +21,6 @@ In code and in every other file of the project:
   `legacy` in the profile.
 - A rule is stated in one place; another document that needs it points there. The exception is an agent's file that
   must check a rule its agent does not otherwise receive. A record copies nothing that another document holds.
+- Outside the kit, a document other than a record names the kit only by what the kit's interface lists
+  (`docs/01-specs/INTERFACE.md` in the kit directory), and cites no section of the kit's documents but that
+  interface's own headings.

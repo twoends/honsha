@@ -1,6 +1,5 @@
-// Checks the shape of a work item's record: the one whose identifier the branch names.
-//
-//   node <kit directory>/checks/record.mjs
+// Checks the shape of a work item's record: the one whose identifier the branch names. Its command is in the kit's
+// interface (interface, Commands).
 //
 // Run from the root of the project. The record is `work/<yyyy>/<mm>/<id>-<slug>.md` for the branch
 // `work/<id>-<slug>`; the profile gives the kinds, and whether the project is public. What is checked:

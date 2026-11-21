@@ -1,12 +1,6 @@
 // The registry of the projects of an installation, and the moves of a project between its states
-// (workflow, Joining an installation). Run from the home's folder:
-//
-//   node <kit directory>/hub/projects.mjs add <name> <repository> <folder> [--assessment <id>]
-//   node <kit directory>/hub/projects.mjs choose <name>
-//   node <kit directory>/hub/projects.mjs refresh
-//   node <kit directory>/hub/projects.mjs folder <name> <folder>
-//   node <kit directory>/hub/projects.mjs check
-//   node <kit directory>/hub/projects.mjs may-start <name> <record>
+// (workflow, Joining an installation). Run from the home's folder, with the commands that the kit's
+// interface gives (interface, Commands).
 //
 // Every step here is mechanical, so no agent takes it: an interface can run the same commands.
 //
@@ -22,18 +16,8 @@
 // home. In a project, the script runs `git fetch` and reads the default branch, which leaves the
 // working tree as it is.
 //
-// The registry is written by this script in one shape, which it reads back strictly: a line it
-// cannot read stops it before it changes anything.
-//
-//   projects:
-//     - name: example-shop
-//       repository: example-owner/example-shop
-//       paths:
-//         example-host: '/srv/projects/example-shop'
-//       state: assessing
-//       assessment: 261201-0930
-//
-// A project has a folder on each host, by the name the system gives the host.
+// The registry is written by this script alone, in the one shape that the interface gives and that
+// the script reads back strictly (interface, The registry).
 
 import fs from "node:fs";
 import os from "node:os";
@@ -44,6 +28,8 @@ import { parseRecord, readTemplate } from "../checks/record.mjs";
 import { attempt, defaultRef, git, inWorktree, writeFiles } from "./home.mjs";
 
 export const REGISTRY = "registry.yml";
+// The commands are part of the kit's interface, whose test compares them with this list.
+export const COMMANDS = ["add", "choose", "refresh", "folder", "check", "may-start"];
 const STATES = ["assessing", "adopting", "active"];
 export const NAME = /^[a-z0-9][a-z0-9-]*$/;
 const ID = /^\d{6}-\d{4}$/;
@@ -114,7 +100,7 @@ export function parseRegistry(text) {
  * @param {Project[]} projects
  */
 export function formatRegistry(projects) {
-  const lines = ["# Written by the kit's hub/projects.mjs (workflow, Joining an installation).", "projects:"];
+  const lines = ["# Written by the kit's hub/projects.mjs (interface, The registry).", "projects:"];
   for (const project of projects) {
     lines.push(`  - name: ${project.name}`, `    repository: ${project.repository}`, "    paths:");
     for (const [host, folder] of Object.entries(project.paths)) lines.push(`      ${host}: ${quote(folder)}`);
@@ -266,7 +252,7 @@ export function moveRecord({ id, date, home, title, requestedBy, command, outcom
       "requested-by": requestedBy,
     },
     {
-      Intent: `> \`hub/projects.mjs ${command}\`\n\nThe command, run on ${date}. The script wrote this record and the change to \`${REGISTRY}\` (workflow, Joining an installation).`,
+      Intent: `> \`hub/projects.mjs ${command}\`\n\nThe command, run on ${date}. The script wrote this record and the change to \`${REGISTRY}\` (interface, The registry).`,
       Verification: "`hub/projects.mjs check` on the registry this branch holds: passed.",
       Outcome: outcome.join(" "),
     },
@@ -401,9 +387,7 @@ export function run(args, { home = ".", host = os.hostname(), now = new Date() }
     if (problems.length > 0) return { code: 1, out: problems };
     return { code: 0, out: [`${REGISTRY} is readable, and the assessment of every project has its record.`] };
   }
-  if (!["add", "choose", "refresh", "folder", "may-start"].includes(command)) {
-    return { code: 2, out: ["Commands: add, choose, refresh, folder, check, may-start."] };
-  }
+  if (!COMMANDS.includes(command)) return { code: 2, out: [`Commands: ${COMMANDS.join(", ")}.`] };
   const base = defaultRef(home);
   const files = commitFiles(home, base);
   const projects = parseRegistry(files.read(REGISTRY) ?? "");

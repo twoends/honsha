@@ -1,6 +1,6 @@
-// Prints the measures of every work item merged into the default branch, from git alone.
-//
-//   node checks/measures.mjs [--json] [--sessions <folder>]
+// Prints the measures of every work item merged into the default branch, from git alone. Its command is in the kit's
+// interface (interface, Commands): `--json` prints the measures as JSON, and `--sessions` names the folder of the
+// platform's session files when they are not where the platform keeps them.
 //
 // An item is found from its merge commit on the default branch: the commits the merge brings in
 // carry the trailer `Work-Item: <id>`, or the merge's subject names the branch `work/<id>-<slug>`.

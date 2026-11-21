@@ -391,6 +391,9 @@ its own rules. What the checker reviews of them is in `agents/checker.md`.
   record that copies another document grows with every item and says nothing new.
 - The records' own rules are given with the record (workflow, The record); a project's earlier documents are listed
   under `legacy` in its profile (`templates/profile.yml`).
+- An installation's documents cite only the kit's interface (`docs/01-specs/INTERFACE.md`), because the kit's other
+  documents are rewritten as it grows: a section that moves or goes leaves a citation of it pointing at nothing, and
+  nothing in the installation shows it.
 
 ---
 

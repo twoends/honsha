@@ -1,7 +1,5 @@
 // Checks the commits of a work branch, or of the default branch, against the rules every project shares and the
-// profile.
-//
-//   node <kit directory>/checks/commits.mjs
+// profile. Its command is in the kit's interface (interface, Commands).
 //
 // Run from the root of the project. For every commit a work branch adds to the default branch:
 //   - the message ends with the trailer `Work-Item: <id>`, where <id> is the one in the name of

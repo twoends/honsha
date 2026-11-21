@@ -95,6 +95,9 @@ work/                  the kit's own work records
   `--plugin-dir`, as the kit's README says.
 - The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
   one, it would stay on its copy until the version changes (O10; architecture, Open design points).
+- What an installation may rely on, and its files may cite, is the kit's interface, `docs/01-specs/INTERFACE.md`: the
+  names of the plugin, its agents and skills, the scripts' commands, the templates, the files the kit reads and writes,
+  the registry's shape. It also says how it may change.
 - What a piece of `services/<name>/` holds is the contract of a service's piece (workflow, The hosting service); the
   wiring of the checks sits where its service reads it.
 - The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the

@@ -1,8 +1,6 @@
 // The home's backlog: the records kept for later, one file each under `backlog/<project>/` on the home's default
-// branch (workflow, The backlog). Run from the home's folder:
-//
-//   node <kit directory>/hub/backlog.mjs add <project> <file>
-//   node <kit directory>/hub/backlog.mjs take <project> <id>
+// branch (workflow, The backlog). Run from the home's folder, with the commands that the kit's interface gives
+// (interface, Commands).
 //
 // A captured record changes nothing and has nothing for the person to review, so it is the one write that reaches the
 // default branch without a pull request (core rules, Delivery). This script is what keeps that exception narrow: each
@@ -25,6 +23,8 @@ import { attempt, defaultRef, git, hasOrigin, inWorktree, writeFiles } from "./h
 import { NAME, parseRegistry, REGISTRY } from "./projects.mjs";
 
 export const BACKLOG = "backlog";
+// The commands are part of the kit's interface, whose test compares them with this list.
+export const COMMANDS = ["add", "take"];
 const STATES = ["idea", "ready", "dropped"];
 const ID = /^\d{6}-\d{4}$/;
 const SLUG = /^[a-z0-9][a-z0-9-]*$/;
@@ -122,7 +122,7 @@ function publish(home, ref, plan, beforePush) {
  */
 export function run(args, { home = ".", beforePush } = {}) {
   const [command, project, given] = args;
-  if (!["add", "take"].includes(command) || !project || !given) {
+  if (!COMMANDS.includes(command) || !project || !given) {
     return { code: 2, out: ["Usage: add <project> <file>, or take <project> <id>."] };
   }
   if (!NAME.test(project)) return { code: 2, out: [`\`${project}\` is not a project's name.`] };
