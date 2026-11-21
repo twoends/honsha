@@ -10,7 +10,9 @@ core rules in your context always hold, and this file does not repeat them: it i
 ## Before changing anything
 
 1. Find the record, on the item's branch. If the request has no record yet, create the branch and the record first:
-   the intent as the core rules say (The record), the size by the core rules, the areas from the profile's area map.
+   the branch from `origin/<default-branch>` after `git fetch`, since the folder a session starts in may lag behind
+   the hosting service; the intent as the core rules say (The record), the size by the core rules, the areas from the
+   profile's area map.
 2. Read the record and the profile, whose keys `templates/profile.yml` in the kit directory explains. Without a profile
    there are no verification commands, gates or area map: say so in the log and go on.
 3. Apply the gate of the item's size.
@@ -48,21 +50,22 @@ What the verification writes into the record stays uncommitted until the closing
    A command that fails is fixed or reported; it is never left out.
 2. A trivial item is verified at this point.
 3. For a small or full item, call the checker:
-   - write two files in the repository root that are not committed: the difference between the default branch and
-     the item's branch, and the list of the branch's commits.
+   - after `git fetch`, write two files in the repository root that are not committed: the difference between the
+     default branch on the hosting service and the item's branch, and the list of the branch's commits.
 
      ```
-     git diff <default-branch>...HEAD > .honsha-checker.diff
-     git log --reverse --name-only --format='commit %h%nauthor %ae%ncommitter %ce%nsubject %s%ntrailers %(trailers:only,unfold,separator=%x3B )%nfiles' <default-branch>..HEAD > .honsha-checker.commits
+     git diff origin/<default-branch>...HEAD > .honsha-checker.diff
+     git log --reverse --name-only --format='commit %h%nauthor %ae%ncommitter %ce%nsubject %s%ntrailers %(trailers:only,unfold,separator=%x3B )%nfiles' origin/<default-branch>..HEAD > .honsha-checker.commits
      ```
 
    - invoke the agent `honsha:checker`, giving it the path of the record and the paths of the two files;
    - delete the two files;
    - copy the checker's report under "Verification", unchanged, with the commit it read.
 4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
-   repeated check: the two commands above with the commit the last check read in place of `<default-branch>...` and
-   `<default-branch>..`. Only the person can ask for a full check again. The fix carries its log lines and not the
-   results of the verification it answers. A finding that cannot be fixed inside the scope is a stop condition.
+   repeated check: the two commands above with the commit the last check read in place of
+   `origin/<default-branch>...` and `origin/<default-branch>..`. Only the person can ask for a full check again. The
+   fix carries its log lines and not the results of the verification it answers. A finding that cannot be fixed inside
+   the scope is a stop condition.
 
 ## Delivery
 

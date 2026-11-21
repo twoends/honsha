@@ -89,11 +89,19 @@ work/                  the kit's own work records
 
 - It is distributed as a Claude Code plugin from the kit's own repository, which is public. The repository is its own
   marketplace: the plugin is the repository root.
-- Every repository that runs under the kit, the kit's own included, declares that marketplace from the repository on
-  its hosting service, with automatic updates. A host registers one source for a marketplace's name, for all its
-  projects, so a second source, such as a clone's folder, would replace the first for every one of them. A session
-  therefore runs under the kit as merged; an unmerged change to the kit is tried in a session started with
-  `--plugin-dir`, as the kit's README says.
+- Each host installs the plugin once, for the user that runs the installation's sessions, from the marketplace on the
+  kit's hosting service, with automatic updates, and with the plugin's setting `home`, the home's folder on the host.
+  No project holds a file for the kit. A host registers one source for a marketplace's name, for all its projects, so
+  a second source, such as a clone's folder, would replace the first for every one of them. A session therefore runs
+  under the kit as merged; an unmerged change to the kit is tried in a session started with `--plugin-dir`, as the
+  kit's README says.
+- The platform runs a plugin installed for the user in every session of that user, so each of the kit's hooks first
+  places the session's folder (`hooks/place.mjs`): the home's main working tree, a worktree of the home, the folder
+  that the home's registry, on its default branch as last fetched, gives a project on this host, or a worktree of
+  that folder. Anywhere else the kit gives nothing and refuses nothing. On the always-on host, whose user runs only
+  the installation's sessions, every folder is one of these; on a personal computer the test keeps the kit out of the
+  person's other work. Where the home or its registry cannot be read, a session receives one line that says so, and
+  the guard judges its commands as in a project.
 - The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
   one, it would stay on its copy until the version changes (O10; architecture, Open design points).
 - What an installation may rely on, and its documents may cite, is the kit's interface,
@@ -116,7 +124,7 @@ work/                  the kit's own work records
   files when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
   `home` names (workflow, Lessons). A session that runs as no agent receives a procedure too, from a hook of its own:
-  the hub's in the main working tree of a home, the worker's anywhere else. The sessions that an application or another
+  the hub's in the home's main working tree, the worker's in the home's worktrees and in the projects. The sessions that an application or another
   session starts run as no agent, and a session started as an agent has that agent's file as its system prompt.
 
 ### Home
@@ -124,7 +132,7 @@ work/                  the kit's own work records
 One per user, private.
 
 ```
-registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, Joining an installation)
+registry.yml           projects: name, repository, folder on each host, state, assessment, chosen items; written by hub/projects.mjs (workflow, Joining an installation)
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, Decisions)
@@ -137,8 +145,8 @@ lessons/host/          one file per host
 .hub/profile.yml       the home's profile, as a project's (architecture, Project)
 ```
 
-The home is a project like any other: the kit is declared in it, and its default branch changes only through pull
-requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
+The home is a project like any other: the kit acts in it as in every project, and its default branch changes only
+through pull requests that the person merges. The hub changes it only through work items, its own writes and those of the kit's
 scripts included; a report is one of them, and its record holds the answer. The one exception is the backlog: the
 kit's script pushes each record there and takes it out without a pull request, in commits that do nothing else (core
 rules, Delivery; workflow, The backlog).
@@ -156,19 +164,12 @@ Each registered repository. What the kit adds to a project:
 .hub/profile.yml       language, stack, areas with their paths, verification commands, quality gates, data sources, playbooks
 work/                  the project's work records
 CLAUDE.md              short; names the profile and anything truly project-specific
-.claude/settings.json  declares the kit's marketplace, from its repository, and its plugin; starts new worktrees from the current branch
 .claude/rules/         project-specific rules, scoped by path
 ```
 
-The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the default
-branch, while the parts of a work item start from the item's branch (workflow, Branches of parallel parts). The
-declaration of the marketplace is the same in every project and on every host (architecture, Kit); the piece of the
-hosting service gives its source.
-
-The declaration makes the marketplace known; each clone of a project installs the plugin once, with
-`claude plugin install honsha@honsha --scope project`, and the plugin is active from the next session. The command
-writes `.claude/settings.json` again with the same values in another order of keys: `git checkout .claude/settings.json`
-restores it, so that no change to the file is committed by mistake.
+The kit needs no file of its own in a project: its sessions receive it once the project is registered and has a
+folder on the host (architecture, Kit). The project's `.gitignore` keeps out the platform's worktrees and the
+checker's input files (`honsha:assessment`).
 
 Existing workflow documents in a project stay where they are as legacy and are not converted.
 

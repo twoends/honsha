@@ -1,6 +1,6 @@
 // Run with: node --test hooks/
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +8,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { BUDGET, context, split } from "./lessons.mjs";
+import { scratchHome } from "./scratch-home.mjs";
 
 const script = fileURLToPath(new URL("./lessons.mjs", import.meta.url));
 /** @type {string[]} */
@@ -153,12 +154,27 @@ test("a profile the reader refuses is named instead of passing in silence", () =
   );
 });
 
+/**
+ * The input of a session's start in a folder.
+ * @param {string} cwd
+ */
+const input = (cwd) => JSON.stringify({ hook_event_name: "SessionStart", cwd });
+
 test("the hook reads the project and the home from the platform's variables, and refuses an unknown level", () => {
   const project = folder({ ".hub/profile.yml": "stack: [node]\n" });
-  const env = { ...process.env, CLAUDE_PROJECT_DIR: project, CLAUDE_PLUGIN_OPTION_HOME: home() };
-  const given = spawnSync(process.execPath, [script, "technologies"], { env, encoding: "utf8" });
+  execFileSync("git", ["init", "-q", project]);
+  const installation = scratchHome([project], { "lessons/tech/node.md": lessonsFile("Technology: Node.js", 2) });
+  made.push(installation.home);
+  const env = { ...installation.env, CLAUDE_PROJECT_DIR: project };
+  const given = spawnSync(process.execPath, [script, "technologies"], { env, input: input(project), encoding: "utf8" });
   assert.equal(given.status, 0, given.stderr);
   assert.match(given.stdout, /# Technology: Node\.js/);
+  // Outside the installation's folders the hook gives nothing, whatever the project's profile says.
+  const outside = folder({});
+  execFileSync("git", ["init", "-q", outside]);
+  const quiet = spawnSync(process.execPath, [script, "technologies"], { env, input: input(outside), encoding: "utf8" });
+  assert.equal(quiet.status, 0, quiet.stderr);
+  assert.equal(quiet.stdout, "");
   const wrong = spawnSync(process.execPath, [script, "team"], { env, encoding: "utf8" });
   assert.equal(wrong.status, 1);
   assert.match(wrong.stderr, /no level `team`/);

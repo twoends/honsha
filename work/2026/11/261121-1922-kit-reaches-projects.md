@@ -146,7 +146,41 @@ Approved by the person on 2026-11-21, with design A, in the chat of the session 
 - 2026-11-21: before approving, the person asked whether the item is needed when the installation's goal is the
   always-on host. Every part is needed there too, the fresh bases more than on a computer; only the registry's test
   and the cost in other sessions concern a personal computer. `6598c72` added that to the strategy.
+- 2026-11-21: `hooks/place.mjs` places a session's folder for every hook. The folder's working tree and main working
+  tree are read from its `.git` file or folder, with no git process; a folder outside every repository is outside
+  without reading the registry, since every registered folder is a clone. The registry is one `git show` of the home's
+  `origin/HEAD`, and the branch is looked for only in a home without an origin. Measured on this computer, ten runs
+  each: a bare `node` 43 ms, a hook outside git 57 ms, a hook in a registered folder 97 to 99 ms, so about 40 ms for
+  the registry's read.
+- 2026-11-21: where the installation cannot be read, only the hook of the opening part, `rules/core.md`, gives the
+  line that says so, in its place: each of the nine hooks giving it would put nine copies of it into the session. The
+  guard adds the reason to a refusal there. The procedure's hook reports an unreadable input only inside the
+  installation.
+- 2026-11-21: the records alone cannot say which items were chosen: an item in progress is on no default branch, and
+  one waiting in the backlog is in the home. So `choose` takes the chosen items' identifiers, each a record in the
+  home's backlog of the project with the assessment as its `source`, and writes them into the entry as `chosen`;
+  `refresh` reads each on the project's default branch after a fetch, and in the backlog for one the person dropped.
+  The hub's procedure captures the chosen items before `choose`. No registry of the installation has a project
+  adopting, so none lacks the new key.
+- 2026-11-21: the platform's documentation, read through a subagent: a plugin can ship no settings; a marketplace
+  other than the official one updates automatically only when set to, in `/plugin` or with `autoUpdate` on its entry
+  of `extraKnownMarketplaces`; a required option of `userConfig` is asked for when the plugin is enabled and kept
+  under `pluginConfigs`; a hook's `cwd` in a worktree is the worktree's root. So `worktree.baseRef`, which only a
+  project's settings could give, goes with the declaration, and `honsha:parallel-parts` makes the parts' worktrees
+  with git from the item's branch; the GitHub piece's "Declaring the kit" becomes "Installing the kit".
+- 2026-11-21: the tests of the hooks run them with a scratch home whose registry names their folders,
+  `hooks/scratch-home.mjs`, which `hooks/place.test.mjs` also covers.
 
 ## Verification
+
+## Deviations
+
+- The scope adds four files the strategy did not name, each a consequence of the design: `skills/parallel-parts`,
+  since the setting that started a part's worktree from the item's branch leaves the projects;
+  `.claude-plugin/plugin.json`, where `home` becomes required and says what it is for; `hub/home.mjs`, whose read of
+  the default branch without a fetch the hooks share; and the description in `hooks/hooks.json`.
+- Criterion 4 is extended: a chosen item that the person drops, in the backlog, ends the adoption as one merged as
+  done does; otherwise a dropped item would keep its project adopting for ever. The registry gains the key `chosen`
+  and `choose` its identifiers, which the interface lists.
 
 ## Outcome

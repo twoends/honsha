@@ -7,82 +7,65 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { HUB, WORKER, context, inHome, procedure } from "./procedure.mjs";
+import { HUB, WORKER, context, procedure } from "./procedure.mjs";
+import { scratchHome } from "./scratch-home.mjs";
 
 const script = fileURLToPath(new URL("./procedure.mjs", import.meta.url));
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-procedure-"));
+const scratch = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), "honsha-procedure-")));
+/** @type {(() => void)[]} */
+const cleanups = [() => fs.rmSync(scratch, { recursive: true, force: true })];
+after(() => cleanups.forEach((cleanup) => cleanup()));
 
-after(() => fs.rmSync(scratch, { recursive: true, force: true }));
-
+const identity = ["-c", "user.name=Tester", "-c", "user.email=tester@example.org", "-c", "commit.gpgsign=false"];
 /**
  * @param {string} dir
  * @param {string[]} args
  */
-const git = (dir, args) => execFileSync("git", ["-C", dir, ...args], { encoding: "utf8", stdio: "pipe" });
+const git = (dir, args) => execFileSync("git", ["-C", dir, ...identity, ...args], { encoding: "utf8", stdio: "pipe" });
 
 /**
- * A repository in `name` with one commit of `files`, and a linked worktree of it beside it, `<name>-item`.
+ * A linked worktree of a repository, beside the scratch folder's others.
+ * @param {string} dir
  * @param {string} name
- * @param {Record<string, string>} files
  */
-function repository(name, files) {
-  const dir = path.join(scratch, name);
-  fs.mkdirSync(dir);
-  git(dir, ["init", "-q", "-b", "main"]);
-  for (const [key, value] of [
-    ["user.name", "Tester"],
-    ["user.email", "tester@example.org"],
-    ["commit.gpgsign", "false"],
-  ]) {
-    git(dir, ["config", key, value]);
-  }
-  for (const [file, text] of Object.entries(files)) {
-    fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
-    fs.writeFileSync(path.join(dir, file), text);
-  }
-  git(dir, ["add", "--all"]);
-  git(dir, ["commit", "-q", "-m", "Start"]);
-  const worktree = path.join(scratch, `${name}-item`);
-  git(dir, ["worktree", "add", "-q", "-b", "work/item", worktree]);
-  return { main: dir, worktree };
+function worktree(dir, name) {
+  const linked = path.join(scratch, name);
+  git(dir, ["worktree", "add", "-q", "-b", `work/${name}`, linked]);
+  return linked;
 }
 
-const project = repository("project", { "README.md": "a project\n" });
-const home = repository("home", { "registry.yml": "projects: []\n", "notes/README.md": "notes\n" });
+const project = path.join(scratch, "project");
+fs.mkdirSync(project);
+git(project, ["init", "-q", "-b", "main"]);
+git(project, ["commit", "-q", "--allow-empty", "-m", "Start"]);
+const projectItem = worktree(project, "project-item");
+const installation = scratchHome([project], { "notes/README.md": "notes\n" });
+cleanups.push(installation.remove);
+const { home, env } = installation;
+const homeItem = worktree(home, "home-item");
+const outside = path.join(scratch, "outside");
+fs.mkdirSync(outside);
+git(outside, ["init", "-q", "-b", "main"]);
 
 /**
- * The hook run as `hooks.json` writes it, with `input` on its standard input.
+ * The hook run as `hooks.json` writes it, with `input` on its standard input and the scratch home as its setting.
  * @param {string} input
  */
-const run = (input) => spawnSync(process.execPath, [script], { input, encoding: "utf8" });
+const run = (input) => spawnSync(process.execPath, [script], { input, encoding: "utf8", env, cwd: outside });
 
-test("a session that runs as no agent gets the worker's procedure in a project and in a home's linked worktree", () => {
-  assert.equal(procedure({ cwd: project.main }), WORKER);
-  assert.equal(procedure({ cwd: project.worktree }), WORKER);
-  assert.equal(procedure({ cwd: home.worktree }), WORKER);
-  assert.equal(inHome(home.worktree), false);
-});
-
-test("a folder outside git is in no home, so a session there that runs as no agent gets the worker's procedure", () => {
-  const outside = path.join(scratch, "outside");
-  fs.mkdirSync(outside);
-  // The scratch folder is not in a repository, so git finds none above this folder.
-  assert.throws(() => git(outside, ["rev-parse", "--show-toplevel"]));
-  assert.equal(inHome(outside), false);
-  assert.equal(procedure({ cwd: outside }), WORKER);
-});
-
-test("a session in a home's main working tree gets the hub's procedure, from any folder of it", () => {
-  assert.equal(inHome(home.main), true);
-  assert.equal(procedure({ cwd: home.main }), HUB);
-  assert.equal(procedure({ cwd: path.join(home.main, "notes") }), HUB);
+test("a session that runs as no agent gets the hub's procedure in the home and the worker's in its other folders", () => {
+  assert.equal(procedure({}, { kind: "home" }), HUB);
+  assert.equal(procedure({}, { kind: "home-worktree" }), WORKER);
+  assert.equal(procedure({}, { kind: "project" }), WORKER);
+  assert.equal(procedure({}, { kind: "outside" }), null);
+  assert.equal(procedure({}, { kind: "unknown", reason: "no home" }), null);
 });
 
 test("a session that runs as an agent gets nothing, wherever it is", () => {
   for (const agent of ["honsha:worker", "honsha:hub", "example-agent"]) {
-    assert.equal(procedure({ cwd: project.main, agent_type: agent }), null);
-    assert.equal(procedure({ cwd: project.worktree, agent_type: agent }), null);
-    assert.equal(procedure({ cwd: home.main, agent_type: agent }), null);
+    for (const kind of /** @type {const} */ (["home", "home-worktree", "project"])) {
+      assert.equal(procedure({ agent_type: agent }, { kind }), null);
+    }
   }
 });
 
@@ -99,19 +82,25 @@ test("the hook gives a line that names the agent, the file and the kit directory
     assert.ok(given.endsWith(`:\n\n${body}`));
     assert.ok(!given.includes("\ndescription:"));
   }
+});
 
+test("as a hook it places the session by its folder: the hub's in the home, the worker's in a worktree or a project", () => {
   for (const [cwd, file] of [
-    [project.worktree, WORKER],
-    [home.worktree, WORKER],
-    [home.main, HUB],
+    [home, HUB],
+    [path.join(home, "notes"), HUB],
+    [homeItem, WORKER],
+    [project, WORKER],
+    [projectItem, WORKER],
   ]) {
     const result = run(JSON.stringify({ hook_event_name: "SessionStart", cwd }));
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, context(file));
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, context(file), cwd);
   }
   for (const input of [
-    { cwd: project.main, agent_type: "honsha:worker" },
-    { cwd: home.main, agent_type: "honsha:hub" },
+    { cwd: project, agent_type: "honsha:worker" },
+    { cwd: home, agent_type: "honsha:hub" },
+    { cwd: outside },
+    { cwd: scratch },
   ]) {
     const quiet = run(JSON.stringify({ hook_event_name: "SessionStart", ...input }));
     assert.equal(quiet.status, 0);
@@ -119,11 +108,14 @@ test("the hook gives a line that names the agent, the file and the kit directory
   }
 });
 
-test("a hook input that cannot be read gives nothing and tells the person", () => {
+test("a hook input that cannot be read gives nothing, and tells the person in the installation's folders", () => {
   for (const input of ["", "not json", "null", "3", "[]", '[{"cwd":"."}]']) {
-    const result = run(input);
-    assert.equal(result.status, 1, input);
-    assert.equal(result.stdout, "");
-    assert.match(result.stderr, /the session lacks its procedure/);
+    const inHome = spawnSync(process.execPath, [script], { input, encoding: "utf8", env, cwd: home });
+    assert.equal(inHome.status, 1, input);
+    assert.equal(inHome.stdout, "");
+    assert.match(inHome.stderr, /the session lacks its procedure/);
+    const elsewhere = run(input);
+    assert.equal(elsewhere.status, 0, input);
+    assert.equal(elsewhere.stdout + elsewhere.stderr, "");
   }
 });

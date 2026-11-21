@@ -20,6 +20,9 @@
 // `&&` (in PowerShell also by `;`), and every later command is one of a few programs that cannot
 // move a shell. Any other line is judged in the session's folder.
 //
+// It judges only in a session of the installation's folders, and in one whose folder it cannot place because the
+// installation cannot be read (`hooks/place.mjs`); anywhere else it lets every command through.
+//
 // The guard matches the text of a command. It stops a mistake; it is not a security boundary: a
 // command hidden in a script or an alias gets past it. It never gets in a session's way by
 // failing: a command it cannot read is let through.
@@ -30,6 +33,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readProfile } from "../checks/profile.mjs";
+import { placeOf, readInput } from "./place.mjs";
 
 const SERVICES = fileURLToPath(new URL("../services/", import.meta.url));
 const WRAPPERS = new Set(["command", "env", "exec", "nice", "nohup", "sudo", "time"]);
@@ -457,12 +461,16 @@ export function judge(line, { cwd = ".", services, powershell = false } = {}) {
 }
 
 function main() {
-  const input = JSON.parse(fs.readFileSync(0, "utf8"));
-  if (input.hook_event_name !== "PreToolUse" || typeof input.tool_input?.command !== "string") return 0;
+  const input = readInput();
+  if (input?.hook_event_name !== "PreToolUse" || typeof input.tool_input?.command !== "string") return 0;
+  // Before the command is read: outside the installation's folders the guard refuses nothing (`hooks/place.mjs`).
+  const at = placeOf(input);
+  if (at.kind === "outside") return 0;
   const powershell = input.tool_name === "PowerShell";
   const reason = judge(input.tool_input.command, { cwd: input.cwd || ".", powershell });
   if (!reason) return 0;
-  process.stderr.write(`${reason}\n`);
+  const why = at.kind === "unknown" ? ` It judged this folder as a project's, since ${at.reason}.` : "";
+  process.stderr.write(`${reason}${why}\n`);
   return 2;
 }
 
