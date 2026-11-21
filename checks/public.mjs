@@ -3,6 +3,9 @@
 //
 // No pattern finds a name; the caller gives those it knows. The hook that runs before a push
 // (checks/pushed.mjs) gives the machine's user. Without names, only the patterns run.
+//
+// The caller can also allow addresses by a pattern: those the project publishes on purpose, as the
+// profile's `commits.address` does for the authors and committers of every commit.
 
 const ADDRESS = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 const FOLDER = /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9._-]+|\/home\/[A-Za-z0-9._-]+|\/Users\/[A-Za-z0-9._-]+/;
@@ -34,14 +37,15 @@ function wordPattern(words) {
  * One entry for each line of the text that holds something personal: `{ line, kind }`. The text itself is not returned.
  * @param {string} text
  * @param {string[]} [words] personal names
+ * @param {RegExp | null} [allowed] the addresses that are not personal
  * @returns {{ line: number, kind: string }[]}
  */
-export function personal(text, words = []) {
+export function personal(text, words = [], allowed = null) {
   /** @type {{ line: number, kind: string }[]} */
   const found = [];
   const listed = words.length > 0 ? wordPattern(words) : null;
   text.split(/\r?\n/).forEach((content, index) => {
-    if ((content.match(ADDRESS) ?? []).some((address) => !placeholder(address))) {
+    if ((content.match(ADDRESS) ?? []).some((address) => !placeholder(address) && !allowed?.test(address))) {
       found.push({ line: index + 1, kind: "an e-mail address" });
     }
     if (FOLDER.test(content)) found.push({ line: index + 1, kind: "a path into a user's folder" });

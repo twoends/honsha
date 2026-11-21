@@ -1,5 +1,5 @@
-# Runs the kit's verification commands on every pull request to the default branch, and the
-# workflow that projects call on the kit itself.
+# Runs the kit's verification commands, the workflow that projects call and the check of personal content on the kit
+# itself: on every pull request to the default branch and on every push to it.
 #
 # This file is the GitHub wiring of the checks: what it has to do is in docs/01-specs/WORKFLOW.md,
 # section 14.2, and how it does it on GitHub is in services/github/README.md. The commands are
@@ -10,13 +10,24 @@ name: verify
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
 
+# A newer run of a pull request cancels its older one. A push has no number: its group is its commit, so that no push
+# cancels another, since each run checks only what its push added.
 concurrency:
-  group: verify-${{ github.event.pull_request.number }}
+  group: verify-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
+
+# On a push to the default branch, the range is what that push added: its merges, which no pull request checks
+# together. A called workflow takes none of these; project.yml sets its own.
+env:
+  HONSHA_BRANCH: ${{ github.event_name == 'push' && github.ref_name || github.head_ref }}
+  HONSHA_BASE: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
+  HONSHA_HEAD: ${{ github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
 
 jobs:
   verify:
@@ -32,10 +43,6 @@ jobs:
             node: 26
           - os: windows-latest
             node: 26
-    env:
-      HONSHA_BRANCH: ${{ github.head_ref }}
-      HONSHA_BASE: ${{ github.event.pull_request.base.sha }}
-      HONSHA_HEAD: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,8 +58,26 @@ jobs:
       - name: Run the verification commands of the profile
         run: node checks/verify.mjs
 
-  # The workflow every project calls runs here on the kit's own pull request, so that it is known to
-  # run before a project relies on it. Called from this repository, it reads the kit with this
+  # The kit is public, and its hook checks a push only in a clone that has it: here every commit of the range is
+  # checked again, the merges GitHub writes included. By the patterns only, since the system's user is the runner's;
+  # the name of the machine's user stays with the hook. One system is enough: the check reads git's output.
+  personal:
+    name: personal content
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+      - name: Check each commit of the range for personal content
+        run: node checks/pushed.mjs --range
+
+  # The workflow every project calls runs here on the kit's own pull requests and pushes, so that both of its paths
+  # are known to run before a project relies on them. Called from this repository, it reads the kit with this
   # repository's own token, whatever the repository's visibility.
   project:
     uses: ./.github/workflows/project.yml

@@ -84,7 +84,9 @@ So a push from a clone is checked by the hook `.githooks/pre-push`: it refuses a
 that no remote holds yet, adds an e-mail address, a path into a user's folder or the name of the machine's user, in a
 line, a file's name, the message or the author. It names the commit, the file and the line, never what it found. A
 session that opens in the clone points git at the hook; a clone used without sessions does it with
-`node checks/pushed.mjs --install`. Neither changes a hooks folder that git's configuration already names.
+`node checks/pushed.mjs --install`. Neither changes a hooks folder that git's configuration already names. The kit's
+pipeline checks every commit of a pull request and of a push to `main` again, for the addresses and the paths, so that
+a clone without the hook is caught too; the name of the machine's user only the hook can look for.
 
 ## Checking a change to the kit
 
@@ -95,8 +97,8 @@ node checks/verify.mjs
 
 It runs the verification commands that `.hub/profile.yml` lists: formatting with Prettier, lint with oxlint, types
 with TypeScript checking the JavaScript files, the tests, `claude plugin validate .`, and the checks of the branch's
-record and commits. The same list runs on every pull request, on Linux and on Windows. `npm ci` is needed once, and
-again when `package-lock.json` changes.
+record and commits. The same list runs on every pull request and every push to `main`, on Linux and on Windows.
+`npm ci` is needed once, and again when `package-lock.json` changes.
 
 The validator warns that the plugin has no version, which is deliberate (architecture, O10). It also remarks that
 there is no licence and no icon, which matters only for a submission to the public plugin directory.
