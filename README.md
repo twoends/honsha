@@ -84,7 +84,9 @@ So a push from a clone is checked by the hook `.githooks/pre-push`: it refuses a
 that no remote holds yet, adds an e-mail address, a path into a user's folder or the name of the machine's user, in a
 line, a file's name, the message or the author. It names the commit, the file and the line, never what it found. A
 session that opens in the clone points git at the hook; a clone used without sessions does it with
-`node checks/pushed.mjs --install`. Neither changes a hooks folder that git's configuration already names.
+`node checks/pushed.mjs --install`. Neither changes a hooks folder that git's configuration already names. The kit's
+pipeline checks every commit of a pull request and of a push to `main` again, for the addresses and the paths, so that
+a clone without the hook is caught too; the name of the machine's user only the hook can look for.
 
 ## Checking a change to the kit
 

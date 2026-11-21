@@ -116,9 +116,9 @@ The wiring is a workflow file. GitHub reads workflow files only from `.github/wo
 project holds a short file of its own that calls the kit's reusable workflow,
 [project.yml](../../.github/workflows/project.yml), which does the work. The kit's own wiring is
 [verify.yml](../../.github/workflows/verify.yml), on the same two events as a project's file: one job runs the kit's
-profile on Linux and on Windows, and another calls project.yml on the kit itself, so that a change to it runs on the
-kit's pull request before it reaches a project, and its path for a push runs at each merge of the kit.
-`gh workflow list` lists the workflows a repository has.
+profile on Linux and on Windows, another calls project.yml on the kit itself, so that a change to it runs on the kit's
+pull request before it reaches a project, and its path for a push runs at each merge of the kit, and a third checks
+the commits for personal content (below). `gh workflow list` lists the workflows a repository has.
 
 A project's file, `.github/workflows/checks.yml`, with its own default branch and the kit's repository and default
 branch in place of the placeholders:
@@ -160,7 +160,7 @@ It answers the contract of WORKFLOW.md, section 14.2, in this way.
    On Linux, with Node.js 26, it installs the project's tools with `npm ci --ignore-scripts` where the project has a
    `package-lock.json`, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and
    `checks/commits.mjs`, `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`,
-   which runs the `verify` list of the profile. The kit's other job runs `node checks/verify.mjs` alone, as its profile
+   which runs the `verify` list of the profile. The kit's first job runs `node checks/verify.mjs` alone, as its profile
    lists the kit's checks. GitHub checks out the merge of the pull request with its base branch, so the commands test
    the merged result, and the workflow does not run while the pull request has a conflict; on a push it checks out the
    pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
@@ -174,6 +174,16 @@ It answers the contract of WORKFLOW.md, section 14.2, in this way.
 6. **What it may not do.** The workflow's token has read access to the contents and nothing else: the caller grants
    no more, and a called workflow can only lower what its caller grants. The checkouts leave no token in the git
    configuration. The actions are pinned to a commit.
+
+The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
+the kit's hook checks a push only in a clone that has it (the kit's README). On Linux it runs
+`node checks/pushed.mjs --range`, which checks each commit from `HONSHA_BASE` to `HONSHA_HEAD` for the e-mail addresses
+and the paths into a user's folder that `checks/public.mjs` finds, and lets through the addresses that the profile's
+`commits.address` allows. It names the commit, the file and the line, never what it found. So it reads what a clone
+without the hook, or a push that skipped it, sent, and on a push the merges, which GitHub writes and no clone's hook
+sees. It does not look for the name of the machine's user, as the hook does: on a runner the system's user is the
+runner's, not whoever made the commits. It finds content once the commits are on the public branch: a finding shows
+before the merge, and taking it out of the history is the person's.
 
 What it costs: nothing on a free account, within a limit. On a private repository the minutes of GitHub's runners are
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows

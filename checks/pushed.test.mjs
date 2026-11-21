@@ -1,13 +1,13 @@
 // Run with: node checks/verify.mjs
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { check, install, personalNames } from "./pushed.mjs";
+import { check, checkRange, install, personalNames } from "./pushed.mjs";
 
 const kit = fileURLToPath(new URL("..", import.meta.url));
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-pushed-"));
@@ -174,6 +174,86 @@ test("looks for the machine's user by name, unless the name is short or one that
   assert.ok(own.length <= 1);
 });
 
+test("the range mode checks each commit after the base, also those a remote holds, by the patterns", () => {
+  const dir = clone();
+  const base = git(dir, ["rev-parse", "HEAD"]);
+  const added = commit(dir, { "docs/notes.md": `first\nsee ${folder}\n` }, "Add notes");
+  const removed = commit(dir, { "notes.md": `${address}\n` }, "Add an address");
+  commit(dir, { "notes.md": "nothing\n" }, "Take the address out");
+  git(dir, ["push", "-q", "origin", "work/item"]);
+  assert.deepEqual(check(input(dir), dir, []), [], "the hook reads only what no remote holds");
+  const { commits, lines } = checkRange(base, "HEAD", dir);
+  assert.equal(commits, 3);
+  assert.deepEqual(lines, [
+    `${short(added)} docs/notes.md:2 holds a path into a user's folder`,
+    `${short(removed)} notes.md:1 holds an e-mail address`,
+  ]);
+  assert.ok(!lines.join("\n").includes("someone"));
+});
+
+test("the range mode reads every commit the head reaches when the base is all zeros", () => {
+  const dir = clone();
+  git(dir, ["switch", "-q", "main"]);
+  const first = commit(dir, { "old.md": `${folder}\n` }, "Add old notes");
+  commit(dir, { "new.md": "plain\n" }, "Add new notes");
+  assert.deepEqual(checkRange(NONE, "HEAD", dir), {
+    commits: 3,
+    lines: [`${short(first)} old.md:1 holds a path into a user's folder`],
+  });
+});
+
+test("lets through the addresses that the profile allows for commits, in both modes, and no other", () => {
+  const dir = clone();
+  const base = git(dir, ["rev-parse", "HEAD"]);
+  const own = ["someone", "own.provider.io"].join("@");
+  commit(dir, { ".hub/profile.yml": "commits:\n  address: '@own\\.provider\\.io$'\n" }, "Add the profile");
+  commit(dir, { "a.md": `written by ${own}\n` }, `Add a\n\nAsked by ${own}`, [`--author=Someone <${own}>`]);
+  const other = commit(dir, { "b.md": `written by ${address}\n` }, "Add b");
+  const expected = [`${short(other)} b.md:1 holds an e-mail address`];
+  assert.deepEqual(check(input(dir), dir, []), expected);
+  assert.deepEqual(checkRange(base, "HEAD", dir).lines, expected);
+  assert.equal(checkRange(base, "HEAD", dir, null).lines.length, 4, "without the profile's pattern");
+});
+
+const machine = personalNames();
+test(
+  "the range mode does not look for the machine's user, which the hook looks for",
+  { skip: machine.length === 0 && "the system gives no name that the hook looks for" },
+  () => {
+    const dir = clone();
+    const base = git(dir, ["rev-parse", "HEAD"]);
+    const added = commit(dir, { "notes.md": `made for ${machine[0]}\n` }, "Add notes");
+    assert.deepEqual(check(input(dir), dir), [`${short(added)} notes.md:1 holds a personal name`]);
+    assert.deepEqual(checkRange(base, "HEAD", dir).lines, []);
+  },
+);
+
+test("the command with --range needs both variables, and fails on a finding without repeating it", () => {
+  const dir = clone();
+  const base = git(dir, ["rev-parse", "HEAD"]);
+  /** @param {Record<string, string>} env */
+  const run = (env) =>
+    spawnSync(process.execPath, [path.join(kit, "checks", "pushed.mjs"), "--range"], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...process.env, HONSHA_BASE: "", HONSHA_HEAD: "", ...env },
+    });
+  const missing = run({ HONSHA_BASE: base });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /needs HONSHA_HEAD,/);
+
+  commit(dir, { "notes.md": "plain\n" }, "Add notes");
+  const clean = run({ HONSHA_BASE: base, HONSHA_HEAD: "HEAD" });
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.match(clean.stdout, /, 1 commit read: none adds/);
+
+  const added = commit(dir, { "more.md": `${address}\n` }, "Add more");
+  const found = run({ HONSHA_BASE: base, HONSHA_HEAD: "HEAD" });
+  assert.equal(found.status, 1);
+  assert.ok(found.stderr.includes(`  ${short(added)} more.md:1 holds an e-mail address\n`), found.stderr);
+  assert.ok(!`${found.stdout}${found.stderr}`.includes(address));
+});
+
 test("install names the kit's hooks once, and leaves a hooks folder already set", () => {
   const dir = clone();
   assert.equal(install(dir), true);
@@ -188,7 +268,7 @@ test("install names the kit's hooks once, and leaves a hooks folder already set"
 test("the hook, once installed, stops the push and lets a clean one through", () => {
   const dir = clone();
   // The copy keeps the mode the checkout gave the hook, so on Linux this also tries the mode committed.
-  for (const file of [".githooks/pre-push", "checks/pushed.mjs", "checks/public.mjs"]) {
+  for (const file of [".githooks/pre-push", "checks/pushed.mjs", "checks/public.mjs", "checks/profile.mjs"]) {
     fs.mkdirSync(path.join(dir, path.dirname(file)), { recursive: true });
     fs.copyFileSync(path.join(kit, file), path.join(dir, file));
   }

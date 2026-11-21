@@ -172,6 +172,17 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   `services/github/README.md` says that the kit's file runs on both events, that project.yml's path for a push runs at
   each merge of the kit, and that the kit's file sets the variables as project.yml does; `README.md` says that the
   verification runs on every push to `main`.
+- `checks/public.mjs`: `personal()` takes a pattern of allowed addresses. `checks/pushed.mjs`: `--range`, with
+  `rangeCommits`, `checkRange` and `allowedAddress`, which reads `commits.address` from the profile of the folder
+  checked; both modes pass it to `commitFindings`. The command reads the profile before git, so that its error, which
+  names a key, is shown as it is, and a git error still is not; a profile the reader refuses now stops the hook too.
+  The report's closing words say, in the pipeline, that the commits are on the hosting service already.
+- `checks/pushed.test.mjs`: five tests, for the range over commits a remote holds, the zero base, the allowed
+  addresses in both modes, the machine's user, built from the system, that only the hook looks for, and the command's
+  variables, exit codes and output; the hook's test copies `checks/profile.mjs` too. `checks/public.test.mjs`: one
+  test for the allowed pattern. The 22 tests of the two files pass here, the one on the machine's user among them.
+- `verify.yml`: the job `personal content`. `services/github/README.md`: the kit's third job, what it checks and why
+  not the name; `README.md`: the pipeline checks the patterns again.
 
 ## Verification
 
