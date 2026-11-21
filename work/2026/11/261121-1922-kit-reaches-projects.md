@@ -202,63 +202,71 @@ On `a7ac7cb`, `node checks/verify.mjs`, which runs the profile's `verify`: passe
 - `node checks/record.mjs`: passed.
 - `node checks/commits.mjs`: the 5 commits of the branch follow the rules.
 
-The check on `692aea2`, by `honsha:checker`: **fail**, with two findings:
+### Checker report, on `692aea2`
+
+**Verdict:** fail
+
+**Findings**
 
 1. Three prose lines the diff adds pass the 120 characters the documents wrap to: `docs/01-specs/ARCHITECTURE.md`
    twice and `agents/hub.md` once.
 2. The live run of criterion 7 is under "Verification", which holds only the verification commands and the checker's
    reports; it belongs in the log.
 
-The repeated check on `a7ac7cb`: **fail**, with one finding:
+### Checker report, repeated, on `a7ac7cb`
+
+**Verdict:** fail
+
+**Findings**
 
 1. "Verification" keeps more of the check on `692aea2` than its verdict and findings: its tally of the criteria and a
    paragraph of what it could not verify.
 
-The repeated check of the record's uncommitted "Verification" on `a7ac7cb`, copied unchanged:
+### Checker report, repeated, on the record's uncommitted Verification after `a7ac7cb`
 
-> **Verdict:** pass
->
-> The last report's one finding is fixed. In `work/2026/11/261121-1922-kit-reaches-projects.md`, "Verification" now
-> keeps only the verdict and the two findings of the check on `692aea2` (lines 204-209). The tally of the criteria and
-> the paragraph of what that check could not verify are gone. The repeated check on `a7ac7cb` is kept the same way,
-> with its verdict and its one finding (lines 211-214).
->
-> **Acceptance criteria**
->
-> 1. Hooks give the kit only in the home, its worktrees, a registered project's folder and its worktrees, with tests:
->    met. This diff does not touch it, and the last check found it met.
-> 2. Registry read from the home's default branch, with one line and the guard's fallback when it cannot be read: met.
->    Unchanged by this diff.
-> 3. Install is one step per host, no project file, the kit's `.claude/settings.json` no longer declares it: met.
->    Unchanged by this diff.
-> 4. `active` comes from the merged chosen items, `refresh` reads the records, with tests: met. Unchanged by this diff.
-> 5. Worker branches from `origin/<default branch>`, the checker's files compare with it, the hub fetches the home:
->    met. Unchanged by this diff.
-> 6. The assessment checks the ignores for the worktrees and the checker's files: met. Unchanged by this diff.
-> 7. Live run in the scratchpad: met. Unchanged by this diff; the run is in the log, lines 173-181.
-> 8. The documents say what holds now and `verify` passes: met. Verification lines 193-202 show every `verify` command
->    passing on `a7ac7cb`, and this diff changes no document.
->
-> - **Intent:** in order
-> - **Scope:** in order
-> - **Comments and documents:** in order
-> - **Gates:** in order
-> - **Verification evidence:** in order. The record lists all seven `verify` commands with their results, including
->   `checks/record.mjs` and `checks/commits.mjs`. The results from `a7ac7cb` still hold for the working tree:
->   - `.prettierignore` excludes `work/`, and no other command reads the record's text.
->   - At `in-progress`, `checks/record.mjs` does not check what "Verification" contains (`checks/record.mjs` lines
->     228-233 and 250-259).
->   - The list covers formatting, lint, types and tests.
-> - **Record:** in order
-> - **Commits:** in order. There is no commit since `a7ac7cb`.
->
-> **Findings**
->
-> none
->
-> **Not verified**
->
-> none
+**Verdict:** pass
+
+The last report's one finding is fixed. In `work/2026/11/261121-1922-kit-reaches-projects.md`, "Verification" now
+keeps only the verdict and the two findings of the check on `692aea2` (lines 204-209). The tally of the criteria and
+the paragraph of what that check could not verify are gone. The repeated check on `a7ac7cb` is kept the same way,
+with its verdict and its one finding (lines 211-214).
+
+**Acceptance criteria**
+
+1. Hooks give the kit only in the home, its worktrees, a registered project's folder and its worktrees, with tests:
+   met. This diff does not touch it, and the last check found it met.
+2. Registry read from the home's default branch, with one line and the guard's fallback when it cannot be read: met.
+   Unchanged by this diff.
+3. Install is one step per host, no project file, the kit's `.claude/settings.json` no longer declares it: met.
+   Unchanged by this diff.
+4. `active` comes from the merged chosen items, `refresh` reads the records, with tests: met. Unchanged by this diff.
+5. Worker branches from `origin/<default branch>`, the checker's files compare with it, the hub fetches the home:
+   met. Unchanged by this diff.
+6. The assessment checks the ignores for the worktrees and the checker's files: met. Unchanged by this diff.
+7. Live run in the scratchpad: met. Unchanged by this diff; the run is in the log, lines 173-181.
+8. The documents say what holds now and `verify` passes: met. Verification lines 193-202 show every `verify` command
+   passing on `a7ac7cb`, and this diff changes no document.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order. The record lists all seven `verify` commands with their results, including
+  `checks/record.mjs` and `checks/commits.mjs`. The results from `a7ac7cb` still hold for the working tree:
+  - `.prettierignore` excludes `work/`, and no other command reads the record's text.
+  - At `in-progress`, `checks/record.mjs` does not check what "Verification" contains (`checks/record.mjs` lines
+    228-233 and 250-259).
+  - The list covers formatting, lint, types and tests.
+- **Record:** in order
+- **Commits:** in order. There is no commit since `a7ac7cb`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
 
 ## Deviations
 
