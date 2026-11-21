@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 38
+model: claude-opus-5-5
 effort: xhigh
 checks:
   - { due: 2026-11-28, what: "The run of verify.yml on the push of this item's merge to `main`, read with `gh run list --branch main --event push`: `verify` on Linux and on Windows, `project / checks` and `personal content` passed, with the commits check over that push's first-parent commits and the patterns over every commit it added." }
@@ -198,7 +198,86 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   - Found while writing the test: in a file's name such as `<address>.md` the pattern of addresses takes the extension
     into the domain, so an allowed address named so is still a finding, which errs toward finding more. The test
     names a folder with the address.
+- Repeated check on `31ca847`, by `honsha:checker`: pass, no finding. Its report ended with a list of the files it
+  read, by absolute paths into the user's folder; the copy below leaves that list out, since the kit must not publish
+  such a path.
 
 ## Verification
 
+On `31ca847`, Windows 11, Node.js 26: `node checks/verify.mjs` passed all 7 commands: Prettier, oxlint, TypeScript,
+153 tests, the plugin validator, `node checks/record.mjs` ("The record work/2026/11/261121-1306-kit-pipeline-gaps.md
+has the shape the rules ask for.") and `node checks/commits.mjs` ("The 5 commits of the branch follow the rules.").
+
+On GitHub, pull request 38, run `44908291743` on `b1249ae`: `verify (ubuntu-latest, Node.js 26)`,
+`verify (windows-latest, Node.js 26)`, `project / checks` and `personal content` passed; the last printed "From
+HONSHA_BASE to HONSHA_HEAD, 4 commits read: none adds what the patterns find." Run `44909078297` on `31ca847`: the same
+four jobs passed, and `personal content` read 5 commits.
+
+### Earlier checker reports
+
+On `b1249ae`, a full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Criterion 6 is met only in part. No test covers an allowed `commits.address` in a file's name (criterion 4 lists that place), or a missing `HONSHA_BASE` (criterion 3 says "either"). `checks/pushed.test.mjs:205-216` and `:241-243` show what is tested. Fix: add both cases to those two tests.
+2. A change outside the boundaries is not declared. The hook now fails on a profile the reader refuses (`checks/pushed.mjs:275-282`, Log entry 4), which the Boundaries rule out, and it is not under Deviations. Fix: declare it under Deviations, or make the hook carry on without the pattern.
+3. The deferred check is missing. The Strategy promises the push run of this item's own merge "declared in `checks` with the work", and `checks` is empty (`work/2026/11/261121-1306-kit-pipeline-gaps.md:17`). Fix: add the `checks` entry.
+
+### Checker report
+
+On `31ca847`, a repeated check of the changes since `b1249ae`, with the record's Verification not yet committed.
+
+**Verdict:** pass
+
+A repeated check of the diff since `b1249ae` (one commit, `31ca847`). All three findings of the last report are fixed:
+
+1. Tests for the two missing cases are now there. An allowed address in a file's name is tested at `checks/pushed.test.mjs:210-218`: the folder `for-<address>/notes.md` is let through in both modes, and without the pattern the count rises to 5. A missing `HONSHA_BASE`, and both variables missing, are tested at `checks/pushed.test.mjs:249-257`.
+2. The hook no longer stops on a profile the reader refuses. `allowedAddress` catches the reader's error and returns null (`checks/pushed.mjs:114-121`). `main()` no longer reads the profile on its own (`checks/pushed.mjs:282-290`). `readProfile` checks the pattern before `new RegExp` runs (`checks/profile.mjs:158-164`), so nothing outside the `try` can throw. The test at `checks/pushed.test.mjs:220-223` tries such a profile in both modes and expects 5 findings, which matches what the commit history holds.
+3. The deferred check is now declared under `checks` (`work/2026/11/261121-1306-kit-pipeline-gaps.md:17-18`).
+
+**Acceptance criteria**
+
+1. Runs on every pull request and push to `main`, and the group of a push is its commit: met, `.github/workflows/verify.yml:10-23`. This diff does not touch it.
+2. The three variables follow the event, and `project` runs on both: met, `.github/workflows/verify.yml:27-30` and `:82-86`. This diff does not touch it.
+3. `--range` over `HONSHA_BASE..HONSHA_HEAD`, or all history on a zero base, by the patterns only. It reports places, never the text, and exits with 1 on a finding or a missing variable: met.
+   - Code: `checks/pushed.mjs:102-106`, `:232-235`, `:275-281` and `:296-304`.
+   - Tests: `checks/pushed.test.mjs:177-203` and `:249-268`.
+4. An allowed address is no finding in a line, a message, a file's name or the identities, in both modes, and another address still is one: met, `checks/pushed.test.mjs:205-224`.
+5. The new job runs once, on Linux, on both events: met, `.github/workflows/verify.yml:64-77`. This diff does not touch it.
+6. Tests cover criteria 3 and 4, that the range mode skips the machine's user, and the hook's own tests: met.
+   - Criteria 3 and 4: `checks/pushed.test.mjs:177-224` and `:239-269`.
+   - The machine's user: `:226-237`.
+   - The hook's tests: `:282-302`.
+7. `services/github/README.md` and `README.md` describe the wiring: met, `services/github/README.md:178-186` and `README.md:83-89`. Neither describes how the hook treats a refused profile, so they still hold after this diff.
+8. `node checks/verify.mjs` passes, and the four jobs pass on the pull request: met for `node checks/verify.mjs` on `31ca847` (Verification). The four jobs are recorded passing on `b1249ae`, run `44908291743`. The run on `31ca847` is not verifiable from here (Not verified).
+
+- **Intent:** in order. Nothing the person said is quoted in the diff or the record.
+- **Scope:** in order. The diff touches only `checks/pushed.mjs`, its test and the record. On a refused profile the hook now behaves as it did before the item, which keeps within the Boundaries.
+- **Comments and documents:** in order.
+- **Gates:** in order.
+  - "the rules name no hosting service": no rule file is in the diff.
+  - "nothing about a user, a user's project or an installation": the test samples are built at run time, at `checks/pushed.test.mjs:208` and `:211`.
+  - "a script comes with its test": `checks/pushed.mjs` changes together with `checks/pushed.test.mjs`.
+- **Verification evidence:** in order. All 7 `verify` commands are recorded passing on `31ca847`, including `node checks/record.mjs` and `node checks/commits.mjs`. They cover formatting (Prettier), lint (oxlint), types (`tsc`) and tests (`node --test`).
+- **Record:** in order.
+- **Commits:** in order.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The pull request's run on `31ca847`: it was still in progress when this check started, so criterion 8's four jobs are recorded only for `b1249ae`.
+- The push path of `.github/workflows/verify.yml` (criteria 1, 2 and 5 on a push): it can only run once the item is merged into `main`. It is declared as the deferred check due 2026-11-28.
+
 ## Outcome
+
+`.github/workflows/verify.yml` runs on every pull request to `main` and on every push to `main`, and the three variables
+of section 14.2 follow the event. On a push, the record's check finds no work branch, the check of commits reads the
+first-parent commits the push added, and the `project` job runs project.yml's path for a push on the kit. A third job,
+`personal content`, runs `node checks/pushed.mjs --range` over the same range, by the patterns of `checks/public.mjs`
+only; both that mode and the hook let through the addresses that `commits.address` allows. The name of the machine's
+user stays with the local hook. The push path first runs on this item's own merge: the deferred check due 2026-11-28.
