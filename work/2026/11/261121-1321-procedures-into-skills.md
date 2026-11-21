@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 39
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -247,8 +247,174 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
 - The repeated check on `09c542e` found the seven fixed and one rule dropped by the fix of the fifth: the size of the
   item of ordinary updates, full if it holds a major upgrade and small otherwise. It is back in `honsha:review`, step
   2, its one place.
+- The second repeated check, on `ed11b1a`, passed. Pull request 38 was merged by then, so the default branch was
+  merged here, `9796c66`, with no conflict: in the README, the GitHub piece and `verify.yml`, git joined the two sides'
+  neighbouring changes. `checks/references.test.mjs` then failed on `checks/pushed.mjs`, whose new comment cited the
+  hosting service's contract by its number; it now names the heading, `c6d97ea`. The verification ran again on
+  `c6d97ea`.
 
 ## Verification
+
+On `c6d97ea`, `node checks/verify.mjs`: all 7 commands passed.
+
+- `prettier --check .`: passed.
+- `oxlint`: passed.
+- `tsc -p .`: passed.
+- `node --test`: passed, 165 tests.
+- `claude plugin validate .`: passed with its warnings.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, 9 commits.
+
+### Checker report, on `833df8f`
+
+A full check.
+
+**Verdict:** fail
+
+**Findings**
+
+1. Two references by number are left in `docs/01-specs/WORKFLOW.md`. Item 2 of "What the piece of a service says"
+   (`:316`) ends "for the guard to refuse (14.3)", and item 5 (`:323`) reads "The wiring of the checks (14.2)". Neither
+   number is a heading any more. `checks/references.test.mjs:69` does not catch this form, so criterion 10 is not met.
+   Fix: name the headings, and widen `numbered`.
+2. Two rules that a session applies stayed only in the workflow, which no session receives. At
+   `docs/01-specs/WORKFLOW.md:155-157`: split work into independent parts without being asked, and reading always fans
+   out. The log (record lines 199-200) says the workflow keeps "that reading always fans out". The strategy's table
+   sends the cases of parallel work, Reading among them, to `honsha:parallel-parts`.
+3. `skills/review/SKILL.md:21` adds "a decision of the installation can except a dependency from the wait". The
+   workflow had no such exception, and the record puts changing or adding a rule out of scope (record line 55).
+   `honsha:dependencies` (`skills/dependencies/SKILL.md:18-20`) states the 7-day wait with no exception, so the two
+   skills disagree. Nothing is declared under "Deviations".
+4. Two moves depart from the strategy's table (record line 116, "Lessons: version, promotion, a full level →
+   `honsha:review`"), which criterion 1 binds:
+   - "One that holds only for a version of a tool names that version" was added to `rules/core.md:45`, although the
+     record also lists the core rules' parts as out of scope (record line 56).
+   - Existing lessons files went to `skills/assessment/SKILL.md:26-28`.
+
+   The log explains both (record lines 201-204), but neither is declared under "Deviations".
+5. Rules are stated in two places. This breaks Documents and the strategy's "Nothing is copied", and
+   `docs/01-specs/WORKFLOW.md:26` says the workflow "states none of them":
+   - A deferred check's outcome is a report linked to the item, and a failed check creates a new item:
+     `docs/01-specs/WORKFLOW.md:202-203` and `skills/review/SKILL.md:25-26`.
+   - A level's budget is raised only by a work item that says why, and the kit takes only reviewed lessons:
+     `docs/01-specs/WORKFLOW.md:228-229` and `:232-233`, and `skills/review/SKILL.md:29-31`.
+   - Ordinary updates come as one work item: `docs/01-specs/WORKFLOW.md:421-422`, `skills/dependencies/SKILL.md:19-20`
+     and `skills/review/SKILL.md:22`.
+   - What an assessment is, a small report item of the home that changes nothing, with the person choosing the items:
+     `docs/01-specs/WORKFLOW.md:462-465` and `skills/assessment/SKILL.md:6-8`.
+6. The log says the lines over 120 characters left by this item's references were wrapped again by hand (record lines
+   227-228). Three lines this item changed are still longer than the 120 characters set in `.prettierrc.json`:
+   `.github/workflows/project.yml:6`, `.github/workflows/verify.yml:5` and `README.md:113`.
+7. `templates/profile.yml:4-5`: `name` and `description` have no comment saying what they hold, as criterion 6 asks of
+   every key.
+
+### Checker report, on `09c542e`
+
+A repeated check of the changes since `833df8f`.
+
+**Verdict:** fail
+
+**Findings**
+
+1. A rule of the workflow is dropped. Before this item, the workflow's Dependencies section said "The updates worth
+   making become one work item, full if it holds a major upgrade and small otherwise." At `833df8f` that clause was in
+   `skills/dependencies/SKILL.md` ("as one work item: full if it holds a major upgrade, small otherwise"). `09c542e`
+   deletes it there and does not move it anywhere.
+   - `skills/review/SKILL.md:21` keeps only "The updates worth making become one work item", and its report sizes
+     items "by the core rules (Sizes)".
+   - The core rules make a major upgrade full, but they do not make a bundle without one small rather than trivial.
+     That difference decides whether the checker runs.
+   - A search of `skills/`, `agents/`, `rules/` and the template finds the clause nowhere.
+   - Log item 5 says the rule now lives in `honsha:review` and does not mention the dropped size.
+   - One-line fix: put the size clause back in step 2 of `skills/review/SKILL.md`.
+
+### Checker report, on `ed11b1a`
+
+A repeated check of the changes since `09c542e`.
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Checker report, on `c6d97ea`
+
+**Verdict:** pass
+
+A repeated check of what changed since `ed11b1a`: the merge `9796c66` (its `--cc` diff) and the fix `c6d97ea`. The
+last report, on `ed11b1a`, passed with no findings, so there is no earlier finding to confirm. Its text is not in the
+record yet; the record's log says it passed, and so does the task.
+
+**Acceptance criteria**
+
+1. Every rule a session applies reaches it, and the workflow keeps reasons, specifications and pointers: met. This
+   diff does not touch the workflow, the rules, the agents or the skills.
+2. `honsha:assessment` holds the reading and the report, and names the files it relies on: met. Not touched by this
+   diff.
+3. `honsha:dependencies` holds an item's rules on dependencies: met. Not touched.
+4. `honsha:review` holds the periodic review: met. Not touched.
+5. `honsha:parallel-parts` is whole and names the worker and the hub: met. Not touched.
+6. `templates/profile.yml` holds every key, and `checks/profile.test.mjs` reads it: met, `checks/profile.test.mjs:109`.
+   Not touched.
+7. `agents/worker.md` names the two skills, the template and `honsha:area-<name>`: met, `agents/worker.md:14`, `:23`,
+   `:32-33`. Not touched.
+8. The record `add` writes names `honsha:assessment`, with a test: met, `hub/projects.mjs:243` and
+   `hub/projects.test.mjs:196`. Not touched.
+9. The kit's profile has the gate on decision logs: met, `.hub/profile.yml:20`.
+10. Headings carry no numbers, every reference names a heading, and a test fails otherwise: met.
+    - The fix: `checks/pushed.mjs:19` now reads `(workflow, Checks on pull requests and on the default branch)` instead
+      of `(workflow, section 14.2)`. That heading is at `docs/01-specs/WORKFLOW.md:327`.
+    - The merged files: every reference in `README.md`, `services/github/README.md` and `.github/workflows/verify.yml`
+      names an existing heading, for example `services/github/README.md:152` and `.github/workflows/verify.yml:5`.
+    - The files the merge took whole from the default branch (`checks/public.mjs`, `checks/public.test.mjs`,
+      `checks/pushed.test.mjs`) contain no reference to either document.
+    - A search outside `work/` finds no reference by number except the test's own samples in
+      `checks/references.test.mjs`.
+11. The small item's example is gone, and the lessons' budget and the guard's move are stated as rules: met. Not
+    touched.
+12. Budgets: met, `checks/budgets.test.mjs:19-28`. Not touched.
+13. The README and the architecture list the new skills and the profile's template: met, `README.md:14`, `:17` and
+    `:115`. The merge kept them.
+14. `LESSONS.md` holds the lesson: met, `LESSONS.md:11`. Not touched.
+15. The live run lists the five skills and the ten steps: met as recorded in the log. The diff touches no skill.
+16. The profile's `verify` passes: met. Verification records all 7 commands passing on `c6d97ea`.
+
+- **Intent:** in order. Nothing the person said is quoted in the diff or in the new log line.
+- **Scope:** in order. The merge is the one the strategy's Risks foresees. The fix `c6d97ea` belongs to criterion 10.
+- **Comments and documents:** in order. The fix changes only the reference in the existing opening comment of
+  `checks/pushed.mjs`, plus its rewrap. The three joined hunks in `README.md`, `services/github/README.md` and
+  `.github/workflows/verify.yml` say what holds now and keep this branch's references by name.
+- **Gates:** in order.
+  - "the rules name no hosting service": no file under `rules/` is in the diff.
+  - "nothing about a user, a user's project or an installation": nothing such is in the diff.
+  - "a script comes with its test": `checks/pushed.mjs` changes only in a comment, and `checks/pushed.test.mjs` came
+    with it in the merge.
+  - "a document of the kit cites no entry of a decision log": the `O10` at `README.md:103` is an open design point of
+    the architecture, not a decision log entry.
+- **Verification evidence:** in order. All 7 commands of `verify` are recorded with results on `c6d97ea`, including
+  `node checks/record.mjs` and `node checks/commits.mjs` (9 commits). The local branch log shows exactly 9 commits
+  after the branch point. Covers formatting (Prettier), lint (oxlint), types (`tsc`) and tests (`node --test`).
+- **Record:** in order.
+  - The new log line matches the diff: no conflict (the local branch log records an automatic merge), the three
+    joined files, and the reference by number in `checks/pushed.mjs` that the fix names.
+  - Verification holds only the commands and their results.
+- **Commits:** in order.
+  - `9796c66` "Merge the default branch, which holds the pipeline changes of item 261121-1306" and `c6d97ea` "Name the
+    heading that the merged check of personal content cited by its number" are each a commit of their own, as
+    `rules/git.md` asks for a merge and a fix.
+  - Each subject is one imperative sentence, and each commit carries `Work-Item: 261121-1321`.
+  - The merge came after a passed check, not between a failed check and its repeated one, as
+    `skills/branch-update/SKILL.md` requires.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The findings of the last report, on `ed11b1a`: the report itself is not yet copied into the record. Only the log
+  line, `work/2026/11/261121-1321-procedures-into-skills.md:250`, and the task say it passed with no findings.
 
 ## Deviations
 
@@ -259,3 +425,11 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   adopts the kit, which is the assessment.
 
 ## Outcome
+
+Every rule of the workflow that a session applies now reaches it: through the core rules, the worker's file, the
+skills `honsha:assessment`, `honsha:dependencies`, `honsha:review` and `honsha:parallel-parts`, or the profile's
+template. The workflow keeps the reasons and the specifications of the kit's own mechanisms, at 32,553 characters
+against 44,724, under a budget of 35,000; it and the architecture are cited by their headings, and a test fails on a
+reference that names no heading or a number. The home's `CLAUDE.md` and documents, and the installation's monthly
+review task, still name sections by number and steps that moved: each changes in its own item after this one is
+merged.
