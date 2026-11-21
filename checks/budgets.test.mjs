@@ -9,8 +9,9 @@ const root = new URL("..", import.meta.url);
  * only by a work item that says why. The core rules and the record template have their own limit, set by what a hook
  * can deliver, in `hooks/hooks.test.mjs`.
  *
- * - The agents' files are read at every item, and a skill whenever its situation comes: what they hold is paid for
- *   each time, so each is kept to what its reader needs.
+ * - The worker's and the checker's files are read at every item, the hub's at the start of every session in a home's
+ *   own folder, and a skill whenever its situation comes: what they hold is paid for each time, so each is kept to what
+ *   its reader needs. The hub's budget is also what `hooks/hooks.test.mjs` counts for it at a hub's start.
  * - The profile's template is read whenever a profile is written or read for what a key holds.
  * - The workflow is read by whoever changes the kit, not by a session at work; nothing else stops its growth, and a
  *   rule that a session applies belongs elsewhere (workflow, Where the rules are).

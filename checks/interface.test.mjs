@@ -93,6 +93,10 @@ test("every script that runs as a command is in the interface, and every command
     assert.ok(text.includes(`\`${script}\``) || listed.some((command) => command.script === script), script);
   }
   for (const { script } of listed) assert.ok(all.includes(script), `${script} does not run as a command`);
+  // A script that the text names, inside the interface or as left out of it, is one the kit has.
+  for (const script of found(/`((?:checks|hub)\/[\w-]+\.mjs)`/g, text)) {
+    assert.ok(all.includes(script), `${script} is named, and does not run as a command`);
+  }
   for (const script of new Set(listed.map((command) => command.script))) {
     const module = await import(new URL(script, root).href);
     const given = listed.filter((command) => command.script === script).map((command) => command.words[0] ?? "");

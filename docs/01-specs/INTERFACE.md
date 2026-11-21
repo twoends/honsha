@@ -1,9 +1,9 @@
 # Interface
 
 What an installation may rely on: the names, commands, templates and shapes of files that its home, its projects,
-their pipelines and the people who run them use. It is the kit's public interface. A document outside the kit names the
-kit only by what this one lists, and cites no section of the kit's other documents (core rules, Documents), since those
-are rewritten as the kit grows; this one changes only as "Changes to the interface" says.
+their pipelines and the people who run them use. It is the kit's public interface, and the one part of the kit that an
+installation's documents may cite (core rules, Documents): the kit's other documents are rewritten as it grows, and
+this one changes only as "Changes to the interface" says.
 
 ## The plugin
 

@@ -169,12 +169,12 @@ Delivery). Code keeps the exception narrow, not trust.
 
 `hub/backlog.mjs` in the kit, run from the home's folder, does both moves:
 
-- `add <project> <file>` captures a record. It reads the registry from the home's default branch after a fetch, and
+- `add` captures a record. It reads the registry from the home's default branch after a fetch, and
   refuses a project that is not there, a file that is not a record of that project in the state `idea`, `ready` or
   `dropped` and named `<id>-<slug>.md`, and a record the backlog holds already. It commits the file in a temporary
   worktree of the default branch's tip, with the trailer `Backlog: <id>`, and pushes it before it returns, so that the
   capture is on the hosting service and the person does nothing for it.
-- `take <project> <id>` removes the record in the same way when the item starts, and prints it for the session that
+- `take` removes the record in the same way when the item starts, and prints it for the session that
   creates the item in its project.
 
 Neither touches the home's working tree. When a push is refused because the default branch moved in the meantime, the
