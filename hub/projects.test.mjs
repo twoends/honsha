@@ -192,6 +192,8 @@ test("add commits the entry and the assessment's record on the assessment's bran
   ]);
   assert.match(show(dir, branch, file), /^type: report$/m);
   assert.match(show(dir, branch, file), /^state: ready$/m);
+  // The session that runs the assessment learns its procedure from the record, which names the skill that holds it.
+  assert.match(show(dir, branch, file), /The procedure is the skill `honsha:assessment`\./);
   assert.deepEqual(recordProblems(dir, branch, file), []);
 
   const again = run(["add", "example-shop", "example-owner/example-shop", folder], { home: dir, host, now });

@@ -11,8 +11,9 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 - **Channels:** a messaging app for capture, quick questions, approvals and notifications; the Claude app and a board
   page for everything longer.
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
-- **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own.
-  The files are the source of truth, not the query engine: questions go through a derived index (architecture, Files and index).
+- **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own. The
+  files are the source of truth, not the query engine: questions go through a derived index (architecture, Files and
+  index).
 - **Outputs:** branches and pull requests, on the service that hosts the repositories, which each installation
   chooses (workflow, The hosting service). Sessions never merge (architecture, Security).
 - **Built from:** native Claude Code features first. Custom code is limited to a scheduler, an index and a board, and to
@@ -72,7 +73,7 @@ The template, shared by every installation. Indicative layout:
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
 rules/                 the always-on rules, in parts of one topic each
-skills/                workflow, triage, radar, status, one pack per area, the worker's situational procedures
+skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review
 agents/                worker, reader, checker
 hooks/                 session and checker start; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
@@ -94,8 +95,8 @@ work/                  the kit's own work records
   `--plugin-dir`, as the kit's README says.
 - The manifests carry no `version`, so an installation that is updated moves to the repository's latest commit; with
   one, it would stay on its copy until the version changes (O10; architecture, Open design points).
-- What a piece of `services/<name>/` holds is the contract of a service's piece (workflow, The hosting service); the wiring of the checks
-  sits where its service reads it.
+- What a piece of `services/<name>/` holds is the contract of a service's piece (workflow, The hosting service); the
+  wiring of the checks sits where its service reads it.
 - The plugin needs only Node.js to run: no hook and no check imports a package. The formatter, the linter and the
   type checker of the kit's own checks are development dependencies in `package.json`, at exact versions, installed
   from the lockfile without their install scripts. An installation of the plugin does not need them.
@@ -103,12 +104,12 @@ work/                  the kit's own work records
 - It is itself a registered project: changes to it are work items like any other.
 - An area pack is written only when a real work item needs it. A pack is the skill `area-<name>` of the kit,
   invoked as `honsha:area-<name>`.
-- A session in a project cannot read the kit's files without a permission, because they lie outside the project.
-  What every session needs is therefore put into its context when it starts: the core rules, in parts of one topic
-  each, and the record template, each file by a hook of its own, since the platform caps each hook's output at
-  10,000 characters and replaces a longer one with a file path and a short preview. What a part near that cap, or a
-  full total, calls for is said with the places a rule can go (workflow, Where the rules are). The checker, a subagent, receives the same files
-  when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
+- A session in a project cannot read the kit's files without a permission, because they lie outside the project. What
+  every session needs is therefore put into its context when it starts: the core rules, in parts of one topic each, and
+  the record template, each file by a hook of its own, since the platform caps each hook's output at 10,000 characters
+  and replaces a longer one with a file path and a short preview. What a part near that cap, or a full total, calls for
+  is said with the places a rule can go (workflow, Where the rules are). The checker, a subagent, receives the same
+  files when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
   `home` names (workflow, Lessons).
 
@@ -117,7 +118,7 @@ work/                  the kit's own work records
 One per user, private.
 
 ```
-registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, Assessing a project)
+registry.yml           projects: name, repository, folder on each host, state, assessment; written by hub/projects.mjs (workflow, Joining an installation)
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, Decisions)
@@ -148,9 +149,10 @@ CLAUDE.md              short; names the profile and anything truly project-speci
 .claude/rules/         project-specific rules, scoped by path
 ```
 
-The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the
-default branch, while the parts of a work item start from the item's branch (workflow, Branches of parallel parts). The declaration of the marketplace is the same in every project and on every host (architecture, Kit); the piece of
-the hosting service gives its source.
+The project's settings set `worktree.baseRef` to `"head"`. The platform otherwise starts a new worktree from the default
+branch, while the parts of a work item start from the item's branch (workflow, Branches of parallel parts). The
+declaration of the marketplace is the same in every project and on every host (architecture, Kit); the piece of the
+hosting service gives its source.
 
 The declaration makes the marketplace known; each clone of a project installs the plugin once, with
 `claude plugin install honsha@honsha --scope project`, and the plugin is active from the next session. The command
@@ -216,8 +218,8 @@ board. Both limits are settings in the home.
 
 ### Ask
 
-- **Status and history.** The hub queries the index (architecture, Files and index) and reads only the records it returns. Nothing is
-  indexed by hand.
+- **Status and history.** The hub queries the index (architecture, Files and index) and reads only the records it
+  returns. Nothing is indexed by hand.
 - **Operations questions** ("how did sales go last week"). The hub starts a read-only session in the project, which uses
   the data sources and playbooks named in the profile. The answer is stored as a report record.
 

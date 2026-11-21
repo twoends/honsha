@@ -42,6 +42,6 @@ Work stops, the record's state becomes `blocked` and the person is told why, whe
 ## Lessons
 
 When a tool is misused or the person corrects an approach, the correct action is written down as a short preventive
-rule, with no history. A lesson about this repository goes into the file the profile names under `lessons`, in the
-same pull request. A lesson about a technology or about the machine is reported to the person: it belongs outside
-the project.
+rule, with no history; one that holds only for a version of a tool names that version. A lesson about this repository
+goes into the file the profile names under `lessons`, in the same pull request. A lesson about a technology or about the
+machine is reported to the person: it belongs outside the project.

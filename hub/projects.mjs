@@ -1,5 +1,5 @@
 // The registry of the projects of an installation, and the moves of a project between its states
-// (workflow, Assessing a project). Run from the home's folder:
+// (workflow, Joining an installation). Run from the home's folder:
 //
 //   node <kit directory>/hub/projects.mjs add <name> <repository> <folder> [--assessment <id>]
 //   node <kit directory>/hub/projects.mjs choose <name>
@@ -48,7 +48,7 @@ const STATES = ["assessing", "adopting", "active"];
 export const NAME = /^[a-z0-9][a-z0-9-]*$/;
 const ID = /^\d{6}-\d{4}$/;
 const KIT = new URL("..", import.meta.url);
-// A report merged before its home ran as a project stays where it was written (workflow, Projects with earlier documents).
+// A report merged before its home ran as a project stays where it was written, as a project's earlier documents do.
 const RECORD_FOLDERS = ["work", "reports"];
 
 /** @typedef {{ name: string, repository: string, paths: Record<string, string>, state: string, assessment: string }} Project */
@@ -114,7 +114,7 @@ export function parseRegistry(text) {
  * @param {Project[]} projects
  */
 export function formatRegistry(projects) {
-  const lines = ["# Written by the kit's hub/projects.mjs (workflow, Assessing a project).", "projects:"];
+  const lines = ["# Written by the kit's hub/projects.mjs (workflow, Joining an installation).", "projects:"];
   for (const project of projects) {
     lines.push(`  - name: ${project.name}`, `    repository: ${project.repository}`, "    paths:");
     for (const [host, folder] of Object.entries(project.paths)) lines.push(`      ${host}: ${quote(folder)}`);
@@ -240,7 +240,7 @@ export function assessmentRecord({ id, name, date }) {
       "requested-by": "person",
     },
     {
-      Intent: `> Add ${name} to the projects.\n\nWritten by \`hub/projects.mjs add\` on ${date}. The procedure is in the workflow (workflow, Assessing a project).`,
+      Intent: `> Add ${name} to the projects.\n\nWritten by \`hub/projects.mjs add\` on ${date}. The procedure is the skill \`honsha:assessment\`.`,
     },
   );
 }
@@ -266,7 +266,7 @@ export function moveRecord({ id, date, home, title, requestedBy, command, outcom
       "requested-by": requestedBy,
     },
     {
-      Intent: `> \`hub/projects.mjs ${command}\`\n\nThe command, run on ${date}. The script wrote this record and the change to \`${REGISTRY}\` (workflow, Assessing a project).`,
+      Intent: `> \`hub/projects.mjs ${command}\`\n\nThe command, run on ${date}. The script wrote this record and the change to \`${REGISTRY}\` (workflow, Joining an installation).`,
       Verification: "`hub/projects.mjs check` on the registry this branch holds: passed.",
       Outcome: outcome.join(" "),
     },

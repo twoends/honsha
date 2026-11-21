@@ -192,6 +192,43 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   reworded. `hooks/hooks.test.mjs` read the record's front matter from the workflow by the heading "4.1 Front
   matter", and now reads it by its name. `checks/references.test.mjs` is new: it fails on a reference that names no
   heading of its document, on a reference by number and on a numbered or repeated heading.
+- The first commit changed the README, the GitHub piece and `verify.yml` after all, since their references had to
+  change with the others; pull request 38 changes them too, and a conflict is resolved when the default branch is
+  merged here.
+- The moves, the second commit. Where each part of the workflow went:
+  - Parallel work: the test, the two cases and the limits to `honsha:parallel-parts`, whose description now names the
+    hub too; the workflow keeps why, and that reading always fans out.
+  - Lessons: how a full level names its files, to `hooks/lessons.mjs`, whose opening comment holds it; what a full
+    level calls for and the review of a lesson tied to a version, to `honsha:review`; that such a lesson names its
+    version, to the core rules (Lessons), since every session may write one; existing lessons files, to
+    `honsha:assessment`, step 6. The workflow keeps the levels, the loading, the budget and why promotion is reviewed.
+  - Profile: the example and every key's bullet, to `templates/profile.yml`, with `secret`, `legacy` and the default
+    kinds from the measures; the workflow keeps what a project may not customise.
+  - Projects with earlier documents: to the template's `legacy` and `honsha:assessment`, step 6; the section is gone,
+    and `hub/projects.mjs` no longer cites it.
+  - Example of a small item: deleted.
+  - The guard: the paths and shells it follows, to `hooks/guard.mjs`, whose opening comment holds them.
+  - Decisions: that the kit's documents cite no entry of a log, to a gate of `.hub/profile.yml`.
+  - Dependencies: the rules of an item to `honsha:dependencies`; the radar's cadence and who starts the review to
+    `honsha:review`; the workflow keeps why.
+  - Upkeep review: to `honsha:review`, which also holds the steps that the installation's monthly task wrote out; the
+    workflow keeps why.
+  - Measures: the default kinds, to the template.
+  - Assessing a project: what is read and the report, to `honsha:assessment`, which points to the template, the
+    hosting service's piece and `honsha:dependencies` instead of other sections; the order that puts the kit's
+    declaration first moved there from the state `adopting`. The section is now "Joining an installation", with the
+    states, the scripts and why; `hub/projects.mjs`, the architecture and the GitHub piece cite it by that name, and
+    the record `add` writes names the skill.
+  - Deferred checks: the periodic review lists those past their date, until an installation has a scheduler.
+- `agents/worker.md` points to the profile's template, names an area's pack as a skill, and says when to invoke
+  `honsha:assessment` and `honsha:dependencies`: 4,800 characters. The workflow went from 44,724 to 32,553 characters;
+  its budget is 35,000. The skills: assessment 4,052, review 4,061, parallel parts 1,884, dependencies 1,733; the
+  template 3,867.
+- Lines over 120 characters that the first commit's references left, and those of this commit, were wrapped again by
+  hand: Prettier keeps prose as written.
+- Live run on the working tree before this commit: in a new repository, `claude -p --plugin-dir` on this checkout
+  listed `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts` and
+  `honsha:review`, and after invoking `honsha:assessment` named its ten steps, from "Profile" to "Open points".
 
 ## Verification
 

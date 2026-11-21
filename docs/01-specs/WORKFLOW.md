@@ -22,25 +22,28 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 ## Where the rules are
 
 The rules a session follows while it works are the [core rules](../../rules/core.md), the files of `rules/` in the kit,
-which every session of a project receives when it starts, together with the record template. This document points to
-them instead of repeating them, and keeps what they do not say: the reasons, the profile, the derived views, the
-contract of a hosting service, decisions, dependencies and the upkeep review.
+which every session of a project receives when it starts, together with the record template. A rule that only some
+sessions apply reaches them through a skill of the kit, a template or an agent's file. This document states none of
+them: it points to them, and keeps what no session needs while it works, the reasons, and the specifications of the
+kit's own mechanisms, for whoever changes the kit.
 
 A new rule goes where it costs least to hold:
 
 - **a script,** when a script can check it: `checks/` in the kit, run by the worker in every project, or a command of
   the project's `verify` list. A script checks every time and costs no context;
-- **a skill** of the kit, `skills/<name>/SKILL.md`, when only some situations need it: the worker's file names the
-  skill and when to invoke it, and the skill's text enters the context only then;
+- **a skill** of the kit, `skills/<name>/SKILL.md`, when only some situations need it: its description says when it
+  applies, the worker's file names the skills an item calls for, and the skill's text enters the context only then;
+- **a template** of the kit, `templates/`, for the shape of a file a session writes: the record, which every session
+  receives, and the profile;
 - **the core rules,** in the part of its topic, when every session needs it while it works. The checker receives them
   too, when it starts;
 - **an agent's file,** for that agent's own procedure.
 
 A document that reaches its budget (`checks/budgets.test.mjs`) is answered by such a move, not by shortening its
 sentences: a shortened rule can lose a condition, and nothing shows it. The core rules have two limits, in
-`hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context
-any hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook.
-The total a session receives at start, the lessons counted at their budget (workflow, Lessons), is a choice of what every
+`hooks/hooks.test.mjs`. Each part reaches a session by a hook of its own, and the platform keeps out of the context any
+hook's output over 10,000 characters: a part that nears that limit is split into two topics, each with its hook. The
+total a session receives at start, the lessons counted at their budget (workflow, Lessons), is a choice of what every
 session pays: it is raised by a work item that says why, or answered by moving a rule that only some situations need
 into a skill.
 
@@ -56,9 +59,9 @@ into a skill.
 
 ### Sizes
 
-The three sizes, what each needs before work starts and the cases that are always full are in the core rules (Sizes);
-a profile adds cases under `always-full` (workflow, Profile). The size is proposed when the item is created and the person can
-change it. The effort of recording follows the size, so that a small change does not carry the paperwork of a large
+The three sizes, what each needs before work starts and the cases that are always full are in the core rules (Sizes); a
+profile adds cases under `always-full` (workflow, Profile). The size is proposed when the item is created and the person
+can change it. The effort of recording follows the size, so that a small change does not carry the paperwork of a large
 one.
 
 ### States
@@ -74,15 +77,16 @@ one.
 | `dropped`           | Abandoned                                                   | Home, `backlog/<project>/`  |
 
 "In review" is not a state: it is a `done` record on a branch whose pull request is open. Starting an item moves its
-record from the home's backlog into a new branch of the project (workflow, The backlog). A report's project is the home: its
-record follows the same states on a branch of the home.
+record from the home's backlog into a new branch of the project (workflow, The backlog). A report's project is the home:
+its record follows the same states on a branch of the home.
 
 ---
 
 ## The record
 
 One Markdown file, whose path and branch are named in the core rules (Work items). The identifier is a time in UTC so
-that two branches cannot produce the same one; folders by year and month keep each folder small (architecture, Files and index).
+that two branches cannot produce the same one; folders by year and month keep each folder small (architecture, Files and
+index).
 
 ### Front matter
 
@@ -138,7 +142,8 @@ extended instead.
    A repeated check reads only what changed (`agents/worker.md`, Verification): a full read of a large branch finds
    something new each time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
-   branches). The checks that are wired to the hosting service run on the pull request (workflow, Checks on pull requests and on the default branch).
+   branches). The checks that are wired to the hosting service run on the pull request (workflow, Checks on pull
+   requests and on the default branch).
 8. **Merge.** The person reviews and merges (workflow, Merging). A project whose profile says that merging deploys is
    deployed by that merge.
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
@@ -147,31 +152,10 @@ A trivial item goes from step 3 to step 5.
 
 ### Parallel work
 
-Work is split and run in parallel whenever its parts are independent. Nobody has to ask for it.
-
-**The test.** Parts are independent when all of these hold:
-
-1. no part needs another part's result;
-2. no two parts change the same files, the same schema or the same configuration;
-3. each part can be verified on its own;
-4. between two separate requests: their pull requests can be merged in either order.
-
-Parts that fail the test run in sequence. A split is never forced: the gain exists only where no coordination is
-needed.
-
-**Where it applies.**
-
-| Case                 | What happens                                                                                                                                                                                                                                                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Parts of one request | One request is one work item and one pull request, even when its parts could land separately. The worker runs the independent parts in separate worktrees, on local branches cut from the item's branch, and merges them into it (workflow, Branches of parallel parts). Verification and the checker run once, on the integrated result |
-| Separate requests    | Each is its own work item, with its own worker, branch and pull request. Two requests run at the same time when they pass the test against each other; otherwise the later one waits                                                                                                                                                     |
-| Reading              | Searching, exploring, researching and reviewing always fan out                                                                                                                                                                                                                                                                           |
-
-**Limits.** `max-workers` in the home's settings caps the workers on a host. `parallel.max` in a profile caps the
-workers in a project. `parallel.exclusive` names resources that only one worker may use at a time, such as a test
-database or a development server; a worker that needs one waits its turn. Work beyond a limit is queued, not dropped.
-
-**Record.** The item's log says which parts ran in parallel and how they were integrated.
+Work is split and run in parallel whenever its parts are independent. Nobody has to ask for it. A split is never
+forced: the gain exists only where no coordination is needed. Searching, exploring, researching and reviewing always
+fan out. The test, the limits, and how parts and separate requests run are in the skill `honsha:parallel-parts`, which
+the worker invokes before it splits an item and the hub before it starts an item in a project where another runs.
 
 ### The backlog
 
@@ -213,9 +197,10 @@ stops instead of guessing leaves a choice to the person that only the person can
 
 ## Deferred checks
 
-An acceptance criterion that only a future event can verify does not keep the item open. It is written in `checks`
-with a date and what to look at. The scheduler runs it on that date. The outcome is a report in the home, linked to
-the item. A failed check creates a new work item.
+An acceptance criterion that only a future event can verify does not keep the item open. It is written in `checks` with
+a date and what to look at. The scheduler runs it on that date; until an installation has one, the periodic review lists
+the checks past their date (`honsha:review`). The outcome is a report in the home, linked to the item. A failed check
+creates a new work item.
 
 ---
 
@@ -239,84 +224,22 @@ once:
   its project's lessons, and is told why when its profile has a `stack`. A setting that names no folder on the
   machine is named in the same way.
 - **Budget.** Each level gives at most 4,000 characters, about fifteen lessons. A level with more gives the lessons
-  that fit and names each file it left in part, with its path, giving fewer lessons to make room for the names; only
-  a level whose names cannot fit even without lessons counts the files it cannot name. The session tells the person.
-  A full level is answered by this section's other moves: a lesson of general worth is promoted to the kit, one tied
-  to a version is reviewed at the tool's upgrade, one that no longer holds is deleted. The budget is raised only by a
-  work item that says why.
+  that fit and names the files it left in part (`hooks/lessons.mjs` says how), and the session tells the person. A
+  level that fills is answered at the periodic review (`honsha:review`); its budget is raised only by a work item that
+  says why.
 - **Technology lessons are the cross-project memory.** A lesson learned on one project is available to every other
   project that declares the same technology, from the next session.
-- **Version.** A lesson tied to a version says so in its text ("with version 2.0 of …"). When the radar records an
-  upgrade of that tool, its lessons are reviewed.
-- **Promotion.** Technology and host lessons accumulate in the home, which is personal. One that has proved generally
-  valid can be proposed for the kit through a work item; the kit only receives reviewed lessons.
-- **Existing files.** A project that already has a lessons file keeps it. Entries in it that are about a technology or
-  a host are moved to the right level when the project adopts this workflow.
+- **Promotion.** Technology and host lessons accumulate in the home, which is personal, so the kit receives one only
+  once it has proved generally valid and been reviewed, through a work item on the kit.
 
 ---
 
 ## Profile
 
-`.hub/profile.yml` in each project. Indicative content:
-
-```yaml
-name: example-project
-description: One line on what the project is.
-language: en # documents and records; English when omitted
-stack: [node, postgres, docker]
-default-branch: main
-merge-deploys: true
-public: false
-areas:
-  backend: { paths: ["src/**"] }
-  deploy: { paths: ["deploy/**", ".github/**"] }
-  content: { paths: ["prompts/**"] }
-verify:
-  - npm run check
-gates:
-  - tests added or updated
-  - no breaking change without approval
-always-full:
-  - "db/migrations/**"
-commits:
-  address: '@example\.org$' # the author and committer addresses of every commit must match
-parallel:
-  max: 2 # workers at once in this project
-  exclusive: [integration-db] # resources only one worker may use at a time
-lessons: MEMORY.md
-data:
-  - { name: metrics, kind: postgres-readonly, secret: EXAMPLE_RO_URL }
-playbooks:
-  - docs/playbooks/weekly-metrics.md
-legacy:
-  - docs/old-worklogs
-```
-
-- `language` sets the language of the project's documents and records (core rules, Work items).
-- `public: true` says that the project's repository is public, which the kit cannot learn from a hosting service: its
-  records restate the request and quote nothing the person said (core rules, The record). A profile without it is
-  private.
-- `stack` lists the technologies whose lessons the project's sessions load (workflow, Lessons).
-- `areas` maps each area of the project to its paths; an item's areas are proposed from it (workflow, Procedure). An area named
-  in a record's `areas` can have a rule pack: the skill `honsha:area-<name>`. A session that works on the item loads
-  the pack of each of its areas before it changes anything (`agents/worker.md`). An area without a pack has no extra
-  rules.
-- `parallel` sets how many workers may run in the project at once and which resources cannot be shared (workflow, Parallel work).
-- `lessons` names the file, inside the project, that holds the project-level lessons only. The file name is the
-  project's choice.
-- `legacy` lists folders with documents from before the project adopted this workflow (workflow, Projects with earlier documents).
-- `secret` is the name of a secret on the host, never its value.
-- `verify` is written as a list with one command on each line: the kit's scripts read no other form. Each command
-  runs in the default shell of the machine.
-- `verify` is expected to cover four things, with the tools of the project's own stack: formatting, lint, types where
-  the language has them, and tests. One command may cover several, as `npm run check` does in the example. A project
-  that leaves one out says why in a comment beside the list. The checker reports what the list does not cover
-  (`agents/checker.md`).
-- `commits.address` is a regular expression that the author and committer addresses of every commit on a work branch
-  must match. A profile without it sets no rule on addresses.
-
-Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
-record format are not customised.
+`.hub/profile.yml` in each project. The template `templates/profile.yml` holds every key, with what it holds;
+`checks/profile.mjs` reads the keys the kit's scripts use, and refuses a form it cannot read. Per-project customisation
+is limited to this file and to the project's own rules. The procedure, sizes, states and record format are not
+customised.
 
 ---
 
@@ -326,95 +249,6 @@ record format are not customised.
 - **Waiting for the person:** records in `awaiting-approval` or `blocked`, and open pull requests.
 - **History:** `done` records on default branches, plus verdicts and reports in the home.
 - **Measures:** counts and durations by size, area and model, from front matter.
-
----
-
-## Projects with earlier documents
-
-A project may already have specifications or work logs in another form when it adopts this workflow. They stay where
-they are, unchanged, and are listed under `legacy` in the profile so that history questions can read them. New work
-follows this workflow from the day of adoption. Nothing is converted.
-
----
-
-## Example: a small item
-
-```markdown
----
-id: 261116-1432
-title: Export orders as CSV
-project: example-project
-type: change
-size: small
-kind: feature
-state: done
-areas: [backend]
-created: 2026-11-16
-updated: 2026-11-16
-requested-by: person
-source: null
-pr: 212
-model: claude-opus-5-5
-effort: high
-checks:
-  - { due: 2026-11-20, what: "A full month of orders opens correctly in a spreadsheet" }
----
-
-## Intent
-
-> let me download the orders list as a CSV file
-
-## Acceptance criteria
-
-- The orders page has a download button that returns the current filter as CSV.
-- Amounts and dates in the file use the same format as on the page.
-
-## Strategy
-
-Reuse the query behind the orders page, stream the rows as CSV, add one unit test for the formatting and one for an
-empty result.
-
-## Log
-
-- Added the CSV endpoint on top of the existing orders query.
-- Added the download button to the orders page.
-- Added tests.
-
-## Verification
-
-- `node <kit directory>/checks/record.mjs`: passed.
-- `node <kit directory>/checks/commits.mjs`: passed.
-- `npm run check`: passed.
-
-### Checker report
-
-**Verdict:** pass
-
-**Acceptance criteria**
-
-1. A download button returns the current filter as CSV: met, `src/orders/export.ts`.
-2. Amounts and dates use the page's format: met, `src/orders/format.ts`.
-
-- **Intent:** in order.
-- **Scope:** in order.
-- **Comments and documents:** in order.
-- **Gates:** in order.
-- **Verification evidence:** in order; `npm run check` covers formatting, lint, types and tests.
-- **Record:** in order.
-- **Commits:** in order.
-
-**Findings**
-
-none
-
-**Not verified**
-
-none
-
-## Outcome
-
-Orders can be downloaded as CSV with the active filter. One deferred check on a full month of real data.
-```
 
 ---
 
@@ -460,9 +294,9 @@ conflict that cannot be resolved inside the scope stops the work, as any work be
 
 ### Branches of parallel parts
 
-How the parts of an item (workflow, Parallel work) get their worktrees and branches, and how they are merged back, is in the
-kit's skills `honsha:parallel-parts` and `honsha:branch-update`, which the worker invokes when it splits the work and
-when it merges the default branch.
+How the parts of an item (workflow, Parallel work) get their worktrees and branches, and how they are merged back, is in
+the kit's skills `honsha:parallel-parts` and `honsha:branch-update`, which the worker invokes when it splits the work
+and when it merges the default branch.
 
 ---
 
@@ -497,9 +331,9 @@ anywhere, a person's computer included. The wiring of a service makes them run o
 default branch. It meets this contract.
 
 1. **When.** On every pull request to the default branch: when it is opened, and at every push to its branch. And on
-   every push to the default branch itself, which takes the merges and the backlog's direct commits (workflow, The backlog):
-   those commits pass through no pull request, so they are checked there. Every push gets its own run, since each
-   checks only the commits it added.
+   every push to the default branch itself, which takes the merges and the backlog's direct commits (workflow, The
+   backlog): those commits pass through no pull request, so they are checked there. Every push gets its own run, since
+   each checks only the commits it added.
 2. **What it runs.** First the kit's checks, from the kit's default branch, or from the branch under check in the kit's
    own repository: the check of the record, on a pull request only, since it belongs to a work branch; the check of the
    commits, and the registry's check where the project's root holds a registry. Then the `verify` commands, as the
@@ -518,23 +352,21 @@ default branch. It meets this contract.
 6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
 
 In the kit, `node checks/verify.mjs` runs the `verify` list of a profile; `node checks/commits.mjs` reads the three
-variables, also when they name the default branch (workflow, The backlog), and `node checks/record.mjs` reads `HONSHA_BRANCH`.
+variables, also when they name the default branch (workflow, The backlog), and `node checks/record.mjs` reads
+`HONSHA_BRANCH`.
 
 ### The guard
 
 - A hook of the kit refuses four kinds of shell command in a session: a push to the default branch, a forced push, a
   push that skips the repository's hooks (`--no-verify`), and a command that merges a pull request. The first three
   are plain git and hold on any service. The fourth comes from the `merge-commands.json` of each service's piece.
-- The backlog's script (workflow, The backlog) pushes to the default branch from inside the script, the one way there. A push to
-  the default branch typed in a session is still refused.
+- The backlog's script (workflow, The backlog) pushes to the default branch from inside the script, the one way there. A
+  push to the default branch typed in a session is still refused.
 - It matches the text of a command. It stops a mistake. It is not a boundary against a session that was manipulated, and
   a command hidden in a script gets past it: what holds against that is protection on the hosting service, where the
   service gives it.
-- It judges a push in the session's folder, or in another repository's when the line begins by moving there for sure
-  (`cd <folder> && …`, in PowerShell also `;`), to a path the shell cannot read as another folder, and holds after that
-  move only programs that cannot move a shell, such as `git`. Such a path holds `..` only at the start of a relative
-  path. In Bash it is absolute or its first part is `.` or `..`; on Windows, where Git Bash may write the session's
-  folder through one of its mounts, it holds no `..`. Any other line is judged in the session's folder, so that a line
+- It judges a push in the session's folder, or in another repository's when the line begins by moving there in a way
+  it can be sure of, which `hooks/guard.mjs` names. Any other line is judged in the session's folder, so that a line
   it cannot follow lets through nothing it would refuse there.
 
 ---
@@ -557,8 +389,8 @@ its own rules. What the checker reviews of them is in `agents/checker.md`.
   identifier is never reused for the same reason.
 - A rule stated twice drifts: one copy is changed and the other is not. The second document points to the first. A
   record that copies another document grows with every item and says nothing new.
-- The records' own rules and a project's earlier documents have their own sections (workflow, The record; Projects
-  with earlier documents).
+- The records' own rules are given with the record (workflow, The record); a project's earlier documents are listed
+  under `legacy` in its profile (`templates/profile.yml`).
 
 ---
 
@@ -575,33 +407,19 @@ know the current rules.
   into the decision log of the home, one entry each.
 - **The log holds only decisions in force,** as the core rules say for every document (Documents). A later choice
   rewrites the entry it changes, or deletes it.
-- **The current rules are read from the specifications,** never from a log. The kit's documents cite no entry of a
-  log: they state the rule, with its reason in a few words where the reason helps.
+- **The current rules are read from the specifications,** never from a log, so a document states a rule, with its
+  reason where the reason helps, instead of citing an entry; for the kit's own documents a gate of its profile checks
+  it.
 
 ---
 
 ## Dependencies
 
-The same in every project that has dependencies. A project adds to it only in its own rules.
-
-- **Pinned.** Every dependency is at an exact version, with the lockfile in the repository, and is installed from the
-  lockfile, without install scripts where the package manager can turn them off.
-- **Known vulnerabilities are looked for on any service.** At every review below, and in every work item that changes
-  the lockfile, the package manager's own vulnerability report runs. Where the hosting service offers alerts on
-  vulnerable dependencies, they are switched on as a further stop between reviews; the piece of the service says how.
-  Its automatic pull requests stay off: a change that is not a work item has no record, and its commits fail the check
-  of a work branch.
-- **A fix of a known vulnerability goes in at once.** When a report or an alert names a dependency, a work item starts
-  the same day, with the version that fixes it as soon as that version is out. No waiting period applies. Its size
-  follows the core rules (Sizes): a major upgrade is full, and its approval is asked the same day.
-- **Ordinary updates wait and come on a cadence.** Each direct dependency of a project is covered by a radar entry of
-  the installation, with a review date. At the review, the outdated dependencies are listed with the package manager.
-  The updates worth making become one work item, full if it holds a major upgrade and small otherwise. A version is
-  taken only when it was released at least 7 days earlier, so that a release withdrawn or found compromised in its
-  first days is not taken.
-- **Who.** The review is started on its date by the scheduler where an installation has one; until then, by the
-  person or by a session asked to. An update worth making ends in a work item and a pull request that the person
-  merges; a review that finds none moves the review date.
+A dependency is code the project runs without having written it. So it is pinned, so that a build installs what was
+checked; its known vulnerabilities are looked for and fixed at once; and any other new version waits a few days, so
+that a release withdrawn or found compromised early is not taken. The rules are in the skill `honsha:dependencies`,
+which a work item invokes when it changes a dependency or answers a vulnerability report. Ordinary updates come
+together from the periodic review (`honsha:review`), as one work item, so that they do not interrupt other work.
 
 ---
 
@@ -609,15 +427,8 @@ The same in every project that has dependencies. A project adds to it only in it
 
 Documents and logs grow by small additions, each reasonable on its own: a rule restated where it is needed, a
 paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
-working, so a review on a date looks for it.
-
-- **When.** On the same date as the radar review (workflow, Dependencies).
-- **What.** The documents and logs of the kit, of the home and of each project are read for duplication, stale text
-  and size; the core rules and the agents' files for rules that could move to a script or a skill (workflow, Where the rules are); and the
-  measures (workflow, Measures) for items that touched more existing files than their kind expects.
-- **Result.** The findings become one work item.
-- **Who.** The review is started by the scheduler where an installation has one; until then, by a scheduled task of
-  the installation, which reports its findings and changes nothing.
+working, so a review on a date looks for it, together with the radar's dates, the dependencies, the deferred checks,
+the lessons and the measures. What it reads and how it reports are in the skill `honsha:review`.
 
 ---
 
@@ -632,10 +443,9 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
 - **Intervals.** Agent work: created to delivered, less the wait for approval. Waiting for approval: strategy to
   approval. Review: delivered to merged.
 - **Size.** Commits; lines added and removed; existing files changed and new files added, records left out.
-- **Kind.** Chosen with the size, from the profile's `kinds`, each with the most existing files a change of that
-  kind is expected to touch. A project whose profile has none uses `feature: 10`, `fix: 5`, `upkeep: 5`,
-  `change: 10`. New files are not counted: a capability added in its own files is the shape that stays easy to
-  change.
+- **Kind.** Chosen with the size, from the profile's `kinds`, each with the most existing files a change of that kind is
+  expected to touch, or the defaults the profile's template names. New files are not counted: a capability added in its
+  own files is the shape that stays easy to change.
 - **Sessions.** Where the platform's session files are on the machine, each item also gets the tokens by class and by
   model, and the active minutes, of the sessions and subagents that worked on it. A response belongs to an item by
   the branch `work/<id>-<slug>` it was on; on no work branch, in the project's folder, by the one item whose window,
@@ -647,18 +457,18 @@ but the kind. `node checks/measures.mjs` in the kit prints them; it is a report 
 
 ---
 
-## Assessing a project
+## Joining an installation
 
-An assessment reads a project against the kit's rules and proposes the work that would close each gap. It changes
-nothing in the project: it is a small report item of the home (workflow, Types), and the person chooses which of its
-proposed items start.
+Every project that joins an installation is assessed first: an assessment reads the project against the kit's rules
+and proposes the work that would close each gap. It is a small report item of the home (workflow, Types) and changes
+nothing in the project; the person chooses which of its proposed items start. What it reads and the report it writes
+are in the skill `honsha:assessment`.
 
-Every project that joins an installation is assessed first. Its entry in the home's registry (architecture, Home) says where it stands, and so what work may start in it:
+A project's entry in the home's registry (architecture, Home) says where it stands, and so what work may start in it:
 
 - **`assessing`:** the person has decided that the project joins. Only its assessment runs.
 - **`adopting`:** the person has taken the decisions of the assessment's report and chosen its proposed items. Only
-  those items start, each with the assessment's identifier as its `source`; the one that declares the kit in the
-  project's repository goes first.
+  those items start, each with the assessment's identifier as its `source`, in the order the report proposes.
 - **`active`:** the kit is declared on the project's default branch, so its sessions run under the core rules. Any
   work item may start; the chosen items left go on as ordinary items.
 
@@ -667,8 +477,8 @@ Entering a project, moving it between states and setting its folder are mechanic
 change of a folder, is a work item of the home made by code: the script reads the registry from the home's default
 branch, creates a work branch from it, and commits the registry's change there with the item's record, leaving the
 home's working tree as it is. It never pushes and never opens a pull request; the hub does, with the commands of the
-hosting service's piece (workflow, The hosting service). Each holds once the person merges its pull request: a project's state and its
-folders are those on the home's default branch.
+hosting service's piece (workflow, The hosting service). Each holds once the person merges its pull request: a project's
+state and its folders are those on the home's default branch.
 
 - `add` creates the assessment's branch, with its record, ready to start, and the entry as `assessing`. The assessment
   runs on that branch, and its pull request carries the entry, so that merging it registers the project. With
@@ -693,46 +503,3 @@ An agent does only the assessment and the items.
 
 A project that is not in the registry gets no work item. An active project can be assessed again when the person
 asks; its state does not change.
-
-### What is read
-
-In this order. A step that finds the project in order says so in a line; a gap is a finding. The commands that are
-specific to the hosting service are in its piece (workflow, The hosting service).
-
-1. **Profile:** present, or what it would hold; `verify` covering formatting, lint, types and tests (workflow, Profile);
-   gates, kinds, the lessons file.
-2. **Checks on pull requests and the default branch:** a pipeline that runs the kit's checks on every pull
-   request and on each push to the default branch (workflow, Checks on pull requests and on the default branch).
-3. **The settings of the hosting service** that the rules rely on: the merge method, merged branches deleted, alerts
-   on vulnerable dependencies (workflow, What the piece of a service says).
-4. **Dependencies** (workflow, Dependencies): pinned with a lockfile and installed without install scripts; the package manager's
-   vulnerability report and its list of outdated dependencies.
-5. **The kit declared in the repository** (architecture, Project), so that sessions get the core rules, the guard
-   and the effort hook.
-6. **The project's own rules,** such as `CLAUDE.md`, for anything that conflicts with the core rules; earlier
-   documents to list under `legacy` (workflow, Projects with earlier documents); an existing lessons file, for entries that belong at another level
-   (workflow, Lessons).
-7. **Records,** where there are any: complete front matter, sizes and kinds.
-8. **Measures** (workflow, Measures), where items have been merged: items over their kind's expectation; size budgets the
-   project sets on its documents, close to their limit.
-9. **Documents:** their size. Duplication and text that no longer holds are the upkeep review's (workflow, Upkeep review).
-10. **Open points:** the project's open questions, and the assumptions the adoption rests on that nobody has tried.
-
-### The report
-
-The record of an assessment has the sections of a small item, from the template.
-
-- **Acceptance criteria:** every step of 20.1 read, and every gap given a proposed item or the reason it has none.
-- **Strategy:** the costs the estimates use, the median agent time and output tokens of a small and of a full item,
-  and the items they come from.
-- **Log:** the commit read in each repository, and the date the settings were read.
-- **Verification:** the project's `verify` commands, where they ran, with their results.
-- **Outcome:** the findings, in one table: number, finding, proposed item, size and kind, estimated cost. A finding
-  with no item says why: a decision only the person can take, or nothing to do now and the review that watches it.
-  After the table, one paragraph lists what was read and found in order; then the state in a few lines, the proposed
-  order of the items, and the decisions waiting for the person.
-
-The size and kind of a proposed item follow the core rules (Sizes) and the project's `kinds`, or the default ones
-(workflow, Measures). Its cost is a multiple of a typical item of that size, from `node checks/measures.mjs` run on the
-project; while the project has no merged items, on another project of the installation, the kit included. An item
-that rests on something untried is estimated higher, and says why.

@@ -1,7 +1,8 @@
 # GitHub
 
 This folder is the kit's piece for GitHub: everything that is specific to that hosting service, kept apart from the
-rules. What a piece has to say is the contract in [the workflow](../../docs/01-specs/WORKFLOW.md) (workflow, The hosting service).
+rules. What a piece has to say is the contract in [the workflow](../../docs/01-specs/WORKFLOW.md) (workflow, The hosting
+service).
 
 Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
 on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
@@ -38,7 +39,7 @@ gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-m
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge
 ```
 
-The first command sets them; the second reads them, as an assessment does (workflow, Assessing a project). A free account
+The first command sets them; the second reads them, as an assessment does (`honsha:assessment`). A free account
 has these settings.
 
 Two things on the site are not used:

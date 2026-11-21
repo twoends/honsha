@@ -1,0 +1,67 @@
+# The profile of a project: this file, filled in, at `.hub/profile.yml` in the project's root. Every key but `name`
+# may be left out, and then takes the default its comment names. `checks/profile.mjs` reads the keys the kit's scripts
+# use and refuses a form it cannot read. The values below are examples.
+name: example-project
+description: One line on what the project is.
+# The language of the project's documents and records (core rules, Work items). English when left out.
+language: en
+# The technologies whose lessons the project's sessions load from the home (workflow, Lessons). It names files of the
+# home, so each is a plain name: letters, digits and `.+-_`.
+stack: [node, postgres, docker]
+# The branch that changes only through pull requests. Left out, the kit's scripts take `main` or `master`.
+default-branch: main
+# True when merging into the default branch deploys the project: that merge is then its deploy.
+merge-deploys: true
+# True when the project's repository is public, which the kit cannot learn from a hosting service: its records then
+# restate the request and quote nothing the person said (core rules, The record). Left out, the project is private.
+public: false
+# Each area of the project, with its paths; an item's areas are proposed from them. An area can have a pack of rules,
+# the skill `honsha:area-<name>` of the kit, which a session that works on an item of that area loads before it
+# changes anything; an area without a pack has no extra rules.
+areas:
+  backend: { paths: ["src/**"] }
+  deploy: { paths: ["deploy/**", ".github/**"] }
+  content: { paths: ["prompts/**"] }
+# The verification commands, one on each line, as a list: the kit's scripts read no other form. Each runs in the
+# machine's default shell. Together they cover four things, with the tools of the project's own stack: formatting,
+# lint, types where the language has them, and tests; one command may cover several, as `npm run check` does here.
+# A project that leaves one out says why in a comment beside the list. The checker reports what the list does not
+# cover.
+verify:
+  - npm run check
+# The project's quality gates. The checker reports each as met, not met or not verifiable.
+gates:
+  - tests added or updated
+  - no breaking change without approval
+# Paths whose change makes an item full, beside the cases the core rules list (Sizes).
+always-full:
+  - "db/migrations/**"
+# The kinds of change, chosen with an item's size, each with the most existing files a change of that kind is expected
+# to touch (workflow, Measures). Left out: feature 10, fix 5, upkeep 5, change 10.
+kinds:
+  feature: 10
+  fix: 5
+  upkeep: 5
+# A regular expression that the author's and the committer's address of every commit on a work branch must match.
+# Left out, no rule on addresses. Best in single quotes, where YAML keeps a backslash as it is.
+commits:
+  address: '@example\.org$'
+# How many workers may run in the project at once, and the resources only one worker may use at a time
+# (`honsha:parallel-parts`).
+parallel:
+  max: 2
+  exclusive: [integration-db]
+# The file, inside the project, that holds the lessons about this repository only; its name is the project's choice.
+lessons: LESSONS.md
+# The read-only data sources an answer about the project may use. `secret` is the name of a secret on the host, never
+# its value.
+data:
+  - { name: metrics, kind: postgres-readonly, secret: EXAMPLE_RO_URL }
+# The documents that say how a recurring question is answered from those sources.
+playbooks:
+  - docs/playbooks/weekly-metrics.md
+# Folders of documents written before the project adopted the kit's workflow. They stay where they are, unchanged, so
+# that questions about history can read them; nothing in them is converted, and the core rules leave them out
+# (Documents). New work follows the workflow from the day of adoption.
+legacy:
+  - docs/old-worklogs
