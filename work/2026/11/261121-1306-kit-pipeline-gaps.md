@@ -14,7 +14,8 @@ source: null
 pr: null
 model: null
 effort: xhigh
-checks: []
+checks:
+  - { due: 2026-11-28, what: "The run of verify.yml on the push of this item's merge to `main`, read with `gh run list --branch main --event push`: `verify` on Linux and on Windows, `project / checks` and `personal content` passed, with the commits check over that push's first-parent commits and the patterns over every commit it added." }
 ---
 
 ## Intent
@@ -183,6 +184,20 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
   test for the allowed pattern. The 22 tests of the two files pass here, the one on the machine's user among them.
 - `verify.yml`: the job `personal content`. `services/github/README.md`: the kit's third job, what it checks and why
   not the name; `README.md`: the pipeline checks the patterns again.
+- The branch was pushed, its hook passing, and pull request 38 opened before the first check, so that the kit's own
+  pipeline, the new job among its four, could run on it.
+- Check on `b1249ae`, by `honsha:checker`: fail, three findings.
+  - No test covered an allowed address in a file's name, nor a missing `HONSHA_BASE`. The test of the allowed
+    addresses adds a file in a folder named with one, and the test of the command tries each variable missing and
+    both.
+  - The hook stopped on a profile the reader refuses, which the Boundaries rule out. `allowedAddress` now gives no
+    pattern for such a profile, so the check finds more and never less, and the reader's errors are left to the other
+    checks; the command no longer reads the profile apart. The test of the allowed addresses tries such a profile in
+    both modes.
+  - The deferred check that the Strategy names was not in `checks`; it is now.
+  - Found while writing the test: in a file's name such as `<address>.md` the pattern of addresses takes the extension
+    into the domain, so an allowed address named so is still a finding, which errs toward finding more. The test
+    names a folder with the address.
 
 ## Verification
 

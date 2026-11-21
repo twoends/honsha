@@ -111,7 +111,14 @@ export function rangeCommits(base, head, cwd) {
  * @returns {RegExp | null}
  */
 export function allowedAddress(cwd) {
-  const address = readProfile(path.join(cwd, ".hub", "profile.yml"))?.commitsAddress;
+  let address;
+  try {
+    address = readProfile(path.join(cwd, ".hub", "profile.yml"))?.commitsAddress;
+  } catch {
+    // A profile the reader refuses is for the other checks to report. Here it only means that no address is allowed,
+    // so the check finds more, never less.
+    return null;
+  }
   return address ? new RegExp(address) : null;
 }
 
@@ -272,19 +279,11 @@ function main() {
     // Read in a pipeline's checkout, a default range would hold nothing, and the check would pass having read nothing.
     return fail(`--range needs ${missing.map(([key]) => key).join(" and ")}, which the wiring of the checks gives.`);
   }
-  let allowed;
-  try {
-    allowed = allowedAddress(cwd);
-  } catch (error) {
-    // The profile's own errors name a key; another error could quote a path of the machine.
-    const own = error instanceof Error && error.message.startsWith("profile:");
-    return fail(`the check could not run: ${own ? error.message : "the profile cannot be read"}.`);
-  }
   let lines;
   let read = 0;
   try {
-    if (range) ({ commits: read, lines } = checkRange(base, head, cwd, allowed));
-    else lines = check(fs.readFileSync(0, "utf8"), cwd, personalNames(), allowed);
+    if (range) ({ commits: read, lines } = checkRange(base, head, cwd));
+    else lines = check(fs.readFileSync(0, "utf8"), cwd);
   } catch {
     // A git error can quote paths of the machine, so it is not shown.
     return fail("the check could not run: git failed.");

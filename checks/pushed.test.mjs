@@ -207,12 +207,20 @@ test("lets through the addresses that the profile allows for commits, in both mo
   const base = git(dir, ["rev-parse", "HEAD"]);
   const own = ["someone", "own.provider.io"].join("@");
   commit(dir, { ".hub/profile.yml": "commits:\n  address: '@own\\.provider\\.io$'\n" }, "Add the profile");
-  commit(dir, { "a.md": `written by ${own}\n` }, `Add a\n\nAsked by ${own}`, [`--author=Someone <${own}>`]);
+  // The address names a folder: in a name such as `<address>.md` the pattern takes the extension into the domain.
+  commit(dir, { "a.md": `written by ${own}\n`, [`for-${own}/notes.md`]: "c\n" }, `Add a\n\nAsked by ${own}`, [
+    `--author=Someone <${own}>`,
+  ]);
   const other = commit(dir, { "b.md": `written by ${address}\n` }, "Add b");
   const expected = [`${short(other)} b.md:1 holds an e-mail address`];
   assert.deepEqual(check(input(dir), dir, []), expected);
   assert.deepEqual(checkRange(base, "HEAD", dir).lines, expected);
-  assert.equal(checkRange(base, "HEAD", dir, null).lines.length, 4, "without the profile's pattern");
+  assert.equal(checkRange(base, "HEAD", dir, null).lines.length, 5, "without the profile's pattern");
+
+  // A profile that the reader refuses allows no address: the check finds more, and still runs.
+  fs.writeFileSync(path.join(dir, ".hub", "profile.yml"), "commits:\n  address: '('\n");
+  assert.equal(check(input(dir), dir, []).length, 5);
+  assert.equal(checkRange(base, "HEAD", dir).lines.length, 5);
 });
 
 const machine = personalNames();
@@ -238,9 +246,15 @@ test("the command with --range needs both variables, and fails on a finding with
       encoding: "utf8",
       env: { ...process.env, HONSHA_BASE: "", HONSHA_HEAD: "", ...env },
     });
-  const missing = run({ HONSHA_BASE: base });
-  assert.equal(missing.status, 1);
-  assert.match(missing.stderr, /needs HONSHA_HEAD,/);
+  for (const [env, named] of [
+    [{ HONSHA_BASE: base }, "HONSHA_HEAD"],
+    [{ HONSHA_HEAD: "HEAD" }, "HONSHA_BASE"],
+    [{}, "HONSHA_BASE and HONSHA_HEAD"],
+  ]) {
+    const missing = run(/** @type {Record<string, string>} */ (env));
+    assert.equal(missing.status, 1);
+    assert.match(missing.stderr, new RegExp(`needs ${named},`));
+  }
 
   commit(dir, { "notes.md": "plain\n" }, "Add notes");
   const clean = run({ HONSHA_BASE: base, HONSHA_HEAD: "HEAD" });
