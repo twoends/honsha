@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-21
 updated: 2026-11-21
@@ -111,7 +111,15 @@ fixes a defect found before the pilot.
 
 ## Approval
 
+Approved by the person on 2026-11-21, in the chat of the session that wrote the strategy. Later the same day, in the
+same chat, the person asked for the item's branch to be made again without the details of the pilot that the first
+one held; this record states the same strategy in general words.
+
 ## Log
+
+- 2026-11-21: the branch is made again from the default branch, at the person's request. The first one held, in its
+  record and in a commit's log, details of the pilot and of this computer that the kit's gate keeps out, and a branch
+  only grows.
 
 ## Verification
 
