@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { DEFAULT_KINDS } from "./measures.mjs";
 import { readProfile } from "./profile.mjs";
-import { check, checkRecord, readTemplate, recordPath } from "./record.mjs";
+import { check, checkRecord, entriesOf, readTemplate, recordPath } from "./record.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const script = fileURLToPath(new URL("./record.mjs", import.meta.url));
@@ -171,6 +171,36 @@ test("a deferred check is a date and what to look at", () => {
   assert.deepEqual(problems(ok), []);
   const bad = record({ checks: "" }, (t) => t.replace("checks: \n", "checks:\n  - { due: soon, what: x }\n"));
   assert.deepEqual(problems(bad), [`${FILE}: an entry of \`checks\` is not \`{ due: YYYY-MM-DD, what: … }\``]);
+});
+
+/**
+ * A record whose `checks` are the given lines.
+ * @param {string} entries
+ */
+const withChecks = (entries) => record({ checks: "" }, (t) => t.replace("checks: \n", `checks:\n${entries}`));
+
+test("a deferred check may take several lines, as Prettier writes one past its width", () => {
+  const long = "the main folder holds no install of its own, and a session there gets the procedure from the user's";
+  // The form Prettier gave such an entry in a project whose formatter reads its records.
+  const formatted = `  - {\n      due: 2026-11-22,\n      what: "${long}",\n    }\n`;
+  assert.deepEqual(problems(withChecks(`${formatted}  - { due: 2026-12-01, what: "the export runs" }\n`)), []);
+  const broken = [
+    `  - {\n      due: soon,\n      what: "${long}",\n    }\n`,
+    `  - {\n      what: "${long}",\n    }\n`,
+    `  - {\n      due: 2026-11-22,\n      what: "${long}",\n`,
+    // A line with no dash after a closed entry is an entry of its own, not the end of the one before.
+    `  - { due: 2026-11-22, what: "x" }\n    { due: soon, what: "y" }\n`,
+    `  - { due: 2026-11-22, what: "x" }\n    { due: 2026-12-01, what: "y" }\n`,
+  ];
+  for (const entries of broken) {
+    assert.deepEqual(problems(withChecks(entries)), [
+      `${FILE}: an entry of \`checks\` is not \`{ due: YYYY-MM-DD, what: … }\``,
+    ]);
+  }
+  assert.deepEqual(
+    entriesOf(["  - {", "      due: 2026-11-22,", '      what: "x",', "    }", '  - { due: 2026-12-01, what: "y" }']),
+    ['- { due: 2026-11-22, what: "x", }', '- { due: 2026-12-01, what: "y" }'],
+  );
 });
 
 test("a section the size does not keep, or one written twice, is named", () => {
