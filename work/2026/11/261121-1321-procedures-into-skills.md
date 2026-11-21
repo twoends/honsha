@@ -244,6 +244,9 @@ Approved by the person on 2026-11-21, in the chat of the session that wrote the 
      wrong twice: a script in the scratchpad wrapped them, and it left these three.
   7. `name` and `description` have their comments in the template, whose opening no longer says that every key but
      `name` may be left out.
+- The repeated check on `09c542e` found the seven fixed and one rule dropped by the fix of the fifth: the size of the
+  item of ordinary updates, full if it holds a major upgrade and small otherwise. It is back in `honsha:review`, step
+  2, its one place.
 
 ## Verification
 
