@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-22
 updated: 2026-11-22
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 46
+model: claude-opus-5-5
 effort: medium
 checks: []
 ---
@@ -85,9 +85,78 @@ each commit, which the core rules do not say.
 
 ## Verification
 
+On db60d7b, from the project's root (no `registry.yml` there, so no `hub/projects.mjs check`):
+
+- `node checks/record.mjs`, the kit's record check in its own repository: the record has the shape the rules ask for.
+- `node checks/commits.mjs`, the kit's commit check: the 2 commits of the branch follow the rules.
+- `npx --no-install prettier --check .`: all matched files use Prettier code style.
+- `npx --no-install oxlint`: passed, exit 0.
+- `npx --no-install tsc -p .`: passed, exit 0.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 196 tests, 196 pass,
+  0 fail.
+- `claude plugin validate .`: validation passed, with a warning on the README's install line that this item does not
+  touch.
+- The pipeline on pull request 46: `verify` on Ubuntu and on Windows, the project's checks and the personal-content
+  check all pass.
+
+Check of 9dec6c9 (full check): verdict `fail`. Finding: `LESSONS.md:7-9` was stale and restated a rule now in the core
+rules, pointing to the workflow's "The trailer" as the text that asks for the block; reduce the lesson to what the core
+rules do not say, point it to the core rules (Commits and branches), and declare the fifth existing file as a deviation.
+
+Repeated check of 9dec6c9..db60d7b, which read db60d7b:
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The core rules say `Work-Item` stands in the last paragraph with the other trailers: met, `rules/git.md:9-10`. This
+   diff does not change it.
+2. The workflow's "The trailer" gives the reason and points to the core rules, with no "can share": met,
+   `docs/01-specs/WORKFLOW.md:270`. This diff does not change it, and "can share" no longer appears.
+3. `node checks/commits.mjs` refuses a `Work-Item` line outside the last paragraph and says why, and keeps the other
+   refusals: met, `checks/commits.mjs:39`. This diff does not change it.
+4. `checks/commits.test.mjs` tests the new refusal and keeps the no-trailer test: met, `checks/commits.test.mjs:95-112`.
+   This diff does not change it.
+5. `docs/01-specs/INTERFACE.md` does not change: met. It is not in the diff.
+6. The profile's `verify` passes: met, going by the results the caller gave for db60d7b. They are not yet in the record.
+
+- **Intent:** in order. The last finding is fixed. `LESSONS.md:7-9` now keeps only the blank line after the subject and
+  running the check, which the core rules do not say. It points to the core rules (Commits and branches) and no longer
+  to the workflow's "The trailer". The profile says `public: true`, and nothing in the diff or the record quotes the
+  person.
+- **Scope:** in order. `LESSONS.md` is a fifth existing file, one more than `kinds.fix: 4`, and the record declares it
+  under "Deviations".
+- **Comments and documents:** in order. The changed lesson says what holds now, keeps no history and states no rule
+  held elsewhere.
+- **Gates:** in order. All four gates are met for the diff: no hosting service is named, nothing is about a user or an
+  installation, no script is added, and no decision log is cited.
+- **Verification evidence:** in order, going by the results the caller gave for db60d7b: every `verify` command passed,
+  including `node checks/record.mjs` and `node checks/commits.mjs`. The list covers formatting (prettier), lint
+  (oxlint), types (tsc) and tests (node --test).
+- **Record:** in order. The log entry and the deviation describe the fix and do not copy the lesson's text.
+- **Commits:** in order. db60d7b "Reduce the lesson on the trailers to what the core rules do not say, as the checker
+  asked" has the `Work-Item: 261122-2133` trailer and the co-author's in one paragraph. Its addresses match
+  `commits.address`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The last report is not in the record yet, because Verification is still empty. I checked the fix against the finding
+  as the caller quoted it.
+
 ## Deviations
 
 - The change touches five existing files, one more than the profile's `kinds` expects of a fix: `LESSONS.md` also
   changes, since its lesson on the trailers restated the rule that the core rules now hold.
 
 ## Outcome
+
+The core rules say that `Work-Item` stands in the message's last paragraph with the other trailers, and the workflow
+gives the reason and points there. `node checks/commits.mjs` names a `Work-Item` line that git does not read as a
+trailer and says why, with its tests; the lesson on the trailers keeps only what the core rules do not say. No deferred
+check. Pull request 46.
