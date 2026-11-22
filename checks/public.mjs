@@ -1,5 +1,6 @@
-// Finds in a text what a kit that is public from its first commit must not hold: an e-mail
-// address that is not a placeholder, a path into a user's folder, and the personal names it is given.
+// Finds in a text what a kit that is public from its first commit must not hold: an e-mail address that is not a
+// placeholder, a path into a user's folder, a link to a user's Claude Code session, and the personal names it is given.
+// A session driven from the web or through Remote Control adds that link to its commits, in a `Claude-Session:` trailer.
 //
 // No pattern finds a name; the caller gives those it knows. The hook that runs before a push
 // (checks/pushed.mjs) gives the machine's user. Without names, only the patterns run.
@@ -8,6 +9,8 @@
 // profile's `commits.address` does for the authors and committers of every commit.
 
 const ADDRESS = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+// A placeholder such as `session_<id>` has no letter or digit after the underscore, so it is no finding.
+const SESSION = /claude\.ai\/code\/session_[A-Za-z0-9]/i;
 const FOLDER = /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9._-]+|\/home\/[A-Za-z0-9._-]+|\/Users\/[A-Za-z0-9._-]+/;
 
 /**
@@ -49,6 +52,7 @@ export function personal(text, words = [], allowed = null) {
       found.push({ line: index + 1, kind: "an e-mail address" });
     }
     if (FOLDER.test(content)) found.push({ line: index + 1, kind: "a path into a user's folder" });
+    if (SESSION.test(content)) found.push({ line: index + 1, kind: "a link to a Claude session" });
     if (listed?.test(content)) found.push({ line: index + 1, kind: "a personal name" });
   });
   return found;
