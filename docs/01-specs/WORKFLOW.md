@@ -267,8 +267,8 @@ A message is read as a title in the history; the reasons are in the record, so t
 
 ### The trailer
 
-- The trailer goes in the last block of the message. Other trailers, such as the one the platform adds for its
-  co-author, can share the block.
+- git reads trailers only in the last paragraph of a message: that is why the core rules (Commits and branches) put
+  the trailer there, with the other trailers. A `Work-Item` line in a paragraph of its own before them is no trailer.
 - It ties each commit to its record without walking the history:
   `git log --format='%(trailers:key=Work-Item,valueonly)'` prints it. It cannot be added later, because commits are
   never rewritten.

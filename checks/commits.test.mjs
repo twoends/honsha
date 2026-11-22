@@ -92,6 +92,26 @@ test("names the commit that has no trailer, and the one with the trailer of anot
   assert.match(problems[1], /Add the button: .Work-Item. is not 261116-1432/);
 });
 
+test("says when the `Work-Item` line stands outside the last paragraph, where git reads no trailer", () => {
+  const { dir, commit } = repository();
+  commit("Add the record", `Work-Item: ${ID}\n\nCo-Authored-By: A Model <model@example.org>`);
+  commit("Add the export", `Work-Item: ${ID}\nCo-Authored-By: A Model <model@example.org>`);
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(
+    problems[0],
+    /Add the record: a .Work-Item. line that git does not read as a trailer: git reads trailers only in the message's last paragraph/,
+  );
+});
+
+test("says the same of a `Work-Item` line left in the subject's paragraph", () => {
+  const { dir, commit } = repository();
+  commit(`Add the record\nWork-Item: ${ID}`);
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /a .Work-Item. line that git does not read as a trailer/);
+});
+
 test("a branch that is not a work branch fails as soon as it adds a commit", () => {
   const { dir, commit } = repository({ branch: "patch-1" });
   assert.deepEqual(run(dir).problems, []);
