@@ -3,7 +3,8 @@
 //
 // Run from the root of the project. For every commit a work branch adds to the default branch:
 //   - the message ends with the trailer `Work-Item: <id>`, where <id> is the one in the name of
-//     the branch, `work/<id>-<slug>`;
+//     the branch, `work/<id>-<slug>`; a `Work-Item` line that git does not read as a trailer, being
+//     outside the message's last paragraph, is named as such;
 //   - the author and committer addresses match `commits.address` of the profile, when it is set;
 //   - for a full item, every commit up to and including the one that writes the approval into the
 //     record changes only the record, so that the approval gate can be read from the history. The
@@ -33,6 +34,10 @@ import { WORK_BRANCH, approved, parseRecord, recordPath } from "./record.mjs";
 const FIELD = "\x1f";
 const RECORD = "\x1d";
 const VALUE = "\x1e";
+const WORK_ITEM_LINE = /^Work-Item:/im;
+const STRAY =
+  "a `Work-Item` line that git does not read as a trailer: git reads trailers only in the message's last paragraph, " +
+  "so it goes there with the other trailers and no blank line between them";
 const CAPTURE = /^backlog\/[a-z0-9][a-z0-9-]*\/(\d{6}-\d{4})-[^/]+\.md$/;
 
 /**
@@ -105,6 +110,8 @@ export function check({ cwd = ".", env = process.env } = {}) {
     "%s",
     "%(trailers:key=Work-Item,valueonly,separator=%x1e)",
     "%(trailers:key=Backlog,valueonly,separator=%x1e)",
+    // The raw message comes last, so that whatever it holds cannot shift the fields before it.
+    "%B",
   ].join("%x1f");
   const range = [...(onDefault ? ["--first-parent"] : []), `${base}..${head}`];
   const commits = git(cwd, ["log", "--reverse", `--format=${format}%x1d`, ...range])
@@ -112,9 +119,10 @@ export function check({ cwd = ".", env = process.env } = {}) {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .map((entry) => {
-      const [hash, parents = "", author, committer, subject, items = "", backlog = ""] = entry.split(FIELD);
+      const [hash, parents = "", author, committer, subject, items = "", backlog = "", ...message] = entry.split(FIELD);
       const merge = parents.includes(" ");
-      return { hash, merge, author, committer, subject, items: values(items), backlog: values(backlog) };
+      const stray = WORK_ITEM_LINE.test(message.join(FIELD));
+      return { hash, merge, author, committer, subject, items: values(items), backlog: values(backlog), stray };
     });
   if (commits.length === 0)
     return { commits: 0, problems: [], note: "The branch adds no commit to the default branch." };
@@ -138,7 +146,8 @@ export function check({ cwd = ".", env = process.env } = {}) {
   for (const commit of commits) {
     /** @param {string} problem */
     const say = (problem) => problems.push(`${commit.hash.slice(0, 7)} ${commit.subject}: ${problem}`);
-    if (commit.items.length === 0) say("no `Work-Item` trailer");
+    if (commit.items.length === 0 && commit.stray) say(STRAY);
+    else if (commit.items.length === 0) say("no `Work-Item` trailer");
     else if (id && commit.items.some((item) => item !== id)) say(`\`Work-Item\` is not ${id}, the one of the branch`);
     if (address && !address.test(commit.author)) say("the author address does not match `commits.address`");
     if (address && !address.test(commit.committer)) say("the committer address does not match `commits.address`");

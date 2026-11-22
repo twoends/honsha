@@ -6,7 +6,8 @@ A part of the Honsha core rules, which `rules/core.md` opens.
 
 - A commit message is one plain imperative sentence in English. It gets a body only when the reason is not in the
   record. A convention of the project's own is stated in the project's rules.
-- Every commit on a work branch ends with the trailer `Work-Item: <id>`.
+- Every commit on a work branch ends with the trailer `Work-Item: <id>`, in the message's last paragraph together with
+  the other trailers, such as the co-author's, and no blank line between them.
 - An item makes as few commits as it can. Small or trivial: the work with its record, then one closing commit. Full:
   the record with its strategy, then its approval, two commits that hold only the record, since no other file changes
   before the approval is committed; then the work and one closing commit. The closing commit holds the verification,
