@@ -68,7 +68,16 @@ on claude.ai, such as artifacts, are out of scope too: the intent names sessions
 - Updated the paragraph of the kit's README on the hook and the one of `services/github/README.md` on the job
   `personal content`, which list what the check finds. No specification under `docs/` lists the patterns, so none
   changes; `docs/01-specs/INTERFACE.md` is untouched.
+- The checker's first check, on `7b957bd`, failed on one finding: a line of `services/github/README.md` past the 120
+  columns, left when its paragraph was rewrapped. Rewrapped it. It also noted five existing files changed, one more
+  than the profile's `kinds` gives a fix: written under "Deviations".
 
 ## Verification
+
+## Deviations
+
+- The change touches five existing files, one more than the four that the profile's `kinds` expects of a `fix`. The
+  fifth is a document: the kit's README and the GitHub piece both list what the check finds, and a rule is updated in
+  every document that states it. The concern and the size stay those of a small fix.
 
 ## Outcome

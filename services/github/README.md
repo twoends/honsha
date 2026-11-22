@@ -176,9 +176,9 @@ the kit's hook checks a push only in a clone that has it (the kit's README). On 
 the paths into a user's folder and the links to a Claude Code session that `checks/public.mjs` finds, and lets through
 the addresses that the profile's `commits.address` allows. It names the commit, the file and the line, never what it
 found. So it reads what a clone without the hook, or a push that skipped it, sent, and on a push the merges, which
-GitHub writes and no clone's hook sees. It does not look for the name of the machine's user, as the hook does: on a runner the system's user is the
-runner's, not whoever made the commits. It finds content once the commits are on the public branch: a finding shows
-before the merge, and taking it out of the history is the person's.
+GitHub writes and no clone's hook sees. It does not look for the name of the machine's user, as the hook does: on a
+runner the system's user is the runner's, not whoever made the commits. It finds content once the commits are on the
+public branch: a finding shows before the merge, and taking it out of the history is the person's.
 
 What it costs: nothing on a free account, within a limit. On a private repository the minutes of GitHub's runners are
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
