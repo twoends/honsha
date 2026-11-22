@@ -78,7 +78,16 @@ each commit, which the core rules do not say.
   co-author's and a line left in the subject's paragraph. Every other refusal is unchanged.
 - `checks/commits.test.mjs`: two tests for the new refusal; the test of a commit with no trailer still expects "no
   `Work-Item` trailer". `node --test checks/commits.test.mjs`: 14 tests pass.
+- The checker read 9dec6c9 and failed it on one finding: the lesson on the trailers in `LESSONS.md` still restated the
+  rule now in the core rules and pointed to the workflow's "The trailer" as the text that asks for the block. The
+  lesson is reduced to what the core rules do not say, the blank line after the subject and running the check, and
+  points to the core rules. That is a fifth existing file: see Deviations.
 
 ## Verification
+
+## Deviations
+
+- The change touches five existing files, one more than the profile's `kinds` expects of a fix: `LESSONS.md` also
+  changes, since its lesson on the trailers restated the rule that the core rules now hold.
 
 ## Outcome
