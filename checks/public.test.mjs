@@ -19,6 +19,7 @@ const at = (local, domain) => `${local}@${domain}`;
 const windows = ["C:", "Users", "someone", "project"].join("\\");
 const linux = ["", "home", "someone", "project"].join("/");
 const mac = ["", "Users", "someone", "project"].join("/");
+const session = ["claude.ai", "code", "session_01AbCdEf23"].join("/");
 
 test("finds an e-mail address and says on which line, without repeating it", () => {
   const found = personal(`first line\nwrite to ${at("someone", "mail.provider.io")} for help\n`);
@@ -64,6 +65,25 @@ test("finds a path into a user's folder on Windows, Linux and macOS", () => {
     assert.deepEqual(personal(`see ${folder}`), [{ line: 1, kind: "a path into a user's folder" }], folder);
   }
   assert.deepEqual(personal("see /home/<name>/project and C:\\Users\\<name>"), []);
+});
+
+test("finds a link to a Claude session, as its trailer carries it, with or without the scheme", () => {
+  const found = personal(`Add notes\n\nClaude-Session: https://${session}\n`);
+  assert.deepEqual(found, [{ line: 3, kind: "a link to a Claude session" }]);
+  for (const text of [session, `see HTTPS://${session.toUpperCase()}.`]) {
+    assert.deepEqual(personal(text), [{ line: 1, kind: "a link to a Claude session" }], text);
+  }
+});
+
+test("lets through a placeholder of a session link and other links to claude.ai", () => {
+  for (const text of [
+    "claude.ai/code/session_<id>",
+    "claude.ai/code/session_…",
+    "https://claude.ai/code/artifacts",
+    "https://claude.ai/code",
+  ]) {
+    assert.deepEqual(personal(text), [], text);
+  }
 });
 
 test("finds the names it is given as whole words, ignoring case, and only when given", () => {

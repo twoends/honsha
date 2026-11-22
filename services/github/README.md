@@ -172,11 +172,11 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
 
 The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
 the kit's hook checks a push only in a clone that has it (the kit's README). On Linux it runs
-`node checks/pushed.mjs --range`, which checks each commit from `HONSHA_BASE` to `HONSHA_HEAD` for the e-mail addresses
-and the paths into a user's folder that `checks/public.mjs` finds, and lets through the addresses that the profile's
-`commits.address` allows. It names the commit, the file and the line, never what it found. So it reads what a clone
-without the hook, or a push that skipped it, sent, and on a push the merges, which GitHub writes and no clone's hook
-sees. It does not look for the name of the machine's user, as the hook does: on a runner the system's user is the
+`node checks/pushed.mjs --range`, which checks each commit from `HONSHA_BASE` to `HONSHA_HEAD` for the e-mail addresses,
+the paths into a user's folder and the links to a Claude Code session that `checks/public.mjs` finds, and lets through
+the addresses that the profile's `commits.address` allows. It names the commit, the file and the line, never what it
+found. So it reads what a clone without the hook, or a push that skipped it, sent, and on a push the merges, which
+GitHub writes and no clone's hook sees. It does not look for the name of the machine's user, as the hook does: on a runner the system's user is the
 runner's, not whoever made the commits. It finds content once the commits are on the public branch: a finding shows
 before the merge, and taking it out of the history is the person's.
 

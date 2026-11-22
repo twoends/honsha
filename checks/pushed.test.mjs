@@ -22,6 +22,7 @@ process.env.GIT_CONFIG_NOSYSTEM = "1";
 // The samples are put together here, so that this file holds none of what it looks for.
 const folder = ["C:", "Users", "someone", "project"].join("\\");
 const address = ["someone", "mail.provider.io"].join("@");
+const session = ["claude.ai", "code", "session_01AbCdEf23"].join("/");
 const NONE = "0".repeat(40);
 
 let count = 0;
@@ -132,6 +133,19 @@ test("checks the message, the identities and the names of files", () => {
     `${short(empty)} the name of a file holds an e-mail address`,
     `${short(empty)} the name of a file holds an e-mail address`,
   ]);
+});
+
+test("refuses a link to a Claude session in a message's trailer and in a line, in both modes", () => {
+  const dir = clone();
+  const base = git(dir, ["rev-parse", "HEAD"]);
+  const trailer = commit(dir, { "a.md": "a\n" }, `Add a\n\nWork-Item: 1\nClaude-Session: https://${session}`);
+  const line = commit(dir, { "b.md": `plain\nsee ${session}\n` }, "Add b");
+  const expected = [
+    `${short(trailer)} its message holds a link to a Claude session`,
+    `${short(line)} b.md:2 holds a link to a Claude session`,
+  ];
+  assert.deepEqual(check(input(dir), dir, []), expected);
+  assert.deepEqual(checkRange(base, "HEAD", dir).lines, expected);
 });
 
 test("does not check again what a remote already holds, nor a deleted branch", () => {
