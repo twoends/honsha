@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-22
 updated: 2026-11-22
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 45
+model: claude-opus-5-5
 effort: medium
 checks: []
 ---
@@ -74,10 +74,83 @@ on claude.ai, such as artifacts, are out of scope too: the intent names sessions
 
 ## Verification
 
+On `8c84c81`, from the project's root:
+
+- `node checks/record.mjs`: pass, the record has the shape the rules ask for.
+- `node checks/commits.mjs`: pass, the 2 commits of the branch follow the rules.
+- `node hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: pass.
+- `npx --no-install oxlint`: pass.
+- `npx --no-install tsc -p .`: pass.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: pass, 194 of 194.
+- `claude plugin validate .`: pass, with one warning that the README has no line installing the plugin from a
+  marketplace, which the change does not touch.
+- The kit's pipeline on pull request #45, at `8c84c81`: pass, `verify` on Ubuntu and on Windows, `project / checks`
+  and `personal content`.
+
+The first check, on `7b957bd`: verdict `fail`. Finding: `services/github/README.md:179` ran past the 120 columns of
+the document, left unwrapped when its paragraph was rewrapped.
+
+The repeated check, on `8c84c81` (7b957bd...8c84c81):
+
+### Checker report
+
+**Verdict:** pass
+
+The last report's only finding is fixed. After the rewrap, `services/github/README.md` lines 179–181 are about 115,
+116 and under 120 columns. The word "public" cannot move up to line 180, because that would make it 123 columns. The
+note about five existing files against the `fix: 4` of `kinds` is now declared under "Deviations".
+
+**Acceptance criteria**
+
+This repeated check covers only the diff 7b957bd...8c84c81. It changes no code, test or listing document, so criteria
+1–4 stand as the last check found them.
+
+1. `personal()` finds a session link, with tests: not touched by this diff.
+2. `checks/pushed.mjs` and `--range` refuse such a link, with a test: not touched by this diff.
+3. The kit's README and the GitHub piece name the link: met. `services/github/README.md` lines 176–181 still name "the
+   links to a Claude Code session" after the rewrap.
+4. No tracked file holds such a link: met for this diff. Neither changed file adds a session link.
+5. The profile's `verify` passes: met, from the results given for 8c84c81. They go into the closing commit.
+
+- **Intent:** in order
+- **Scope:** in order. The rewrap only reflows the text, with no change of words. The record adds a log entry and a
+  "Deviations" section.
+- **Comments and documents:** in order
+- **Gates:** in order. No rule names a hosting service, nothing is about a user, and the diff adds no script.
+- **Verification evidence:** in order, from the results given for 8c84c81: all three `verify` commands,
+  `checks/record.mjs` and `checks/commits.mjs` pass. They go into the record's Verification in the closing commit.
+  `verify` covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test of the four globs). Of
+  these, `.hub/profile.yml` lines 8–11 show only the first three, and I did not read the test command.
+- **Record:** in order. "Deviations" sits between Verification and Outcome, as in the template. The new log entry and
+  the deviation copy nothing from another document and quote nothing the person said.
+- **Commits:** in order. 8c84c81 "Rewrap the paragraph of the GitHub piece at 120 columns, as the checker asked" is
+  one imperative sentence with the trailer `Work-Item: 261122-1929`. It is a commit of its own for a fix the checker
+  asked for.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The column widths of `services/github/README.md` lines 179–181 were counted by hand from the diff. No tool measured
+  them.
+- The results of `verify`, `checks/record.mjs` and `checks/commits.mjs` on 8c84c81 come from your message, not from
+  the record, because Verification is still empty until the closing commit.
+
 ## Deviations
 
 - The change touches five existing files, one more than the four that the profile's `kinds` expects of a `fix`. The
   fifth is a document: the kit's README and the GitHub piece both list what the check finds, and a rule is updated in
   every document that states it. The concern and the size stay those of a small fix.
+- The repeated check's report is copied without the list of the files it read that followed it, which named them by
+  absolute paths into the user's folder: the kit's push check refuses such a path, and the files are those named in
+  the report itself.
 
 ## Outcome
+
+A push of the kit, through its pre-push hook, and every commit its pipeline reads with `--range`, are now refused when
+a commit carries a link to a Claude Code session, in its message, as the `Claude-Session:` trailer puts it, in a line it
+adds or in a file's name. The report names the commit and where, never the link. The description of a pull request is
+not checked. Pull request: #45.
