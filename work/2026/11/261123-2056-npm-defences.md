@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-23
 updated: 2026-11-23
@@ -203,6 +203,9 @@ hub.
   dependencies: with npm 11.12.1 and `--dry-run`, it would change npm 12.2.1 to 12.2.2, and not to 12.2.3, released
   on 2026-11-18. The second finding, the three record-only commits before the approval, cannot be fixed on a branch
   that only grows (next line).
+- Stop: the second finding cannot be fixed, inside the scope or outside it. The record and its strategy were committed
+  apart, at the hub's request, and no new commit joins them; the measures will read `b336245` as the strategy and
+  `6ccfb03` as the approval. The state is `blocked` until the person decides whether to accept it.
 
 ## Verification
 
