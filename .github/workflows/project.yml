@@ -80,7 +80,9 @@ jobs:
         if: inputs.claude-code != ''
         env:
           VERSION: ${{ inputs.claude-code }}
-        run: npm install --global "@anthropic-ai/claude-code@$VERSION"
+        # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
+        # not name.
+        run: npm install --global --allow-scripts=@anthropic-ai/claude-code "@anthropic-ai/claude-code@$VERSION"
       - name: Check the record of the work item
         if: github.event_name == 'pull_request'
         run: node ../kit/checks/record.mjs
