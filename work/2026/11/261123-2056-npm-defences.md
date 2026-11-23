@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: awaiting-approval
 areas: []
 created: 2026-11-23
 updated: 2026-11-23
@@ -48,7 +48,7 @@ do, and takes oxlint 1.94.0, the version the other project takes in the same ali
 
 - What the kit asks of projects: `skills/dependencies/SKILL.md`, the assessment, the templates and `project.yml` with
   its inputs.
-- Prettier, TypeScript and `＠types/node`, which both projects already hold at the same versions.
+- Prettier, TypeScript and `@types/node`, which both projects already hold at the same versions.
 - The plugin itself, which needs none of the development tools to run.
 
 ### Boundaries
@@ -72,9 +72,104 @@ do, and takes oxlint 1.94.0, the version the other project takes in the same ali
 
 ## Strategy
 
+**The design.**
+
+- `package.json` gains `devEngines`, after `engines`, which stays as it is:
+
+  ```json
+  "devEngines": {
+    "runtime": { "name": "node", "version": ">=26", "onFail": "error" },
+    "packageManager": { "name": "npm", "version": ">=12 <13", "onFail": "error" }
+  }
+  ```
+
+  npm checks it before `install`, `ci` and `run`, so the profile's setup stops, before it installs anything, under an
+  npm other than 12 or a Node.js older than 26.
+
+- `.npmrc` holds `save-exact=true`, `min-release-age=7`, `strict-allow-scripts=true`, `allow-git=none` and
+  `allow-remote=none`, and no longer `ignore-scripts=true`. npm 12 does not need it to keep a dependency's install
+  script from running: it runs only the scripts that `allowScripts` names, and the kit names none. With
+  `strict-allow-scripts=true`, an install that meets a script nobody named fails, where npm 12 alone would skip the
+  script with a warning. `ignore-scripts` overrides that setting, as npm's documentation of `strict-allow-scripts` says,
+  so keeping it in the file would hide the very case the setting is for: a new version that brings an install script,
+  at the `npm install` that takes it. The profile's setup keeps `npm ci --ignore-scripts`, so the install from the
+  lockfile still runs no script, as the rule on dependencies asks; today no package in the lockfile has one.
+  `allow-git` and `allow-remote` are already `none` by default in npm 12: written in the file, they hold whatever a
+  host's own configuration says.
+
+- `verify.yml`, `verify` job: right after `actions/setup-node`, a step installs npm 12.2.2 and prints `npm --version`.
+  It runs in bash on both systems, so that a failed install fails the step: PowerShell, the default shell on Windows,
+  would report only the exit code of the last command. The step "Install Claude Code, for the plugin validator" gains
+  `--allow-scripts=@anthropic-ai/claude-code`, as in `project.yml`: npm 12 otherwise blocks the package's
+  `postinstall`, which fetches its native binary, and `claude plugin validate .` stops. The comment on the `project`
+  job's `npm: "12.2.2"`, which says that the `verify` job keeps the npm of Node.js 26, says instead that it is the npm
+  that `devEngines` asks, the same version as the job above.
+
+- oxlint 1.94.0 is taken with `npm install oxlint@1.94.0` under npm 12 and the new `.npmrc`, so that the waiting
+  period itself admits it; `npm audit` runs after it.
+
+- `README.md`: the requirement on the development tools names npm 12, which `package.json` asks, with the command that
+  installs it where Node.js carries an older npm. "Checking a change to the kit" stays as it is.
+
+**Found while writing this strategy.**
+
+- npm does not read the repository's `.npmrc` in global mode: from the root, `npm config get ignore-scripts` prints
+  `true`, and the same with `--global` prints `false`. So the waiting period does not reach the `verify` job's global
+  installs of npm and of Claude Code, and the exception of record `261117-2034` needs nothing in the command. Claude
+  Code 2.1.325, the version the job installs, was released on 2026-11-13, more than 7 days ago in any case.
+- npm 11 knows some of these settings, depending on its release: 11.12.1 knows `min-release-age` and `allow-git`,
+  11.20.0 all four, with `allow-git` and `allow-remote` at `all`. The defaults that refuse are npm 12's; asking npm 12
+  in `devEngines` makes the whole set hold whatever npm 11 a host carries.
+- The registry today: npm 12.2.2 was released on 2026-11-04 and 12.2.3 on 2026-11-18; oxlint 1.94.0 on 2026-11-16 at
+  12:26 UTC, and 1.95.0 on 2026-11-23.
+
+**How each criterion is shown.**
+
+1. npm 11.12.1, already on this host in npm's cache, runs `npm ci --ignore-scripts` in the worktree and must stop on
+   `devEngines`; this host's npm 12.2.1 runs it and must pass. The pipeline adds npm 12.2.2 on both systems.
+2. With npm 12, `npm install --dry-run oxlint@1.95.0`, released less than 7 days earlier, must be refused. If 1.95.0 is
+   7 days old by then, the test takes the newest version of another package that is not.
+3. The pipeline's run on the pull request, with `npm --version` printed in each `verify` job.
+4. `package.json`, the lockfile, and the output of `npm audit`.
+5. The profile's `verify` on this host, apart from oxlint, which this host's application control stops; the pipeline
+   runs it.
+
+**Plan.** After the approval, one commit of the work: the five files with the record's log. Then the verification, the
+checker, the closing commit and the pull request. No part runs in parallel: the change is a few lines in files that
+must agree with each other.
+
+**Assumptions.** `npm install --global npm@12.2.2` replaces the npm of Node.js 26 on `windows-latest` as it does on
+`ubuntu-latest`, where `project.yml` already does it. No package that oxlint 1.94.0 brings has an install script, as
+none that 1.93.0 brings has; if one has, `strict-allow-scripts` fails the install and the work stops to ask.
+
+**Risks.** The npm update on Windows is the one step that the kit's pipeline has not run yet: if it fails, the
+`verify` job on Windows shows it on the first run, and the work stops to ask. A host whose npm is 11 can no longer run
+the setup until it installs npm 12: the README says so, and npm's error names the version `devEngines` asks.
+
+**For the person.** The change touches five existing files, one more than the profile's `kinds` expects of a fix:
+`package.json` with its lockfile, `.npmrc`, `verify.yml` and the README, all five named by the scope. The measure only
+reports it; nothing fails on it.
+
 ## Approval
 
 ## Log
+
+- The record was committed as the hub gave it, then its strategy, at the hub's request: the branch holds three
+  record-only commits before the approval, where the core rules expect two, and the measures will read the first two
+  as the strategy and the approval.
+- `git config user.email` matches the profile's `commits.address`. The item has no areas, so no area pack is loaded.
+- `node checks/verify.mjs --setup` ran once in the worktree before the first commit, with this host's npm 12.2.1:
+  `npm ci --ignore-scripts` passed.
+- The out-of-scope line on Prettier, TypeScript and `@types/node` wrote the package's name with a full-width at sign;
+  it is written with the plain one, before the approval.
+- Read `package.json`, `.npmrc`, the lockfile, `verify.yml`, `project.yml`, the README, the GitHub piece and the rule
+  on dependencies. The README is the one document that says how to install the development tools, under
+  "Requirements". No other file of the kit names the kit's `.npmrc`, its npm or `devEngines`:
+  `services/github/README.md` names `devEngines` only for a project's caller of `project.yml`, out of scope.
+- Read npm 12.2.1's documentation of `min-release-age`, `strict-allow-scripts`, `allow-scripts`, `allow-git`,
+  `allow-remote`, `ignore-scripts` and `devEngines`, and the release dates of npm, oxlint, Prettier, TypeScript,
+  `@types/node` and Claude Code in the registry (Strategy).
+- The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 
 ## Verification
 
