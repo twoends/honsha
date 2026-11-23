@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-23
 updated: 2026-11-23
@@ -152,6 +152,9 @@ reports it; nothing fails on it.
 
 ## Approval
 
+Approved by the person on 2026-11-23, in the hub's session, as written in `6ccfb03`, relayed to this session by the
+hub.
+
 ## Log
 
 - The record was committed as the hub gave it, then its strategy, at the hub's request: the branch holds three
@@ -170,6 +173,7 @@ reports it; nothing fails on it.
   `allow-remote`, `ignore-scripts` and `devEngines`, and the release dates of npm, oxlint, Prettier, TypeScript,
   `@types/node` and Claude Code in the registry (Strategy).
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The approval is written and the state set to `in-progress`.
 
 ## Verification
 
