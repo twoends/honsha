@@ -46,8 +46,9 @@ of a service's piece (workflow, The hosting service).
   the plugin is enabled. The kit acts only in the folders that the home's registry names, so without it a session
   receives one line that says so, and nothing else, and the guard judges its commands as in a project.
 - For a change to the kit, npm 12, which `package.json` asks in `devEngines`: under another npm the setup stops before
-  it installs anything. With it, the development tools, which `node checks/verify.mjs --setup` installs at the versions
-  in `package-lock.json`, with no install scripts.
+  it installs anything. Where Node.js carries an older npm, `npm install --global --min-release-age=7 npm@12` installs
+  the newest npm 12 released at least 7 days earlier. With it, the development tools, which
+  `node checks/verify.mjs --setup` installs at the versions in `package-lock.json`, with no install scripts.
 - A command-line client for the service that hosts the repositories, to open pull requests and to read them. The
   piece of that service names it.
 

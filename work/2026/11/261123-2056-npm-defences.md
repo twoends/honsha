@@ -197,6 +197,12 @@ hub.
   `npm ci --ignore-scripts`: exit 0, "added 7 packages", "found 0 vulnerabilities".
 - Criterion 2: npm 12.2.1, `npm install --dry-run oxlint@1.95.0`: exit 1, `ETARGET`, "No matching version found for
   oxlint@1.95.0 with a date before 16/11/2026, 22:13:33", the host's local time 7 days before the command.
+- The checker read `d1a860b` and failed it on two findings. The first: the README named npm 12 without the command that
+  installs it, which the approved strategy promised. The README now gives
+  `npm install --global --min-release-age=7 npm@12`, so that the command itself keeps the waiting period of the rule on
+  dependencies: with npm 11.12.1 and `--dry-run`, it would change npm 12.2.1 to 12.2.2, and not to 12.2.3, released
+  on 2026-11-18. The second finding, the three record-only commits before the approval, cannot be fixed on a branch
+  that only grows (next line).
 
 ## Verification
 
