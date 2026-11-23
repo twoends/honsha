@@ -93,7 +93,8 @@ item was chosen.
   on the default branch).
 - The trailers: `Work-Item: <id>` on every commit of a work branch, `Backlog: <id>` on the commits of the backlog.
 - What the piece of a hosting service gives an installation's pipeline is named in that piece: for GitHub, the
-  workflow `.github/workflows/project.yml`, which a project's own workflow calls, with its input `claude-code`.
+  workflow `.github/workflows/project.yml`, which a project's own workflow calls, with its inputs `claude-code` and
+  `npm`.
 
 ## Identifiers
 

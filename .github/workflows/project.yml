@@ -17,6 +17,11 @@ on:
         type: string
         required: false
         default: ""
+      npm:
+        description: The npm version to install before the setup, for a project that asks another npm; none when empty.
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -59,6 +64,14 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
+      # Before the setup, whose first `npm ci` refuses an npm outside the project's `devEngines`.
+      - name: Install npm
+        if: inputs.npm != ''
+        env:
+          VERSION: ${{ inputs.npm }}
+        run: |
+          npm install --global "npm@$VERSION"
+          npm --version
       # The profile says what a fresh checkout of the project needs, wherever its packages are: the pipeline installs
       # none of the project's packages itself.
       - name: Prepare the checkout with the setup commands of the profile
@@ -67,7 +80,9 @@ jobs:
         if: inputs.claude-code != ''
         env:
           VERSION: ${{ inputs.claude-code }}
-        run: npm install --global "@anthropic-ai/claude-code@$VERSION"
+        # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
+        # not name.
+        run: npm install --global --allow-scripts=@anthropic-ai/claude-code "@anthropic-ai/claude-code@$VERSION"
       - name: Check the record of the work item
         if: github.event_name == 'pull_request'
         run: node ../kit/checks/record.mjs

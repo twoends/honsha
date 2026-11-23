@@ -85,3 +85,5 @@ jobs:
     with:
       # The profile runs `claude plugin validate .`; the same version as the job above.
       claude-code: "2.1.325"
+      # Another npm than the one of Node.js 26, which the `verify` job above keeps, so that the input runs here.
+      npm: "12.2.2"

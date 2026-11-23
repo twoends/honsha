@@ -134,8 +134,14 @@ jobs:
     uses: <owner>/<repository of the kit>/.github/workflows/project.yml@<default branch of the kit>
 ```
 
-A profile that runs `claude`, as the kit's does with `claude plugin validate .`, needs Claude Code on the runner: the
-job adds `with:` and, under it, `claude-code: "<version>"`.
+For what the runner needs beyond Node.js 26 and the npm it carries, the job adds `with:` and, under it, a line for each
+input:
+
+- `claude-code: "<version>"`, for a profile that runs `claude`, as the kit's does with `claude plugin validate .`:
+  Claude Code, installed after the setup.
+- `npm: "<version>"`, for a project that asks another npm, as one whose `package.json` asks npm 12 in `devEngines`,
+  which npm checks at the setup's first `npm ci`: that npm, installed before the setup. The version is an exact one
+  that `devEngines` allows.
 
 GitHub lets a workflow of a private or a public repository call a reusable workflow of a public one, as long as the
 caller's Actions settings allow reusable workflows, which they do by default. project.yml checks out the kit with the
@@ -151,14 +157,15 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
 2. **What it runs.** project.yml checks out the project in `project/` and, beside it in `kit/`, the kit at the commit
    project.yml was read from, which is the kit's default branch for a project and, for the kit, the pull request or the
    pushed commit itself.
-   On Linux, with Node.js 26, it prepares the checkout with the kit's `checks/verify.mjs --setup`, which runs the
-   `setup` list of the profile and installs nothing when the profile has none, then runs from `project/` the kit's
-   `checks/record.mjs`, on a pull request only, and `checks/commits.mjs`, `hub/projects.mjs check` where the project
-   holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify` list of the profile. The kit's first job
-   runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone, as its profile lists the kit's checks.
-   GitHub checks out the merge of the pull request with its base branch, so the commands test the merged result, and
-   the workflow does not run while the pull request has a conflict; on a push it checks out the pushed commit. The
-   checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
+   On Linux, with Node.js 26 and the npm the caller names, if any, it prepares the checkout with the kit's
+   `checks/verify.mjs --setup`, which runs the `setup` list of the profile and installs nothing when the profile has
+   none, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and `checks/commits.mjs`,
+   `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify`
+   list of the profile. The kit's first job runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone,
+   as its profile lists the kit's checks. GitHub checks out the merge of the pull request with its base branch, so the
+   commands test the merged result, and the workflow does not run while the pull request has a conflict; on a push it
+   checks out the pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the
+   commits needs.
 3. **What it gives the commands.** project.yml, and the kit's file for its own jobs, set `HONSHA_BRANCH` from
    `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base and head commits of the pull request. On a push,
    `github.ref_name`, `github.event.before` and `github.sha`.
