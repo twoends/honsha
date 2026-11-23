@@ -17,6 +17,11 @@ on:
         type: string
         required: false
         default: ""
+      npm:
+        description: The version of npm to install before the setup, for a project that asks another npm than the one of Node.js 26; none when empty.
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -59,6 +64,14 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
+      # Before the setup, whose first `npm ci` refuses an npm outside the project's `devEngines`.
+      - name: Install npm
+        if: inputs.npm != ''
+        env:
+          VERSION: ${{ inputs.npm }}
+        run: |
+          npm install --global "npm@$VERSION"
+          npm --version
       # The profile says what a fresh checkout of the project needs, wherever its packages are: the pipeline installs
       # none of the project's packages itself.
       - name: Prepare the checkout with the setup commands of the profile
