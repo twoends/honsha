@@ -206,7 +206,34 @@ hub.
 - Stop: the second finding cannot be fixed, inside the scope or outside it. The record and its strategy were committed
   apart, at the hub's request, and no new commit joins them; the measures will read `b336245` as the strategy and
   `6ccfb03` as the approval. The state is `blocked` until the person decides whether to accept it.
+- oxlint 1.94.0 runs on this host, which the boundaries did not expect: on a file outside the repository with two
+  errors, it reported both and exited with 1. So the lint ran here too (Verification), besides in the pipeline.
+- The person accepted the three record-only commits (Deviations); the state is `in-progress` again.
+- The second check, of `2bc9a4e`, passed with no findings. The pull request is #48.
+- The kit's pipeline on #48, run 45271715560, at `2bc9a4e`: `project` passed, with npm 12.2.2 installed before the
+  setup, `npm ci --ignore-scripts` passing under it, Claude Code installed with its script allowed, and all 7
+  verification commands passing. `verify` on Linux and on Windows and `personal content` failed in
+  `actions/setup-node`, before any step of the kit's own. setup-node v7.1.0 takes the package manager of
+  `package.json`'s `devEngines` as the project's, turns its npm cache on, and asks for the cache's folder with
+  `npm config get cache`, run by the npm of Node.js 26.13.1, npm 11.20.0. npm checks `devEngines` there too, and stops
+  with `EBADDEVENGINES`. `project` passed because its checkouts sit in `project/` and `kit/`, and setup-node found no
+  `package.json` at the workspace's root.
+- The fix lies in the `actions/setup-node` steps of the `verify` and `personal` jobs, which the approved scope does not
+  name: `package-manager-cache: false`, the input that setup-node's own message names, keeps both jobs without an npm
+  cache, as they were before `package.json` named a package manager, and setup-node then runs no npm before the job
+  installs npm 12. That is a deviation from the scope, so the work stops here: the state is `blocked` until the person
+  decides.
 
 ## Verification
+
+## Deviations
+
+- The branch holds three record-only commits before the approval, where the core rules ask for two: `b336245`, the
+  record as the hub gave it, `6ccfb03`, its strategy, and `10bc2e8`, the approval. The cause is the hub's brief, which
+  asked for the record to be committed unchanged before the strategy was written. `checks/measures.mjs` reads the
+  first two commits of a full item as the strategy and the approval, so for this item it measures the writing of the
+  strategy, from `b336245` to `6ccfb03`, as the wait for approval, and counts the real wait, from `6ccfb03` to
+  `10bc2e8`, as agent work. Accepted by the person on 2026-11-23, in the hub's session, after the hub explained the
+  checker's finding and its cause.
 
 ## Outcome
