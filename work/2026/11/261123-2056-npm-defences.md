@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-23
 updated: 2026-11-23
@@ -223,6 +223,9 @@ hub.
   cache, as they were before `package.json` named a package manager, and setup-node then runs no npm before the job
   installs npm 12. That is a deviation from the scope, so the work stops here: the state is `blocked` until the person
   decides.
+- The person approved `package-manager-cache: false` in the two jobs (Deviations); the state is `in-progress` again.
+- `verify.yml`: the `actions/setup-node` steps of the `verify` and `personal` jobs take `package-manager-cache: false`,
+  each with a comment that says why.
 
 ## Verification
 
@@ -235,5 +238,9 @@ hub.
   strategy, from `b336245` to `6ccfb03`, as the wait for approval, and counts the real wait, from `6ccfb03` to
   `10bc2e8`, as agent work. Accepted by the person on 2026-11-23, in the hub's session, after the hub explained the
   checker's finding and its cause.
+- The `actions/setup-node` steps of the `verify` and `personal` jobs of `verify.yml`, which the scope does not name,
+  take `package-manager-cache: false`. With `devEngines` in `package.json`, setup-node v7.1.0 turns its npm cache on and
+  runs the npm of Node.js 26, which stops on `devEngines` before the `verify` job installs npm 12, and fails both jobs
+  (Log). Approved by the person on 2026-11-24, in the hub's session, relayed to this session by the hub.
 
 ## Outcome
