@@ -161,11 +161,11 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    `checks/verify.mjs --setup`, which runs the `setup` list of the profile and installs nothing when the profile has
    none, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and `checks/commits.mjs`,
    `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify`
-   list of the profile. The kit's first job
-   runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone, as its profile lists the kit's checks.
-   GitHub checks out the merge of the pull request with its base branch, so the commands test the merged result, and
-   the workflow does not run while the pull request has a conflict; on a push it checks out the pushed commit. The
-   checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
+   list of the profile. The kit's first job runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone,
+   as its profile lists the kit's checks. GitHub checks out the merge of the pull request with its base branch, so the
+   commands test the merged result, and the workflow does not run while the pull request has a conflict; on a push it
+   checks out the pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the
+   commits needs.
 3. **What it gives the commands.** project.yml, and the kit's file for its own jobs, set `HONSHA_BRANCH` from
    `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base and head commits of the pull request. On a push,
    `github.ref_name`, `github.event.before` and `github.sha`.
