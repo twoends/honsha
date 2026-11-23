@@ -174,6 +174,29 @@ hub.
   `@types/node` and Claude Code in the registry (Strategy).
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The approval is written and the state set to `in-progress`.
+- No part runs in parallel: the change is a few lines in files that must agree.
+- `package.json`: `devEngines` with the runtime `node` `>=26` and the package manager `npm` `>=12 <13`, both with
+  `onFail: error`; npm wrote the two objects one key per line when it saved the file.
+- `.npmrc`: `min-release-age=7`, `strict-allow-scripts=true`, `allow-git=none` and `allow-remote=none` beside
+  `save-exact=true`, without `ignore-scripts=true`, with a comment that says why it is absent. From the root,
+  `npm config get` reads the five as written and `ignore-scripts` as `false`; with `--global`, `min-release-age` is
+  `null`, so the global installs of the pipeline stay outside the file.
+- `verify.yml`: the step "Install the npm that package.json asks", in bash, installs npm 12.2.2 and prints
+  `npm --version` before the setup. "Install Claude Code, for the plugin validator" runs with
+  `--allow-scripts=@anthropic-ai/claude-code`, with the comment that `project.yml` gives the same flag. The comment on
+  the `project` job's `npm` says it is the npm that `devEngines` asks.
+- `README.md`: "Requirements" names npm 12, which `package.json` asks in `devEngines`, and says that under another npm
+  the setup stops before it installs anything.
+- `npm install oxlint@1.94.0`, with this host's npm 12.2.1 under the new `.npmrc`: "changed 2 packages", "found 0
+  vulnerabilities". The lockfile holds oxlint and its 19 bindings at 1.94.0, no 1.93.0, and no package with an install
+  script; its one other change is the range of oxlint's optional peer `oxlint-tsgolint`, which is not installed.
+  `npm audit`: "found 0 vulnerabilities".
+- Criterion 1: npm 11.12.1, from npm's cache on this host, `npm ci --ignore-scripts`: exit 1, `EBADDEVENGINES`,
+  "Invalid semver version ">=12 <13" does not match "11.12.1" for "packageManager"", before it installs anything; it
+  also warns that `strict-allow-scripts` and `allow-remote` are unknown project configs. npm 12.2.1,
+  `npm ci --ignore-scripts`: exit 0, "added 7 packages", "found 0 vulnerabilities".
+- Criterion 2: npm 12.2.1, `npm install --dry-run oxlint@1.95.0`: exit 1, `ETARGET`, "No matching version found for
+  oxlint@1.95.0 with a date before 16/11/2026, 22:13:33", the host's local time 7 days before the command.
 
 ## Verification
 

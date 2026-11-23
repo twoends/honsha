@@ -52,10 +52,19 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
+      # Before the setup, whose `npm ci` refuses an npm outside the `devEngines` of package.json. Bash on both systems,
+      # since PowerShell would fail the step only on the exit code of its last command.
+      - name: Install the npm that package.json asks
+        shell: bash
+        run: |
+          npm install --global npm@12.2.2
+          npm --version
       - name: Prepare the checkout with the setup commands of the profile
         run: node checks/verify.mjs --setup
       - name: Install Claude Code, for the plugin validator
-        run: npm install --global @anthropic-ai/claude-code@2.1.325
+        # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
+        # not name.
+        run: npm install --global --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@2.1.325
       - name: Run the verification commands of the profile
         run: node checks/verify.mjs
 
@@ -85,5 +94,5 @@ jobs:
     with:
       # The profile runs `claude plugin validate .`; the same version as the job above.
       claude-code: "2.1.325"
-      # Another npm than the one of Node.js 26, which the `verify` job above keeps, so that the input runs here.
+      # The npm that the kit's `devEngines` asks; the same version as the job above.
       npm: "12.2.2"
