@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-23
-updated: 2026-11-23
+updated: 2026-11-24
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 48
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -226,8 +226,89 @@ hub.
 - The person approved `package-manager-cache: false` in the two jobs (Deviations); the state is `in-progress` again.
 - `verify.yml`: the `actions/setup-node` steps of the `verify` and `personal` jobs take `package-manager-cache: false`,
   each with a comment that says why.
+- The third check, of `b830b42`, passed with no findings. Its report is copied without the list of the files it read,
+  which named them by absolute path, outside the report's shape. It noted that the record did not support the
+  Verification's claim of the same results at `d1a860b` and `2bc9a4e`: Verification now gives only those at
+  `b830b42`.
+- The kit's pipeline on #48, run 45290838126, at `b830b42`: all four jobs passed. In `verify` on Linux and on Windows,
+  setup-node ran with `package-manager-cache: false`, `npm --version` printed 12.2.2, `npm ci --ignore-scripts` passed
+  under it, and the 7 verification commands passed, 196 tests among them. `personal content` and `project` passed.
+  Criterion 3 is met.
 
 ## Verification
+
+On this host, at `b830b42` with the record as it stands, with npm 12.2.1:
+
+- `node checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node checks/commits.mjs`: passed, the 8 commits of the branch follow the rules.
+- `node hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed, no findings, with oxlint 1.94.0.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 196 tests, 196 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version, licence and icon and advice on the README's
+  install line, none of which this change touches.
+
+The first check, of `d1a860b` (full): verdict `fail`. Findings: 1. `README.md:48-50` names npm 12 but not the command
+that installs it where Node.js carries an older npm, which the approved strategy says it would; add the command, or
+write in the record why it was left out. 2. The branch has three record-only commits before the approval, `b336245`,
+`6ccfb03` and `10bc2e8`, where `rules/git.md` asks for two; `checks/measures.mjs` will count `b336245` as the strategy
+and `6ccfb03` as the approval. A branch that only grows cannot correct it; the person decides whether to accept it.
+
+The second check, of `2bc9a4e` (since `d1a860b`): verdict `pass`, no findings.
+
+The third check, of `b830b42` (since `2bc9a4e`), with the record as it stands:
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. npm 11 stops on `devEngines`, npm 12 passes, both in the log: met. `package.json:8-19`, and the record's log at
+   lines 194-197 (`EBADDEVENGINES` under 11.12.1, exit 0 under 12.2.1).
+2. npm 12 refuses a version released less than 7 days earlier: met. `.npmrc:4`, and the record's log at lines 198-199
+   (`ETARGET` on `oxlint@1.95.0`).
+3. `verify` is green on Ubuntu and Windows with npm 12.2.2, and `personal content` and `project` stay green: not
+   verifiable. Run 45271715560 at `2bc9a4e` failed `verify` on both systems and `personal content` inside
+   `actions/setup-node` (record lines 213-220). The fix at `.github/workflows/verify.yml:57` and `:91` has not had a
+   pipeline run read yet.
+4. oxlint is at 1.94.0 in `package.json` and the lockfile, and the audit is in the log: met. `package.json:22`,
+   `package-lock.json:715-717` and its 19 bindings at 1.94.0 with no 1.93.0, and the record's log at line 193.
+5. The profile's `verify` commands pass: met, in the record's Verification for `b830b42`.
+
+- **Intent:** in order. The fix keeps the kit's pipeline able to run under the new `devEngines`. The profile has
+  `public: true`, and nothing the person said is quoted in the diff, the record or the commit subjects.
+- **Scope:** in order. The diff's one change outside the approved scope, `package-manager-cache: false` on the
+  `actions/setup-node` steps of the `verify` and `personal` jobs, is recorded under "Deviations" with the person's
+  approval (who, when, where). No other workflow runs `actions/setup-node` with the kit's `package.json` at the
+  workspace root: `.github/workflows/project.yml:50-66` checks out into `project/` and `kit/`.
+- **Comments and documents:** in order. The comments at `.github/workflows/verify.yml:55-56` and `:89-90` say why and
+  hold no history. No document describes the setup-node cache of these jobs, and `services/github/README.md:107-188`
+  still holds.
+- **Gates:** in order. No rule names a hosting service. Nothing in the diff is about a user, a user's project or an
+  installation. No script is added. No decision-log entry is cited.
+- **Verification evidence:** in order. All seven `verify` commands of `.hub/profile.yml` are listed with results,
+  `checks/record.mjs` and `checks/commits.mjs` among them. Covers formatting (`prettier --check .`), lint (`oxlint`),
+  types (`tsc -p .`) and tests (`node --test`).
+- **Record:** in order
+- **Commits:** in order. `7fd85e3` "Stop the item: setup-node reads devEngines and runs npm 11 before the job installs
+  npm 12" is a stop commit of its own and holds only the record. `b830b42` "Turn off setup-node's npm cache in the
+  verify and personal jobs, as the person approved" is the approved fix. Both carry `Work-Item: 261123-2056`. The
+  branch's reflog shows the 8 commits that Verification counts.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 3: the pipeline run on `b830b42` has not been read. It is the first proof that setup-node v7.1.0 accepts
+  `package-manager-cache: false` and runs no npm before the job installs npm 12. It is also the first run of
+  `npm install --global npm@12.2.2` on `windows-latest`.
+- Verification says its results were "the same at `d1a860b` and `2bc9a4e`". The record's log places the first oxlint
+  run on this host after the stop line that went into `2bc9a4e` (record line 209). So the oxlint result claimed for
+  `d1a860b` has no support in the record and cannot be checked from here.
 
 ## Deviations
 
@@ -244,3 +325,10 @@ hub.
   (Log). Approved by the person on 2026-11-24, in the hub's session, relayed to this session by the hub.
 
 ## Outcome
+
+The kit's own installs enforce its rule on dependencies. `devEngines` asks npm 12, so the setup stops under another npm
+before it installs anything, and `.npmrc` has npm 12 refuse a version released less than 7 days earlier, an install
+script that nobody named, and a dependency from git or from a URL. The `verify` job installs npm 12.2.2 before the
+setup on Linux and on Windows, and installs Claude Code with its install script allowed; in it and in the `personal`
+job, setup-node's npm cache is off, so that no npm runs before npm 12 is installed. oxlint is at 1.94.0. The README
+names npm 12 and the command that installs it. The pipeline passes on Linux and on Windows. No deferred check.
