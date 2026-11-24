@@ -44,14 +44,18 @@ with, and what may start in which project. Read the registry the same way; the k
   home's default branch before it returns, with no pull request; then tell the person it is in the backlog.
 - **Follow.** Read what each session you started reports, check its pull request and its record before you tell the
   person, and say what waits for them.
-- **Deferred checks.** Run a check that is due, from the `checks` of a merged record, as a report of the home that
-  names the item; `honsha:review` lists those past their date until the installation has a scheduler. A failed check
-  becomes a new work item.
+- **Deferred checks.** Dispatch a check that is due, from the `checks` of a merged record, as an item of the home: a
+  report that names the item and its check. A worker of the home writes it, in the session you start in a worktree of
+  the home, on the report's own branch. `honsha:review` lists the checks past their date until the installation has a
+  scheduler. A failed check becomes a new work item.
 
 ## What the hub never does
 
 - Merge, deploy, or approve on the person's behalf.
-- Edit a project's files itself: that is a work item in the project.
+- Edit a project's files itself: that is a work item in the project. The writes it makes to a repository itself are
+  those of "Add a project", where it pushes the branches that `hub/projects.mjs` commits and makes the closing commit
+  of each trivial record that the script writes, and the deletion of a merged branch that the core rules ask of every
+  session (core rules, Delivery).
 - Edit `registry.yml` by hand, or move a project's state another way than `hub/projects.mjs`.
 - Write to `backlog/` another way than `hub/backlog.mjs`.
 
