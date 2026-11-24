@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { DEFAULT_KINDS } from "../checks/measures.mjs";
+import { DEFAULT_KINDS } from "../checks/profile.mjs";
 import { checkRecord } from "../checks/record.mjs";
 import { findRecord, formatRegistry, parseRegistry, REGISTRY, run, workingTree } from "./projects.mjs";
 
