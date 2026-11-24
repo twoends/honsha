@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-23
 updated: 2026-11-24
@@ -123,6 +123,9 @@ either form, within its budget.
 
 ## Approval
 
+Form B approved by the person on 2026-11-24, in the hub's session, with the strategy as written in `18d1ee8`, relayed
+to this session by the hub.
+
 ## Log
 
 - The branch was cut from `origin/main` after `git fetch`. `git config user.email` matches the profile's
@@ -136,6 +139,7 @@ either form, within its budget.
   says who writes a deferred check's report: the architecture's "Scheduled" flow says that every timed run goes through
   the hub and leaves records, and `honsha:review` only lists the checks past their date; both hold under either form.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The approval is written and the state set to `in-progress`.
 
 ## Verification
 
