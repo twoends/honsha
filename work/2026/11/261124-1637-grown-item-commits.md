@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
@@ -300,3 +300,15 @@ the person" included, relayed to this session by the hub and confirmed by the pe
   forged entry readable by the other rules. The other way for 2 is to take back `--end-of-options` from the default
   branch's reading and the comparison with `git rev-list`, and keep the check of identifiers of `8b449e6`, which the
   second review found weaker.
+- The person accepted both deviations (Deviations); the state is `in-progress` again.
+
+## Deviations
+
+- The boundary "every history the check accepts today it still accepts" does not hold for one history: work committed
+  at small after a record at small that holds an approval, then a record made full with no deviation. Since an approval
+  is read only from the gate's opening, as the strategy says, that history now fails on the missing deviation. Accepted
+  by the person on 2026-11-24, in this item's session.
+- The fixes that the security review's weak points asked for reach beyond the approval gate: `checks/commits.mjs`
+  compares every reading of `git log` with `git rev-list` for the same range, on work branches and on the default
+  branch, and gives git `--end-of-options` before each commit's identifier, in the default branch's reading of direct
+  commits too. Accepted by the person on 2026-11-24, in this item's session.
