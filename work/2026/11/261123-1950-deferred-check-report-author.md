@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: done
 areas: []
 created: 2026-11-23
 updated: 2026-11-24
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 50
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -157,4 +157,67 @@ to this session by the hub.
 
 ## Verification
 
+On this host, at `4e1bef5` with the record as it stands, with npm 12.2.1:
+
+- `node checks/record.mjs`, in the kit directory and in the worktree: passed, the record has the shape the rules ask
+  for.
+- `node checks/commits.mjs`, in the kit directory and in the worktree: passed, the 4 commits of the branch follow the
+  rules.
+- `node hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed, no findings, with oxlint 1.94.0.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 196 tests, 196 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version, licence and icon and advice on the README's
+  install line, none of which this change touches.
+
+The first check, of `65c9082` (full): verdict `fail`. Findings: 1. `agents/hub.md:55-57` gives a closed list of the
+hub's own writes to a repository and leaves out the deletion of a merged branch, which `rules/git.md:28` asks of every
+session, the hub included; the strategy's facts leave it out too. Name the deletion in the list, or limit the sentence
+to the writes beyond those the core rules ask of every session.
+
+The second check, of `4e1bef5` (since `65c9082`), with the record as it stands:
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. `agents/hub.md` says who writes the report of a due deferred check, and in which worktree and branch, as the
+   approved form B: met, `agents/hub.md:47-50` (a worker of the home, in the session the hub starts in a worktree of
+   the home, on the report's own branch).
+2. The rule is stated in one place, and other documents point there: met, `docs/01-specs/WORKFLOW.md:207-208` points
+   to `agents/hub.md`, Deferred checks. `skills/review/SKILL.md:24` and `docs/01-specs/ARCHITECTURE.md:143` do not say
+   who writes the report.
+3. `agents/hub.md` names every write the hub makes to a repository itself, in one place: met, `agents/hub.md:55-58`.
+   The list now includes the deletion of a merged branch and points to the core rules (Delivery) for that rule, which
+   is `rules/git.md:28`.
+
+- **Intent:** in order. No words of the person are quoted in the diff or the record, so `public: true` is respected.
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting (prettier), lint (oxlint), types (tsc) and tests (`node --test`)
+- **Record:** in order
+- **Commits:** in order
+
+Last report's finding: the list of the hub's own writes left out the deletion of a merged branch. This is fixed in
+`agents/hub.md:57-58` by commit 4e1bef5, "Name the deletion of a merged branch among the hub's own writes, as the
+checker asked". The approved strategy's facts still leave this write out. The log at lines 153-156 of the record states
+this and keeps the strategy as it was approved. That is not a change to the scope or the criteria.
+
+**Findings**
+
+none
+
+**Not verified**
+
+none
+
 ## Outcome
+
+The hub dispatches a deferred check that is due as an item of the home, and a worker of the home writes its report in
+a worktree of the home, on the report's own branch; the hub's procedure says so under "Deferred checks", and the
+workflow points there. "What the hub never does" names, in one place, every write the hub makes to a repository itself.
+No deferred check.
