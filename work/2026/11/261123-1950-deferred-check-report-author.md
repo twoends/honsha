@@ -140,6 +140,16 @@ to this session by the hub.
   the hub and leaves records, and `honsha:review` only lists the checks past their date; both hold under either form.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The approval is written and the state set to `in-progress`.
+- `agents/hub.md`, "Deferred checks": the hub dispatches a due check as an item of the home, and a worker of the home
+  writes the report in the session the hub starts in a worktree of the home, on the report's own branch. "What the hub
+  never does": the rule that the hub edits no project's files itself names the writes it makes to a repository itself,
+  those of "Add a project": the pushes of the branches that `hub/projects.mjs` commits, and the closing commits of the
+  trivial records the script writes. The pushes are named because the third criterion asks for every write to a
+  repository; the pull requests the hub opens change no file. The file holds 5,166 characters, budget 6,000.
+- `docs/01-specs/WORKFLOW.md`, "Deferred checks": the sentence on the outcome points to `agents/hub.md` for who writes
+  the report and where. The scheduler's sentence stays.
+- Found and left, outside the scope: both documents say that a failed check becomes a new work item, and neither says
+  who creates it.
 
 ## Verification
 

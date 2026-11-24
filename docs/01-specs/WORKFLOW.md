@@ -204,8 +204,8 @@ stops instead of guessing leaves a choice to the person that only the person can
 
 An acceptance criterion that only a future event can verify does not keep the item open. It is written in `checks` with
 a date and what to look at. The scheduler runs it on that date; until an installation has one, the periodic review lists
-the checks past their date (`honsha:review`). The outcome is a report in the home, linked to the item. A failed check
-creates a new work item.
+the checks past their date (`honsha:review`). The outcome is a report in the home, linked to the item; who writes it,
+and where, is in the hub's procedure (`agents/hub.md`, Deferred checks). A failed check creates a new work item.
 
 ---
 
