@@ -2,13 +2,17 @@
 //
 // The profile is `.hub/profile.yml`. No YAML library is used: the reader accepts the plain forms
 // below and refuses anything else, so that a profile it cannot read is an error and never a
-// silent pass.
+// silent pass. A path pattern of `security-review` is refused too when the matcher of
+// `checks/record.mjs` would not read it: a pattern that matched nothing in silence would leave a
+// security review undone.
 //
 //   default-branch: main
 //   verify:
 //     - npm run check
 //   setup:
 //     - npm ci --ignore-scripts
+//   security-review:
+//     - "deploy/**"
 //   commits:
 //     address: '@example\.org$'
 //   kinds:
@@ -30,7 +34,7 @@ const TECHNOLOGY = /^[A-Za-z0-9][\w.+-]*$/;
 /**
  * @typedef {{ defaultBranch: string | null, verify: string[], setup: string[],
  *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean,
- *   stack: string[], lessons: string | null }} Profile
+ *   stack: string[], lessons: string | null, securityReview: string[] }} Profile
  */
 
 /**
@@ -64,7 +68,44 @@ function block(lines, start, test) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, setup, commitsAddress, kinds, public, stack, lessons }` from the text of a profile.
+ * The items of the list under the key on line `start`, written as a block below it or as `[]`; throws `form` for any
+ * other form. An indented line that is no item would end the list where it stands, and an item after it would be
+ * skipped with no word: the reader refuses it.
+ * @param {string[]} lines
+ * @param {number} start
+ * @param {string} value the key's value on its own line
+ * @param {string} form
+ */
+function list(lines, start, value, form) {
+  if (value === "[]") return [];
+  if (value !== "") throw new Error(form);
+  const after = lines.slice(start + 1).find((next) => !BLANK.test(next) && !ITEM.test(next));
+  if (after !== undefined && /^\s/.test(after)) throw new Error(form);
+  return block(lines, start, ITEM).map((match) => scalar(match[1]));
+}
+
+/**
+ * Why the matcher of `checks/record.mjs` would not read a pattern of `security-review`, or null when it would. It
+ * takes no other special character than `*`, `?` and `**`, and matches paths from the project's root, folder by
+ * folder, as git names them.
+ * @param {string} pattern
+ */
+function unreadable(pattern) {
+  const name = `\`${pattern}\` in \`security-review\``;
+  if (pattern === "") return "`security-review` holds an empty pattern";
+  if (/[[\]{}\\]/.test(pattern)) {
+    return `${name} holds \`[\`, \`]\`, \`{\`, \`}\` or a backslash, which the record's check does not read as a pattern`;
+  }
+  if (pattern.startsWith("!")) return `${name} begins with \`!\`: a pattern cannot leave paths out`;
+  if (pattern.split("/").some((folder) => folder === "" || folder === "." || folder === "..")) {
+    return `${name} is not a path from the project's root: it begins with \`/\` or \`./\`, or holds a \`..\`, \`.\` or empty name`;
+  }
+  return null;
+}
+
+/**
+ * Returns `{ defaultBranch, verify, setup, commitsAddress, kinds, public, stack, lessons, securityReview }` from the
+ * text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -81,6 +122,7 @@ export function parseProfile(text) {
     public: false,
     stack: [],
     lessons: null,
+    securityReview: [],
   };
   lines.forEach((line, index) => {
     const top = /^([A-Za-z][\w-]*):(.*)$/.exec(line);
@@ -118,20 +160,18 @@ export function parseProfile(text) {
       );
     }
     if (key === "verify" || key === "setup") {
-      const form = `profile: \`${key}\` must be a list with one command on each line`;
-      /** @type {string[]} */
-      let commands = [];
-      if (value === "") {
-        commands = block(lines, index, ITEM).map((match) => scalar(match[1]));
-        // An indented line that is no item would end the list where it stands, and a command left out of it would be
-        // skipped with no word: the reader refuses it.
-        const after = lines.slice(index + 1).find((next) => !BLANK.test(next) && !ITEM.test(next));
-        if (after !== undefined && /^\s/.test(after)) throw new Error(form);
-      } else if (value !== "[]") {
-        throw new Error(form);
-      }
+      const commands = list(lines, index, value, `profile: \`${key}\` must be a list with one command on each line`);
       if (commands.some((command) => command === "")) throw new Error(`profile: \`${key}\` holds an empty command`);
       profile[key] = commands;
+    }
+    if (key === "security-review") {
+      const form = "profile: `security-review` must be a list with one path pattern on each line";
+      const patterns = list(lines, index, value, form);
+      for (const pattern of patterns) {
+        const why = unreadable(pattern);
+        if (why) throw new Error(`profile: ${why}`);
+      }
+      profile.securityReview = patterns;
     }
     if (key === "commits") {
       const inline = /^\{\s*address:\s*(.+?)\s*\}$/.exec(value);

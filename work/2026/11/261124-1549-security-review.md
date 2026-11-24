@@ -306,3 +306,15 @@ the person" included, relayed to this session by the hub.
 - Both reports keep the agent's shape, and the second ends with a note outside it: in the trial the agent ran as a
   session's own agent, so it received the kit's start hooks, and with `--plugin-dir` the plugin's setting `home` is
   unset, so the opening part said so. Run as a subagent, as the skill runs it, it receives no start hook.
+- The scripts part is `0264724`: `checks/profile.mjs` reads `security-review` and refuses a pattern its matcher does
+  not read, `[`, `]`, `{`, `}`, a backslash, a leading `!`, or a name that is empty, `.` or `..`, since a pattern that
+  matched nothing in silence would leave a review undone. `checks/record.mjs` exports the matcher `matches`, reads the
+  branch's changed files with `--no-renames` only when the profile lists patterns, names those that match after its
+  usual line, and fails a `done` record that lacks a `### Security review report` heading, which may name the commit
+  it read as a checker report's does, or a branch whose changed files it cannot read. Its reading of the checker's
+  report now ends at any `###` heading, so a review's verdict is never taken for the checker's. 13 new tests; the
+  part's own run passed but for the session-start total, which its longer folder pushed past 29,000, and which this
+  part raised.
+- Integration: the scripts part was merged into the item's branch with a merge commit. The one fix it needed is in that
+  commit: the test of the profile's template expects the template's example, `src/auth/**`, under `security-review`.
+  The part's worktree and branch were then removed.
