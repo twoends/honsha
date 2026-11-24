@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: gate
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
@@ -240,6 +240,11 @@ that the worker does not see as one of the cases gets no review; the checker rea
 - The kit's own profile could list the guard and the check of personal content under `security-review`; that is a
   choice of its own, left to a later item.
 
+## Approval
+
+Approved by the person on 2026-11-24, in the hub's session, as written in `466832a`, the four choices listed under "For
+the person" included, relayed to this session by the hub.
+
 ## Log
 
 - The record comes from the home's backlog, taken by the hub; its intent is restated as the core rules ask of a public
@@ -252,3 +257,5 @@ that the worker does not see as one of the cases gets no review; the checker rea
   tests of budgets, hooks and the interface. Measured the session-start total and the budgets (Strategy) and tried
   `path.matchesGlob` on names that begin with a dot (Strategy, Found while writing this strategy).
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The pull request is #51, opened with the record alone while it waited for the approval.
+- The approval is written and the state set to `in-progress`.
