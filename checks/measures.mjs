@@ -29,6 +29,7 @@ import { attribute, describeUsage, readResponses, sessionsDir } from "./sessions
 
 const ID = /work\/(\d{6}-\d{4})-/;
 const TRAILER = /^Work-Item:\s*(\d{6}-\d{4})\s*$/m;
+const OBJECT = /^[0-9a-f]{40,64}$/;
 
 /**
  * @typedef {{ id: string, size: string | null, kind: string | null, commits: number, added: number, removed: number,
@@ -101,7 +102,10 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
         // The message comes last, so that whatever it holds cannot shift the fields before it.
         const [hash, parents = "", time, ...body] = entry.split("\x1f");
         return { hash, merge: parents.includes(" "), time: Number(time) * 1000, body: body.join("\x1f") };
-      });
+      })
+      // A message may hold the byte that ends an entry: what follows it is no commit, and its identifier would reach
+      // git as an argument.
+      .filter((commit) => OBJECT.test(commit.hash));
     const id = commits.map((commit) => TRAILER.exec(commit.body)?.[1]).find(Boolean) ?? ID.exec(subject.join(" "))?.[1];
     if (!id || commits.length === 0) continue;
 
@@ -135,7 +139,9 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
     const own = commits.filter((commit) => !commit.merge);
     const gate =
       size === "full" && recordPath
-        ? approvalGate(own.values().map((commit) => attempt(cwd, ["show", `${commit.hash}:${recordPath}`])))
+        ? approvalGate(
+            own.values().map((commit) => attempt(cwd, ["show", "--end-of-options", `${commit.hash}:${recordPath}`])),
+          )
         : { opens: -1, closes: -1 };
     const gated = gate.closes < 0 ? null : { strategy: own[gate.opens].time, approval: own[gate.closes].time };
     const agentMinutes = gated

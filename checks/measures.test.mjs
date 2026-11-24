@@ -178,6 +178,27 @@ test("an item that grew to full has its strategy and approval at the commits tha
   assert.equal(grown?.reviewMinutes, 20);
 });
 
+test("a message that holds the byte separating git's output adds no commit to its item", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-measures-"));
+  git(dir, ["init", "-q", "-b", "main"]);
+  git(dir, ["config", "user.name", "Test"]);
+  git(dir, ["config", "user.email", "test@example.org"]);
+  write(dir, "a.md", "a\n");
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", "Start"]);
+  const id = "261118-1600";
+  git(dir, ["switch", "-q", "-c", `work/${id}-forged`]);
+  write(dir, `work/2026/11/${id}-forged.md`, record(id, "full", "fix", APPROVED));
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", `Add the record\x1e--output=forged\x1f\x1f0\x1f\n\nWork-Item: ${id}`]);
+  commit(dir, id, "Close it", "2026-11-18T16:30:00Z");
+  git(dir, ["switch", "-q", "main"]);
+  git(dir, ["merge", "-q", "--no-ff", "-m", `Merge work/${id}-forged`, `work/${id}-forged`]);
+  const item = measure({ cwd: dir, ref: "main" }).find((found) => found.id === id);
+  assert.equal(item?.commits, 2);
+  assert.ok(!fs.readdirSync(dir).some((name) => name.startsWith("forged")));
+});
+
 const SCRIPT = fileURLToPath(new URL("measures.mjs", import.meta.url));
 
 /**

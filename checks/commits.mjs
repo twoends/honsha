@@ -48,6 +48,10 @@ const CAPTURE = /^backlog\/[a-z0-9][a-z0-9-]*\/(\d{6}-\d{4})-[^/]+\.md$/;
 // The sizes whose work needs no approval: an item that grows from one keeps the commits it made at it.
 const SMALLER = ["trivial", "small"];
 const GREW = "the record becomes full here, after work committed at a smaller size, and holds no deviation";
+// A message may hold the byte that ends an entry of git's output, and what follows it would be read as a commit of its
+// own, whose identifier reaches git as an argument: only an object name is taken for one.
+const OBJECT = /^[0-9a-f]{40,64}$/;
+const FORGED = "a commit message holds the byte that separates the commits in git's output, so they cannot be read";
 
 /**
  * Where a full item's approval gate lies among its commits, read from its record as each commit holds it.
@@ -155,6 +159,7 @@ export function check({ cwd = ".", env = process.env } = {}) {
       const stray = WORK_ITEM_LINE.test(message.join(FIELD));
       return { hash, merge, author, committer, subject, items: values(items), backlog: values(backlog), stray };
     });
+  if (commits.some((commit) => !OBJECT.test(commit.hash))) return { commits: commits.length, problems: [FORGED] };
   if (commits.length === 0)
     return { commits: 0, problems: [], note: "The branch adds no commit to the default branch." };
 
@@ -163,7 +168,15 @@ export function check({ cwd = ".", env = process.env } = {}) {
   if (onDefault) {
     for (const commit of commits) {
       if (commit.merge) continue;
-      const changes = git(cwd, ["diff-tree", "--no-commit-id", "--name-status", "-r", "--root", commit.hash])
+      const changes = git(cwd, [
+        "diff-tree",
+        "--no-commit-id",
+        "--name-status",
+        "-r",
+        "--root",
+        "--end-of-options",
+        commit.hash,
+      ])
         .split("\n")
         .filter(Boolean);
       const why = notCapture(commit.backlog, changes);
@@ -188,10 +201,10 @@ export function check({ cwd = ".", env = process.env } = {}) {
   if (record && parseRecord(text)?.fields.get("size")?.value === "full") {
     const own = commits.filter((commit) => !commit.merge);
     /** @param {{ hash: string }} commit */
-    const recordAt = (commit) => attempt(cwd, ["show", `${commit.hash}:${record}`]);
+    const recordAt = (commit) => attempt(cwd, ["show", "--end-of-options", `${commit.hash}:${record}`]);
     /** @param {{ hash: string }} commit */
     const others = (commit) =>
-      git(cwd, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", commit.hash])
+      git(cwd, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", "--end-of-options", commit.hash])
         .split("\n")
         .filter((file) => file !== "" && file !== record);
     /** @param {{ hash: string, subject: string }} commit @param {string} problem */

@@ -223,3 +223,43 @@ the person" included, relayed to this session by the hub and confirmed by the pe
   work commit, `node checks/commits.mjs` from the kit's default branch, `6719d4b`, with `HONSHA_BRANCH`, `HONSHA_BASE`
   and `HONSHA_HEAD` naming that branch and its four commits, fails on the work commit with "before the approval is
   committed", as that project's pipeline does.
+- The scripts part is `aeea33c`. `checks/commits.mjs` exports `approvalGate(records)`, which takes the record's texts
+  at the branch's commits, merges left out, with "" where a commit holds no record, and returns where the gate opens
+  and closes, -1 for none; it reads them only up to the close, so both callers give them lazily and a branch costs one
+  `git show` per commit up to there. The check names the commit that opens the gate when work came before it and its
+  record holds no written "Deviations", then every commit inside the gate that changes another file, with today's
+  message. `checks/measures.mjs` reads its log with `%H` and `%P`, sets merges aside and takes strategy and approval
+  at the gate's commits; `DEFAULT_KINDS` is in `checks/profile.mjs`, and `checks/`, `hub/` and `hooks/` import one
+  another in no cycle. 7 new tests of the check and 1 of the measures; the part's own run passed, 221 tests.
+- Decisions of the part that the strategy did not spell out: when only a merge made the record full, no commit opens
+  the gate and every commit of the branch is read as inside one that never closes, as today's check reads it; when the
+  commit that opens the gate both lacks a deviation and changes another file, the deviation comes first. The measures'
+  test of a full item wrote its approval under "Intent", where the gate's reading finds none: it now writes a section
+  "Approval", and the command's test counts 3 more lines.
+- An approval written in a record at a smaller size no longer closes the gate, as the strategy says. A history that
+  today's check passes for that reason alone, work committed at small after a small record that holds an approval and
+  then a full record with no deviation, now fails on the missing deviation, which the core rules ask of it; and
+  `checks/record.mjs` refuses a small record that holds an approval.
+- Integration: the scripts part was merged into the item's branch with a merge commit, `7b2d47e`, with no conflict;
+  the part's worktree and branch were then removed.
+- Criterion 7, the second half: on the same branch and range, `node checks/commits.mjs` from this branch passes, "The 4
+  commits of the branch follow the rules.": the gate opens at the record made full with its deviation and closes at
+  the approval.
+- Not breaking, tried: on every work branch merged into the kit's default branch, 51, and into that project's, 22,
+  `checks/commits.mjs` from the default branch and from this branch give the same output and exit code. Two of the
+  kit's first branches fail under both, for commits made before the `Work-Item` trailer was a rule.
+- The security review runs, as the strategy says: on the diff without the record, at `7b2d47e`, after the profile's
+  `verify` passed there.
+- The review of `7b2d47e` passed with no findings and two weak points.
+  1. `checks/measures.mjs` now gives git, as an argument, a commit's identifier read from `git log`'s output, and a
+     message that holds the byte ending an entry makes what follows read as an entry of its own, whose identifier can
+     be an option of git. Fixed inside the scope, in a commit of its own: `checks/commits.mjs` and
+     `checks/measures.mjs` take only an object name for a commit's identifier and give git `--end-of-options` before
+     it. The check fails with a line of its own when an entry is no commit; the measures, a report, set such an entry
+     aside. The same reading in `checks/commits.mjs` was older than this item, and its new calls take the same
+     identifiers, so the fix covers it too. A test of each script fails on the scripts of `7b2d47e` and passes on the
+     fix.
+  2. Before the gate opens, a commit at a smaller size may change any file, the paths of `always-full` among them, once
+     a deviation follows. Left to the person: the gate never proved an approval, whose text the branch's author
+     writes; the deviation and the order of the commits are in the pull request; and the checker, not this script,
+     reads the always-full cases.

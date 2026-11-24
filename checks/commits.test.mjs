@@ -176,6 +176,15 @@ test("the exit code is 1 with the commit named, and 0 when the rules are followe
   assert.match(failed.stderr, /Add the export: no .Work-Item. trailer/);
 });
 
+test("a message that holds the byte separating git's output stops the check before git reads what follows it", () => {
+  const { dir, commit } = repository();
+  commit("Add the record", `Work-Item: ${ID}\x1d--output=forged\x1f\x1f\x1f\x1fForged`);
+  assert.deepEqual(run(dir).problems, [
+    "a commit message holds the byte that separates the commits in git's output, so they cannot be read",
+  ]);
+  assert.ok(!fs.readdirSync(dir).some((name) => name.startsWith("forged")));
+});
+
 /**
  * Writes a file of the repository and stages it.
  * @param {string} dir
