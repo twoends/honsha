@@ -2,7 +2,8 @@
 // interface (interface, Commands).
 //
 // Run from the root of the project. The record is `work/<yyyy>/<mm>/<id>-<slug>.md` for the branch
-// `work/<id>-<slug>`; the profile gives the kinds, and whether the project is public. What is checked:
+// `work/<id>-<slug>`; the profile gives the kinds, whether the project is public, and the paths
+// whose change calls for the security review. What is checked:
 //   - the front matter has the keys of the record template, with the values its comments allow,
 //     a `kind` among the profile's kinds or the default ones, and the identifier of the branch; an
 //     entry of `checks` may take several lines, as a formatter writes a long one;
@@ -11,13 +12,25 @@
 //   - at `in-progress`: every section the size keeps before Verification is written, the approval
 //     of a full item and the headings of its scope among them;
 //   - at `done`: every section the size keeps is written, `pr` and `model` are set,
-//     and a small or full item ends with a checker report whose verdict is `pass`.
+//     and a small or full item ends with a checker report whose verdict is `pass`;
+//   - at `done`, at every size, the trivial one included, which no checker reads: when the branch
+//     changes a path under the profile's `security-review`, the verification holds a security
+//     review report. Only that it is there: a finding the person accepted leaves its verdict
+//     `fail`, and only the checker reads "Deviations".
 // What a size keeps is read from the template's comments, so that it is written in one place;
 // the template is the one in the kit directory, beside this script's folder.
 //
-// The branch comes from HONSHA_BRANCH when a hosting service checks out something else. A branch
-// that is not a work branch has no record to check. The exit code is 1 when the record breaks a
-// rule, with one line for each.
+// The branch's changed files are read only when the profile lists paths under `security-review`,
+// with renames split into a deletion and an addition, so that a file moved out of a listed path
+// counts by its old path. Those that match are named at any state, since the review is due before
+// delivery. When they cannot be read the check fails: a review it cannot tell is due must not pass
+// in silence.
+//
+// The branch comes from HONSHA_BRANCH when a hosting service checks out something else, and the two
+// ends of its changes from HONSHA_BASE and HONSHA_HEAD, as for `checks/commits.mjs`; otherwise they
+// are the default branch, as last fetched where there is a remote, and HEAD. A branch that is not a
+// work branch has no record to check. The exit code is 1 when the record breaks a rule, with one
+// line for each.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -32,6 +45,8 @@ const SIZES = ["trivial", "small", "full"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 // A quote line that says nothing: the template's placeholder, or a bare `>`.
 const EMPTY_QUOTE = /^>\s*(?:…\s*)?$/;
+// The heading of a security review's report below Verification; like a checker report's, it may name the commit read.
+const REVIEW_REPORT = /^Security review report\b/;
 const TEMPLATE = new URL("../templates/record.md", import.meta.url);
 
 /**
@@ -177,15 +192,78 @@ export function readTemplate(text) {
 }
 
 /**
+ * Whether a path from the project's root, with forward slashes as git names it, matches a pattern of the profile's
+ * `security-review`. `*` stands for any characters inside one name and `?` for one character other than `/`; `**` as
+ * a whole name stands for zero or more folders, and inside a name reads as `*`. A pattern without `/` matches at the
+ * root only. Every other character stands for itself.
+ *
+ * Node's `path.matchesGlob` is not used: its `*` and `**` skip a name that begins with a dot, and a file of secrets
+ * often has one, as `.env` or a folder `.secrets` does.
+ * @param {string} file
+ * @param {string} pattern
+ */
+export function matches(file, pattern) {
+  return expression(pattern).test(file);
+}
+
+/**
+ * The regular expression source of one name of a pattern, which never crosses a `/`.
+ * @param {string} name
+ */
+function inside(name) {
+  return name
+    .split(/(\*+|\?)/)
+    .map((part) =>
+      part.startsWith("*") ? "[^/]*" : part === "?" ? "[^/]" : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    )
+    .join("");
+}
+
+/**
+ * The regular expression that a pattern of `security-review` stands for.
+ * @param {string} pattern
+ */
+function expression(pattern) {
+  // Two `**` in a row are one: each already stands for any number of folders.
+  const names = pattern.split("/").filter((name, index, all) => name !== "**" || all[index - 1] !== "**");
+  let source = "";
+  names.forEach((name, index) => {
+    const first = index === 0;
+    const last = index === names.length - 1;
+    if (name === "**") {
+      // Each form keeps the `/` that separates it from its neighbours, and stands for no folder at all too.
+      if (first && last) source += ".*";
+      else if (first) source += "(?:[^/]*/)*";
+      else if (last) source += "(?:/.*)?";
+      else source += "(?:/[^/]*)*";
+    } else {
+      if (!first && !(index === 1 && names[0] === "**")) source += "/";
+      source += inside(name);
+    }
+  });
+  return new RegExp(`^${source}$`, "s");
+}
+
+/**
+ * Up to three paths by name, then how many more.
+ * @param {string[]} paths
+ */
+function briefly(paths) {
+  const items = paths.length > 3 ? [...paths.slice(0, 3), `${paths.length - 3} more`] : paths;
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+/**
  * The problems of a record, one line each. `public` is whether the project is public, as its profile says, or null
- * where the profile is not at hand: the intent may then quote the person or restate the request.
+ * where the profile is not at hand: the intent may then quote the person or restate the request. `due` is the
+ * branch's changed paths that match the profile's `security-review`.
  * @param {string} text
- * @param {{ file: string, id: string, kinds: Record<string, number>, public?: boolean | null,
+ * @param {{ file: string, id: string, kinds: Record<string, number>, public?: boolean | null, due?: string[],
  *   template?: ReturnType<typeof readTemplate> }} options
  */
 export function checkRecord(
   text,
-  { file, id, kinds, public: open = false, template = readTemplate(fs.readFileSync(TEMPLATE, "utf8")) },
+  { file, id, kinds, public: open = false, due = [], template = readTemplate(fs.readFileSync(TEMPLATE, "utf8")) },
 ) {
   /** @type {string[]} */
   const problems = [];
@@ -253,8 +331,8 @@ export function checkRecord(
     }
     // Once work has started, what comes before the verification is written; at `done`, everything is.
     const verification = allowed.findIndex((section) => section.name === "Verification");
-    const due = state === "done" ? allowed : state === "in-progress" ? allowed.slice(0, verification) : [];
-    for (const section of due) {
+    const owed = state === "done" ? allowed : state === "in-progress" ? allowed.slice(0, verification) : [];
+    for (const section of owed) {
       const name = section.names[size];
       if (!section.optional && !written(named.get(name))) say(`section "${name}" is not written`);
       const below = named.get(name)?.subsections ?? [];
@@ -289,18 +367,26 @@ export function checkRecord(
       if (verdict === null) say("the verification has no checker report with a verdict");
       else if (verdict !== "pass") say(`the checker report kept in full has the verdict \`${verdict}\`, not \`pass\``);
     }
+    const reviewed = named.get("Verification")?.subsections.some((heading) => REVIEW_REPORT.test(heading)) ?? false;
+    if (due.length > 0 && !reviewed) {
+      const paths = due.length === 1 ? "a path" : "paths";
+      say(
+        `the branch changes ${paths} under \`security-review\` (${briefly(due)}), and the verification has no security review report`,
+      );
+    }
   }
   return problems;
 }
 
 /**
- * The verdict of the report kept in full: the last report that lists the acceptance criteria, since earlier ones
- * keep only their verdict and findings and may come after it; or the last report when none lists them.
+ * The verdict of the checker report kept in full: the last one that lists the acceptance criteria, since earlier ones
+ * keep only their verdict and findings and may come after it; or the last one when none lists them. Every `###`
+ * heading ends the report before it, so that the verdict of a security review report is never read as the checker's.
  * @param {string} verification
  */
 function lastReport(verification) {
   const reports = verification
-    .split(/^(?=###\s+Checker report)/m)
+    .split(/^(?=###\s)/m)
     .filter((part) => /^###\s+Checker report/.test(part))
     .map((part) => ({
       full: /\*\*Acceptance criteria\*\*/.test(part),
@@ -325,9 +411,37 @@ function attempt(cwd, args) {
 }
 
 /**
- * Returns `{ file, problems, note }` for the repository in `cwd`.
+ * The paths the branch changes, a moved file by its old path and its new one; or why git could not list them.
+ * @param {string} cwd
+ * @param {NodeJS.ProcessEnv} env
+ * @param {string} defaultBranch
+ * @returns {{ files: string[] } | { why: string }}
+ */
+function changes(cwd, env, defaultBranch) {
+  const head = env.HONSHA_HEAD || "HEAD";
+  const base =
+    env.HONSHA_BASE ||
+    [`origin/${defaultBranch}`, defaultBranch].find((ref) => attempt(cwd, ["rev-parse", "--verify", "--quiet", ref]));
+  if (!base) return { why: `the default branch \`${defaultBranch}\` was not found` };
+  const range = `${base}...${head}`;
+  try {
+    const names = execFileSync(
+      "git",
+      ["diff", "--name-only", "--no-renames", "-z", "--end-of-options", range, "--"],
+      // A branch may change many files: past the default buffer, their names would not be read at all.
+      { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 64 * 1024 * 1024 },
+    );
+    return { files: names.split("\0").filter(Boolean) };
+  } catch {
+    return { why: `git could not compare \`${range}\`` };
+  }
+}
+
+/**
+ * Returns `{ file, problems, note }` for the repository in `cwd`, and `due`, the branch's changed paths that match
+ * the profile's `security-review`, when the profile lists any.
  * @param {{ cwd?: string, env?: NodeJS.ProcessEnv }} [options]
- * @returns {{ file: string | null, problems: string[], note?: string }}
+ * @returns {{ file: string | null, problems: string[], note?: string, due?: string[] }}
  */
 export function check({ cwd = ".", env = process.env } = {}) {
   const branch = env.HONSHA_BRANCH || attempt(cwd, ["symbolic-ref", "--short", "-q", "HEAD"]);
@@ -349,17 +463,33 @@ export function check({ cwd = ".", env = process.env } = {}) {
   const listed = profile?.kinds;
   const kinds = listed && Object.keys(listed).length > 0 ? listed : DEFAULT_KINDS;
   const text = fs.readFileSync(path.join(cwd, file), "utf8");
-  return { file, problems: checkRecord(text, { file, id, kinds, public: profile?.public ?? false }) };
+  const options = { file, id, kinds, public: profile?.public ?? false };
+  const patterns = profile?.securityReview ?? [];
+  if (patterns.length === 0) return { file, problems: checkRecord(text, options) };
+  const changed = changes(cwd, env, profile?.defaultBranch ?? "main");
+  if ("why" in changed) {
+    const unread = `${file}: the branch's changed files could not be read (${changed.why}), so whether the security review is due cannot be told`;
+    return { file, problems: [...checkRecord(text, options), unread], due: [] };
+  }
+  const expressions = patterns.map(expression);
+  const due = changed.files.filter((changedFile) => expressions.some((pattern) => pattern.test(changedFile)));
+  return { file, problems: checkRecord(text, { ...options, due }), due };
 }
 
 function main() {
-  const { file, problems, note } = check();
+  const { file, problems, note, due = [] } = check();
   for (const problem of problems) console.error(problem);
   if (problems.length > 0) {
     console.error(`\nThe record breaks ${problems.length === 1 ? "a rule" : "the rules"} above.`);
     return 1;
   }
   console.log(note ?? `The record ${file} has the shape the rules ask for.`);
+  if (due.length > 0) {
+    const paths = `${due.length} ${due.length === 1 ? "path" : "paths"}`;
+    console.log(
+      `The branch changes ${paths} under \`security-review\` in the profile: ${briefly(due)}. The security review is due before delivery (\`honsha:security-review\`).`,
+    );
+  }
   return 0;
 }
 

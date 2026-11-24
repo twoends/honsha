@@ -19,10 +19,11 @@ this one changes only as "Changes to the interface" says.
 ## Agents and skills
 
 - Agents: `honsha:hub`, the hub of an installation, whose procedure a session opened in a home's own folder receives
-  when it starts; `honsha:worker`, which takes one work item from its record to an open pull request; and
-  `honsha:checker`, which verifies a finished item against its record.
-- Skills: `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts` and
-  `honsha:review`. The description of each says when it applies.
+  when it starts; `honsha:worker`, which takes one work item from its record to an open pull request;
+  `honsha:checker`, which verifies a finished item against its record; and `honsha:security-reviewer`, which looks for
+  security holes in a change before the checker.
+- Skills: `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts`, `honsha:review`
+  and `honsha:security-review`. The description of each says when it applies.
 - The pack of an area: the skill `honsha:area-<name>`, for the area of that name in a project's profile.
 
 ## Commands

@@ -9,9 +9,10 @@ const root = new URL("..", import.meta.url);
  * only by a work item that says why. The core rules and the record template have their own limit, set by what a hook
  * can deliver, in `hooks/hooks.test.mjs`.
  *
- * - The worker's and the checker's files are read at every item, the hub's at the start of every session in a home's
- *   own folder, and a skill whenever its situation comes: what they hold is paid for each time, so each is kept to what
- *   its reader needs. The hub's budget is also what `hooks/hooks.test.mjs` counts for it at a hub's start.
+ * - The worker's and the checker's files are read at every item, the security reviewer's at every item whose change
+ *   calls for its review, the hub's at the start of every session in a home's own folder, and a skill whenever its
+ *   situation comes: what they hold is paid for each time, so each is kept to what its reader needs. The hub's budget is
+ *   also what `hooks/hooks.test.mjs` counts for it at a hub's start.
  * - The profile's template is read whenever a profile is written or read for what a key holds.
  * - The workflow is read by whoever changes the kit, not by a session at work; nothing else stops its growth, and a
  *   rule that a session applies belongs elsewhere (workflow, Where the rules are).
@@ -23,8 +24,9 @@ const budgets = {
   "agents/hub.md": 6000,
   "agents/worker.md": 5800,
   "agents/checker.md": 7600,
-  "templates/profile.yml": 4400,
-  "docs/01-specs/WORKFLOW.md": 35000,
+  "agents/security-reviewer.md": 6000,
+  "templates/profile.yml": 4700,
+  "docs/01-specs/WORKFLOW.md": 36000,
   "docs/01-specs/INTERFACE.md": 9000,
 };
 const SKILL = 6000;

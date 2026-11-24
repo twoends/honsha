@@ -50,20 +50,23 @@ What the verification writes into the record stays uncommitted until the closing
    a `registry.yml`; then every other command listed under `verify` in the profile. Write each command and its result
    under "Verification".
    A command that fails is fixed or reported; it is never left out.
-2. A trivial item is verified at this point.
-3. For a small or full item, call the checker:
+2. When the description of the skill `honsha:security-review` says that the change calls for it, whatever the item's
+   size, invoke the skill now: the security review runs before the checker.
+3. A trivial item is verified at this point.
+4. For a small or full item, call the checker:
    - after `git fetch`, write two files in the repository root that are not committed: the difference between the
-     default branch on the hosting service and the item's branch, and the list of the branch's commits.
+     default branch on the hosting service and the item's branch, without the record, and the list of the branch's
+     commits.
 
      ```
-     git diff origin/<default-branch>...HEAD > .honsha-checker.diff
+     git diff origin/<default-branch>...HEAD -- . ':(exclude)<record>' > .honsha-checker.diff
      git log --reverse --name-only --format='commit %h%nauthor %ae%ncommitter %ce%nsubject %s%ntrailers %(trailers:only,unfold,separator=%x3B )%nfiles' origin/<default-branch>..HEAD > .honsha-checker.commits
      ```
 
    - invoke the agent `honsha:checker`, giving it the path of the record and the paths of the two files;
    - delete the two files;
    - copy the checker's report under "Verification", unchanged, with the commit it read.
-4. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
+5. When the report's verdict is `fail`, fix what lies inside the scope, then repeat the verification and run a
    repeated check: the two commands above with the commit the last check read in place of
    `origin/<default-branch>...` and `origin/<default-branch>..`. Only the person can ask for a full check again. The
    fix carries its log lines and not the results of the verification it answers. A finding that cannot be fixed inside

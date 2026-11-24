@@ -43,6 +43,11 @@ gates:
 # Paths whose change makes an item full, beside the cases the core rules list (Sizes).
 always-full:
   - "db/migrations/**"
+# Paths whose change calls for the security review before delivery, beside the cases the skill
+# `honsha:security-review` names. `*` stays inside a folder, `**` crosses folders, and both match a name that begins
+# with a dot. Left out, only those cases call for it.
+security-review:
+  - "src/auth/**"
 # The kinds of change, chosen with an item's size, each with the most existing files a change of that kind is expected
 # to touch (workflow, Measures). Left out: feature 10, fix 5, upkeep 5, change 10.
 kinds:

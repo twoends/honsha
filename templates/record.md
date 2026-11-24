@@ -59,7 +59,8 @@ full: what is in scope, what is out of scope, the boundaries, the criteria.
 ## Verification
 
 <!-- trivial: one line, the commands and their result. small and full: the commands with their results, then the
-checker's report, copied unchanged. -->
+checker's report, copied unchanged. At any size, a security reviewer's report comes before any checker's, copied
+unchanged too. -->
 
 ## Deviations
 
