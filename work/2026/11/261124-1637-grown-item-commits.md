@@ -263,3 +263,20 @@ the person" included, relayed to this session by the hub and confirmed by the pe
      a deviation follows. Left to the person: the gate never proved an approval, whose text the branch's author
      writes; the deviation and the order of the commits are in the pull request; and the checker, not this script,
      reads the always-full cases.
+- The fix is `8b449e6`. The profile's `verify` passed on it, with 223 tests, and a repeated review read what changed
+  since `7b2d47e`.
+- The repeated review of `8b449e6` passed with no findings, confirmed the weak point fixed, and named two more.
+  1. An entry forged with the object name of a commit that exists, but is not one of the branch's, still passed the
+     check of identifiers: in `checks/commits.mjs` it could close the gate early by naming a commit whose record holds
+     an approval, and in `checks/measures.mjs` add a commit to an item. Fixed in `checks/commits.mjs`, inside the scope,
+     in a commit of its own: the entries must be the commits that `git rev-list` lists for the same range, in the same
+     order, or the check fails with the same line; this replaces the check of identifiers there. The test now forges
+     an option of git and the name of the default branch's commit, and the second fails on `8b449e6`. Left to the
+     person in `checks/measures.mjs`: it is a report that fails nothing, and leaving out an item it cannot read would
+     need a way of saying so that it does not have.
+  2. A separator in a subject shifts the fields read after it, `Work-Item` among them, so a commit could pass the rule
+     of the trailer. Older than this item and outside its scope, which is the approval gate; no value from a message
+     reaches git as an argument. Left to the person.
+- After this fix, on every merged work branch, 51 of the kit's and 22 of that project's, and on the last 15 and 30
+  commits of the two default branches, the check from the default branch and from this branch give the same output;
+  the trial branch still passes.

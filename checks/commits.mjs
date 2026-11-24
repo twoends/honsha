@@ -48,9 +48,6 @@ const CAPTURE = /^backlog\/[a-z0-9][a-z0-9-]*\/(\d{6}-\d{4})-[^/]+\.md$/;
 // The sizes whose work needs no approval: an item that grows from one keeps the commits it made at it.
 const SMALLER = ["trivial", "small"];
 const GREW = "the record becomes full here, after work committed at a smaller size, and holds no deviation";
-// A message may hold the byte that ends an entry of git's output, and what follows it would be read as a commit of its
-// own, whose identifier reaches git as an argument: only an object name is taken for one.
-const OBJECT = /^[0-9a-f]{40,64}$/;
 const FORGED = "a commit message holds the byte that separates the commits in git's output, so they cannot be read";
 
 /**
@@ -159,7 +156,14 @@ export function check({ cwd = ".", env = process.env } = {}) {
       const stray = WORK_ITEM_LINE.test(message.join(FIELD));
       return { hash, merge, author, committer, subject, items: values(items), backlog: values(backlog), stray };
     });
-  if (commits.some((commit) => !OBJECT.test(commit.hash))) return { commits: commits.length, problems: [FORGED] };
+  // A message may hold the byte that ends an entry, and what follows it would be read as a commit of its own: one that
+  // reaches git as an argument, or one that names another commit, such as an approval, where it is not. So the entries
+  // must be the commits that git lists for the range, in its order, before any of them is read further.
+  const listed = git(cwd, ["rev-list", "--reverse", ...range])
+    .split("\n")
+    .filter(Boolean);
+  if (commits.length !== listed.length || commits.some((commit, index) => commit.hash !== listed[index]))
+    return { commits: listed.length, problems: [FORGED] };
   if (commits.length === 0)
     return { commits: 0, problems: [], note: "The branch adds no commit to the default branch." };
 

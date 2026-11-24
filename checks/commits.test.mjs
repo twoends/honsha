@@ -177,12 +177,18 @@ test("the exit code is 1 with the commit named, and 0 when the rules are followe
 });
 
 test("a message that holds the byte separating git's output stops the check before git reads what follows it", () => {
-  const { dir, commit } = repository();
-  commit("Add the record", `Work-Item: ${ID}\x1d--output=forged\x1f\x1f\x1f\x1fForged`);
-  assert.deepEqual(run(dir).problems, [
-    "a commit message holds the byte that separates the commits in git's output, so they cannot be read",
-  ]);
-  assert.ok(!fs.readdirSync(dir).some((name) => name.startsWith("forged")));
+  for (const forged of ["--output=forged", "main"]) {
+    const { dir, commit, git } = repository();
+    // An option of git, or the name of a commit that exists but is not one of the branch's.
+    const name = forged === "main" ? git(["rev-parse", "main"]) : forged;
+    commit("Add the record", `Work-Item: ${ID}\x1d${name}\x1f\x1f\x1f\x1fForged`);
+    assert.deepEqual(
+      run(dir).problems,
+      ["a commit message holds the byte that separates the commits in git's output, so they cannot be read"],
+      forged,
+    );
+    assert.ok(!fs.readdirSync(dir).some((file) => file.startsWith("forged")));
+  }
 });
 
 /**
