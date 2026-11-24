@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-23
 updated: 2026-11-24
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 49
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -79,3 +79,85 @@ changes; the interface lists the commands, not the options of `checkRecord`, so 
   tests pass.
 - oxlint runs on this PC and refused the new test of `checks/record.test.mjs` (`consistent-function-scoping`): its
   helper captured nothing from the test. The test now builds the quoted idea once and replaces its intent in place.
+- The checker read 6c30df0 and failed it on one finding: the oxlint line under "Verification" also told of the earlier
+  failure and its fix, which belong to the log. The line now keeps only the result at 6c30df0. The fix touches only the
+  verification, which stays uncommitted until the closing commit, so no commit answers it and the repeated check reads
+  6c30df0 with the record.
+
+## Verification
+
+On 6c30df0, from the project's root (no `registry.yml` there, so no `hub/projects.mjs check`):
+
+- `node <kit>/checks/record.mjs` and `node checks/record.mjs`: the record has the shape the rules ask for.
+- `node <kit>/checks/commits.mjs` and `node checks/commits.mjs`: the 2 commits of the branch follow the rules.
+- `npx --no-install prettier --check .`: all matched files use Prettier code style.
+- `npx --no-install oxlint`: passed, exit 0.
+- `npx --no-install tsc -p .`: passed, exit 0.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 198 tests, 198 pass,
+  0 fail.
+- `claude plugin validate .`: validation passed, with advice on the README's install line that this item does not
+  touch.
+
+After the fix of this section: `npx --no-install prettier --check .`, `node <kit>/checks/record.mjs` and
+`node checks/record.mjs` pass.
+
+Check of 6c30df0 (full check): verdict `fail`. Finding: the oxlint line under "Verification" added the earlier failure
+and its fix, which the log holds; keep only the result at 6c30df0.
+
+Repeated check of 6c30df0 with the record's working copy, which read 6c30df0:
+
+### Checker report
+
+**Verdict:** pass
+
+The last report's one finding is fixed. The oxlint line under "Verification" in
+`work/2026/11/261123-1954-backlog-public-intent.md:94` now reads "`npx --no-install oxlint`: passed, exit 0." That is
+the result at 6c30df0 only. The earlier failure and its fix are in the Log at lines 80-81. The diff and the commit list
+since 6c30df0 are empty, so this check covered only the edits to the record's working copy: the Log line at lines 82-85
+and the "Verification" section at lines 87-102.
+
+**Acceptance criteria**
+
+1. `backlog.mjs add` captures an idea with a restated intent: met, `hub/backlog.mjs:51` passes `public: null`;
+   `checks/record.mjs:270-276`; `hub/backlog.test.mjs:189-200`.
+2. It still captures an idea with a quoted intent: met, `checks/record.mjs:270-276` accepts any line that says
+   something; `hub/backlog.test.mjs:192`.
+3. It still refuses no intent, or only the placeholder: met, `checks/record.mjs:269` and `:272-276`;
+   `hub/backlog.test.mjs:169-173`.
+4. `checks/record.mjs` checks a project's own record as before: met, `checks/record.mjs:188` (default false), `:352`
+   (profile's value), `:277-282`; `checks/record.test.mjs:221-234`.
+5. `hub/backlog.test.mjs` captures restated and quoted intents and refuses an empty one: met,
+   `hub/backlog.test.mjs:189-200` and `:170`.
+6. The kit's interface does not change: met, nothing changed since 6c30df0; `docs/01-specs/INTERFACE.md:40-41` lists
+   only the commands.
+
+- **Intent:** in order. The Log and Verification edits quote nothing the person said.
+- **Scope:** in order. Nothing changed since 6c30df0 except the record's Log and Verification.
+- **Comments and documents:** in order. The diff adds no comment and no document.
+- **Gates:** in order. The four gates in `.hub/profile.yml` are not touched by the record's Log and Verification edits.
+- **Verification evidence:** in order. All seven `verify` commands and the kit's `checks/record.mjs` and
+  `checks/commits.mjs` are listed, each with a passing result at 6c30df0. The list covers formatting (prettier), lint
+  (oxlint), types (tsc) and tests (`node --test`).
+- **Record:** in order. Verification holds only command results and the earlier check, which keeps its verdict, its
+  finding and the commit it read (lines 101-102). What followed the check is in the Log (lines 82-85). The record's
+  front matter and sections match what `checks/record.mjs` asks for a small item at `in-progress`. The intent quotes
+  nothing.
+- **Commits:** in order. There are no new commits since 6c30df0.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- After the record was edited, `prettier --check .` and the record checks were run again; only the caller states this,
+  and the record's "Verification" does not say so. Reading the edited record against `checks/record.mjs` and
+  `.prettierrc.json` found nothing either would refuse.
+
+## Outcome
+
+`hub/backlog.mjs add` captures an idea whose intent quotes the person or restates the request, since the home does not
+know whether the idea's project is public, and still refuses a record with no intent or one that says nothing beyond
+the template's placeholder. `checkRecord` reads `public: null` as a profile not at hand; a project's own record is
+checked as before, quoted in a private project and unquoted in a public one, when the item starts. The interface does
+not change. Pull request 49.
