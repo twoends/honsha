@@ -280,3 +280,15 @@ the person" included, relayed to this session by the hub and confirmed by the pe
 - After this fix, on every merged work branch, 51 of the kit's and 22 of that project's, and on the last 15 and 30
   commits of the two default branches, the check from the default branch and from this branch give the same output;
   the trial branch still passes.
+- The fix is `92d86d9`. The profile's `verify` passed on it, with 223 tests. The second repeated review, of what changed
+  since `8b449e6`, passed with no findings and confirmed the weak point fixed in `checks/commits.mjs`; its one weak
+  point is the same one in `checks/measures.mjs`, left to the person above.
+- The first check, of `92d86d9`, failed with three findings. 1: the boundary "every history the check accepts today it
+  still accepts" does not hold for the history named above, where an approval in a record at small no longer closes
+  the gate, and no deviation declares it. 2: two changes of the security fixes reach beyond the approval gate and are
+  not declared: `--end-of-options` in the default branch's reading of direct commits, and the comparison with
+  `git rev-list`, which guards every rule the script applies. 3: the opening comment of `checks/commits.mjs` does not
+  say what the command now refuses, which the interface asks of it.
+- Finding 3 is fixed inside the scope, in a commit of its own: the opening comment says that the check reads no
+  further, and fails with a line of its own, when what `git log` gave is not the list that `git rev-list` gives for
+  the same range.

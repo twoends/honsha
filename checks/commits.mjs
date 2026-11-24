@@ -28,6 +28,10 @@
 // variables: HONSHA_BRANCH (the name of the branch), HONSHA_BASE and HONSHA_HEAD (the commit
 // before the first of the range, and the last one).
 //
+// The commits are read from `git log`, and a message can hold the byte that separates them there. When what was read
+// is not the list of commits that `git rev-list` gives for the same range, in its order, the check reads no further
+// and fails with a line that says so.
+//
 // The exit code is 1 when a commit breaks a rule. An address is never printed.
 
 import { execFileSync } from "node:child_process";
