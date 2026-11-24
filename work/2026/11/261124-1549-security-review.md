@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: gate
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 51
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -327,9 +327,92 @@ the person" included, relayed to this session by the hub.
   not list that file. The work asked the person through the hub while it went on; the person approved the row
   (Deviations). It is a commit of its own, after the first check.
 - `docs/00-vision/VISION.md`: the glossary's row "Security reviewer", after "Checker".
+- The second check, of `dfbbe5a`, passed with no findings. Both checks ran with the checker as merged, which has no
+  check of the security review yet, and both reports therefore lack its line; the review was not due on this item.
+- The kit's pipeline on #51, run 45440590239, at `dfbbe5a`: `verify` on Linux and on Windows, `personal content` and
+  `project` passed. Criterion 7 is met.
+
+## Verification
+
+On this host, at `dfbbe5a` with the record as it stands, with npm 12.2.1, the same results as at `66b8256`:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 6 commits of the branch follow the rules.
+- `node <kit directory>/hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 213 tests, 213 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version, licence and icon and advice on the README's
+  install line, none of which this change touches.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+The first check, of `66b8256` (full): verdict `pass`, no findings.
+
+The second check, of `dfbbe5a` (since `66b8256`):
+
+### Checker report
+
+**Verdict:** pass
+
+This is a repeated check, of `66b8256...dfbbe5a`. The last report, on `66b8256`, had no findings, so no earlier finding
+needed confirming.
+
+**Acceptance criteria**
+
+1. The reviewer's tools, model, inputs, the rule that it reads no record, what it looks for and its report shape: met
+   at the last check. The diff does not touch it.
+2. The skill `honsha:security-review`, and `agents/worker.md` invoking it before the checker: met at the last check. The
+   diff does not touch it.
+3. The checker verifies that the review ran and that its findings were handled, with a line in its report: met at the
+   last check. The diff does not touch it.
+4. The `security-review` key, how `checks/profile.mjs` and `checks/record.mjs` read it, and their tests: met at the last
+   check. The diff does not touch it.
+5. The rules and documents name the review and nothing contradicts it: met. The new glossary row at
+   `docs/00-vision/VISION.md:96` matches `agents/security-reviewer.md:4` (read-only tools) and
+   `agents/security-reviewer.md:11` (given the change, not its author's account).
+6. The trial reports the fail-open hole as a finding and passes the safe diff: met at the last check. The diff does not
+   touch it.
+7. The profile's `verify` commands pass and the pipeline passes on the pull request: the `verify` part is met, per the
+   record's Verification at `dfbbe5a`. The pipeline part is not verifiable from here.
+
+- **Intent:** in order
+- **Scope:** in order. The one change, the glossary row in `docs/00-vision/VISION.md`, is outside the in-scope list but
+  is declared under "Deviations" with who approved it, when and where.
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The kit's pipeline on pull request #51 (criterion 7): it runs on the hosting service, which this check cannot read.
+- That the record's log grew since `66b8256` only by new entries: the diff leaves out the record, and no earlier copy of
+  it can be read without running git.
+- The person's approval of the deviation: the record says the hub passed it on, and only the hub's session holds it.
 
 ## Deviations
 
 - The glossary of `docs/00-vision/VISION.md`, which the scope does not name, gains the row "Security reviewer", beside
   Hub, Worker, Reader and Checker: without it the glossary names every agent of the kit but the new one. Approved by
   the person on 2026-11-24, in the hub's session, relayed to this session by the hub.
+
+## Outcome
+
+The kit has a security review. The agent `honsha:security-reviewer` reads a change's diff without its record, from a
+fresh context and with read-only tools, looks for exploitable holes and weak points, and returns a report whose verdict
+fails on a finding. The skill `honsha:security-review` runs it in the worker's verification, before the checker, at
+any size, when the change touches authentication, permissions or secrets, deploy or CI configuration, or the grants,
+roles and policies of a data schema, or a path that the profile lists under the new key `security-review`. A finding
+holds the item until it is fixed or the person accepts it; a weak point goes into the log. The report is kept under
+Verification as the checker's is; the checker verifies that a review that was due ran, and `checks/record.mjs` fails a
+`done` record whose branch changes a listed path and holds no review's report, with patterns that match a name that
+begins with a dot. The worker's diff, read by both agents, leaves out the record. The core rules, the templates, the
+interface, the specifications, the vision's glossary, the README and the manifests name the review. The pipeline passes
+on Linux and on Windows. No deferred check.
