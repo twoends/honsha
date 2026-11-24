@@ -6,7 +6,9 @@
 // carry the trailer `Work-Item: <id>`, or the merge's subject names the branch `work/<id>-<slug>`.
 // Its record, as merged, gives its size and kind. The times are those of commits:
 //   - created: the identifier is the creation time in UTC;
-//   - strategy and approval: the first two commits, for a full item;
+//   - strategy and approval: the commits that open and close a full item's approval gate, read
+//     from its record at each of its commits as `checks/commits.mjs` reads it, merges left out;
+//     an item whose gate does not close, as a smaller one's, has no approval time;
 //   - delivered: the item's last commit, the closing commit;
 //   - merged: the merge commit.
 // The size of the change is its diff from the merge base: lines, and files counted apart as
@@ -21,11 +23,9 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { readProfile } from "./profile.mjs";
+import { approvalGate } from "./commits.mjs";
+import { DEFAULT_KINDS, readProfile } from "./profile.mjs";
 import { attribute, describeUsage, readResponses, sessionsDir } from "./sessions.mjs";
-
-/** The kinds a project has when its profile names none. */
-export const DEFAULT_KINDS = { feature: 10, fix: 5, upkeep: 5, change: 10 };
 
 const ID = /work\/(\d{6}-\d{4})-/;
 const TRAILER = /^Work-Item:\s*(\d{6}-\d{4})\s*$/m;
@@ -42,6 +42,18 @@ const TRAILER = /^Work-Item:\s*(\d{6}-\d{4})\s*$/m;
  */
 function git(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 1 << 26 });
+}
+
+/**
+ * @param {string} cwd
+ * @param {string[]} args
+ */
+function attempt(cwd, args) {
+  try {
+    return git(cwd, args);
+  } catch {
+    return "";
+  }
 }
 
 /**
@@ -81,13 +93,14 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
   const found = [];
   for (const mergeLine of merges) {
     const [merge, mergedTime, ...subject] = mergeLine.split(" ");
-    const commits = git(cwd, ["log", "--reverse", "--format=%ct%x1f%B%x1e", `${merge}^1..${merge}^2`])
+    const commits = git(cwd, ["log", "--reverse", "--format=%H%x1f%P%x1f%ct%x1f%B%x1e", `${merge}^1..${merge}^2`])
       .split("\x1e")
       .map((entry) => entry.trim())
       .filter(Boolean)
       .map((entry) => {
-        const [time, body] = entry.split("\x1f");
-        return { time: Number(time) * 1000, body: body ?? "" };
+        // The message comes last, so that whatever it holds cannot shift the fields before it.
+        const [hash, parents = "", time, ...body] = entry.split("\x1f");
+        return { hash, merge: parents.includes(" "), time: Number(time) * 1000, body: body.join("\x1f") };
       });
     const id = commits.map((commit) => TRAILER.exec(commit.body)?.[1]).find(Boolean) ?? ID.exec(subject.join(" "))?.[1];
     if (!id || commits.length === 0) continue;
@@ -119,11 +132,15 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
 
     const created = createdAt(id);
     const delivered = commits[commits.length - 1].time;
-    const full = size === "full" && commits.length >= 3;
-    const strategy = commits[0].time;
-    const approval = full ? commits[1].time : null;
-    const agentMinutes =
-      approval === null ? minutes(created, delivered) : minutes(created, strategy) + minutes(approval, delivered);
+    const own = commits.filter((commit) => !commit.merge);
+    const gate =
+      size === "full" && recordPath
+        ? approvalGate(own.values().map((commit) => attempt(cwd, ["show", `${commit.hash}:${recordPath}`])))
+        : { opens: -1, closes: -1 };
+    const gated = gate.closes < 0 ? null : { strategy: own[gate.opens].time, approval: own[gate.closes].time };
+    const agentMinutes = gated
+      ? minutes(created, gated.strategy) + minutes(gated.approval, delivered)
+      : minutes(created, delivered);
     const expected = kind !== null && kind in kinds ? kinds[kind] : null;
     found.push({
       id,
@@ -137,7 +154,7 @@ export function measure({ cwd = ".", ref = "HEAD", kinds = DEFAULT_KINDS } = {})
       created,
       delivered,
       agentMinutes,
-      approvalMinutes: approval === null ? null : minutes(strategy, approval),
+      approvalMinutes: gated ? minutes(gated.strategy, gated.approval) : null,
       reviewMinutes: minutes(delivered, Number(mergedTime) * 1000),
       expected,
       over: expected !== null && existing > expected,

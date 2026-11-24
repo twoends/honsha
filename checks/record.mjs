@@ -37,8 +37,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { DEFAULT_KINDS } from "./measures.mjs";
-import { readProfile } from "./profile.mjs";
+import { DEFAULT_KINDS, readProfile } from "./profile.mjs";
 
 export const WORK_BRANCH = /^work\/((\d{2})(\d{2})\d{2}-\d{4})-([^/]+)$/;
 const SIZES = ["trivial", "small", "full"];

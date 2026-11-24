@@ -6,10 +6,16 @@
 //     the branch, `work/<id>-<slug>`; a `Work-Item` line that git does not read as a trailer, being
 //     outside the message's last paragraph, is named as such;
 //   - the author and committer addresses match `commits.address` of the profile, when it is set;
-//   - for a full item, every commit up to and including the one that writes the approval into the
-//     record changes only the record, so that the approval gate can be read from the history. The
-//     size is read from the record as the last commit holds it. A merge is not looked at: what it
-//     brings is the default branch's.
+//   - for an item whose record says full at the last commit, the approval gate is read from the
+//     history, in the record as each commit holds it. The commits made while the record states
+//     trivial or small are a smaller item's, and free. The gate opens at the first commit whose
+//     record states another size, or that holds no record, and closes with the first commit from
+//     there whose record holds a written approval; every commit inside it changes only the record.
+//     When a commit before the gate changes another file, the item grew after its work began, and
+//     the record at the commit that opens the gate holds a written "Deviations" that says why. A
+//     record that only a merge made full has no commit where the item grew: every commit is then
+//     inside a gate that never closes. A merge is not looked at: what it brings is the default
+//     branch's.
 //
 // On the default branch itself, its own commits are read, those of its first parents: a merge brings a pull
 // request, whose commits were checked on its branch, and any other commit was pushed there directly. The only
@@ -29,7 +35,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { readProfile } from "./profile.mjs";
-import { WORK_BRANCH, approved, parseRecord, recordPath } from "./record.mjs";
+import { WORK_BRANCH, approved, parseRecord, recordPath, sections, written } from "./record.mjs";
 
 const FIELD = "\x1f";
 const RECORD = "\x1d";
@@ -39,6 +45,31 @@ const STRAY =
   "a `Work-Item` line that git does not read as a trailer: git reads trailers only in the message's last paragraph, " +
   "so it goes there with the other trailers and no blank line between them";
 const CAPTURE = /^backlog\/[a-z0-9][a-z0-9-]*\/(\d{6}-\d{4})-[^/]+\.md$/;
+// The sizes whose work needs no approval: an item that grows from one keeps the commits it made at it.
+const SMALLER = ["trivial", "small"];
+const GREW = "the record becomes full here, after work committed at a smaller size, and holds no deviation";
+
+/**
+ * Where a full item's approval gate lies among its commits, read from its record as each commit holds it.
+ * `records` are those texts in the order of the commits, merges left out, with "" for a commit that holds no record.
+ * `opens` is the index of the first record that states a size other than trivial or small, or is no record at all;
+ * `closes` is the index of the first record from there that holds a written approval, so that an approval in a record
+ * of a smaller size closes nothing. Either is -1 when there is no such record, and `closes` is -1 too when the gate
+ * does not open.
+ * The records are read only as far as the gate's close, so a caller may give them lazily.
+ * @param {Iterable<string>} records
+ * @returns {{ opens: number, closes: number }}
+ */
+export function approvalGate(records) {
+  let opens = -1;
+  let index = 0;
+  for (const text of records) {
+    if (opens < 0 && !SMALLER.includes(parseRecord(text)?.fields.get("size")?.value ?? "")) opens = index;
+    if (opens >= 0 && approved(text)) return { opens, closes: index };
+    index += 1;
+  }
+  return { opens, closes: -1 };
+}
 
 /**
  * Why a commit is not a capture of the backlog, or null when it is one.
@@ -155,18 +186,29 @@ export function check({ cwd = ".", env = process.env } = {}) {
   const record = recordPath(branch);
   const text = record ? attempt(cwd, ["show", `${head}:${record}`]) : "";
   if (record && parseRecord(text)?.fields.get("size")?.value === "full") {
-    for (const commit of commits) {
-      if (commit.merge) continue;
-      const others = git(cwd, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", commit.hash])
+    const own = commits.filter((commit) => !commit.merge);
+    /** @param {{ hash: string }} commit */
+    const recordAt = (commit) => attempt(cwd, ["show", `${commit.hash}:${record}`]);
+    /** @param {{ hash: string }} commit */
+    const others = (commit) =>
+      git(cwd, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", commit.hash])
         .split("\n")
         .filter((file) => file !== "" && file !== record);
-      if (others.length > 0) {
-        const files = others.join(", ");
-        problems.push(
-          `${commit.hash.slice(0, 7)} ${commit.subject}: changes ${files} before the approval is committed`,
-        );
-      }
-      if (approved(attempt(cwd, ["show", `${commit.hash}:${record}`]))) break;
+    /** @param {{ hash: string, subject: string }} commit @param {string} problem */
+    const name = (commit, problem) => problems.push(`${commit.hash.slice(0, 7)} ${commit.subject}: ${problem}`);
+    const gate = approvalGate(own.values().map(recordAt));
+    if (gate.opens > 0 && own.slice(0, gate.opens).some((commit) => others(commit).length > 0)) {
+      const opening = own[gate.opens];
+      const deviations = sections(parseRecord(recordAt(opening))?.body ?? "").find(
+        (section) => section.name === "Deviations",
+      );
+      if (!written(deviations)) name(opening, GREW);
+    }
+    // No commit opens the gate when only a merge made the record full: the whole branch is then read as inside it.
+    const inside = own.slice(Math.max(gate.opens, 0), gate.closes < 0 ? own.length : gate.closes + 1);
+    for (const commit of inside) {
+      const files = others(commit);
+      if (files.length > 0) name(commit, `changes ${files.join(", ")} before the approval is committed`);
     }
   }
   return { commits: commits.length, problems };

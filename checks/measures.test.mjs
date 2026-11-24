@@ -36,8 +36,10 @@ function write(dir, file, text) {
  * @param {string} id
  * @param {string} size
  * @param {string} kind
+ * @param {string} [more] the sections after the intent
  */
-const record = (id, size, kind) => `---\nid: ${id}\nsize: ${size}\nkind: ${kind}\n---\n\n## Intent\n`;
+const record = (id, size, kind, more = "") => `---\nid: ${id}\nsize: ${size}\nkind: ${kind}\n---\n\n## Intent\n${more}`;
+const APPROVED = "\n## Approval\n\napproved\n";
 
 /**
  * Commits everything with the trailer of `id`.
@@ -84,7 +86,7 @@ function repository(kind = "gate") {
   git(dir, ["switch", "-q", "-c", "work/261118-1200-full"]);
   write(dir, "work/2026/11/261118-1200-full.md", record("261118-1200", "full", kind));
   commit(dir, "261118-1200", "Add the record", "2026-11-18T12:10:00Z");
-  write(dir, "work/2026/11/261118-1200-full.md", `${record("261118-1200", "full", kind)}approved\n`);
+  write(dir, "work/2026/11/261118-1200-full.md", record("261118-1200", "full", kind, APPROVED));
   commit(dir, "261118-1200", "Record the approval", "2026-11-18T13:10:00Z");
   write(dir, "a.md", "a, changed again\n");
   write(dir, "b.md", "b, changed\n");
@@ -130,6 +132,52 @@ test("measures every merged item from git, and marks the one over its kind's exp
   assert.match(describe(full), /2 existing files \(expected at most 1\) OVER, 0 new$/u);
 });
 
+test("an item that grew to full has its strategy and approval at the commits that open and close its gate", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-measures-"));
+  git(dir, ["init", "-q", "-b", "main"]);
+  git(dir, ["config", "user.name", "Test"]);
+  git(dir, ["config", "user.email", "test@example.org"]);
+  write(dir, "a.md", "a\n");
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", "Start"], "2026-11-18T09:00:00Z");
+
+  // Created 15:00. The default branch merged in at 15:10, before the record: a merge that opened the gate would put
+  // the strategy there. Work at small 15:20, stop 15:30, strategy 15:40, approval 16:40, delivered 17:10, merged 17:30.
+  const id = "261118-1500";
+  const file = `work/2026/11/${id}-grown.md`;
+  const deviation = "\n## Deviations\n\nThe item grew from small.\n";
+  git(dir, ["switch", "-q", "-c", `work/${id}-grown`]);
+  git(dir, ["switch", "-q", "main"]);
+  write(dir, "b.md", "b\n");
+  commit(dir, "261118-1400", "Do another item", "2026-11-18T15:05:00Z");
+  git(dir, ["switch", "-q", `work/${id}-grown`]);
+  git(
+    dir,
+    ["merge", "-q", "--no-ff", "-m", `Merge the default branch\n\nWork-Item: ${id}`, "main"],
+    "2026-11-18T15:10:00Z",
+  );
+  write(dir, file, record(id, "small", "fix"));
+  write(dir, "a.md", "a, changed\n");
+  commit(dir, id, "Do the work at small", "2026-11-18T15:20:00Z");
+  write(dir, file, record(id, "small", "fix", "\n## Log\n\nStopped: the item outgrows small.\n"));
+  commit(dir, id, "Stop", "2026-11-18T15:30:00Z");
+  write(dir, file, record(id, "full", "fix", deviation));
+  commit(dir, id, "Write the strategy", "2026-11-18T15:40:00Z");
+  write(dir, file, record(id, "full", "fix", `${deviation}${APPROVED}`));
+  commit(dir, id, "Record the approval", "2026-11-18T16:40:00Z");
+  write(dir, "a.md", "a, changed again\n");
+  commit(dir, id, "Finish the work", "2026-11-18T17:00:00Z");
+  commit(dir, id, "Close it", "2026-11-18T17:10:00Z");
+  git(dir, ["switch", "-q", "main"]);
+  git(dir, ["merge", "-q", "--no-ff", "-m", `Merge work/${id}-grown`, `work/${id}-grown`], "2026-11-18T17:30:00Z");
+
+  const grown = measure({ cwd: dir, ref: "main" }).find((item) => item.id === id);
+  assert.equal(grown?.size, "full");
+  assert.equal(grown?.approvalMinutes, 60);
+  assert.equal(grown?.agentMinutes, 40 + 30);
+  assert.equal(grown?.reviewMinutes, 20);
+});
+
 const SCRIPT = fileURLToPath(new URL("measures.mjs", import.meta.url));
 
 /**
@@ -170,7 +218,7 @@ test("the command reads the profile's default branch and kinds, and the session 
   assert.deepEqual(run(dir, ["--sessions", sessions]).split("\n"), [
     "261118-1000 small fix: agent 30 min, review 30 min; 2 commits, +9 -1; 1 existing files (expected at most 1), " +
       "1 new; 1 responses, active 1 min; model-a: 7 out, 1 in, 100 cache read, 5 cache written",
-    "261118-1200 full fix: agent 40 min, approval 60 min, review 20 min; 4 commits, +11 -2; " +
+    "261118-1200 full fix: agent 40 min, approval 60 min, review 20 min; 4 commits, +14 -2; " +
       "2 existing files (expected at most 1) OVER, 0 new; no session data",
     "1 lines of the session files could not be read",
     "",
