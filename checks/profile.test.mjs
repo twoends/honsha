@@ -41,6 +41,7 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     public: false,
     stack: [],
     lessons: null,
+    securityReview: [],
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
 });
@@ -132,6 +133,7 @@ test("the profile's template is one the reader accepts, with every key the reade
     public: false,
     stack: ["node", "postgres", "docker"],
     lessons: "LESSONS.md",
+    securityReview: [],
   });
 });
 
@@ -153,4 +155,60 @@ test("reads the kinds and the most existing files each may touch", () => {
 test("refuses a kind without a whole number, and kinds in another form", () => {
   assert.throws(() => parseProfile("kinds:\n  gate: one\n"), /whole number/u);
   assert.throws(() => parseProfile("kinds: gate\n"), /must be a map/u);
+});
+
+test("reads the paths whose change calls for the security review, quoted or bare, one on each line", () => {
+  const text = [
+    "security-review:",
+    '  - "deploy/**"',
+    "  # the keys",
+    "  - '**/*.pem'",
+    "  - .env # at the root only",
+    "name: x",
+  ].join("\n");
+  assert.deepEqual(parseProfile(text).securityReview, ["deploy/**", "**/*.pem", ".env"]);
+  assert.deepEqual(parseProfile("security-review: []\n").securityReview, []);
+  assert.deepEqual(parseProfile("name: x\n").securityReview, []);
+});
+
+test("refuses a form of `security-review` it does not read, and a pattern that would match nothing in silence", () => {
+  for (const form of [
+    "security-review: deploy/**\n",
+    "security-review: [deploy/**]\n",
+    "security-review:\n  deploy/**\n",
+  ]) {
+    assert.throws(
+      () => parseProfile(form),
+      /`security-review` must be a list with one path pattern on each line/,
+      form,
+    );
+  }
+  for (const empty of ['  - ""\n', "  - ''\n", "  - \n"]) {
+    assert.throws(() => parseProfile(`security-review:\n${empty}`), /`security-review` holds an empty pattern/, empty);
+  }
+  for (const pattern of ["deploy/[ab]*", "deploy/*.{yml,yaml}", "deploy]", "deploy\\x"]) {
+    assert.throws(
+      () => parseProfile(`security-review:\n  - '${pattern}'\n`),
+      /holds `\[`, `\]`, `\{`, `\}` or a backslash/,
+      pattern,
+    );
+  }
+  assert.throws(() => parseProfile("security-review:\n  - '!deploy/**'\n"), /begins with `!`/);
+  for (const pattern of [
+    "/deploy/**",
+    "./deploy/**",
+    "deploy/../secrets",
+    "..",
+    "deploy/",
+    "deploy//x",
+    "deploy/./x",
+  ]) {
+    assert.throws(
+      () => parseProfile(`security-review:\n  - '${pattern}'\n`),
+      new RegExp(
+        `\`${pattern.replace(/[.*/]/g, "\\$&")}\` in \`security-review\` is not a path from the project's root`,
+      ),
+      pattern,
+    );
+  }
 });

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { DEFAULT_KINDS } from "./measures.mjs";
 import { readProfile } from "./profile.mjs";
-import { check, checkRecord, entriesOf, readTemplate, recordPath } from "./record.mjs";
+import { check, checkRecord, entriesOf, matches, readTemplate, recordPath } from "./record.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const script = fileURLToPath(new URL("./record.mjs", import.meta.url));
@@ -309,6 +309,147 @@ test("a trivial item needs no checker report, and a report item needs its pull r
   assert.deepEqual(problems(record({ type: "report", pr: "null" })), [`${FILE}: a done item has no \`pr\``]);
 });
 
+const REVIEW = "### Security review report\n\n**Verdict:** pass\n\n";
+/**
+ * The record with a security review report before its checker report, or at the end of Verification without one.
+ * @param {string} text
+ */
+const reviewed = (text) =>
+  text.includes("### Checker report")
+    ? text.replace("### Checker report", `${REVIEW}### Checker report`)
+    : text.replace("## Outcome", `${REVIEW}## Outcome`);
+/**
+ * The problems of a record whose branch changes the paths `due` under `security-review`.
+ * @param {string} text
+ * @param {string[]} due
+ */
+const whenDue = (text, due) => checkRecord(text, { file: FILE, id: ID, kinds: DEFAULT_KINDS, template, due });
+const UNREVIEWED = `${FILE}: the branch changes a path under \`security-review\` (deploy/.env), and the verification has no security review report`;
+
+test("a done record whose branch changes a path under `security-review` holds a security review report", () => {
+  assert.deepEqual(whenDue(record(), ["deploy/.env"]), [UNREVIEWED]);
+  assert.deepEqual(whenDue(reviewed(record()), ["deploy/.env"]), []);
+  // A finding the person accepted leaves the verdict `fail`: the record's check asks only that the report be there.
+  const accepted = reviewed(record()).replace(REVIEW, REVIEW.replace("pass", "fail"));
+  assert.deepEqual(whenDue(accepted, ["deploy/.env"]), []);
+  // Like a checker report's, its heading may name the commit it read.
+  const named = reviewed(record()).replace("### Security review report", "### Security review report, on `abc1234`");
+  assert.deepEqual(whenDue(named, ["deploy/.env"]), []);
+  assert.deepEqual(whenDue(record(), []), []);
+});
+
+test("the security review report is asked at every size, and only once the item is done", () => {
+  const trivial = record({ size: "trivial" }, (t) =>
+    t
+      .replace(/## Acceptance criteria[\s\S]*?## Verification/, "## Verification")
+      .replace(/### Checker report[\s\S]*?## Outcome/, "## Outcome"),
+  );
+  assert.deepEqual(whenDue(trivial, ["deploy/.env"]), [UNREVIEWED]);
+  assert.deepEqual(whenDue(reviewed(trivial), ["deploy/.env"]), []);
+  const started = record({ state: "in-progress", pr: "null", model: "null" }, (t) =>
+    t.slice(0, t.indexOf("## Verification")),
+  );
+  assert.deepEqual(whenDue(started, ["deploy/.env"]), []);
+});
+
+test("the problem names up to three of the paths due, then how many more", () => {
+  const named = (/** @type {string[]} */ due) => /\((.*)\)/.exec(whenDue(record(), due)[0] ?? "")?.[1];
+  assert.equal(named(["a", "b"]), "a and b");
+  assert.equal(named(["a", "b", "c"]), "a, b and c");
+  assert.equal(named(["a", "b", "c", "d", "e"]), "a, b, c and 2 more");
+  assert.match(whenDue(record(), ["a", "b"])[0] ?? "", /the branch changes paths under `security-review` \(a and b\)/);
+});
+
+test("a security review report's verdict is never read as the checker's", () => {
+  const review =
+    "### Security review report\n\n**Verdict:** fail\n\n**Findings**\n\n1. A hole the person accepted.\n\n";
+  assert.deepEqual(problems(record({}, (t) => t.replace("## Outcome", `${review}## Outcome`))), []);
+  // A checker report with no verdict has none, whatever the report after it says.
+  const unjudged = record({}, (t) =>
+    t.replace("**Verdict:** pass\n\n", "").replace("## Outcome", `${review.replace("fail", "pass")}## Outcome`),
+  );
+  assert.deepEqual(problems(unjudged), [`${FILE}: the verification has no checker report with a verdict`]);
+});
+
+test("a pattern of `security-review` matches names that begin with a dot, and crosses folders only with `**`", () => {
+  /** @type {[string, string, boolean][]} */
+  const cases = [
+    ["deploy/**", "deploy", true],
+    ["deploy/**", "deploy/.env", true],
+    ["deploy/**", "deploy/x/.env", true],
+    ["deploy/**", "deployment/x", false],
+    ["deploy/**", "app/deploy/x", false],
+    ["**/*.pem", ".secrets/a.pem", true],
+    ["**/*.pem", "a.pem", true],
+    ["**/*.pem", "x/y/.pem", true],
+    ["**/*.pem", "a.pem.txt", false],
+    ["**", ".git-crypt/keys/a", true],
+    ["**/**", "x/.y", true],
+    ["*.pem", "a.pem", true],
+    ["*.pem", "x/a.pem", false],
+    [".env", ".env", true],
+    [".env", "app/.env", false],
+    ["*", ".env", true],
+    ["*", "x/a", false],
+    ["a/**/b.txt", "a/b.txt", true],
+    ["a/**/b.txt", "a/x/y/b.txt", true],
+    ["a/**/b.txt", "a/x/c.txt", false],
+    ["a/**/b.txt", "ab.txt", false],
+    ["**/deploy/**", "app/deploy/.env", true],
+    ["**/deploy/**", "deploy", true],
+    ["a/x**y", "a/xzzy", true],
+    ["a/x**y", "a/x/y", false],
+    ["?env", ".env", true],
+    ["a?b", "a/b", false],
+    ["a?b", "ab", false],
+    ["a+b.txt", "a+b.txt", true],
+    ["a+b.txt", "aab.txt", false],
+    ["a.b", "a.b", true],
+    ["a.b", "aXb", false],
+    ["(x)|y^$", "(x)|y^$", true],
+  ];
+  for (const [pattern, file, expected] of cases) assert.equal(matches(file, pattern), expected, `${pattern} ${file}`);
+});
+
+/**
+ * Runs git in a repository made by `repository`, with its empty configuration and an identity of its own.
+ * @param {string} dir
+ * @param {string[]} args
+ */
+function git(dir, args) {
+  return execFileSync("git", args, {
+    cwd: dir,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      GIT_CONFIG_GLOBAL: path.join(dir, "no-config"),
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_AUTHOR_NAME: "Worker",
+      GIT_AUTHOR_EMAIL: "worker@example.org",
+      GIT_COMMITTER_NAME: "Worker",
+      GIT_COMMITTER_EMAIL: "worker@example.org",
+    },
+  }).trim();
+}
+
+/**
+ * Writes `files` into the repository, a null text removing the file, and commits every change.
+ * @param {string} dir
+ * @param {Record<string, string | null>} files
+ * @param {string} subject
+ */
+function commit(dir, files, subject) {
+  for (const [file, text] of Object.entries(files)) {
+    if (text === null) fs.rmSync(path.join(dir, file));
+    else {
+      fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+      fs.writeFileSync(path.join(dir, file), text);
+    }
+  }
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", subject]);
+}
+
 /**
  * A repository on `branch` holding `files`, that reads no configuration but its own.
  * @param {string} branch
@@ -317,10 +458,8 @@ test("a trivial item needs no checker report, and a report item needs its pull r
 function repository(branch, files) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "honsha-record-"));
   made.push(dir);
-  const empty = path.join(dir, "no-config");
-  fs.writeFileSync(empty, "");
-  const env = { ...process.env, GIT_CONFIG_GLOBAL: empty, GIT_CONFIG_NOSYSTEM: "1" };
-  execFileSync("git", ["init", "-q", "-b", branch, "."], { cwd: dir, env });
+  fs.writeFileSync(path.join(dir, "no-config"), "");
+  git(dir, ["init", "-q", "-b", branch, "."]);
   for (const [file, text] of Object.entries(files)) {
     fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
     fs.writeFileSync(path.join(dir, file), text);
@@ -328,7 +467,8 @@ function repository(branch, files) {
   return dir;
 }
 
-const quiet = { ...process.env, HONSHA_BRANCH: "" };
+// A pipeline gives the branch and the two ends of its changes; the tests give their own.
+const quiet = { ...process.env, HONSHA_BRANCH: "", HONSHA_BASE: "", HONSHA_HEAD: "" };
 
 test("finds the record from the branch and reads the kinds of the profile", () => {
   assert.equal(recordPath(`work/${ID}-export-orders`), FILE);
@@ -356,6 +496,80 @@ test("a branch that is not a work branch has nothing to check", () => {
   assert.match(check({ cwd: dir, env: quiet }).note ?? "", /`main` is not a work branch/);
 });
 
+const BRANCH = `work/${ID}-export-orders`;
+const PATTERNS = 'security-review:\n  - "deploy/**"\n  - "**/*.pem"\n';
+
+/**
+ * A repository whose `main` holds a profile and a few files, on a work branch made from it.
+ * @param {string} [profile]
+ */
+function project(profile = PATTERNS) {
+  const dir = repository("main", { ".hub/profile.yml": profile, "deploy/run.sh": "run\n", "src/app.js": "app\n" });
+  commit(dir, {}, "Start the project");
+  git(dir, ["checkout", "-q", "-b", BRANCH]);
+  return dir;
+}
+
+test("names the branch's changed paths under `security-review`, names that begin with a dot among them", () => {
+  const dir = project();
+  const files = { [FILE]: record(), "deploy/.env": "KEY=1\n", ".secrets/key.pem": "pem\n", "src/app.js": "app 2\n" };
+  commit(dir, files, "Add the export");
+  const due = [".secrets/key.pem", "deploy/.env"];
+  assert.deepEqual(check({ cwd: dir, env: quiet }), {
+    file: FILE,
+    problems: [
+      `${FILE}: the branch changes paths under \`security-review\` (.secrets/key.pem and deploy/.env), and the verification has no security review report`,
+    ],
+    due,
+  });
+  fs.writeFileSync(path.join(dir, FILE), reviewed(record()));
+  assert.deepEqual(check({ cwd: dir, env: quiet }), { file: FILE, problems: [], due });
+});
+
+test("a file moved out of a path under `security-review` counts by its old path", () => {
+  const dir = project();
+  commit(dir, { [FILE]: reviewed(record()), "deploy/run.sh": null, "tools/run.sh": "run\n" }, "Move the script");
+  // Git itself reads the move as a rename, and names only the new path.
+  assert.equal(git(dir, ["diff", "--name-only", "main...HEAD"]), `tools/run.sh\n${FILE}`);
+  assert.deepEqual(check({ cwd: dir, env: quiet }).due, ["deploy/run.sh"]);
+});
+
+test("reads the changes from the default branch as last fetched, else the local one, or between the pipeline's ends", () => {
+  const dir = project();
+  commit(dir, { [FILE]: reviewed(record()), "deploy/a.yml": "a\n" }, "Add a");
+  const first = git(dir, ["rev-parse", "HEAD"]);
+  commit(dir, { "deploy/b.yml": "b\n" }, "Add b");
+  const due = (/** @type {NodeJS.ProcessEnv} */ env = {}) => check({ cwd: dir, env: { ...quiet, ...env } }).due;
+  assert.deepEqual(due(), ["deploy/a.yml", "deploy/b.yml"]);
+  assert.deepEqual(due({ HONSHA_BASE: first }), ["deploy/b.yml"]);
+  assert.deepEqual(due({ HONSHA_HEAD: first }), ["deploy/a.yml"]);
+  git(dir, ["update-ref", "refs/remotes/origin/main", first]);
+  assert.deepEqual(due(), ["deploy/b.yml"]);
+});
+
+test("fails when the branch's changed files cannot be read, rather than pass a review it cannot tell is due", () => {
+  const dir = project(`default-branch: trunk\n${PATTERNS}`);
+  commit(dir, { [FILE]: reviewed(record()), "deploy/a.yml": "a\n" }, "Add a");
+  assert.deepEqual(check({ cwd: dir, env: quiet }), {
+    file: FILE,
+    problems: [
+      `${FILE}: the branch's changed files could not be read (the default branch \`trunk\` was not found), so whether the security review is due cannot be told`,
+    ],
+    due: [],
+  });
+  assert.deepEqual(check({ cwd: dir, env: { ...quiet, HONSHA_BASE: "no-such-commit" } }).problems, [
+    `${FILE}: the branch's changed files could not be read (git could not compare \`no-such-commit...HEAD\`), so whether the security review is due cannot be told`,
+  ]);
+});
+
+test("without paths under `security-review`, no diff is read and no `due` is given", () => {
+  // A repository with no commit at all, where any diff would fail.
+  for (const profile of ["verify: []\n", "security-review: []\n"]) {
+    const dir = repository(BRANCH, { [FILE]: record(), ".hub/profile.yml": profile });
+    assert.deepEqual(check({ cwd: dir, env: quiet }), { file: FILE, problems: [] });
+  }
+});
+
 test("the exit code is 1 with each break named, and 0 when the record is in shape", () => {
   const dir = repository(`work/${ID}-export-orders`, { [FILE]: record() });
   const passed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
@@ -364,6 +578,28 @@ test("the exit code is 1 with each break named, and 0 when the record is in shap
   const failed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
   assert.equal(failed.status, 1);
   assert.match(failed.stderr, /a done item has no `pr`/);
+});
+
+test("after the usual line, names the paths under `security-review` the branch changes, and fails without the report", () => {
+  const dir = project();
+  const keys = { "deploy/.env": "KEY=1\n", "deploy/a.pem": "a\n", "deploy/b.pem": "b\n", "deploy/c.pem": "c\n" };
+  commit(dir, { [FILE]: reviewed(record()), ...keys }, "Add the keys");
+  const passed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
+  assert.equal(passed.status, 0, passed.stderr);
+  assert.equal(
+    passed.stdout,
+    `The record ${FILE} has the shape the rules ask for.\n` +
+      "The branch changes 4 paths under `security-review` in the profile: deploy/.env, deploy/a.pem, deploy/b.pem and " +
+      "1 more. The security review is due before delivery (`honsha:security-review`).\n",
+  );
+  fs.writeFileSync(path.join(dir, FILE), record());
+  const failed = spawnSync(process.execPath, [script], { cwd: dir, env: quiet, encoding: "utf8" });
+  assert.equal(failed.status, 1);
+  assert.equal(failed.stdout, "");
+  assert.match(
+    failed.stderr,
+    /\(deploy\/\.env, deploy\/a\.pem, deploy\/b\.pem and 1 more\), and the verification has no security review report/,
+  );
 });
 
 test("a section kept only if there is something to say is not left empty", () => {
