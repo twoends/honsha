@@ -206,3 +206,20 @@ the person" included, relayed to this session by the hub and confirmed by the pe
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The pull request is #52, opened with the record alone while it waited for the approval.
 - The approval is written and the state set to `in-progress`.
+- Two parts ran in parallel, as `honsha:parallel-parts` admits: they change different files, neither needs the
+  other's result, and each is verified on its own. The scripts with their tests ran in a worktree of their own on the
+  local branch `work/261124-1637-grown-item-commits.scripts`, cut from `ec90a6f`, by a subagent on Opus. The worker's
+  file, the core rules, the workflow and the budgets ran in the item's worktree, in this session.
+- `agents/worker.md`: under "While working", after the stop conditions, the commits of an item that turns out larger
+  than its size. `rules/git.md`: an item that grows to full keeps the commits of its smaller size.
+- The workflow: under "Which commits an item makes", a bullet with the reasons; under "Measures", strategy and
+  approval are the commits that open and close a full item's gate.
+- Budgets: the worker's file 6,000 (it holds 5,925 characters), the workflow 36,300 (36,288), the session-start total
+  29,400. Measured in this worktree, a hub's session counts 29,290 characters at start and a worker's 29,312. The
+  comment of `checks/budgets.test.mjs` now says that the worker's budget, like the hub's, is what
+  `hooks/hooks.test.mjs` counts at a session's start, as that test does. The budget, hook, reference and interface
+  tests pass on this part: 31 tests.
+- Criterion 7, the first half: on the branch of a project using the kit whose small item grew to full after its first
+  work commit, `node checks/commits.mjs` from the kit's default branch, `6719d4b`, with `HONSHA_BRANCH`, `HONSHA_BASE`
+  and `HONSHA_HEAD` naming that branch and its four commits, fails on the work commit with "before the approval is
+  committed", as that project's pipeline does.

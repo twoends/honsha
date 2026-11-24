@@ -10,8 +10,9 @@ A part of the Honsha core rules, which `rules/core.md` opens.
   the other trailers, such as the co-author's, and no blank line between them.
 - An item makes as few commits as it can. Small or trivial: the work with its record, then one closing commit. Full:
   the record with its strategy, then its approval, two commits that hold only the record, since no other file changes
-  before the approval is committed; then the work and one closing commit. The closing commit holds the verification
-  with its reports, the outcome and the pull request's number together.
+  before the approval is committed; then the work and one closing commit. An item that grows to full keeps the commits
+  of its smaller size. The closing commit holds the verification with its reports, the outcome and the pull request's
+  number together.
 - The work is split into more than one commit only where its parts are separate enough to be reviewed one at a time.
   A stop, a merge of the default branch and a fix asked by the security reviewer, the checker or the person are
   commits of their own.
