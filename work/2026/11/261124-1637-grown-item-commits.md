@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 52
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -301,6 +301,147 @@ the person" included, relayed to this session by the hub and confirmed by the pe
   branch's reading and the comparison with `git rev-list`, and keep the check of identifiers of `8b449e6`, which the
   second review found weaker.
 - The person accepted both deviations (Deviations); the state is `in-progress` again.
+- The profile's `verify` passed at `0b9ec12`. The fix of finding 3 got a repeated review, of what changed since
+  `92d86d9`: pass, no findings and no weak points. Then a repeated check, of what changed since `92d86d9`.
+- The repeated check, of `0b9ec12`, passed with no findings and confirmed the three earlier ones fixed.
+- The kit's pipeline on #52, run 45463002141, at `b810e7a`, which holds the branch's final code, since the commits after
+  it change only the record: `verify` on Linux and on Windows, `personal content` and `project` passed. Criterion 8 is
+  met.
+
+## Verification
+
+On this host, at `0b9ec12` with the record as it stands, with npm 12.2.1; at `7b2d47e`, `8b449e6` and `92d86d9` the
+same commands had passed, with 221, 223 and 223 tests:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 10 commits of the branch follow the rules.
+- `node <kit directory>/hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 223 tests, 223 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version, licence and icon and advice on the README's
+  install line, none of which this change touches.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+The first security review, of `7b2d47e` (full): verdict `pass`, no findings.
+
+The second security review, of `8b449e6` (since `7b2d47e`): verdict `pass`, no findings.
+
+The third security review, of `92d86d9` (since `8b449e6`): verdict `pass`, no findings.
+
+The fourth security review, of `0b9ec12` (since `92d86d9`):
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `checks/`: `checks/commits.mjs` (the diff, plus the whole file to check the new comment against the code).
+`.hub/`: `.hub/profile.yml`.
+
+**Findings**
+
+none
+
+**Weak points**
+
+none
+
+**Not reviewed**
+
+- The diff is the change since commit `92d86d9`. It only adds a four-line comment to the opening comment of
+  `checks/commits.mjs` (lines 31-33). No code changes, so there is no new input, branch or command to judge. I checked
+  that the comment describes the code: lines 166-170 compare the entries parsed from `git log` with
+  `git rev-list --reverse` for the same range, by count and by hash in order. On any difference, the check returns the
+  single `FORGED` problem without reading any commit further, and `main` then exits with 1. The comment does not claim
+  more than the code does.
+- The last review's weak points were not given to me, and you say this change answers none of them. So I have not
+  confirmed whether they still apply. They stay as the last review left them.
+- I could not run git, so I could not confirm that the diff file holds everything since `92d86d9`. As the brief says,
+  the item's records under `work/` were left out and not read.
+
+The first check, of `92d86d9` (full): verdict `fail`. Findings:
+
+1. The "Not breaking" boundary is broken without a deviation: a history that today's check passes, an approval in a
+   small record, then work committed at small, then a full record with no deviation, now fails on the missing
+   deviation, since `checks/commits.mjs:69` counts an approval only from the gate's opening.
+2. Two changes outside the stated scope are not declared: `--end-of-options` in the default branch's reading of direct
+   commits (`checks/commits.mjs:175-183`), and the refusal of any range whose `git log` entries differ from
+   `git rev-list` (`checks/commits.mjs:159-166`), which covers every rule the script applies.
+3. The script's opening comment does not say what the command now refuses, which `docs/01-specs/INTERFACE.md:31-32`
+   asks of it.
+
+The second check, of `0b9ec12` (since `92d86d9`):
+
+### Checker report
+
+**Verdict:** pass
+
+This is a repeated check of `0b9ec12`, covering what changed since `92d86d9`. It reads the diff `.honsha-checker.diff`,
+the three commits in `.honsha-checker.commits` (`7bfe25c`, `b810e7a`, `0b9ec12`) and the whole record.
+
+**Findings of the last report**
+
+1. The "Not breaking" boundary broke without a deviation: fixed. It is now declared under "Deviations", first bullet
+   (`work/2026/11/261124-1637-grown-item-commits.md:373-376`). The bullet names who accepted it, when and where: the
+   person, on 2026-11-24, in this item's session. It matches the code: `checks/commits.mjs:72-73` counts an approval
+   only from the gate's opening.
+2. Two changes outside the scope were not declared: fixed. They are now declared under "Deviations", second bullet
+   (record lines 377-380), with who, when and where. The bullet matches the code:
+   - the comparison with `git rev-list` runs on the one `range` that both readings share (`checks/commits.mjs:152`,
+     `166-170`);
+   - `--end-of-options` is in the default branch's `diff-tree` (`checks/commits.mjs:185`).
+3. The opening comment did not say what the command refuses: fixed. `checks/commits.mjs:31-33` now says that the check
+   reads no further, and fails with a line of its own, when the entries `git log` gives are not the list `git rev-list`
+   gives. This is what `docs/01-specs/INTERFACE.md:31-32` asks for. The comment matches `checks/commits.mjs:166-170`
+   and the `FORGED` line at `checks/commits.mjs:55`.
+
+**Acceptance criteria**
+
+The diff since `92d86d9` changes only the opening comment, so no criterion's evidence has changed.
+
+1. Gate read from each commit's record, merges set aside: met, `checks/commits.mjs:68-77` and `209-220`.
+2. Deviation required where work came before the gate: met, `checks/commits.mjs:221-227`.
+3. An item full from its start, and a record turned back to small inside the gate: met, `checks/commits.mjs:229-233`.
+4. Tests: met, `checks/commits.test.mjs`, tests at lines 299, 313, 326, 344, 218 and 357.
+5. Measures read the gate, with no import cycle: met.
+   - Measures read the gate: `checks/measures.mjs:9`, `26`, `142`, and the test at `checks/measures.test.mjs:135`.
+   - `DEFAULT_KINDS` is at `checks/profile.mjs:30` and is imported at `checks/record.mjs:40` and
+     `checks/measures.mjs:27`.
+   - No cycle: `checks/measures.mjs` imports `checks/commits.mjs`, which imports `checks/record.mjs` and
+     `checks/profile.mjs`; neither imports the measures.
+6. Worker, core rules and workflow: met, `agents/worker.md:40`, `rules/git.md:13`, `docs/01-specs/WORKFLOW.md:281` and
+   `482`.
+7. Trial on another project's branch: not verifiable. It ran in that project's checkout, which is not here. The log
+   states both halves (record lines 222-225 and 245-247) without naming the project.
+8. `verify` and the kit's pipeline: the `verify` part is met, since Verification records every command passing at
+   `0b9ec12`. The pipeline's run on pull request #52 is not verifiable.
+
+- **Intent:** in order.
+- **Scope:** in order. The diff's only change is the script's opening comment, which is in scope.
+- **Comments and documents:** in order.
+- **Gates:** in order.
+- **Verification evidence:** in order; covers formatting, lint, types and tests.
+- **Security review:** in order. It was due for the item, as its strategy says, and the chain of reviews is unbroken up
+  to `0b9ec12`:
+  - the first review covers `7b2d47e` (the whole diff);
+  - later reviews cover `8b449e6`, `92d86d9` and `0b9ec12`, each on what changed since the one before.
+
+  No review has findings, and the log says what was done with each weak point.
+
+- **Record:** in order.
+- **Commits:** in order. The three commits are a checker's fix, a stop and a resume, each a commit of its own with the
+  item's trailer. The ten commits that Verification counts match the branch's history.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 7: the trial ran in another project's checkout, which cannot be read from here.
+- Criterion 8: the kit's pipeline run on pull request #52 cannot be seen from here.
 
 ## Deviations
 
@@ -312,3 +453,18 @@ the person" included, relayed to this session by the hub and confirmed by the pe
   compares every reading of `git log` with `git rev-list` for the same range, on work branches and on the default
   branch, and gives git `--end-of-options` before each commit's identifier, in the default branch's reading of direct
   commits too. Accepted by the person on 2026-11-24, in this item's session.
+
+## Outcome
+
+`checks/commits.mjs` reads a full item's approval gate from the record as each commit holds it. The commits an item
+made at trivial or small pass. The gate runs from the commit whose record becomes full to the one that writes the
+approval. When work came before the gate, the record at its opening holds a deviation. Work committed before the
+approval of an item that was full from its start is still refused. On every merged work branch of the kit and of a
+project using the kit, the result is the same as before, and the branch of that project whose item grew now passes.
+The check also refuses a reading of `git log` that is not the list `git rev-list` gives for the range. The measures
+take strategy and approval at the gate's commits, and `DEFAULT_KINDS` is in `checks/profile.mjs`. The worker's
+procedure says what an item that outgrows its size commits, the core rules say that an item grown to full keeps the
+commits of its smaller size, and the workflow says why. The session-start total is 29,400 characters. The pipeline
+passes on Linux and on Windows. Two weak points of the security review are left to the person: in the measures, a
+forged entry that names an existing commit; and a separator in a subject that shifts the trailer fields read after
+it. No deferred check.
