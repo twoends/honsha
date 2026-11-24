@@ -24,19 +24,20 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 
 ## Components
 
-| Component        | Role                                                                                                                     | Built from                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| Host             | Runs everything; reachable without any personal device                                                                   | Linux VPS                                                          |
-| Hub session      | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself        | The kit's agent `honsha:hub`, in a Claude Code session in the home |
-| Messaging        | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only          | Claude Code Channels (research preview)                            |
-| App access       | Full conversations with the hub and with any worker, from phone or browser                                               | Remote Control in server mode                                      |
-| Worker           | Executes one work item in a worktree of its project and opens the pull request                                           | Background session (research preview)                              |
-| Reader           | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access | Subagent defined in the kit                                        |
-| Checker          | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only                | Subagent defined in the kit                                        |
-| Scheduler        | Starts timed runs: checks that are due, radar reviews, proactive research                                                | Timers on the host (custom, small)                                 |
-| Board            | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                | Page generated from the index and session state (custom, small)    |
-| Index            | Answers "which records" questions for the hub and the board: metadata of every record and full-text search               | A SQLite file built from the records by a script (custom, small)   |
-| Hosting identity | Pushes branches and opens pull requests in the registered repositories; never merges                                     | An account or token on the hosting service                         |
+| Component         | Role                                                                                                                                                             | Built from                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Host              | Runs everything; reachable without any personal device                                                                                                           | Linux VPS                                                          |
+| Hub session       | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself                                                | The kit's agent `honsha:hub`, in a Claude Code session in the home |
+| Messaging         | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only                                                  | Claude Code Channels (research preview)                            |
+| App access        | Full conversations with the hub and with any worker, from phone or browser                                                                                       | Remote Control in server mode                                      |
+| Worker            | Executes one work item in a worktree of its project and opens the pull request                                                                                   | Background session (research preview)                              |
+| Reader            | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access                                         | Subagent defined in the kit                                        |
+| Checker           | Verifies a finished work item against its record and the profile's gates, from a fresh context, read-only                                                        | Subagent defined in the kit                                        |
+| Security reviewer | Looks for security holes in a change that touches what an attacker aims at, from a fresh context, read-only, given the change and not the worker's account of it | Subagent defined in the kit                                        |
+| Scheduler         | Starts timed runs: checks that are due, radar reviews, proactive research                                                                                        | Timers on the host (custom, small)                                 |
+| Board             | Shows projects, open work items, live sessions and pending approvals; links into the app for conversation                                                        | Page generated from the index and session state (custom, small)    |
+| Index             | Answers "which records" questions for the hub and the board: metadata of every record and full-text search                                                       | A SQLite file built from the records by a script (custom, small)   |
+| Hosting identity  | Pushes branches and opens pull requests in the registered repositories; never merges                                                                             | An account or token on the hosting service                         |
 
 ```mermaid
 flowchart LR
@@ -50,6 +51,7 @@ flowchart LR
   H -- records --> HOME[(Home repo)]
   H -- dispatch --> W[Worker per work item]
   W -- record, branch --> PRJ[(Project repo)]
+  W --> SR[Security reviewer]
   W --> C[Checker]
   W -- pull request --> GH[Hosting service]
   P -- merge --> GH
@@ -74,8 +76,8 @@ The template, shared by every installation. Indicative layout:
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
 rules/                 the always-on rules, in parts of one topic each
-skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review
-agents/                hub, worker, reader, checker
+skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review, a security review
+agents/                hub, worker, reader, checker, security reviewer
 hooks/                 session and checker start, and the hub's or the worker's procedure; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
 hub/                   the hub's code: the registry of projects, the moves between their states, the backlog
@@ -245,7 +247,8 @@ board. Both limits are settings in the home.
    the same time, within the limits of the host and the project.
 2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
-4. The checker verifies the result. Its report goes into the record and the pull request.
+4. Where the change touches what an attacker aims at, the security reviewer looks for holes in it first. The checker
+   verifies the result. Their reports go into the record and the pull request.
 5. The pull request is opened and the person is notified. The person merges.
 
 ### Scheduled
@@ -291,10 +294,11 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ## Models
 
-- Everything that needs judgement runs on a strong model: the hub, workers, the checker. The default is Opus. The
-  strongest model is used when the work is too complex for the default: for a full item the strategy says so, and
-  the person approves that choice with the strategy.
-- The checker runs on the model of the session that calls it, so it is never weaker than the work it checks.
+- Everything that needs judgement runs on a strong model: the hub, workers, the checker, the security reviewer. The
+  default is Opus. The strongest model is used when the work is too complex for the default: for a full item the
+  strategy says so, and the person approves that choice with the strategy.
+- The checker and the security reviewer run on the model of the session that calls them, so neither is weaker than
+  the work it reads.
 - A cheaper model is fixed only for mechanical steps: the reader's extraction and summarising, searching, bulk
   formatting.
 - The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table. A model

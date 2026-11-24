@@ -10,10 +10,11 @@ A part of the Honsha core rules, which `rules/core.md` opens.
   the other trailers, such as the co-author's, and no blank line between them.
 - An item makes as few commits as it can. Small or trivial: the work with its record, then one closing commit. Full:
   the record with its strategy, then its approval, two commits that hold only the record, since no other file changes
-  before the approval is committed; then the work and one closing commit. The closing commit holds the verification,
-  the checker's report, the outcome and the pull request's number together.
+  before the approval is committed; then the work and one closing commit. The closing commit holds the verification
+  with its reports, the outcome and the pull request's number together.
 - The work is split into more than one commit only where its parts are separate enough to be reviewed one at a time.
-  A stop, a merge of the default branch and a fix asked by the checker or the person are commits of their own.
+  A stop, a merge of the default branch and a fix asked by the security reviewer, the checker or the person are
+  commits of their own.
 - A work branch only grows: no amend, no rebase, no squash. A mistake is corrected by a new commit.
 - A work branch is brought up to date only on a conflict, a need or a request, by merging the default branch into
   it. The verification commands run again, and the checker on what changed.
@@ -27,6 +28,7 @@ A part of the Honsha core rules, which `rules/core.md` opens.
   kit refuses those commands.
   A session that finds a merged branch deletes it, with its worktrees, locally and on the hosting service.
 - The record travels in the same pull request as the change. The pull request's description comes from the record:
-  intent, what changed, verification evidence, checker report, deviations.
-- Before delivery the profile's verification commands run. For small and full items the checker, `honsha:checker`,
-  then compares the result with the record from a fresh context.
+  intent, what changed, verification evidence, the agents' reports, deviations.
+- Before delivery the profile's verification commands run. Where `honsha:security-review` applies, at any size, the
+  security reviewer then looks for holes in the change. For small and full items the checker, `honsha:checker`, then
+  compares the result with the record from a fresh context.

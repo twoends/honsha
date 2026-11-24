@@ -7,7 +7,7 @@ Work runs in parallel only when no part needs another part's result, no two part
 configuration, and each part can be verified on its own. Parts that fail this test run in sequence.
 
 **Parts of one request.** One request is one work item and one pull request, even when its parts could land
-separately. Verification and the checker run once, on the integrated result.
+separately. Verification, the security review where it is due, and the checker run once, on the integrated result.
 
 1. Run such parts in separate worktrees, each on a local branch cut from the tip of the item's branch and never
    pushed, named `work/<id>-<slug>.<part>`: git refuses a branch named below an existing one. Make each with

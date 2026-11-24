@@ -117,7 +117,7 @@ Who writes `model` and `effort` is in the core rules (The record).
 ### Sections by size
 
 The record template (`templates/record.md`) says, section by section, which sizes keep it and what it holds. What
-Verification holds, and how much of each checker report a record keeps, is in the core rules (The record): only
+Verification holds, and how much of each agent's report a record keeps, is in the core rules (The record): only
 the last report in full, because an earlier one matters only for what it found. A record is as long as its size calls
 for, and copies nothing another document holds (core rules, Documents); the checker fails an item whose record is
 longer.
@@ -141,8 +141,9 @@ extended instead.
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas: a
    session that receives the worker's procedure when it starts, or one started as the worker (`agents/worker.md`).
 6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
-   verification commands. For small and full items the checker then compares the result with the record and the
-   profile's gates, from a fresh context and without write access (`agents/checker.md`).
+   verification commands. Where the change touches what an attacker aims at, the security reviewer looks for holes in
+   it, at any size (workflow, Security review). For small and full items the checker then compares the result with
+   the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
    A repeated check reads only what changed (`agents/worker.md`, Verification): a full read of a large branch finds
    something new each time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
@@ -434,6 +435,28 @@ checked; its known vulnerabilities are looked for and fixed at once; and any oth
 that a release withdrawn or found compromised early is not taken. The rules are in the skill `honsha:dependencies`,
 which a work item invokes when it changes a dependency or answers a vulnerability report. Ordinary updates are left
 to the periodic review (`honsha:review`), so that they do not interrupt other work.
+
+---
+
+## Security review
+
+The checker compares the work with its record and is no security audit: a change can do all that its record says and
+still open a hole. So a change that touches what an attacker aims at is read before delivery by a second agent, the
+security reviewer, whatever the item's size: authentication, permissions or secrets, deploy or CI configuration, the
+grants, roles and policies of a data schema, which are the always-full list's cases of that kind, and the paths that
+the profile lists under `security-review`. Elsewhere it would cost time and tokens and find nothing, so it does not
+run.
+
+- It reads from a fresh context with read-only tools, as the checker does, and is given the diff without the record:
+  a reviewer that read the worker's account of the change would tend to find what the worker believed.
+- A finding stops the item until it is fixed or the person accepts it: the worker wrote the change, so it does not
+  judge a finding against it.
+- `checks/record.mjs` checks the listed paths at every size, in the pipeline too: a script matches patterns more
+  reliably than a session, and no checker reads a trivial item. It checks that the report is there and not its
+  verdict, which a finding the person accepted leaves `fail`; the checker judges the rest. Its patterns match a name
+  that begins with a dot, as a file of secrets often has, where Node.js's own matcher skips one.
+
+The worker's procedure is in the skill `honsha:security-review`, the reviewer's in `agents/security-reviewer.md`.
 
 ---
 

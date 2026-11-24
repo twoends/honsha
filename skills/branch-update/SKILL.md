@@ -11,4 +11,5 @@ into the branch of a part. Never merge between a failed check and its repeated c
 2. A conflict that cannot be resolved inside the scope is a stop condition.
 3. Run the verification again and say so in the log. If a check has already run and the merge had conflicts, run a
    repeated check on the merge commit `<merge>`: the diff `git show --cc <merge>`, which holds only what the merge
-   itself changed, and the list of commits with `<merge>^!` as the range.
+   itself changed, and the list of commits with `<merge>^!` as the range. Where that diff touches what the security
+   review guards, a repeated review reads it first (`honsha:security-review`).

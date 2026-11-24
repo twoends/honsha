@@ -259,3 +259,50 @@ the person" included, relayed to this session by the hub.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The pull request is #51, opened with the record alone while it waited for the approval.
 - The approval is written and the state set to `in-progress`.
+- Two parts ran in parallel, as `honsha:parallel-parts` admits: they change different files, neither needs the
+  other's result, and each is verified on its own. The scripts with their tests, `checks/profile.mjs`,
+  `checks/record.mjs` and their tests, ran in a worktree of their own on the local branch
+  `work/261124-1549-security-review.scripts`, cut from `6fcf7ee`, by a subagent on Opus. The agent, the skills, the
+  rules, the templates, the documents and the budgets ran in the item's worktree, in this session.
+- `agents/security-reviewer.md` and `skills/security-review/SKILL.md` are written as the strategy says. The agent's
+  description names the skill, so that the agent is invoked only where the skill applies.
+- `agents/worker.md`: a step 2 in Verification invokes the skill, at any size, before the checker; the diff command
+  leaves out the record with `-- . ':(exclude)<record>'`. `agents/checker.md`: the record is read by its path and is
+  not in the diff; check 7, "Security review", with its line in the report; the record and the commits become checks 8
+  and 9.
+- `templates/profile.yml`: `security-review`, with `src/auth/**` as its example.
+- The core rules' first wording grew them by 497 characters, past the 380 that the approved total of 29,300 leaves at
+  a hub's start. They grow by 290 instead: `rules/git.md` names the agents' reports in the pull request's description
+  and gives the review one sentence in Delivery that points to the skill, and its line on bringing a branch up to date
+  stays as it is, since `skills/branch-update/SKILL.md` now holds the repeated review. At start, a hub's session counts
+  29,210 characters and a worker's 29,032, under 29,300.
+- `rules/records.md`: Verification holds the reports of the security reviewer and the checker, and only each agent's
+  last report stays in full. `templates/record.md`: a security reviewer's report comes before any checker's, at any
+  size.
+- `skills/branch-update/SKILL.md`: a repeated review reads a merge's diff before the repeated check, where it is due.
+  `skills/parallel-parts/SKILL.md`: the review runs once, on the integrated result.
+- The interface lists the agent and the skill. The workflow names the review in the step Verify and in "Sections by
+  size", and gives its reasons in a section "Security review", after "Dependencies". The architecture adds the
+  reviewer to the components, their diagram, the kit's layout, the flow Dispatch and the models. The README and both
+  manifests' descriptions name it.
+- Budgets: the reviewer's file 6,000 (it holds 4,682 characters), the profile's template 4,700 (4,627), the workflow
+  36,000 (35,860); the session-start total 29,300. The test suite passes on this part alone: 200 tests.
+- Criterion 6, the trial. A scratch repository in the session's scratchpad, outside the installation, holds
+  `deploy/write-secrets.mjs`, a script run as root that writes each pasted secret to the application's file or to
+  root's by two lists, and refuses a name in neither; its profile lists `deploy/**` under `security-review`. Branch
+  `work/1-hole` makes the unknown name the application's; branch `work/2-safe` adds one name to the application's
+  list. On each, `git diff main...HEAD > .honsha-checker.diff`, then
+  `claude -p --model opus --plugin-dir <this worktree> --agent honsha:security-reviewer` with "Review the change in the
+  diff file .honsha-checker.diff, at the repository's root."
+- The report on `work/1-hole`: verdict `fail`. Its finding, at `deploy/write-secrets.mjs:11-13`: `owner()` fails open;
+  any name not exactly in `ROOT` goes to the file the application's container reads, so a new root secret, or a
+  root name pasted with a stray space or another case, reaches the container, where whoever runs code in it can read
+  a backup key, a registry token or the deploy key; the fix restores the refusal of a name in neither list. Weak
+  points: `APP` is no longer read, and an error part way through leaves earlier lines written. Not reviewed: how the
+  container mounts the file, which the repository does not hold.
+- The report on `work/2-safe`: verdict `pass`, no findings. Weak points: the new name reaches the application's file,
+  right only if the application uses it, which the repository does not show; the file's mode applies only when it is
+  created, which the change does not touch. Not reviewed: the same two points.
+- Both reports keep the agent's shape, and the second ends with a note outside it: in the trial the agent ran as a
+  session's own agent, so it received the kit's start hooks, and with `--plugin-dir` the plugin's setting `home` is
+  unset, so the opening part said so. Run as a subagent, as the skill runs it, it receives no start hook.
