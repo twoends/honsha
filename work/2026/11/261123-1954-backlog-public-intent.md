@@ -77,3 +77,5 @@ changes; the interface lists the commands, not the options of `checkRecord`, so 
   restated intent and one with a quoted intent, and the refusals add a record with no intent, one with an empty intent
   and one with the template's comment and placeholder. `node --test checks/record.test.mjs hub/backlog.test.mjs`: 28
   tests pass.
+- oxlint runs on this PC and refused the new test of `checks/record.test.mjs` (`consistent-function-scoping`): its
+  helper captured nothing from the test. The test now builds the quoted idea once and replaces its intent in place.

@@ -235,12 +235,13 @@ test("in a public project, an intent that quotes the person is named, and one th
 
 test("where the profile is not at hand, an intent quoted or restated passes, and one that says nothing is named", () => {
   const options = { file: FILE, id: ID, kinds: DEFAULT_KINDS, template, public: null };
-  /** @param {string} intent */
-  const idea = (intent) => record({ state: "idea" }, (t) => t.replace("> Export the orders as CSV.", intent));
-  assert.deepEqual(checkRecord(idea("> Export the orders as CSV."), options), []);
-  assert.deepEqual(checkRecord(idea("The person asked for the orders as a CSV file."), options), []);
+  const quoted = record({ state: "idea" });
+  assert.deepEqual(checkRecord(quoted, options), []);
+  const restated = quoted.replace("> Export the orders as CSV.", "The person asked for the orders as a CSV file.");
+  assert.deepEqual(checkRecord(restated, options), []);
   for (const empty of ["", "> …", ">", "<!-- The person's words as a quote. -->\n\n> …"]) {
-    assert.deepEqual(checkRecord(idea(empty), options), [`${FILE}: the intent is not written`], empty);
+    const text = quoted.replace("> Export the orders as CSV.", empty);
+    assert.deepEqual(checkRecord(text, options), [`${FILE}: the intent is not written`], empty);
   }
 });
 
