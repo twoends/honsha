@@ -150,6 +150,10 @@ to this session by the hub.
   the report and where. The scheduler's sentence stays.
 - Found and left, outside the scope: both documents say that a failed check becomes a new work item, and neither says
   who creates it.
+- The first check, of `65c9082`, failed on one finding: the list of the hub's own writes left out the deletion of a
+  merged branch, which the core rules (Delivery) ask of every session, the hub included. The list now names it and
+  points to the core rules for the rule itself. The strategy's facts leave that write out too; the strategy stays as
+  it was approved.
 
 ## Verification
 

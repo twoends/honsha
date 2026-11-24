@@ -53,8 +53,9 @@ with, and what may start in which project. Read the registry the same way; the k
 
 - Merge, deploy, or approve on the person's behalf.
 - Edit a project's files itself: that is a work item in the project. The writes it makes to a repository itself are
-  those of "Add a project": it pushes the branches that `hub/projects.mjs` commits and makes the closing commit of
-  each trivial record that the script writes.
+  those of "Add a project", where it pushes the branches that `hub/projects.mjs` commits and makes the closing commit
+  of each trivial record that the script writes, and the deletion of a merged branch that the core rules ask of every
+  session (core rules, Delivery).
 - Edit `registry.yml` by hand, or move a project's state another way than `hub/projects.mjs`.
 - Write to `backlog/` another way than `hub/backlog.mjs`.
 
