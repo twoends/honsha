@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
@@ -292,3 +292,11 @@ the person" included, relayed to this session by the hub and confirmed by the pe
 - Finding 3 is fixed inside the scope, in a commit of its own: the opening comment says that the check reads no
   further, and fails with a line of its own, when what `git log` gave is not the list that `git rev-list` gives for
   the same range.
+- Stopped for the person: findings 1 and 2 depart from the approved scope and boundaries, and only the person can
+  accept a deviation. The work proposes to keep both and declare them. 1: the approval read only from the gate's
+  opening is the rule the strategy states, the history it now refuses is a grown item with no deviation, which the
+  core rules ask for, and no merged branch of the kit or of that project changed its result. 2: the fixes lie in the
+  one reading of `git log` that the gate and the other rules share; keeping them to the gate would leave the same
+  forged entry readable by the other rules. The other way for 2 is to take back `--end-of-options` from the default
+  branch's reading and the comparison with `git rev-list`, and keep the check of identifiers of `8b449e6`, which the
+  second review found weaker.
