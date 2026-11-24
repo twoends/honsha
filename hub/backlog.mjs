@@ -46,8 +46,9 @@ export function backlogProblems(text, { name, project }) {
   const value = (key) => fields.get(key)?.value ?? "";
   const id = value("id");
   const kind = value("kind");
-  // The project's kinds are in its own profile, which the home does not hold: the kind is checked when the item starts.
-  const problems = checkRecord(text, { file: name, id, kinds: { [kind]: 0 } });
+  // The project's kinds, and whether it is public, are in its own profile, which the home does not hold: the kind and
+  // the form of the intent, quoted or restated, are checked when the item starts.
+  const problems = checkRecord(text, { file: name, id, kinds: { [kind]: 0 }, public: null });
   if (!ID.test(id)) problems.push(`${name}: \`id\` is not an identifier YYMMDD-HHMM`);
   else if (!name.startsWith(`${id}-`) || !name.endsWith(".md") || !SLUG.test(name.slice(id.length + 1, -3))) {
     problems.push(`${name}: the name is not ${id}-<slug>.md, a slug in lower case`);

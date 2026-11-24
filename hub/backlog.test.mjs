@@ -50,8 +50,9 @@ function home() {
  * @param {string} id
  * @param {Record<string, string>} [changes] front matter values that replace the ordinary ones
  * @param {string} [name] the file's name, `<id>-<slug>.md` unless given
+ * @param {string | null} [intent] the text of the section "Intent", or null for a record without it
  */
-function draft(id, changes = {}, name = `${id}-export-orders.md`) {
+function draft(id, changes = {}, name = `${id}-export-orders.md`, intent = "> Export the orders as CSV.") {
   const values = {
     id,
     title: "Export orders as CSV",
@@ -73,7 +74,8 @@ function draft(id, changes = {}, name = `${id}-export-orders.md`) {
   };
   const front = Object.entries(values).map(([key, value]) => `${key}: ${value}`);
   const file = path.join(temporary("honsha-draft-"), name);
-  fs.writeFileSync(file, `---\n${front.join("\n")}\n---\n\n## Intent\n\n> Export the orders as CSV.\n`);
+  const body = intent === null ? "" : `\n## Intent\n\n${intent}\n`;
+  fs.writeFileSync(file, `---\n${front.join("\n")}\n---\n${body}`);
   return file;
 }
 
@@ -164,6 +166,12 @@ test("a project that is not in the registry, a file that is not a record, and a 
     [draft("261201-0930", { size: "large" }), /`size` is `large`/],
     [draft("261201-0930", {}, "export-orders.md"), /the name is not 261201-0930-<slug>\.md/],
     [draft("261201-0930", {}, "261201-0930-Export.md"), /the name is not 261201-0930-<slug>\.md/],
+    [draft("261201-0930", {}, undefined, null), /section "Intent" is missing/],
+    [draft("261201-0930", {}, undefined, ""), /the intent is not written/],
+    [
+      draft("261201-0930", {}, undefined, "<!-- The person's words as a quote. -->\n\n> …"),
+      /the intent is not written/,
+    ],
   ];
   for (const [file, expected] of failures) {
     const result = run(["add", "example", /** @type {string} */ (file)], { home: dir });
@@ -176,6 +184,20 @@ test("a project that is not in the registry, a file that is not a record, and a 
   const twice = run(["add", "example", draft("261201-0930", {}, "261201-0930-other.md")], { home: dir });
   assert.match(twice.out[0], /in the backlog of `example` already/);
   assert.equal(git(origin, ["rev-list", "--count", `${start}..main`]).trim(), "1");
+});
+
+test("an idea is captured with its intent restated or quoted, since whether its project is public is not in the home", () => {
+  const { dir, origin } = home();
+  const restated = draft("261201-0930", {}, undefined, "The person asked for the orders as a CSV file.");
+  const quoted = draft("261201-0931", {}, "261201-0931-import-orders.md", "> Import the orders from CSV.");
+  for (const file of [restated, quoted]) {
+    const result = run(["add", "example", file], { home: dir });
+    assert.equal(result.code, 0, result.out.join("\n"));
+  }
+  assert.deepEqual(listed(origin, "backlog/example"), [
+    "backlog/example/261201-0930-export-orders.md",
+    "backlog/example/261201-0931-import-orders.md",
+  ]);
 });
 
 test("when the default branch moves before the push, the capture is committed again on the new tip", () => {
