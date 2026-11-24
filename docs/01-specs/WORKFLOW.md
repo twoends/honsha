@@ -278,6 +278,10 @@ A message is read as a title in the history; the reasons are in the record, so t
 ### Which commits an item makes
 
 - The two commits of a full item that hold only the record let the approval gate be read from the history.
+- An item that grows to full keeps the commits of its smaller size, which followed that size's rules, since a branch
+  is never rewritten. The check of commits reads the size each commit's record states: the gate starts where the
+  record becomes full, and the deviation written there says why work came before it. The worker commits that work
+  before it stops, as an approval can take days and a worktree may not last them.
 - The closing commit is made after the pull request is opened, so no commit exists only to write its number.
 - A pull request is reviewed as a whole. Fewer commits make the history shorter; the record says what happened in
   between.
@@ -475,8 +479,8 @@ Each merged item is measured from git, so that later work can be estimated from 
 that touches more of a project than its kind should shows where the project is too coupled. Nothing is typed by hand
 but the kind. `node checks/measures.mjs` in the kit prints them; it is a report and fails nothing.
 
-- **Times,** from commits. Created: the identifier. Strategy and approval: the two record-only commits of a full
-  item. Delivered: the closing commit. Merged: the merge commit on the default branch.
+- **Times,** from commits. Created: the identifier. Strategy and approval: the commits that open and close a full
+  item's gate. Delivered: the closing commit. Merged: the merge commit on the default branch.
 - **Intervals.** Agent work: created to delivered, less the wait for approval. Waiting for approval: strategy to
   approval. Review: delivered to merged.
 - **Size.** Commits; lines added and removed; existing files changed and new files added, records left out.

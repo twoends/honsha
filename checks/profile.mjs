@@ -26,6 +26,9 @@
 
 import fs from "node:fs";
 
+/** The kinds a project has when its profile names none. */
+export const DEFAULT_KINDS = { feature: 10, fix: 5, upkeep: 5, change: 10 };
+
 const BLANK = /^\s*(#.*)?$/;
 const ITEM = /^\s*-\s+(.*)$/;
 // A technology names a file of the home's lessons, so it may not lead out of their folder.

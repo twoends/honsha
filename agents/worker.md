@@ -37,6 +37,8 @@ core rules in your context always hold, and this file does not repeat them: it i
   dependency, changes a lockfile or answers a vulnerability report, `honsha:dependencies`.
 - At a stop condition, write the reason in the log, commit the record and tell the person; do not guess a way around
   it.
+- When the item turns out larger than its size, commit the work as far as it got, with the record at that size; the
+  larger size, its deviation and its gate then begin in a commit of the record alone.
 - Update the specifications the change affects as part of the work, before the verification.
 - The work, with the record and its log, is one commit, made when it is ready for the verification.
 - Before merging the default branch, invoke the skill `honsha:branch-update`.

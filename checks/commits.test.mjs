@@ -7,7 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { check } from "./commits.mjs";
+import { approvalGate, check } from "./commits.mjs";
 
 const script = fileURLToPath(new URL("./commits.mjs", import.meta.url));
 const ID = "261116-1432";
@@ -176,6 +176,21 @@ test("the exit code is 1 with the commit named, and 0 when the rules are followe
   assert.match(failed.stderr, /Add the export: no .Work-Item. trailer/);
 });
 
+test("a message that holds the byte separating git's output stops the check before git reads what follows it", () => {
+  for (const forged of ["--output=forged", "main"]) {
+    const { dir, commit, git } = repository();
+    // An option of git, or the name of a commit that exists but is not one of the branch's.
+    const name = forged === "main" ? git(["rev-parse", "main"]) : forged;
+    commit("Add the record", `Work-Item: ${ID}\x1d${name}\x1f\x1f\x1f\x1fForged`);
+    assert.deepEqual(
+      run(dir).problems,
+      ["a commit message holds the byte that separates the commits in git's output, so they cannot be read"],
+      forged,
+    );
+    assert.ok(!fs.readdirSync(dir).some((file) => file.startsWith("forged")));
+  }
+});
+
 /**
  * Writes a file of the repository and stages it.
  * @param {string} dir
@@ -193,9 +208,12 @@ const RECORD = `work/2026/11/${ID}-export-orders.md`;
 /**
  * @param {string} size
  * @param {string} approval
+ * @param {{ state?: string, deviation?: string }} [more] the state, and the text of a section "Deviations" if any
  */
-const record = (size, approval) =>
-  `---\nid: ${ID}\nsize: ${size}\nstate: in-progress\n---\n\n## Intent\n\n> Export the orders.\n\n## Approval\n\n${approval}`;
+const record = (size, approval, { state = "in-progress", deviation = "" } = {}) =>
+  `---\nid: ${ID}\nsize: ${size}\nstate: ${state}\n---\n\n## Intent\n\n> Export the orders.\n\n## Approval\n\n${approval}` +
+  (deviation ? `\n## Deviations\n\n${deviation}` : "");
+const GREW = "The export turned out larger than a small item: it stopped and became full.\n";
 
 test("for a full item, a commit up to the approval that changes another file than the record is named", () => {
   const { dir, git } = repository();
@@ -233,6 +251,140 @@ test("a small item changes other files from its first commit", () => {
   put(dir, git, "export.js", "export {};\n");
   git(["commit", "-q", "-m", "Add the export", "-m", `Work-Item: ${ID}`]);
   assert.deepEqual(run(dir), { commits: 1, problems: [] });
+});
+
+/**
+ * Commits what is staged, with the trailer of the branch.
+ * @param {(args: string[]) => string} git
+ * @param {string} subject
+ */
+const save = (git, subject) => git(["commit", "-q", "-m", subject, "-m", `Work-Item: ${ID}`]);
+
+/**
+ * The first commits of an item that grew: its work and its stop, with the record at `size`.
+ * @param {string} dir
+ * @param {(args: string[]) => string} git
+ * @param {string} size
+ */
+function workThenStop(dir, git, size) {
+  put(dir, git, RECORD, record(size, ""));
+  put(dir, git, "export.js", "export {};\n");
+  save(git, "Add the export");
+  put(dir, git, RECORD, record(size, "", { state: "blocked" }));
+  save(git, "Stop: the export outgrows its size");
+}
+
+test("the gate is read from the record as each commit holds it, merges left out", () => {
+  const small = record("small", "");
+  const full = record("full", "");
+  const approvedFull = record("full", "Approved in the chat.\n");
+  assert.deepEqual(approvalGate([]), { opens: -1, closes: -1 });
+  assert.deepEqual(approvalGate([small, small]), { opens: -1, closes: -1 });
+  assert.deepEqual(approvalGate(["", full, approvedFull]), { opens: 0, closes: 2 });
+  assert.deepEqual(approvalGate([full, full]), { opens: 0, closes: -1 });
+  assert.deepEqual(approvalGate([record("trivial", ""), record("small", "Approved.\n"), full, approvedFull, full]), {
+    opens: 2,
+    closes: 3,
+  });
+  /** @type {number[]} */
+  const read = [];
+  const lazily = [small, full, approvedFull, full, full].values().map((text, index) => {
+    read.push(index);
+    return text;
+  });
+  assert.deepEqual(approvalGate(lazily), { opens: 1, closes: 2 });
+  assert.deepEqual(read, [0, 1, 2], "nothing is read after the gate's close");
+});
+
+test("an item that grew to full passes with the work of its smaller size and a deviation where it grew", () => {
+  for (const size of ["small", "trivial"]) {
+    const { dir, git } = repository();
+    workThenStop(dir, git, size);
+    put(dir, git, RECORD, record("full", "", { state: "awaiting-approval", deviation: GREW }));
+    save(git, "Write the strategy");
+    put(dir, git, RECORD, record("full", "Approved in the chat.\n", { deviation: GREW }));
+    save(git, "Record the approval");
+    put(dir, git, "export.js", "export const orders = [];\n");
+    save(git, "Finish the export");
+    assert.deepEqual(run(dir), { commits: 5, problems: [] }, size);
+  }
+});
+
+test("for an item that grew, the commit that makes the record full and changes another file is named", () => {
+  const { dir, git } = repository();
+  workThenStop(dir, git, "small");
+  put(dir, git, RECORD, record("full", "", { state: "awaiting-approval", deviation: GREW }));
+  put(dir, git, "export.js", "export const orders = [];\n");
+  save(git, "Write the strategy");
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n", { deviation: GREW }));
+  save(git, "Record the approval");
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /Write the strategy: changes export\.js before the approval is committed$/);
+});
+
+test("an item that grew after its work began, and whose record becomes full with no deviation, is named", () => {
+  const { dir, git } = repository();
+  workThenStop(dir, git, "small");
+  put(dir, git, RECORD, record("full", "", { state: "awaiting-approval" }));
+  save(git, "Write the strategy");
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  save(git, "Record the approval");
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(
+    problems[0],
+    new RegExp(
+      `^${git(["rev-parse", "--short=7", "HEAD~1"])} Write the strategy: the record becomes full here, ` +
+        "after work committed at a smaller size, and holds no deviation$",
+    ),
+  );
+});
+
+test("an item made full before any work needs no deviation", () => {
+  const { dir, git } = repository();
+  put(dir, git, RECORD, record("small", ""));
+  save(git, "Add the record");
+  put(dir, git, RECORD, record("full", "", { state: "awaiting-approval" }));
+  save(git, "Write the strategy");
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  save(git, "Record the approval");
+  put(dir, git, "export.js", "export {};\n");
+  save(git, "Add the export");
+  assert.deepEqual(run(dir), { commits: 4, problems: [] });
+});
+
+test("a record turned back to small inside the gate, by a commit that changes another file, is named", () => {
+  const { dir, git } = repository();
+  put(dir, git, RECORD, record("full", ""));
+  save(git, "Write the strategy");
+  put(dir, git, RECORD, record("small", ""));
+  put(dir, git, "export.js", "export {};\n");
+  save(git, "Add the export as a small item");
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  save(git, "Record the approval");
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /Add the export as a small item: changes export\.js before the approval is committed$/);
+});
+
+test("when only a merge made the record full, every commit of the branch is inside a gate that never closes", () => {
+  const { dir, git } = repository();
+  git(["checkout", "-q", "main"]);
+  put(dir, git, RECORD, record("small", ""));
+  git(["commit", "-q", "-m", "Add a record to the default branch"]);
+  git(["checkout", "-q", BRANCH]);
+  git(["merge", "-q", "--ff-only", "main"]);
+  put(dir, git, "export.js", "export {};\n");
+  save(git, "Add the export");
+  git(["checkout", "-q", "main"]);
+  put(dir, git, RECORD, record("full", "Approved in the chat.\n"));
+  git(["commit", "-q", "-m", "Make the record full on the default branch"]);
+  git(["checkout", "-q", BRANCH]);
+  git(["merge", "-q", "--no-ff", "main", "-m", "Merge the default branch", "-m", `Work-Item: ${ID}`]);
+  const { problems } = run(dir);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /Add the export: changes export\.js before the approval is committed$/);
 });
 
 test("on the default branch, merges and captures of the backlog pass, and any other direct commit is named", () => {

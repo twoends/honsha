@@ -7,8 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { DEFAULT_KINDS } from "./measures.mjs";
-import { readProfile } from "./profile.mjs";
+import { DEFAULT_KINDS, readProfile } from "./profile.mjs";
 import { check, checkRecord, entriesOf, matches, readTemplate, recordPath } from "./record.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
