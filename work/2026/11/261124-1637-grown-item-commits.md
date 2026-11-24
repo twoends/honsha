@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: fix
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-24
@@ -186,6 +186,11 @@ commit up to the gate's close: a few per item.
   5. the session-start total rises by 100 characters, rather than leaving `rules/git.md` silent on a grown item;
   6. the security review runs on this item.
 
+## Approval
+
+Approved by the person on 2026-11-24, in the hub's session, as written in `ca2db44`, the six choices listed under "For
+the person" included, relayed to this session by the hub and confirmed by the person in this session the same day.
+
 ## Log
 
 - The record comes from the home's backlog, taken by the hub; its intent is restated as the core rules ask of a public
@@ -199,3 +204,5 @@ commit up to the gate's close: a few per item.
 - Read the history of the branch of a project using the kit whose small item grew to full after its first work commit
   (Strategy, How the check reads the gate).
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The pull request is #52, opened with the record alone while it waited for the approval.
+- The approval is written and the state set to `in-progress`.
