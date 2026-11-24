@@ -318,3 +318,18 @@ the person" included, relayed to this session by the hub.
 - Integration: the scripts part was merged into the item's branch with a merge commit. The one fix it needed is in that
   commit: the test of the profile's template expects the template's example, `src/auth/**`, under `security-review`.
   The part's worktree and branch were then removed.
+- The security review is not due on this item: its diff touches none of the cases the skill names, and the kit's
+  profile lists no paths under `security-review`, so `checks/record.mjs` names none.
+
+- The first check, of `66b8256`, passed with no findings. Its diff, written with the worker's new command, held the
+  branch's 22 changed files and not the record.
+- The glossary of `docs/00-vision/VISION.md` names every agent of the kit but the new one, and the approved scope does
+  not list that file. The work asked the person through the hub while it went on; the person approved the row
+  (Deviations). It is a commit of its own, after the first check.
+- `docs/00-vision/VISION.md`: the glossary's row "Security reviewer", after "Checker".
+
+## Deviations
+
+- The glossary of `docs/00-vision/VISION.md`, which the scope does not name, gains the row "Security reviewer", beside
+  Hub, Worker, Reader and Checker: without it the glossary names every agent of the kit but the new one. Approved by
+  the person on 2026-11-24, in the hub's session, relayed to this session by the hub.
