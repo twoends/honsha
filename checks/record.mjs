@@ -30,6 +30,8 @@ import { readProfile } from "./profile.mjs";
 export const WORK_BRANCH = /^work\/((\d{2})(\d{2})\d{2}-\d{4})-([^/]+)$/;
 const SIZES = ["trivial", "small", "full"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+// A quote line that says nothing: the template's placeholder, or a bare `>`.
+const EMPTY_QUOTE = /^>\s*(?:…\s*)?$/;
 const TEMPLATE = new URL("../templates/record.md", import.meta.url);
 
 /**
@@ -175,9 +177,10 @@ export function readTemplate(text) {
 }
 
 /**
- * The problems of a record, one line each.
+ * The problems of a record, one line each. `public` is whether the project is public, as its profile says, or null
+ * where the profile is not at hand: the intent may then quote the person or restate the request.
  * @param {string} text
- * @param {{ file: string, id: string, kinds: Record<string, number>, public?: boolean,
+ * @param {{ file: string, id: string, kinds: Record<string, number>, public?: boolean | null,
  *   template?: ReturnType<typeof readTemplate> }} options
  */
 export function checkRecord(
@@ -264,10 +267,17 @@ export function checkRecord(
   const intent = named.get("Intent");
   const lines = intent?.text.split(/\r?\n/) ?? [];
   if (!intent) say('section "Intent" is missing');
-  else if (open) {
+  else if (open === null) {
+    // Either form is right for some project, so only an intent that says nothing is wrong for every one.
+    const said = intent.text
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .split(/\r?\n/)
+      .some((line) => line.trim() !== "" && !EMPTY_QUOTE.test(line));
+    if (!said) say("the intent is not written");
+  } else if (open) {
     // The rules ask a public project to restate the request: a quote would publish the person's words.
     if (lines.some((line) => line.startsWith(">"))) say("the intent quotes the person in a public project");
-  } else if (!lines.some((line) => /^>\s*\S/.test(line) && !/^>\s*…\s*$/.test(line))) {
+  } else if (!lines.some((line) => line.startsWith(">") && !EMPTY_QUOTE.test(line))) {
     say("the intent is not quoted");
   }
   if (state === "done") {
