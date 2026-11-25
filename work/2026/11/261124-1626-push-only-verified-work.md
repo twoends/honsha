@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -301,6 +301,14 @@ approval on to this item's session.
   runs it with `--ignore-submodules=none`. Weak points 2, the base moved since the run on the code, and 3, a file at a
   record's path that a project's `verify` reads, are left to the person: the strategy's risks name both, and the
   documents say so.
+- Finding 1: the skip reads which files a push changed, not whether the run on the branch's earlier tip passed, or
+  whether one ran. After code that failed, or whose run a newer push cancelled, or that never ran, as on a pull request
+  retargeted to the default branch, a push that changes only records shows the pull request's head green, and a check
+  that a ruleset requires passes. Each fix reaches past the approved scope: reading the earlier run's result needs
+  `actions: read` in each project's caller file, which the boundaries keep unchanged; a mark of a passing run kept in
+  GitHub's cache needs a new action and another design of the skip; refusing the skip on a pull request from a fork
+  narrows the finding without closing it. A finding that cannot be fixed inside the scope is a stop condition: the
+  state is `blocked`, and the person decides.
 
 ## Verification
 
