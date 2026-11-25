@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -413,6 +413,14 @@ choices and the trial's downloads listed under "For the person" included.
   network with no way out for an active scan, which the review proposes, is left to the person: it is a further rule
   for projects, which the trial did not try. The fix changes only the skill, none of the cases the review guards, so
   no further review is due.
+- The first check, of `30a3fcd` (full), fails on one finding: the two commits that wrap lines, `7f6dc23` and
+  `286dff4`, make one correction in two commits, where the core rules ask an item to make as few commits as it can.
+  The wrap was made first in the new skill alone, before a search of the other changed files found more such lines.
+  A branch only grows, so the finding cannot be fixed inside the scope: a stop condition. The state is `blocked`, and
+  the person decides whether to accept it under "Deviations".
+- The hub says that `261123-2103` is merged into the kit's default branch, at `042cf46`: this item, merged second, is
+  brought up to date before its merge, and sets the workflow's budget for both. The merge waits for the repeated check
+  of the finding above (`honsha:branch-update`).
 
 ## Verification
 
