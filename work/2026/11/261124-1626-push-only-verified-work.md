@@ -361,6 +361,10 @@ approval on to this item's session.
   outside it, and the test reads the scripts of each piece of `services/` too: with the name written wrong, it fails.
 - Its finding 3: the comment in `project.yml` on the token did not say that the checkouts get it too, as the last
   security review's weak point said. The comment now says it, as the README does.
+- The repeated security review of `a784f87`, on Opus, passed: that weak point is fixed. Its one weak point:
+  `actions/setup-node` takes the token as an input too, which neither the comment nor the README said. Both now say
+  that the actions take the token as an input and that, of the steps that run commands, the one that reads the
+  earlier run alone gets it, so that no list of actions has to be kept in step with the workflow.
 
 ## Verification
 

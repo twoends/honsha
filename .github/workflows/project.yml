@@ -71,9 +71,9 @@ jobs:
       # below still read the records. The opening of a pull request has no earlier tip, and the default branch is
       # checked in full at every push: it is where whatever the skip leaves out is caught. Only both scripts' exit
       # code 0 writes `false`; a failure of either, like a skipped step, leaves the output empty, and every step runs.
-      # Besides the checkouts, which take the token as an input, this step alone gets it, in its environment and before
-      # any of the project's commands runs; code in the job can still read it from the runner's memory, so what it may
-      # do is what the job may do.
+      # The actions above take the token as an input; of the steps that run commands, this one alone gets it, in its
+      # environment and before any of the project's commands runs. Code in the job can still read it from the runner's
+      # memory, so what it may do is what the job may do.
       - name: Tell whether the push changes more than records
         id: changes
         if: github.event_name == 'pull_request'
