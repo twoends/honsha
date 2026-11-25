@@ -5,16 +5,17 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 59
+model: claude-opus-5-5
 effort: xhigh
-checks: []
+checks:
+  - { due: 2026-11-26, what: "The run on the closing commit of pull request 59, a push that changes only the record, shows in its `project` job that the run on the work passed, the setup, the verification and the dynamic testing skipped, and the checks of the record and of the commits passed" }
 ---
 
 ## Intent
@@ -422,8 +423,160 @@ choices and the trial's downloads listed under "For the person" included.
   brought up to date before its merge, and sets the workflow's budget for both. The merge waits for the repeated check
   of the finding above (`honsha:branch-update`).
 - The person accepted the finding (Deviations); the state is `in-progress`.
+- The second check, of `3f8707e`, passes with no findings.
+- The default branch, at `042cf46` with `261123-2103`, is merged in `4d80ed1` (`honsha:branch-update`). It conflicted
+  only on the workflow's budget in `checks/budgets.test.mjs`, 39,500 there and 42,000 here: the two changes together
+  hold 41,830 characters, so the budget stays at 42,000. The template's 5,200 stays, since the other item did not
+  change it. Git merged step 4 of the assessment, the workflow's "Dependencies" and `skills/dependencies/SKILL.md` with
+  this item's changes on its own. The verification ran again on the merge and passed. The merge's own diff,
+  `git show --cc 4d80ed1`, is empty, since its resolution keeps this branch's line: it touches nothing the security
+  review guards, and a repeated check reads it.
+- The third check, of `4d80ed1`, fails on one finding: Verification gave its results at `30a3fcd`. The check read the
+  record while the results on the merge were being written there. They are written now, and a repeated check reads
+  them.
+- The fourth check, of `4d80ed1` with the results on the merge, passes with no findings.
+- The pull request is #59. The kit's pipeline on it, run 45677757658 at `4d80ed1`, passed: `verify` on Linux and on
+  Windows, `personal content` and `project`, whose new step "Run the dynamic testing commands of the profile" ran and
+  found no command in the kit's profile. Criteria 5 and 8 are met.
 
 ## Verification
+
+On this host, at `4d80ed1`, the merge of the default branch, with the record as it stands, with npm 12.2.1, the same
+results as at `d452187`, `286dff4` and `30a3fcd`:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 10 commits of the branch follow the rules.
+- `node <kit directory>/hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 255 tests, 255 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version and icon, a licence that the plugin
+  directory would ask for, and advice on the README's install line, none of which this change touches.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+- The kit's profile lists no `dynamic-testing`: `node checks/verify.mjs --dynamic` says so and passes.
+
+The first security review, of `d452187` (full): verdict `pass`, no findings.
+
+The second security review, of `286dff4` (since `d452187`):
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `.github/workflows/` (project.yml), `agents/` (checker.md), `docs/01-specs/` (WORKFLOW.md), `services/github/`
+(README.md), `skills/security-review/` (SKILL.md), `skills/security-testing/` (SKILL.md). For context I also read
+`checks/verify.mjs` (how `--dynamic` hands the environment to the commands), `templates/profile.yml` (the example
+`dynamic-testing` command) and the WORKFLOW.md section "Security testing".
+
+**Confirmation of the earlier weak points**
+
+1. `.github/workflows/project.yml:121-124`: fixed. The comment now says the step's environment holds no secret and no
+   token, and that the project's code it runs can read the token from the runner's memory, as the verification's code
+   can. This matches the step: it has no `env` of its own, only the job's `HONSHA_*`. It also matches the note at lines
+   75-77 and `services/github/README.md:198-202`.
+2. `skills/security-testing/SKILL.md:30-32`: fixed. The rule now applies on a worker's host as well. Nothing reaches
+   the instance from the host's environment or from an uncommitted variables file, and the instance publishes no port,
+   or only on the host's loopback. That closes both channels the weak point named: compose filling variables from the
+   host's environment or `.env`, and ports published on every interface.
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. `skills/security-testing/SKILL.md:30-32`: the rule gives as its reason that "the network around the host" is out of
+   the scan's reach, but the measure it names, publishing no port or only on loopback, only blocks inbound traffic:
+   other machines cannot reach the instance. It does nothing about outbound traffic. On compose's default network, the
+   instance and scanner containers can still reach the host's LAN, and in the pipeline the internet. An active scan
+   that sets off a server-side request or an open redirect in the instance could therefore make it call services next
+   to the worker's host. As written this cannot be exploited: the skill is a rule, no project's compose file is in
+   this change, the scanner targets only the local instance, and a test value stands in for every secret. Fix: put
+   the instance and scanner on an `internal: true` network, or reword the reason so it claims only what the port rule
+   achieves.
+
+**Not reviewed**
+
+- The projects' own `dynamic-testing` commands and compose files are not in this repository. Whether a given project
+  keeps the host's environment, its `.env` and its ports out of the instance can only be judged in a review of that
+  project's change.
+- The rest of the diff (project.yml lines 69-74, `agents/checker.md`, `docs/01-specs/WORKFLOW.md`,
+  `services/github/README.md`, `skills/security-review/SKILL.md`) only rewraps lines. I compared each against its old
+  text word by word: nothing was added or removed, so there is nothing further to review there.
+
+The first check, of `30a3fcd` (full): verdict `fail`, one finding. Commits `7f6dc23` "Wrap a line of the security
+testing skill at the width of the kit's documents" and `286dff4` "Wrap the lines that the change left wider than the
+kit's documents" make the same correction, line wrapping with the words unchanged, in two consecutive commits, where the
+core rules (Commits and branches) ask an item to make as few commits as it can; the branch only grows, so the person
+accepts it under "Deviations" or not.
+
+The second check, of `3f8707e` (since `30a3fcd`): verdict `pass`, no findings.
+
+The third check, of `4d80ed1` (the merge's own diff): verdict `fail`, one finding. "Verification" gave the results of
+the `verify` commands at `30a3fcd`, while `4d80ed1` merged into the tree the default branch's changes to files that
+`verify` reads; no command's result on `4d80ed1` was written under "Verification".
+
+The fourth check, of `4d80ed1` (since `4d80ed1`, with the results on the merge):
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The skill `honsha:security-testing` holds the kinds, where the profile names them, the tools, a finding, a silenced
+   finding and a found secret: met, `skills/security-testing/SKILL.md:9-17`, `23-37`, `41-56`, `60-69`.
+2. The template names static security testing and holds `dynamic-testing`. The profile reader reads it as a list of
+   commands and refuses any other form. `--dynamic` runs it and refuses to go with another flag. Tests cover each:
+   met, `templates/profile.yml:29`, `34-37`; `checks/profile.mjs:168-171`; `checks/verify.mjs:49-62`;
+   `checks/profile.test.mjs:50-67`, `133-136`, `156`; `checks/verify.test.mjs:69-97`.
+3. The worker invokes the skill and runs `dynamic-testing` after `verify`. It writes down a command that the host
+   cannot run and takes its result from the pipeline, except a scan for secrets, which stops the item. The checker
+   takes such a command as not verifiable and reports whether `verify` covers static security testing: met,
+   `agents/worker.md:35-37`, `50-56`; `agents/checker.md:48-54`.
+4. A change that weakens the security testing calls for the review: met, `skills/security-review/SKILL.md:3`, `12-13`;
+   `agents/checker.md:55-57`; `agents/security-reviewer.md:47-49`.
+5. `project.yml` runs `--dynamic` after the verification, under its condition, and the step holds no token: met,
+   `.github/workflows/project.yml:118-127`. The kit's pipeline running it on this item's pull request is not
+   verifiable: no pull request exists yet.
+6. The workflow, interface, architecture, README, GitHub's piece and assessment step 1 cover what criteria 1 to 5 make
+   true: met, `docs/01-specs/WORKFLOW.md:251`, `381-386`, `404`, `507-510`; `docs/01-specs/INTERFACE.md:26`, `45`;
+   `docs/01-specs/ARCHITECTURE.md:79`; `README.md:18`; `services/github/README.md:173`;
+   `skills/assessment/SKILL.md:15-18`.
+7. The trial in a scratch repository, with both static and dynamic testing failing and then passing, and which tools
+   the host's application control lets run: met as the log records it,
+   `work/2026/11/261124-1550-sast-dast-tools.md:353-382`.
+8. `verify` passes, the security review passes and the checker passes: met, Verification and the second security
+   review report. The kit's pipeline passing on the pull request is not verifiable: no pull request exists yet.
+
+- **Intent:** in order
+- **Scope:** in order. The diff since `4d80ed1` is empty.
+- **Comments and documents:** in order. The diff since `4d80ed1` is empty.
+- **Gates:** in order
+- **Verification evidence:** in order. The last report's finding is fixed: Verification now gives the results of every
+  `verify` command, and of the kit's `checks/record.mjs` and `checks/commits.mjs`, at `4d80ed1`, the merge. Its count
+  of 10 commits on the branch matches the branch's history (`bb38740` to `4d80ed1`). The profile lists no
+  `dynamic-testing`. Covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test). It does not
+  cover static security testing; the record puts the kit's own security testing out of scope as a later item, and no
+  gate asks for it.
+- **Security review:** not due. The diff since `4d80ed1` is empty.
+- **Record:** in order. The new text only appends the third check's entry to the log and updates Verification: its
+  header now names `4d80ed1`, and the third check's verdict and finding are summed up. Earlier reports keep only their
+  verdict and findings.
+- **Commits:** in order. No commit since `4d80ed1`.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The kit's pipeline on the pull request (criteria 5 and 8): no pull request exists yet.
+- Whether the record's uncommitted change touched only Verification and the end of the log: the diff file leaves the
+  record out, so the log's append-only rule was judged from the record as it stands, not from a comparison with
+  `4d80ed1`.
 
 ## Deviations
 
@@ -431,3 +584,16 @@ choices and the trial's downloads listed under "For the person" included.
   found. Accepted by the person on 2026-11-25, in this item's session.
 
 ## Outcome
+
+Projects get static and dynamic security testing where their files and surface call for it, under the new skill
+`honsha:security-testing`. Static testing is part of `verify`, a fifth thing the list covers, with a scan for secrets
+over the branch's commits that prints no secret. Dynamic testing is the profile's new `dynamic-testing`, which
+`checks/verify.mjs --dynamic` runs after `verify` on the worker's host and in `project.yml`, against a local instance
+with no secret, and which a push that changes only records leaves out. A command the host cannot run goes to the
+pipeline, except a scan for secrets, which stops the item; a change that weakens the security testing calls for the
+security review. The assessment, the checker, the reviewer, the workflow, the interface and GitHub's piece say so. The
+trial showed both kinds failing on planted holes and passing once they were fixed, on this host. Four weak points of the
+security review, the kit's own security testing and the host's lesson are left to the person.
+
+Deferred check: the run on the closing commit, which changes only the record, shows in its `project` job the dynamic
+testing step skipped with the setup and the verification (`checks`).
