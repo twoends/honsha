@@ -239,3 +239,24 @@ GitHub's own scanners are no part of the rules. Its code scanning with CodeQL an
 public repository; on a private one of a free personal account code scanning is not offered, and both need a paid
 product of GitHub's on a repository of an organisation. Where one of them is on at no cost, it is a further stop, as
 the alerts on dependencies are.
+
+## The refs of the history
+
+The scan of a repository's history (workflow, Security testing) reads every ref that a mirror clone takes. Beside the
+branches, `refs/heads/`, and the tags, `refs/tags/`, GitHub serves for each pull request `refs/pull/<number>/head`, the
+tip of its branch, and, while it is open, `refs/pull/<number>/merge`, the merge that GitHub tests. The `head` ref stays
+after the branch is deleted and after the pull request is closed without a merge, so it keeps the branch's commits for
+anyone who can read the repository: `git ls-remote origin 'refs/pull/*'` lists them. The namespace is read-only, and
+only GitHub Support removes a pull request's refs.
+
+What GitHub keeps beyond any ref, no clone and no scan reaches:
+
+- a commit that no branch holds any longer is still shown by its hash in GitHub's cached views, and through the pull
+  requests that reference it;
+- the repositories of a fork network share their git data, so a commit pushed to one can be read through another, the
+  upstream included; and a fork keeps its copy whatever the upstream does.
+
+So a secret that reached GitHub is revoked first, as GitHub's guide to removing sensitive data advises. A rewritten
+history removes it from the branches; then GitHub Support, given the pull requests concerned and the first commit
+changed, removes the cached views and the pull requests' refs, once no fork references the data. A fork's owner removes
+it from the fork, and no one removes it from the clones that hold it.

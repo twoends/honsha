@@ -1,6 +1,6 @@
 ---
 name: security-testing
-description: Use when a work item assesses a project, sets up or changes its static or dynamic security testing, or answers one of their findings. It holds which kinds of security testing a project receives, where the profile names them, how their tools are chosen, and what a finding, a silenced finding and a found secret do.
+description: Use when a work item assesses a project, sets up or changes its static or dynamic security testing, or answers one of their findings, and when an assessment or the periodic review scans a repository's whole history for secrets. It holds which kinds of security testing a project receives, where the profile names them, how their tools are chosen, what a finding, a silenced finding and a found secret do, and the scan of the history.
 ---
 
 Static testing reads the project's files and history; dynamic testing attacks a running instance from outside. Both
@@ -67,3 +67,27 @@ set, for languages; ShellCheck for shell scripts; hadolint for container files; 
 - **A secret found in a commit** is a stop condition (core rules, Stop conditions), before any push: the branch only
   grows, so the commit stays in the history that a push sends, and a secret that reaches the hosting service must be
   revoked. The person decides.
+
+## The history
+
+A scan of a branch misses a secret committed before the project had one, or pushed outside a work item: every clone
+still holds it.
+
+- **The scan,** `node <kit directory>/checks/history-secrets.mjs` in the repository's clone, is the first step of every
+  assessment, and runs at every periodic review in each repository it reads. It reads every ref the hosting service
+  serves, those it keeps for pull requests included, which hold deleted branches' commits; what the service keeps
+  beyond any ref is in its piece. A host that cannot run the scanner says so, with the system's message.
+- **Its report** gives the scanner's version, the refs and commits read, and each finding by commit, file, line and
+  rule, with its fingerprint, whether the default branch holds it, and its line with any value masked. A session never
+  reads a value: it opens no file at a finding's commit, and scans with the script alone.
+- **A finding is a secret** unless its file, rule and masked line show otherwise, as a test's fixture, an example or an
+  identifier does, with the reason written. A secret stops an assessment (core rules, Stop conditions) and is urgent at
+  the review: the person gets the list at once, revokes the secret at its provider and decides whether the history
+  changes. No session changes a history, nor writes anywhere public where a live secret is.
+- **A public repository's history is public:** a secret there is taken for used, and revoking it is the remedy, since
+  forks, clones and archives keep it whatever the history becomes. In a private one revoking comes first too, and a new
+  history narrows who reads it later, at the cost of every clone and open branch. Made public, a repository publishes
+  its whole history.
+- **The findings answered** are listed in `.gitleaksignore` on the default branch by an item that the assessment or the
+  review proposes, each fingerprint under a comment line with its outcome: revoked on a date, or no secret and why. An
+  entry silences a finding, so that item calls for the security review (A finding).

@@ -43,6 +43,7 @@ node <kit directory>/hub/backlog.mjs take <project> <id>
 node <kit directory>/checks/record.mjs
 node <kit directory>/checks/commits.mjs
 node <kit directory>/checks/verify.mjs [--setup | --dynamic] [<profile>]
+node <kit directory>/checks/history-secrets.mjs
 node <kit directory>/checks/measures.mjs [--json] [--sessions <folder>]
 ```
 

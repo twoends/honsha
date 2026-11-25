@@ -367,6 +367,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
    that install it and that move a host's registration of the marketplace to that source.
 7. **The static testing of its pipeline's configuration** (workflow, Security testing): free tools that read the
    service's pipeline files, and which of the service's own scanners a free account has.
+8. **The refs it serves beyond branches and tags,** which a mirror clone takes for the scan of the history (workflow,
+   Security testing), and what it keeps that no ref holds, and how that is removed.
 
 ### Checks on pull requests and on the default branch
 
@@ -527,6 +529,10 @@ tools that know classes of holes that no reader keeps in mind. The rules are in 
   that wrote the change does not make alone.
 - **A host that cannot run a command** leaves it to the pipeline (`agents/worker.md`, Verification), except the scan
   for secrets, whose finding would then already be on the hosting service.
+- **The whole history is scanned at every assessment and periodic review:** `verify` reads what a work item pushes,
+  and a secret committed before the project had a scan, or pushed outside a work item, stays in every clone. A script
+  does it, so that every session pins the same scanner and reads the same refs, and none sees a value, which would
+  leave the host in its transcript.
 - **Cost.** Dynamic testing adds the minutes of its instance and its scan to every run that verifies, which a private
   repository's account pays for; a push that changes only records leaves it out.
 
@@ -536,8 +542,9 @@ tools that know classes of holes that no reader keeps in mind. The rules are in 
 
 Documents and logs grow by small additions, each reasonable on its own: a rule restated where it is needed, a
 paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
-working, so a review on a date looks for it, together with the radar's dates, the dependencies, the deferred checks,
-the lessons and the measures. What it reads and how it reports are in the skill `honsha:review`.
+working, so a review on a date looks for it, together with the radar's dates, the dependencies, the secrets in the
+histories, the deferred checks, the lessons and the measures. What it reads and how it reports are in the skill
+`honsha:review`.
 
 ---
 

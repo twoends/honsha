@@ -365,6 +365,59 @@ scanner: the six choices and the trial's download listed under "For the person" 
   checks. The scope and the criteria stand as written.
 - The state is `awaiting-approval`; the work waits for the person's approval, in this session.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- No part of the change ran in parallel, as the strategy says. A lookup in GitHub's documentation ran in a subagent on
+  Haiku at medium effort, and the trial in a subagent on Opus, while this session wrote the skills and the documents.
+- gitleaks 8.30.1's checksums file, read from its release, gives for each of the six archives the digest that the
+  release lists; the script pins those six.
+- `checks/history-secrets.mjs` takes the remote `origin`, or the clone's only remote, and borrows the clone's objects
+  unless the clone is shallow or partial, whose objects are missing. On Windows it extracts with the system's
+  `tar.exe`. It gives gitleaks no configuration, an empty folder as its working folder and its ignore path, and
+  `--ignore-gitleaks-allow`, so that the built-in rules read everything and only the default branch's ignore file,
+  which the script reads, leaves a finding out; `--exit-code=0`, so that any other status is an error. git and the
+  scanner run without the variables that point git at another repository and without `GITLEAKS_*`. The script builds
+  each fingerprint from the commit, file, rule and line, and reads no other field of the report but the redacted match,
+  which places the value in the line. A run is shown only when it reads as a name: letters only, in words of at most 20
+  joined by `_`, `-` or `.`, at most four changes of case, 40 characters in all; a part after an `=` is a run of its
+  own, and a run with no letter or digit, such as `//`, stays. The remote's address is never printed, and an address
+  in git's messages has its credential hidden. Its test: 14 tests, with no network, on a fixture that a local bare
+  repository serves.
+- The lookup, in GitHub's pages on removing sensitive data, on forks and on checking out pull requests: the namespace
+  `refs/pull/` is read-only, GitHub Support removes a pull request's refs and the cached views, the repositories of a
+  fork network share their git data, and revoking comes first. That a pull request's `head` ref stays after its branch
+  is deleted is not stated there: `git ls-remote origin` on the kit's own repository shows it, with `HEAD`, one branch,
+  26 refs `refs/pull/<n>/head`, no `merge` ref since no pull request is open, and no tag; and the hub's confirmation
+  above shows it for a pull request closed without a merge.
+- The trial's first round, on a scratch repository served as a bare remote, ran on this host with gitleaks 8.30.1,
+  which its application control let run, in 6.8 seconds with the download: it reported the five fake values by commit,
+  file, line and rule, with the four lines it could read masked, and printed no value, author or path of the remote;
+  the clone and the temporary folder were left as they were. The merge's finding came with the file `b/settings.txt`: with
+  `--diff-merges=remerge`, git writes a line `remerge CONFLICT …` into the header of a conflict's file, and gitleaks
+  then keeps the prefix `b/` in its name, so the line could not be read and the fingerprint named no file. A run of
+  gitleaks alone on the same mirror with `--diff-merges=first-parent` named the file and the line right. As the
+  strategy foresaw, the script reads each merge against its first parent, which reports again under a merge the
+  findings of the branch it brings; its test reads the merge's patch with the script's options.
+- The guard refused the trial's push of the scratch repository's `main`, as it refuses any push that updates a branch
+  named as the default; the trial stopped there and went around nothing. Its second round serves the scratch working
+  repository itself as the remote, with no push. The first push of the scratch `main`, inside a shell script that the
+  trial ran, passed the guard, which reads the command line only: reported to the person, outside this item's scope.
+- The test's first wording left its temporary folders in the system's temporary folder, 47 of them after the runs:
+  they are now in one folder that the test deletes at its end, and the 47 were deleted.
+- The skills and the documents are written as the strategy says. `skills/security-testing/SKILL.md` holds 7,557
+  characters, more than the 7,000 or so the strategy expected, for what criterion 4 lists: its budget is 7,600.
+  `docs/01-specs/WORKFLOW.md` holds 43,024, its budget 43,100. `skills/assessment/SKILL.md` holds 5,543,
+  `skills/review/SKILL.md` 4,320 and `docs/01-specs/INTERFACE.md` 7,012, within theirs. The assessment's and the
+  review's later steps are renumbered; nothing in the kit cites them by number.
+- The trial's second round, with the script from this branch, in the scratchpad, with the scratch working repository
+  served as the remote and no push. Its history: a fake GitHub token on `main`, removed by a later commit; a fake GitLab
+  token on a branch deleted but kept by `refs/pull/1/head`; a fake Slack token only in a tag; a fake generic key added
+  only by a merge's resolution of a conflict; a fake npm token on `main`. Run 1 reported the five by commit, file, line
+  and rule and exited 1, in 7.0 seconds; with the npm token's fingerprint in `.gitleaksignore` on `main`, run 2
+  reported the other four, left the fifth out and exited 1, in 6.4 seconds; with the four listed too, run 3 found
+  nothing and exited 0, in 9.0 seconds. Each run read 4 refs and 10 to 12 commits, and most of its time is the download
+  of about 8 MB. The merge's finding named its file and line, with its line masked. No output held a value, whole or in
+  part, the commits' author or the remote's path, searched for in each; the clone was unchanged after each run, and no
+  temporary folder was left. A merged branch's finding reported again under its merge did not arise, since the merged
+  branch held none.
 
 ## Verification
 

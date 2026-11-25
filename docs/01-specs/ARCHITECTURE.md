@@ -80,7 +80,7 @@ rules/                 the always-on rules, in parts of one topic each
 skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review, a security review, security testing
 agents/                hub, worker, reader, checker, security reviewer
 hooks/                 session and checker start, the installation's models, and the hub's or the worker's procedure; the guard on shell commands; write the effort level into records
-checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
+checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits; scan a repository's whole history for secrets
 hub/                   the hub's code: the registry of projects, the moves between their states, the backlog
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
 templates/             record, inbox item, radar entry, profile
