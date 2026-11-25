@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: done
 areas: []
 created: 2026-11-23
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 58
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -208,3 +208,100 @@ Approved by the person on 2026-11-25, in this item's worker session, as written 
 - The kit's own `.npmrc` holds `min-release-age=7` and `strict-allow-scripts=true` and no `ignore-scripts`, and
   `package.json` asks npm `>=12 <13` under `devEngines.packageManager` with `onFail: error`. The kit holds no Claude
   Code dependency, and its pipeline installs Claude Code with `--global`. The kit meets the rule as the skill words it.
+- The security review is not due: the change touches no authentication, permission, secret, deploy or CI
+  configuration or data schema, and the profile lists no path under `security-review`.
+- The first check, of `f1ddd4d`, failed on two findings, both in the record. For the first, npm 12.2.1 ran in a scratch
+  project whose `.npmrc` holds `min-release-age=7`, `strict-allow-scripts=true` and
+  `min-release-age-exclude=undici-types`: `npm install undici-types@8.13.1`, released 4.8 days earlier, exit 0,
+  installed; `npm install --dry-run oxlint@1.95.0`, not named, exit 1, `ETARGET`, "No matching version found for
+  oxlint@1.95.0 with a date before 18/11/2026, 18:39:40". The same with `min-release-age-exclude[]=undici-types`, the
+  list form of npm's documentation: the same two results. So npm 12 reads the setting from the project's `.npmrc` and
+  lets through only the package it names. For the second, the line on the security review moved from "Verification"
+  to the log, above. Only the record changed, so the repeated check reads the record against the same commit.
+- The second check, of `f1ddd4d`, passed with no findings. Its report is copied without the list of the files it read,
+  which named them by absolute path, outside the report's shape.
+- The pull request is #58. The kit's pipeline on it, run 45667526254, at `f1ddd4d`: `personal content`,
+  `project / checks` and `verify` on Linux and on Windows passed.
+
+## Verification
+
+On this host, at `f1ddd4d`, with npm 12.2.1:
+
+- `node checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node checks/commits.mjs`: passed, the 3 commits of the branch follow the rules.
+- `node hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed, exit 0, no findings.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 250 tests, 250 pass,
+  `docs/01-specs/WORKFLOW.md stays within its budget` among them.
+- `claude plugin validate .`: passed, with the warnings on the plugin's version, licence and icon and the advice on the
+  README's install line, none of which this change touches.
+
+The first check, of `f1ddd4d` (full): verdict `fail`. Findings: 1. `skills/dependencies/SKILL.md:39-40` tells a
+project that holds Claude Code as a dependency to name its package under `min-release-age-exclude` in `.npmrc`, but the
+record shows the exclusion only as a flag on the command; criterion 5 asks for that behaviour to be shown on this host.
+2. Verification held a paragraph saying that the security review is not due, which is neither a command's result nor
+an agent's report; it belongs in the log.
+
+The second check, of `f1ddd4d` (since `f1ddd4d`), with the record as it stands:
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The skill says the configuration holds the waiting period and the refusal of install scripts, asks for a package
+   manager version that applies them, and gives the reason and npm 12's settings: met. Nothing has changed since
+   `f1ddd4d` (empty diff), and `skills/dependencies/SKILL.md:25-35` is unchanged.
+2. How a fix and Claude Code stay outside the waiting period, with npm 12's way: met, unchanged. See
+   `skills/dependencies/SKILL.md:29-31` and `36-40`.
+3. Step 4 of the assessment reads the configuration, so a gap becomes a finding: met, unchanged since `f1ddd4d`.
+4. WORKFLOW "Dependencies" gives the reason, and the budget is raised as the log says: met, unchanged since `f1ddd4d`.
+   The log is at record lines 205-207.
+5. Each npm 12 behaviour the skill states is shown on this host, and the kit's `.npmrc` and `package.json` meet the
+   rule: met.
+   - The statement at `skills/dependencies/SKILL.md:39-40` is now backed by record lines 213-218. npm 12.2.1 ran with
+     `min-release-age-exclude=undici-types` in a scratch `.npmrc`. `npm install undici-types@8.13.1`, a version too
+     recent to pass the 7-day wait, exited 0. `npm install --dry-run oxlint@1.95.0`, a package not named there, exited
+     1 with `ETARGET`. The `[]` list form gave the same two results.
+   - `.npmrc:4-5` and `package.json:12-17` still hold the settings.
+6. No other file changes but the record, and `verify` passes: met. The diff since `f1ddd4d`, without the record, is
+   empty. The `verify` results are recorded at `f1ddd4d` (record lines 224-235).
+
+- **Intent:** in order
+- **Scope:** in order. Only the record changed since `f1ddd4d`.
+- **Comments and documents:** in order
+- **Gates:** in order. All four gates under `gates` hold: the diff is empty, and nothing the record added breaks any of
+  them.
+- **Verification evidence:** in order. The record holds results for every `verify` command, including
+  `checks/record.mjs` and `checks/commits.mjs`. They cover formatting (prettier), lint (oxlint), types (tsc) and tests
+  (`node --test`).
+- **Security review:** not due
+- **Record:** in order.
+  - Finding 2 of the last report is fixed. "Verification" (record lines 222-241) now holds only the command results and
+    the earlier check, which keeps its verdict and findings in short form, as other records of the repository do. The
+    line saying the security review is not due is now a log entry (lines 211-212).
+  - The log was only appended to.
+  - Nothing the person said is quoted; `public: true` holds.
+- **Commits:** in order. The list since `f1ddd4d` is empty.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The recorded results of `node checks/record.mjs` and `npx --no-install prettier --check .` were taken at `f1ddd4d`,
+  before the record's current edits. A run on the record as it now stands is not shown; it belongs with the closing
+  commit.
+
+## Outcome
+
+Where a project's package manager can refuse a version released less than 7 days earlier and an install script, the
+rule on dependencies now has the project's configuration do both, and ask for a version of the package manager that
+applies it; npm 12 is its example, with the way a vulnerability fix and Claude Code stay outside the waiting period
+while the settings stay on. The assessment's step 4 reads it, so every project receives it from its assessment, and the
+workflow's "Dependencies" gives the reason. The kit's own configuration already meets the rule. The pipeline passes on
+Linux and on Windows. No deferred check.
