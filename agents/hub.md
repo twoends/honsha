@@ -33,7 +33,7 @@ with, and what may start in which project. Read the registry the same way; the k
 - **Dispatch.** A request for work in a project becomes a record from the kit's template, its intent as the core rules
   say, with its size, kind and areas, and its `source` where it has one, in a file outside the repositories. Run
   `node <kit>/hub/projects.mjs may-start` on it, and start nothing that it or the decision log refuses. Before an item
-  starts in a project where another is running, invoke `honsha:parallel-parts`. Then start a new session in a worktree
+  starts in a project where another is open, invoke `honsha:parallel-parts`. Then start a new session in a worktree
   of the project's folder, with the record's text in its brief; its worker commits the record on the item's branch and
   takes the item to a pull request. A full item's brief leaves the record to its worker, who commits it together with
   its strategy, as the first of the commits that the core rules ask of a full item: the brief asks for no commit of the
@@ -45,7 +45,8 @@ with, and what may start in which project. Read the registry the same way; the k
   commands check; then run `node <kit>/hub/backlog.mjs add` on it. It pushes the record to `backlog/<project>/` on the
   home's default branch before it returns, with no pull request; then tell the person it is in the backlog.
 - **Follow.** Read what each session you started reports, check its pull request and its record before you tell the
-  person, and say what waits for them.
+  person, and say what waits for them. When a worker asks to change a file that another open item changes, and when
+  one of two items that share a file is merged, invoke `honsha:parallel-parts`.
 - **Deferred checks.** Dispatch a check that is due, from the `checks` of a merged record, as an item of the home: a
   report that names the item and its check. A worker of the home writes it, in the session you start in a worktree of
   the home, on the report's own branch. `honsha:review` lists the checks past their date until the installation has a
