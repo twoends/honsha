@@ -292,6 +292,15 @@ approval on to this item's session.
   a run on records costs, and a paragraph on a project's own workflows.
 - Searched the kit for other texts that describe the wiring's steps, the worker's closing commit or the budgets: none
   but those changed.
+- The security review of `5bb799e`, on Opus, failed with two findings and three weak points (Verification).
+- Finding 2: `checks/changes.mjs` printed the first file outside the records as it is, and a runner reads a line that
+  begins with `::` as a command to it. The script now writes the name as a JSON string, and a test builds two names
+  that hold `::`, one with line breaks, with git's plumbing, since this system refuses such names in a working tree. The
+  test fails on the script as it was.
+- Weak point 1: the pull request's own `.gitmodules` could tell `git diff` to ignore a submodule's change; the script
+  runs it with `--ignore-submodules=none`. Weak points 2, the base moved since the run on the code, and 3, a file at a
+  record's path that a project's `verify` reads, are left to the person: the strategy's risks name both, and the
+  documents say so.
 
 ## Verification
 

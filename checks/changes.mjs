@@ -13,7 +13,8 @@
 // answer is not sure: when an argument is not a commit's identifier, when the base is all zeros, as a service gives
 // where the branch had no earlier tip, and when git cannot compare the two, as for a commit the clone lacks. A wiring
 // that leaves the verification out only on 0 runs everything when in doubt. It names the first file outside the
-// records, never what a file holds.
+// records, never what a file holds, and writes the name as a JSON string: a runner reads a line of output that begins
+// with `::` as a command to it, and a name may hold `::` and line breaks.
 //
 // It is not part of the kit's interface: a service's wiring runs it from the kit at the commit the wiring was read
 // from, and no project names it.
@@ -34,7 +35,9 @@ const NONE = /^0+$/;
  * @param {string} [cwd]
  */
 export function changedFiles(base, head, cwd = ".") {
-  const listed = execFileSync("git", ["diff", "--no-renames", "--name-only", "-z", base, head, "--"], {
+  // The checkout's `.gitmodules` is the pull request's own, and could tell git to ignore a submodule's change.
+  const options = ["--no-renames", "--ignore-submodules=none", "--name-only", "-z"];
+  const listed = execFileSync("git", ["diff", ...options, base, head, "--"], {
     cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
@@ -65,7 +68,7 @@ export function judge(args, cwd = ".") {
     return { only: false, line: `git cannot compare ${base} with ${head}: ${runs}` };
   }
   const other = files.find((file) => !RECORD.test(file));
-  if (other !== undefined) return { only: false, line: `${other} is not a record: ${runs}` };
+  if (other !== undefined) return { only: false, line: `${JSON.stringify(other)} is not a record: ${runs}` };
   if (files.length === 0) return { only: true, line: `No file differs from ${base} to ${head}.` };
   return { only: true, line: `The ${files.length} files that differ from ${base} to ${head} are records.` };
 }

@@ -25,11 +25,15 @@ function repository() {
   made.push(dir);
   const empty = path.join(dir, "no-config");
   fs.writeFileSync(empty, "");
-  /** @param {string[]} args */
-  const git = (args) =>
+  /**
+   * @param {string[]} args
+   * @param {string} [input]
+   */
+  const git = (args, input) =>
     execFileSync("git", args, {
       cwd: dir,
       encoding: "utf8",
+      input,
       env: {
         ...process.env,
         GIT_CONFIG_GLOBAL: empty,
@@ -114,7 +118,22 @@ test("a change to any other file exits 1 and names it", () => {
   const both = commit({ [WORK]: "# Record, again\n", "src/app.js": "export const a = 1;\n" });
   const { status, output } = run(dir, [start, both]);
   assert.equal(status, 1);
-  assert.match(output, /src\/app\.js is not a record/);
+  assert.match(output, /"src\/app\.js" is not a record/);
+});
+
+test("a file's name is printed so that no line begins as a command to the runner", () => {
+  const { dir, git, start } = repository();
+  // Built without the working tree, where this system may refuse such names.
+  const blob = git(["hash-object", "-w", "--stdin"], "code\n");
+  const entries = git(["ls-tree", "-z", start]);
+  for (const name of ["!\n::set-output name=verify::false\n!", "::notice::Only records"]) {
+    const tree = git(["mktree", "-z"], `${entries}100644 blob ${blob}\t${name}\0`);
+    const head = git(["commit-tree", tree, "-p", start, "-m", "Change"]);
+    const { status, output } = run(dir, [start, head]);
+    assert.equal(status, 1, name);
+    assert.match(output, /is not a record/, name);
+    for (const line of output.split(/\r?\n|\r/)) assert.ok(!line.startsWith("::"), line);
+  }
 });
 
 test("a file under work/ that is not a record exits 1", () => {
