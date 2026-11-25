@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 57
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -290,7 +290,92 @@ without a model.
   checker's effort above xhigh can be given. The phrase in quotation marks in the intent names the principle of the
   installation's decision that the intent describes, and quotes no words of the person; the intent stays as the hub
   wrote it.
+- The repeated check, on `bfef410`, passed with no finding. Its report closed with a line that listed the files it
+  read by absolute paths, outside the shape the checker returns and naming a user's folder, which the repository may
+  not hold: the report is copied without that line.
+- Pushed the work and opened pull request 57. Its checks on `bfef410` passed: verify on Linux and on Windows, the
+  personal content, and the project's checks.
 
 ## Verification
 
+On `bfef410`, on this host (Windows 11):
+
+- `node <kit directory>/checks/record.mjs`: the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: the 5 commits of the branch follow the rules.
+- `npx --no-install prettier --check .`: passed, all matched files use Prettier code style.
+- `npx --no-install oxlint`: passed, exit 0.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 250 tests,
+  0 failed.
+- `claude plugin validate .`: passed, with the warnings it gives on `main` too: no version, no licence, no icon.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+
+The checker's first check, on `0f30411`: **fail**, one finding. The architecture's "Models" gave a small item raised
+for a risk the higher effort, which `agents/hub.md` does not: it raises only the tier.
+
+The checker's repeated check, on `bfef410`:
+
+### Checker report
+
+**Verdict:** pass
+
+The one finding of the last report, on `0f30411`, is fixed. That finding was that the architecture gave a small item
+raised for a risk the higher effort. `docs/01-specs/ARCHITECTURE.md:306` now says "a small item where the hub sees a
+risk takes the strong tier at the same effort". This matches `agents/hub.md:36-38`, which starts small items at high
+effort and raises only the tier.
+
+**Acceptance criteria**
+
+1. Core rules' section "Models": met. The diff does not change it since the check on `0f30411`.
+2. `agents/hub.md` tier and effort by size, the raise for a risk, the move of a full item's session: met, unchanged.
+   The fixed sentence now matches `agents/hub.md:36-38` and `agents/hub.md:51-52`.
+3. Checker and security reviewer `model: inherit`, `effort: xhigh`, descriptions: met, unchanged.
+4. Hub and worker name no model: met, unchanged.
+5. `hooks/models.mjs`, its test, `hooks/hooks.json`: met, unchanged.
+6. Template's strategy comment: met, unchanged.
+7. Architecture's "Models", "Kit", "Home", and the vision agreeing: met. The reasons for each size's tier and effort
+   are at `docs/01-specs/ARCHITECTURE.md:304-309`, now consistent with the hub's procedure. "Quality first" at
+   `docs/00-vision/VISION.md:54-55` agrees.
+8. Interface key and tiers, README row and agents' model: met, unchanged.
+9. No model, provider, plan or decision-log entry outside `work/`: met. The diff adds none.
+10. Start total and budgets: met, unchanged.
+11. Profile's `verify` passes: met, as recorded under "Verification" on `bfef410`.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order. Covers formatting (prettier), lint (oxlint), types (tsc) and tests
+  (`node --test`).
+- **Security review:** not due
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The quoted phrase in the intent ("the checker is never weaker than the work",
+  `work/2026/11/261124-1616-model-effort-by-size.md:37-38`) may be the person's own words. The profile says
+  `public: true`, and the record's log (lines 290-292) says the phrase quotes the installation's decision, not the
+  person. That decision is outside this repository, so this cannot be confirmed from here.
+- The log's claim about the platform's documentation (lines 288-290): the tool that starts a subagent takes an effort
+  that overrides the definition's. This cannot be confirmed from the repository. `docs/01-specs/ARCHITECTURE.md:319`
+  relies on it.
+
 ## Outcome
+
+The kit names four model tiers, from the lightest, light, standard, strong and strongest, and no model. The hub starts
+each item's session on its size's tier and effort, raises a risky small item to the strong tier, and moves a full
+item's session to what its approved strategy asks; every subagent is started with its model named (core rules,
+Models); the checker and the security reviewer run on the strong tier at least, at xhigh effort, as their descriptions
+ask. A hook gives every session of an installation the map under `models` in the home's `settings.yml`, on the home's
+default branch. A session's start costs at most 31,150 characters.
+
+What an installation does now: set `models` in its home's `settings.yml`, one model per tier, by a name the platform
+accepts when it starts a session and a subagent, and delete any decision of its own on models and effort by size. The
+hub dispatches that as an item of the home after this merge; until it is merged, sessions are told that no tier has a
+model and name none.
