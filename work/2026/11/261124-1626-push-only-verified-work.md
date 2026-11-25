@@ -344,6 +344,10 @@ approval on to this item's session.
 - Its weak point 3, left to the person: a passed run of another pull request from the same branch, against another
   base, would count. The caller's branch filter gives every such run the default branch as its base, and the documents
   already name a base that moved.
+- The repeated security review of `09df150`, on Opus, passed: weak point 1 is fixed and weak point 2 answered. Its one
+  weak point: the comment in `project.yml` still said that the token goes to the kit's script alone. The comment now
+  says, as the README does, that the token is in that step's environment alone and that code in the job can still
+  read it.
 
 ## Verification
 
