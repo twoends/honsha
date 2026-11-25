@@ -316,6 +316,22 @@ approval on to this item's session.
   caller's. It does not say what happens to a called workflow that asks for more than its caller grants; in the
   kit's experience GitHub then refuses to start the run. The list of a workflow's runs takes `head_sha` and `event`,
   and each run carries `id`, `event`, `head_sha`, `status`, `conclusion`, `workflow_id` and `pull_requests`.
+- Finding 1, as the person decided: `services/github/runs.mjs` reads the current run's workflow, then that workflow's
+  runs on the earlier tip for the `pull_request` event, and passes only when the latest from the same branch of the
+  same repository completed with success. It matches a run by its commit, its branch and its repository, which a run
+  carries from its start, rather than by the pull requests GitHub lists beside it, which are empty for a fork. It
+  prints no text of the API's, and checks its arguments and GitHub's variables before it asks the API anything. Its
+  test, `services/github/runs.test.mjs`, answers in place of the API: a run that passed, the latest that failed, one
+  cancelled, one still going, none, one from a fork, an answer of another shape or not JSON, a refusal, no network,
+  and arguments or variables that are not a run's. The test found that the first pattern of a repository let `../other`
+  through; the pattern now refuses a name of dots alone.
+- `project.yml` runs it after `checks/changes.mjs`, with the token in that step's environment alone, and names no
+  permission of its own (Deviations). `verify.yml` grants `contents: read` and `actions: read` to its `project` job.
+- The piece's README shows `actions: read` in the caller's file, says what it is for, that a file without it keeps
+  working with every push running everything, and that the caller's `permissions` is the token's one limit; the skip's
+  conditions and what the token may read replace what the skip assumed. The workflow's "Pushes" and its contract say
+  that the skip follows a run that passed; the interface's line on `project.yml` names the permissions its caller
+  grants. The workflow is 46 characters over the budget this item gave it, which goes from 38,600 to 38,700.
 
 ## Verification
 

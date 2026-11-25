@@ -127,6 +127,7 @@ on:
     branches: [<default branch>]
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: checks-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
@@ -143,6 +144,13 @@ input:
 - `npm: "<version>"`, for a project that asks another npm, as one whose `package.json` asks npm 12 in `devEngines`,
   which npm checks at the setup's first `npm ci`: that npm, installed before the setup. The version is an exact one
   that `devEngines` allows.
+
+`actions: read` lets project.yml read whether the run on a pull request's earlier tip passed, before it leaves a
+project's verification out of a push that changes only records (below). A file without it keeps working, and every
+push of its pull requests runs everything. project.yml names no permission of its own: a called workflow may only keep
+or lower what its caller grants, and one that named `actions: read` would ask more than such a file grants. The
+caller's `permissions` is so the one limit of the token, and a file without it would give the token the repository's
+default permissions.
 
 GitHub lets a workflow of a private or a public repository call a reusable workflow of a public one, as long as the
 caller's Actions settings allow reusable workflows, which they do by default. project.yml checks out the kit with the
@@ -169,12 +177,14 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
    On a push to a pull request's branch, project.yml first runs the kit's `checks/changes.mjs` on the commits that the
    push added, from `github.event.before`, the branch's tip before the push, to `HONSHA_HEAD`. When they change only
-   records, it skips the steps that install npm, run the setup and install Claude Code, and the one that runs
-   `checks/verify.mjs`; a notice on the run says so, and the kit's checks run. The opening of a pull request, whose
-   event has no earlier tip, any failure of the script, and every push to the default branch run every step. The skip
-   assumes that the run on the code has finished: a push that changes only records while it goes cancels it, and the
-   code is then checked by nothing on the pull request until the merge's run on the default branch. So a session waits
-   for that run before it pushes the closing commit (core rules, Delivery).
+   records, [runs.mjs](runs.mjs) reads from GitHub's API, with the run's token, the latest run of the same workflow on
+   that earlier tip, from the same branch of the same repository. When that run passed, project.yml skips the steps
+   that install npm, run the setup and install Claude Code, and the one that runs `checks/verify.mjs`; a notice on the
+   run says so, and the kit's checks run. A run that skipped them passed only after such a run on its own earlier tip,
+   so a chain of them goes back to a run that checked the code. Everything runs otherwise: at the opening of a pull
+   request, whose event has no earlier tip; after a run that failed, was cancelled, still goes or never ran, as for a
+   pull request retargeted to the default branch; for a pull request from a fork; for a token without `actions: read`;
+   on any failure of either script; and at every push to the default branch.
 3. **What it gives the commands.** project.yml, and the kit's file for its own jobs, set `HONSHA_BRANCH` from
    `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base and head commits of the pull request. On a push,
    `github.ref_name`, `github.event.before` and `github.sha`.
@@ -182,8 +192,9 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    on the commit and read with `gh run list --branch <default branch>`.
 5. **What can block.** A failed job stops a merge only where branch protection or a ruleset requires it. Elsewhere, and
    so in a private repository of a free account, it is shown and nothing more.
-6. **What it may not do.** The workflow's token has read access to the contents and nothing else: the caller grants
-   no more, and a called workflow can only lower what its caller grants. The checkouts leave no token in the git
+6. **What it may not do.** The workflow's token has read access to the contents and to the runs of Actions, and
+   nothing else: the caller grants no more. Besides the checkouts, only the step that reads the earlier run gets the
+   token, in its environment and before any of the project's commands runs. The checkouts leave no token in the git
    configuration. The actions are pinned to a commit.
 
 The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
@@ -199,8 +210,8 @@ public branch: a finding shows before the merge, and taking it out of the histor
 What it costs: nothing on a free account, within a limit. On a private repository the minutes of GitHub's runners are
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
 minutes count for more than Linux ones. A run of project.yml is one Linux job, counted to the account that owns the
-calling project; on a push that changes only records it holds the checkouts and the kit's checks alone, and counts as
-one minute while they take less. With no payment method on the account, runs stop when that amount is used and nothing
+calling project; on a later push that changes only records, after a run that passed, it holds the checkouts, the read
+of that run and the kit's checks alone, and counts as one minute while they take less. With no payment method on the account, runs stop when that amount is used and nothing
 is billed. On a public repository the standard runners are free.
 
 A project's own workflows, such as its application's checks, are the project's: this wiring does not reach them, and

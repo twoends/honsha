@@ -297,9 +297,9 @@ A message is read as a title in the history; the reasons are in the record, so t
   test that fails at random, is something the person should see, and a second run that passes would hide it.
 - The closing commit changes only the record, and the session runs on it the checks that read the record: a run on it
   finds nothing new, and waiting for it would only delay the end. So the wiring leaves the verification out on such a
-  push (workflow, Checks on pull requests and on the default branch). That holds only once the run on the work has
-  finished, since a newer push cancels an older run of the same pull request: the session waits for that run, and
-  reads its result, before it pushes the closing commit.
+  push once the run on the work has passed (workflow, Checks on pull requests and on the default branch). The session
+  waits for that run, and reads its result, before it pushes the closing commit: a newer push cancels an older run of
+  the same pull request, and the push on records would then run everything.
 - The rule is the same on a public repository, whose runs some services do not count: the time a run takes and the
   fault a second run hides do not depend on its price.
 
@@ -370,10 +370,10 @@ default branch. It meets this contract.
    them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
    merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise, and on
    the pushed commit for a push; the piece says which.
-   A later push to a pull request's branch whose new commits change only records leaves out the `setup` and `verify`
-   commands, and its run says so: the run before checked the same code, the kit's checks still read the records, and
-   the session has run on them those that read the record (core rules, Delivery). Whatever cannot be told runs
-   everything. The opening of a pull request and every push to the default branch run them all: the default branch is
+   A later push to a pull request's branch whose new commits change only records, after a run on the branch's earlier
+   tip that passed, as the service reports it, leaves out the `setup` and `verify` commands, and its run says so: that
+   run checked the same code, the kit's checks still read the records, and the session has run on them those that read
+   the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a pull request and every push to the default branch run them all: the default branch is
    where what the skip leaves out is caught, such as a record that a formatter of the `verify` list reads, or a default
    branch that moved between the run on the work and the closing commit.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
