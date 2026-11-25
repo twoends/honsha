@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -249,6 +249,10 @@ its opening; the work checks it against GitHub's documentation of the event befo
 
 ## Approval
 
+Approved by the person on 2026-11-25, in the hub's session, as written, with its two choices: the skip only on a pull
+request's later pushes, never on the default branch, and the kit's own `verify` job running in full. The hub passed the
+approval on to this item's session.
+
 ## Log
 
 - The branch was cut from `origin/main` after `git fetch`, and its upstream unset, so that no push can follow
@@ -265,6 +269,7 @@ its opening; the work checks it against GitHub's documentation of the event befo
 - `skills/assessment/SKILL.md`, which another item changes, says that the wiring runs `verify` "on every pull request
   and on each push to the default branch": with the skip on a pull request's later pushes only, that stays true.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
