@@ -161,7 +161,13 @@ Independent parts that run at once arrive sooner and cost no more, so nobody has
 forced, since the gain exists only where no coordination is needed. When to split and to fan out is in the worker's
 file (`agents/worker.md`). The test, the limits, and how parts and separate requests run are in the skill
 `honsha:parallel-parts`, which the worker invokes before it splits an item and the hub before it starts an item in a
-project where another runs.
+project where another is open.
+
+Items that run at once in one project are coordinated by the hub, the one session that sees them all: a worker sees
+only its own item, so its brief names the others and their files, and it asks before it changes one of them. Two items
+may share a file whose changes lie apart, since waiting for a whole item costs more than a merge that git makes by
+itself. The one merged second is brought up to date first: each was verified without the other's change, and a budget
+that both reach can hold either change alone and not the two.
 
 ### The backlog
 
@@ -316,7 +322,8 @@ A message is read as a title in the history; the reasons are in the record, so t
 ### Keeping a work branch up to date
 
 A work branch does not need to hold the latest default branch: its pull request shows a conflict when there is one. A
-conflict that cannot be resolved inside the scope stops the work, as any work beyond the scope does.
+conflict that cannot be resolved inside the scope stops the work, as any work beyond the scope does. The exception is an
+item that shares a file with another, once the other is merged (workflow, Parallel work).
 
 ### Branches of parallel parts
 

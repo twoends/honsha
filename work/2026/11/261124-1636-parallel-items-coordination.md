@@ -242,6 +242,16 @@ item's session, where the person confirmed it the same day.
   that changed lines 2 and 3 conflicted.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- The skill's test, its section on separate requests and its description are written as the strategy gives them; the
+  skill has 4,041 characters of 6,000.
+- `agents/hub.md`: "running" became "open" in "Dispatch", and "Follow" gained its sentence; the file has 5,651 characters
+  of 6,000, and the step that starts an item's session is unchanged.
+- The workflow gained the paragraph of reasons in "Parallel work" and the exception in "Keeping a work branch up to
+  date". The sentence before the reasons, which says when the hub invokes the skill, said "where another runs": it now
+  says "where another is open", the word of the hub's file and the skill. The workflow has 39,293 characters, and its
+  budget is raised from 38,700 to 39,300.
+- No other document says when the skill applies: the README and the interface only name it, and the architecture's
+  dispatch stays true.
 
 ## Verification
 
