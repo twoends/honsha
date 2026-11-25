@@ -97,22 +97,22 @@ commands, all passed.
 - `node checks/record.mjs`: passed.
 - `node checks/commits.mjs`: passed, the 2 commits of the branch follow the rules.
 
-### Checker, first check
+### Checker report, first check
 
-Verdict: fail, on commit 06a0013. Criteria 1 to 3 met. Findings: the verification was empty; and
+**Verdict:** fail, on commit 06a0013. Criteria 1 to 3 met. Findings: the verification was empty; and
 `docs/01-specs/ARCHITECTURE.md` still sent approvals through the messaging app and the board.
 
-### Checker, second check
+### Checker report, second check
 
-Verdict: fail, on commit 12dfcd7, reading what changed since 06a0013. Criteria 1 to 5 met. Finding: a sentence in
+**Verdict:** fail, on commit 12dfcd7, reading what changed since 06a0013. Criteria 1 to 5 met. Finding: a sentence in
 Verification that was neither a command's result nor a report.
 
-### Checker, third check
+### Checker report, third check
 
-Verdict: fail, on commit 12dfcd7, reading the record alone. Criteria 1 to 5 met. Finding: the shortened reports of the
+**Verdict:** fail, on commit 12dfcd7, reading the record alone. Criteria 1 to 5 met. Finding: the shortened reports of the
 first two checks held clauses on what followed each check, which the log already says.
 
-### Checker, fourth check
+### Checker report, fourth check
 
 Read commit 12dfcd7, with the diff and the commit list empty since nothing outside the record had changed.
 
