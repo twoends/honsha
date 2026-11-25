@@ -5,16 +5,17 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 55
+model: claude-opus-5-5
 effort: xhigh
-checks: []
+checks:
+  - { due: 2026-11-26, what: "The run on the closing commit of pull request 55, a push that changes only the record, shows in its `project` job that the run on the work passed, the setup, Claude Code and the verification commands skipped, and the checks of the record and of the commits passed" }
 ---
 
 ## Intent
@@ -375,8 +376,195 @@ approval on to this item's session.
   Both reach past the approved scope, and a departure from it is a stop condition: the state is `blocked`, and the
   person decides whether to accept the test's extension as a deviation.
 - The person accepted the test's extension (Deviations); the item resumes, and the state is `in-progress`.
+- The checker's repeated check of `c52641c`, on Opus, passed (Verification).
+- The branch was pushed once, at `c52641c`, and pull request 55 opened. `gh pr checks --watch`, run at once after the
+  pull request was opened, found no check yet and exited with "no checks reported"; run again a moment later, it
+  waited until the four jobs finished. The piece's README gives the command without saying so: a follow-up for the
+  hub.
+- The run on `c52641c`, at the pull request's opening, passed in its four jobs: `verify` on Ubuntu and on Windows,
+  `personal content`, and `project / checks`. In the last, the step that tells a push of records printed that an
+  argument is not a commit's identifier, since the opening has no earlier tip, and the setup, Claude Code and the
+  verification commands ran.
+- The closing commit holds the verification, the outcome and the pull request's number; `node checks/record.mjs` and
+  `node checks/commits.mjs` run on it before its push, and its run is not waited for (criterion 7 is a deferred check).
 
 ## Verification
+
+On commit `84365ea`, from the root of the kit's worktree:
+
+- `node checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node checks/commits.mjs`: passed, the 12 commits of the branch follow the rules.
+- `node checks/verify.mjs`, the profile's `verify` list: all 7 commands passed.
+  - `npx --no-install prettier --check .`: passed.
+  - `npx --no-install oxlint`: passed.
+  - `npx --no-install tsc -p .`: passed.
+  - `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 238 tests, 238
+    passed, the 9 of `checks/changes.test.mjs` and the 6 of `services/github/runs.test.mjs` among them.
+  - `claude plugin validate .`: passed.
+  - `node checks/record.mjs`: passed.
+  - `node checks/commits.mjs`: passed.
+
+### Security review report, on `5bb799e`
+
+**Verdict:** fail
+
+**Findings**
+
+1. `.github/workflows/project.yml:79` (with the `if:` lines at 85, 94, 97 and 112): the skip assumes the earlier run on `github.event.before` passed, but nothing checks that.
+   - **What the step checks:** only that the trees of the old and new head differ in record paths. It never asks whether the earlier run succeeded, or whether there was one at all.
+   - **Who can exploit it:** anyone who can push to a pull request's branch, including the author of a pull request from a fork. The kit's checks that still run can be satisfied by an outsider: a branch named `work/<id>-<slug>`, a record, `Work-Item` trailers, and author addresses they choose freely.
+   - **Ways to do it:**
+     - (a) Push code that fails `verify`, then push a commit that only touches `work/<yyyy>/<mm>/<id>-x.md`. The new head's `checks` job is green, and the red run stays on an older commit.
+     - (b) Push the two commits back to back. `cancel-in-progress` cancels the run on the code, so no failed run exists anywhere.
+     - (c) Open the pull request against any other existing branch. There is no run, because the caller filters on `branches: [<default>]`. Push the code, then retarget the pull request to the default branch; `edited` is not a default event type, so again there is no run. Then push a commit that changes only records. The only run the pull request ever has is green, and the code never went through `verify`.
+   - **What they gain:** a required status check (branch protection or ruleset) is satisfied, and the person merges on a green `gh pr checks` for code the project's verification never passed. On a project with `merge-deploys: true` the merge is the deploy, so the full run on the default branch, which the change names as the place where the skip is caught, runs only after the code has shipped.
+   - **Fix:** skip only when this job's run on `before`, against the same base, concluded `success`, read through the API (`actions: read` or `checks: read`). Run everything otherwise, and at minimum never skip for a pull request whose head repository is not this repository.
+
+2. `checks/changes.mjs:68` and `checks/changes.mjs:75`: a file name from the pull request's commits is written raw to stdout, which lets it inject a workflow command.
+   - **How the name gets there:** the first path that is not a record is read from `git diff -z`, which gives names verbatim with any newlines in them, and is then printed with `console.log`. The runner treats any stdout line that starts with `::` as a workflow command.
+   - **The exploit:** in a later push, the author commits code changes plus a file named, for example, `!\n::set-output name=verify::false\n!`. That name sorts before all other paths, so it is the one printed. The runner then sets `steps.changes.outputs.verify` to `false`, even though the script exits 1 and the shell writes nothing to `GITHUB_OUTPUT`. The setup and verification steps are skipped and the run is green on a push that changes code.
+   - **Precondition:** the runner must still honour the deprecated `::set-output` command. GitHub deprecated it in 2022 and postponed its removal in 2023.
+   - **Fix:** never print a path unescaped, for example print `JSON.stringify(other)` or no name at all, so that no line of output can begin with `::`.
+
+### Security review report, on `20db06c`, a repeated review since `5bb799e`
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Security review report, on `09df150`, a repeated review since `20db06c`
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Security review report, on `1d24ac7`, a repeated review since `09df150`
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Security review report, on `a784f87`, a repeated review since `1d24ac7`
+
+**Verdict:** pass
+
+**Findings**
+
+none
+
+### Security review report, on `84365ea`, a repeated review since `a784f87`
+
+**Verdict:** pass
+
+**Read:** `.github/workflows/` (project.yml, the whole file, not only the hunk); `services/github/` (README.md, lines 150-209, around the hunk). I also searched outside `work/` for any other place that states which steps get the token.
+
+**Findings**
+
+none
+
+**Weak points**
+
+none
+
+The last review's one weak point is fixed. Both places now say "The actions above take the token as an input" (`.github/workflows/project.yml:74`) and "The actions take the token as an input" (`services/github/README.md:196`). That covers the two `actions/checkout` steps and `actions/setup-node` (lines 52, 60 and 66). All three come before the step that reads the earlier run, and no action follows it.
+
+The new narrower claim also holds: "of the steps that run commands, this one alone gets it". The token appears once in `.github/`, as `GH_TOKEN: ${{ github.token }}` at `.github/workflows/project.yml:82`. The job-level `env` (lines 42-45) holds no token, and no other `run` step puts it in its environment. "before any of the project's commands runs" is still true, because that step runs only the kit's `checks/changes.mjs` and `services/github/runs.mjs`.
+
+The README's other statements in item 6 match the workflow as it stands:
+- both checkouts set `persist-credentials: false`;
+- `setup-node` is given no `registry-url`, so it writes no `.npmrc` that would refer to a token;
+- every action is pinned to a commit SHA.
+
+The diff changes only a YAML comment and README prose. It changes no step, permission, input or command, so it opens nothing new.
+
+**Not reviewed**
+
+- What `actions/setup-node` does internally with its `token` input at the pinned commit `949feb2413d6458794dcd2491c4babbbce0c15c1`. Its source is not in this repository and I cannot fetch it from here. The docs now say that it receives the token and do not claim it leaves no trace.
+
+### Checker report, on `1d24ac7`
+
+**Verdict:** fail
+
+**Findings**
+
+1. Two document lines the diff adds run well past the 120 characters the documents wrap to (`.prettierrc.json`, `printWidth: 120`). Prettier's `proseWrap: preserve` does not catch this, which is why `verify` passes.
+   - `docs/01-specs/WORKFLOW.md:376` ("…Whatever cannot be told runs everything. The opening of a pull request and every push to the default branch run them all: the default branch is") is about 180 characters.
+   - `services/github/README.md:215` ("…counts as one minute while they take less. With no payment method on the account, runs stop when that amount is used and nothing") is about 170.
+   - Fix: rewrap both paragraphs at 120.
+2. `services/github/runs.mjs` runs as a command (`services/github/runs.mjs:735-739`, `import.meta.url === pathToFileURL(…)`), and the interface does not name it.
+   - `docs/01-specs/INTERFACE.md:49-51` lists "the kit's other scripts" that are not part of the interface (`checks/pushed.mjs`, `checks/changes.mjs`, the hooks) and leaves it out.
+   - `docs/01-specs/INTERFACE.md:115-116` says `checks/interface.test.mjs` fails when the kit has a script the document does not name. That no longer holds: the test reads only `checks/` and `hub/` (`checks/interface.test.mjs:63-64`), so this script passes it unnamed.
+   - Fix: name `services/github/runs.mjs` among the scripts outside the interface.
+3. `.github/workflows/project.yml:74` says "The token is in this step's environment alone". The two checkouts at lines 52 and 60 also get the token, through their default `token` input. `services/github/README.md:196` says so ("Besides the checkouts, only the step that reads the earlier run gets the token in its environment"), so the comment and the README state different facts. The last security review named this as a weak point, and the log leaves it to the person, but the comment is still inaccurate.
+   - Fix: say in the comment, as the README does, that the checkouts get the token too.
+
+### Checker report, on `84365ea`, a repeated check since `1d24ac7`
+
+**Verdict:** fail
+
+**Findings**
+
+1. `checks/interface.test.mjs:62-74` and `:100`: the diff extends a kit test so that it also checks every script under `services/`. This changes what the kit enforces for any future folder there.
+   - The file is not under "In scope".
+   - It is not in the extension the person accepted under "Deviations" either: that lists `services/github/runs.mjs`, its test, `verify.yml`, `project.yml` and the interface's line.
+   - Only the log mentions the change (record lines 359-361).
+   - So this is a departure from the approved scope that the record does not declare. Fix: declare it under "Deviations".
+
+### The checks of the record and of the commits, on `c52641c`
+
+Only the record changed after `84365ea`:
+
+- `node checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node checks/commits.mjs`: passed, the 14 commits of the branch follow the rules.
+
+### Checker report, on `c52641c`, a repeated check since `84365ea`
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The rule on pushes is in `rules/git.md`, Delivery: met, at `rules/git.md:36-42`. It is unchanged since `84365ea`.
+2. The worker waits for the checks and runs the checks that read the record on the closing commit, pointing to the rule: met, at `agents/worker.md:82` and `agents/worker.md:86`. Unchanged since `84365ea`.
+3. `checks/changes.mjs` gives the right exit code for each case, and each case has a test: met. Neither the script nor `checks/changes.test.mjs` changed since `84365ea`, where the last check found every case covered.
+4. `project.yml` skips the setup and `verify` on a later push that changes only records, shows a notice, and keeps the kit's checks: met.
+   - The notice is at `.github/workflows/project.yml:87`, and the skip conditions are at lines 91, 100, 103 and 118.
+   - The extra condition from the first entry under "Deviations" is in place.
+   - Unchanged since `84365ea`.
+5. The documents say what criteria 1 to 4 make true, and each raised budget has its reason: met. `docs/01-specs/INTERFACE.md:50-51` names both scripts, and the claim at line 116 holds through `checks/interface.test.mjs:62-75` and `:100`. Unchanged since `84365ea`.
+6. `verify` passes, and the pull request's run on the work is green: the `verify` part is met (Verification, on `84365ea`; only the record changed since then). The run on the pull request is not verifiable: the branch is pushed after this check.
+7. The run on the closing commit shows the skip, as a deferred check in `checks`: not verifiable. `checks` is still `[]` (record line 17), and both the check and the run come with the closing commit.
+
+- **Intent:** in order
+- **Scope:** in order. The diff since `84365ea` is empty. The last report's one finding is fixed: the extension of `checks/interface.test.mjs` is now declared under "Deviations" (record lines 566-569), with who accepted it, when and where.
+- **Comments and documents:** in order. The diff adds no comment and changes no document.
+- **Gates:** in order. The diff is empty, and the record's new text breaks none of the four gates.
+- **Verification evidence:** in order; covers formatting, lint, types, tests.
+- **Security review:** in order. It was due on the branch, since the branch touches `.github/workflows/project.yml`.
+  - The reports run up to `84365ea`, and the last one names no finding and no weak point.
+  - The two commits since then change only the record, which calls for no review.
+- **Record:** in order. The earlier checker report, on `1d24ac7`, keeps only its verdict and findings, and the one on `84365ea` is kept in full. The new log entries and the new deviation quote no words of the person (`public: true`).
+- **Commits:** in order. `ddacb40` "Stop the item for the person, since the checker asks to declare the extension of the interface's test as a deviation" and `c52641c` "Write the deviation the person accepted for the interface's test, and resume the item":
+  - each is one imperative sentence;
+  - each carries `Work-Item: 261124-1626` with the other trailers;
+  - the addresses match `commits.address`;
+  - the stop is a commit of its own.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The run on the pull request (criterion 6): the branch is pushed after this check.
+- The run on the closing commit and its deferred check in `checks` (criterion 7): both come with the closing commit.
+- No result under Verification covers `c52641c`, because the results are on `84365ea`. That leaves the checks that read the record without a result there: `checks/record.mjs`, `checks/commits.mjs` and the formatter. I read `checks/record.mjs` and `checks/commits.mjs` against the record and the commits `ddacb40` and `c52641c` and found nothing they would refuse. The rule has the session run these checks on the closing commit.
+- At the start of this session, git status showed the record as modified against `c52641c`. I read the file on disk and cannot compare it with the committed version without git.
 
 ## Deviations
 
@@ -407,3 +595,18 @@ approval on to this item's session.
   extension on 2026-11-25, in the hub's session; the hub passed the decision on to this item's session.
 
 ## Outcome
+
+- The core rules ask every session to push a work branch only with work that has passed the verification, the
+  security review where it applies and the checker, as seldom as its commits allow; to wait for the hosting service's
+  checks on the work and never start them again; to report a failure that does not come from the change; and to push
+  the closing commit without waiting for its run, after running on it the checks that read the record. The worker's
+  procedure points to the rule, and the workflow keeps its reasons.
+- On GitHub, `project.yml` leaves the setup, Claude Code and the verification commands out of a later push to a pull
+  request whose commits change only records, once the latest run on the branch's earlier tip passed, as
+  `services/github/runs.mjs` reads it with `actions: read`. The opening of a pull request, every push to the default
+  branch and whatever cannot be told run everything. `project.yml` names no permission of its own.
+- What each project using the kit has to do: add `actions: read` beside `contents: read` in the `permissions` of its
+  caller file, as the GitHub piece's README shows. Until then its checks keep working, and every push of its pull
+  requests runs everything. The hub dispatches the change, as an item of each project, after this pull request is
+  merged.
+- Criterion 7 is a deferred check in `checks`: the run on this closing commit, which no session waits for.
