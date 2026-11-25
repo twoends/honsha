@@ -78,17 +78,28 @@ export function trees(dir) {
 }
 
 /**
+ * A file's text on the home's default branch as last fetched, null where that branch holds no such file, and the
+ * branch as a ref; throws where the home has no such branch.
+ * @param {string} home
+ * @param {string} file a path from the home's root
+ * @returns {{ ref: string, text: string | null }}
+ */
+export function homeFile(home, file) {
+  // One git process for a home with an origin, the usual case; the others only to find the branch of one without.
+  const text = attempt(home, ["show", `origin/HEAD:${file}`]);
+  if (text !== null) return { ref: "origin/HEAD", text };
+  const ref = fetchedRef(home);
+  return { ref, text: attempt(home, ["show", `${ref}:${file}`]) };
+}
+
+/**
  * The registry's text on the home's default branch as last fetched.
  * @param {string} home
  */
 function registryText(home) {
-  // One git process for a home with an origin, the usual case; the others only to find the branch of one without.
-  const text = attempt(home, ["show", `origin/HEAD:${REGISTRY}`]);
-  if (text !== null) return text;
-  const ref = fetchedRef(home);
-  const found = attempt(home, ["show", `${ref}:${REGISTRY}`]);
-  if (found === null) throw new Error(`the home's ${ref} holds no ${REGISTRY}`);
-  return found;
+  const { ref, text } = homeFile(home, REGISTRY);
+  if (text === null) throw new Error(`the home's ${ref} holds no ${REGISTRY}`);
+  return text;
 }
 
 /**
