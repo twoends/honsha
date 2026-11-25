@@ -20,8 +20,8 @@ core rules in your context always hold, and this file does not repeat them: it i
    - **trivial:** go on.
    - **small:** write a few lines of strategy if the record has none, then go on.
    - **full:** if the record holds no written approval, write the strategy the template asks for, set the state to
-     `awaiting-approval`, commit the record, ask the person and stop. An approval the person gives is written into
-     the record and committed. If the record holds one, go on.
+     `awaiting-approval`, commit the record, ask the person and stop. An approval the person gives in this session is
+     written into the record and committed. If the record holds one, go on.
 4. Set the state to `in-progress`.
 5. Load the pack of each of the item's areas, the skill `honsha:area-<name>`. Write in the log an area that has none.
 
@@ -81,7 +81,8 @@ What the verification writes into the record stays uncommitted until the closing
 What follows the checker makes the closing commit.
 
 1. Push the branch and open the pull request to the default branch, with the hosting service's command-line client,
-   whose commands are in `services/<name>/README.md` in the kit directory. Then wait for its checks.
+   whose commands are in `services/<name>/README.md` in the kit directory. Then wait for its checks (core rules,
+   Delivery): when one still runs, say so and wait to be told (workflow, Pushes), then read them once.
 2. Write the outcome. A criterion that only a future event can verify goes into `checks` with its date and what to
    look at.
 3. Write `pr`, `updated` and `model`, and set the state to `done`.

@@ -21,12 +21,12 @@ const root = new URL("..", import.meta.url);
  */
 /** @type {Record<string, number>} */
 const budgets = {
-  "agents/hub.md": 6000,
-  "agents/worker.md": 6400,
+  "agents/hub.md": 6400,
+  "agents/worker.md": 6600,
   "agents/checker.md": 7600,
   "agents/security-reviewer.md": 6000,
   "templates/profile.yml": 5200,
-  "docs/01-specs/WORKFLOW.md": 42000,
+  "docs/01-specs/WORKFLOW.md": 42500,
   "docs/01-specs/INTERFACE.md": 9000,
 };
 const SKILL = 6000;

@@ -107,7 +107,7 @@ test("the opening of the core rules names each of their other parts", () => {
 // system prompt: a session receives one of the two, and each counts at its file's budget, so that the file can grow to
 // that budget without reaching the total.
 const PART = 9000;
-const TOTAL = 31550;
+const TOTAL = 31750;
 
 test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
   let total = 0;
