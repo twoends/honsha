@@ -196,8 +196,7 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    nothing else: the caller grants no more. The actions take the token as an input; of the steps that run commands,
    only the one that reads the earlier run gets it, in its environment, before any of the project's commands runs.
    Code that runs in the job can still read it from the runner's memory, so what the token may do is what the whole job
-   may do. The checkouts leave no token in the
-   git configuration. The actions are pinned to a commit.
+   may do. The checkouts leave no token in the git configuration. The actions are pinned to a commit.
 
 The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
 the kit's hook checks a push only in a clone that has it (the kit's README). On Linux it runs
