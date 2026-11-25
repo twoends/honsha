@@ -382,6 +382,27 @@ choices and the trial's downloads listed under "For the person" included.
   release publishes none, and its archive matched the digest that GitHub gives the release's file.
 - On this host `docker desktop status` read "stopped" while the engine answered `docker info`; the trial went by the
   engine. This is a lesson of the host, for the person.
+- The security review is due, since the change touches CI configuration. Its report on `d452187` passes, with no
+  findings and six weak points:
+  1. The comment of the new step in `project.yml` said the step is given no secret and no token, while the project's
+     code that it runs can read the token from the runner's memory: fixed, the comment says so.
+  2. A pull request opened before this change reaches the kit's default branch can leave out the dynamic testing on
+     its closing commit after a run on its work that had no such step: left to the person. It can happen once, at the
+     change, and the push of the merge runs everything.
+  3. `checks/record.mjs` names neither a change of the profile that weakens a command nor an inline suppression:
+     left to the person. The skill asks for the tools' configuration and ignore files under `security-review`, the
+     checker reads the rest in the diff, and listing the profile there too is each project's choice.
+  4. The profile's reader lets a later occurrence of a key win and ignores a misspelt key, so a second, empty
+     `dynamic-testing` passes in silence: left to the person. The reader has always read every key so, and refusing a
+     repeated or unknown key is a change of its own.
+  5. A worker's statement that the host cannot run a command makes the checker take it as not verifiable: left to the
+     person, as the approved choice. The pipeline's result is written before the closing commit, and the scan for
+     secrets is excluded.
+  6. The skill did not say how an instance keeps "no secret" on a worker's host, where compose fills variables from
+     the environment and from an uncommitted file of variables, and publishes ports on every interface: fixed, the
+     skill says that nothing reaches the instance from either, and that it publishes no port, or only on the loopback.
+- The two fixes are a commit of their own. The verification ran again on it, and the review was repeated on what it
+  changed.
 
 ## Verification
 

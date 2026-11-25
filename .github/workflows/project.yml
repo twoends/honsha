@@ -119,7 +119,8 @@ jobs:
         run: node ../kit/checks/verify.mjs
       # After the verification, so that a change that fails it spends no minutes on an instance. The commands start a
       # local instance from this checkout and attack it, with the runner's container engine; a profile without them
-      # passes at once. The step is given no secret and no token.
+      # passes at once. Its environment holds no secret and no token, but the project's code that it runs can read the
+      # token from the runner's memory, as that of the verification can.
       - name: Run the dynamic testing commands of the profile
         if: steps.changes.outputs.verify != 'false'
         run: node ../kit/checks/verify.mjs --dynamic
