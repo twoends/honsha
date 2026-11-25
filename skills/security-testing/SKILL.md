@@ -83,8 +83,9 @@ still holds it.
 - **A finding is a secret** unless its file, rule and masked line show otherwise, as a test's fixture, an example or an
   identifier does, with the reason written. A secret stops an assessment (core rules, Stop conditions) and is urgent at
   the review: the person gets the list at once, revokes the secret at its provider and decides whether the history
-  changes. No session changes a history, nor writes anywhere public where a live secret is. One that only pull requests
-  opened from forks reach, as the service's piece tells, can be anyone's: it is reported with them, and stops nothing.
+  changes. No session changes a history, nor writes anywhere public where a live secret is. In a public repository, one
+  that only the refs of pull requests reach, each opened by someone outside the project, as the service's piece tells,
+  can be a stranger's: listed apart, it is neither a stop nor urgent.
 - **A public repository's history is public:** a secret there is taken for used, and revoking it is the remedy, since
   forks, clones and archives keep it whatever the history becomes. In a private one revoking comes first too, and a new
   history narrows who reads it later, at the cost of every clone and open branch. Made public, a repository publishes

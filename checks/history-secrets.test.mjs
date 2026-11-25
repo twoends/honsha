@@ -310,16 +310,25 @@ test("git and the scanner read no other repository, no configuration of the scan
   }
 });
 
-test("a finding names the refs that reach its commit: the repository's own, or else pull requests only", () => {
+test("a finding names the branches and tags that reach its commit, or else every other ref that does", () => {
   const mirror = makeMirror(shared.clone, temporary("honsha-history-mirror-"));
-  assert.equal(reachedBy(mirror, shared.pulled), "pull requests only: refs/pull/1/head");
+  assert.equal(reachedBy(mirror, shared.pulled), "no branch or tag, only refs/pull/1/head");
   assert.equal(reachedBy(mirror, shared.tagged), "refs/tags/v1");
   assert.match(reachedBy(mirror, shared.added), /refs\/heads\/main/);
   assert.doesNotMatch(reachedBy(mirror, shared.added), /refs\/pull\//);
+  // Every one is named, however many: whether each is a stranger's decides what the finding does.
+  for (const number of [100, 101, 102, 103, 104, 105]) {
+    git(mirror, ["update-ref", `refs/pull/${number}/head`, shared.pulled]);
+  }
+  const named = reachedBy(mirror, shared.pulled);
+  assert.match(named, /refs\/pull\/1\/head/);
+  assert.equal(named.match(/refs\/pull\//g)?.length, 7);
 });
 
-test("a control or format character of the history is printed as an escape", () => {
-  assert.equal(printable("a\nb\u001b[2Jc‮d"), "a\\u{a}b\\u{1b}[2Jc\\u{202e}d");
+test("a control, format or line-separating character of the history is printed as an escape", () => {
+  const [newline, escape, bidi, separator] = [0x0a, 0x1b, 0x20_2e, 0x20_28].map((code) => String.fromCodePoint(code));
+  const text = `a${newline}b${escape}[2Jc${bidi}d${separator}e`;
+  assert.equal(printable(text), String.raw`a\u{a}b\u{1b}[2Jc\u{202e}d\u{2028}e`);
   assert.equal(printable("config/app.env"), "config/app.env");
 });
 
@@ -458,7 +467,7 @@ test("the findings are printed by where they are, with no value, no unmasked lin
   assert.match(output, /^ {2}line: resolved = \*+$/m);
   assert.equal(output.match(/on the default branch: yes/g)?.length, 2);
   assert.equal(output.match(/on the default branch: no/g)?.length, 2);
-  assert.match(output, /^ {2}reached by: pull requests only: refs\/pull\/1\/head$/m);
+  assert.match(output, /^ {2}reached by: no branch or tag, only refs\/pull\/1\/head$/m);
   assert.match(output, /^ {2}reached by: refs\/tags\/v1$/m);
   for (const value of [...Object.values(VALUES), "Jane", "jane.roe", "Add the configuration", shared.origin]) {
     assert.ok(!output.includes(value), value);

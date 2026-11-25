@@ -18,7 +18,7 @@ that is behind or has changes not committed.
    the version that fixes it and whether that version is out.
 2. **Secrets in the history.** `node <kit directory>/checks/history-secrets.mjs` in each repository
    (`honsha:security-testing`, The history): it reads what reached the hosting service outside a work item. A secret
-   that `.gitleaksignore` does not yet answer is urgent, and the person gets it at once.
+   that `.gitleaksignore` does not yet answer is urgent, as that skill says, and the person gets it at once.
 3. **Ordinary updates.** Each direct dependency of a project is covered by a radar entry of the installation, with a
    review date. The outdated dependencies are listed with the package manager, each with the newest version that
    `honsha:dependencies` lets an item take. The updates worth making become one work item, full if it holds a major

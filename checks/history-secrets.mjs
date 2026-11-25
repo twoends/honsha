@@ -17,9 +17,9 @@
 //
 // It leaves out the findings whose fingerprints `.gitleaksignore` lists on the default branch, where an item under the
 // security review put them, and prints each other one by commit, file, line and rule, with its fingerprint, whether the
-// default branch holds its commit, the refs that reach it, which tell a branch of the repository from a pull request
-// that anyone could open, and its line read from the mirror, with the value found and every run of characters that
-// could be a value masked. It never prints a value, a commit's author or the remote's address, which can hold a
+// default branch holds its commit, the refs that reach it, which tell a branch or a tag from a ref such as a pull
+// request's, which someone outside the project can add, and its line read from the mirror, with the value found and
+// every run of characters that could be a value masked. It never prints a value, a commit's author or the remote's address, which can hold a
 // credential, nor a control character of the history: what it prints reaches a session's transcript, which leaves the
 // host.
 //
@@ -258,8 +258,9 @@ export function makeMirror(clone, dir) {
 }
 
 /**
- * The refs that reach a commit, at most five named: the repository's own, or, when none does, those of pull requests,
- * which anyone who can open a pull request adds, from a fork too.
+ * The refs that reach a commit: its branches and tags, at most five named, or, when none reaches it, every other ref
+ * that does, such as those a service keeps for pull requests, which someone outside the project can add. All of those
+ * are named, since whether each is a stranger's decides what the finding does.
  * @param {string} mirror
  * @param {string} commit
  */
@@ -267,10 +268,9 @@ export function reachedBy(mirror, commit) {
   const refs = git(mirror, ["for-each-ref", "--contains", commit, "--format=%(refname)"])
     .split(/\r?\n/)
     .filter(Boolean);
-  const own = refs.filter((ref) => !ref.startsWith("refs/pull/"));
-  const named = own.length > 0 ? own : refs;
-  const list = named.slice(0, 5).join(", ") + (named.length > 5 ? `, and ${named.length - 5} more` : "");
-  return own.length > 0 ? list : `pull requests only: ${list}`;
+  const own = refs.filter((ref) => ref.startsWith("refs/heads/") || ref.startsWith("refs/tags/"));
+  if (own.length === 0) return `no branch or tag, only ${refs.join(", ")}`;
+  return own.slice(0, 5).join(", ") + (own.length > 5 ? `, and ${own.length - 5} more` : "");
 }
 
 /**
@@ -486,26 +486,28 @@ function lineOf(mirror, finding) {
 }
 
 /**
- * A text with its control and format characters written as escapes: a path or a line that the history holds could
- * otherwise drive the terminal, add lines to the report or hide part of it.
+ * A text with its control, format and line-separating characters written as escapes: a path, a ref or a line that the
+ * history holds could otherwise drive the terminal, add lines to the report or hide part of it.
  * @param {string} text
  */
 export const printable = (text) =>
-  text.replace(/[\p{Cc}\p{Cf}]/gu, (char) => `\\u{${(char.codePointAt(0) ?? 0).toString(16)}}`);
+  text.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, (char) => `\\u{${(char.codePointAt(0) ?? 0).toString(16)}}`);
 
 /**
  * The lines that report one finding.
  * @param {string} mirror
  * @param {Finding} finding
  * @param {Set<string>} onDefault
+ * @param {Map<string, string>} [reached] the refs that reach each commit already read, since many findings can share one
  */
-export function describe(mirror, finding, onDefault) {
+export function describe(mirror, finding, onDefault, reached = new Map()) {
   const line = lineOf(mirror, finding);
+  if (!reached.has(finding.commit)) reached.set(finding.commit, reachedBy(mirror, finding.commit));
   return [
     printable(`${finding.rule} in ${finding.file}, line ${finding.line}, commit ${finding.commit}`),
     printable(`  fingerprint: ${fingerprint(finding)}`),
     `  on the default branch: ${onDefault.has(finding.commit) ? "yes" : "no"}`,
-    `  reached by: ${reachedBy(mirror, finding.commit)}`,
+    printable(`  reached by: ${reached.get(finding.commit)}`),
     `  line: ${line === null ? "(it could not be read)" : printable(maskLine(line, finding))}`,
   ];
 }
@@ -604,9 +606,10 @@ export async function scan({
     const left = found.length - findings.length;
     const branch = history.branch?.replace(/^refs\/heads\//, "") ?? "no default branch";
     out(`${findings.length} findings; ${left} left out, as ${IGNORE_FILE} on ${branch} lists them.`);
+    const reached = new Map();
     for (const finding of findings) {
       out("");
-      for (const line of describe(mirror, finding, history.onDefault)) out(line);
+      for (const line of describe(mirror, finding, history.onDefault, reached)) out(line);
     }
     return findings.length > 0 ? 1 : 0;
   } catch (error) {

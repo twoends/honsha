@@ -248,8 +248,9 @@ tip of its branch, and, while it is open, `refs/pull/<number>/merge`, the merge 
 after the branch is deleted and after the pull request is closed without a merge, so it keeps the branch's commits for
 anyone who can read the repository: `git ls-remote origin 'refs/pull/*'` lists them. The namespace is read-only, and
 only GitHub Support removes a pull request's refs. Anyone who can open a pull request adds one, from a fork too, which
-any account can make of a public repository: `gh pr view <number> --json isCrossRepository` says `true` for a pull
-request opened from a fork, whose finding the scan reports and stops nothing for.
+any account can make of a public repository. `gh api repos/{owner}/{repo}/pulls/<number> --jq .author_association`
+gives its author's tie to the repository: `OWNER`, `MEMBER` and `COLLABORATOR` are the project's, and any other, such as
+`CONTRIBUTOR` or `NONE`, is someone outside it. Whether the branch lived in a fork tells nothing of who wrote it.
 
 What GitHub keeps beyond any ref, no clone and no scan reaches:
 

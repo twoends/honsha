@@ -442,13 +442,32 @@ scanner: the six choices and the trial's download listed under "For the person" 
   `attr.tree=HEAD`, with and without that file.
 - With the case of a fork, `skills/security-testing/SKILL.md` holds 7,728 characters, its budget 7,800;
   `docs/01-specs/WORKFLOW.md` holds 43,083 of its 43,100. The script's test has 18 tests.
+- The repeated security review, of the diff since `d9fe419` at `0252bd3`, confirms the finding fixed for the
+  assessment, the findings told apart, and fails on two findings. 1: the periodic review still took a finding that
+  only a stranger's pull request reaches as urgent. 2: the exception went by whether a pull request came from a fork,
+  which tells nothing of who wrote its commits: in a private repository no stranger can add such a ref, and a member who
+  works from a fork would leak a credential of the project without the stop. Fixed in a commit of its own: the
+  exception holds only in a public repository, for a finding that only the refs of pull requests reach, each opened by
+  someone outside the project, and such a finding is listed apart, neither a stop nor urgent; the review's step defers
+  to the skill. GitHub's piece gives the author's tie to the repository, `gh api repos/{owner}/{repo}/pulls/<number>
+  --jq .author_association`, tried on pull request 61, which gives `OWNER`; `gh pr view` has no such field.
+- Its weak points, each fixed. 1: five refs named at most, so that those that decide could hide behind "and N more":
+  when no branch or tag reaches a commit, every ref that does is named. 2: U+2028 and U+2029 were not escaped. 3: the
+  line of the refs was not escaped. 4: the refs were read once for each finding, now once for each commit. 5:
+  `refs/pull/` is GitHub's naming: the script tells branches and tags, `refs/heads/` and `refs/tags/`, from every other
+  ref, and names no service's.
+- The editing tool wrote a bidi override character into the test's source where an escape was meant; the test now makes
+  its characters from their code points, and the source holds none.
+- `skills/security-testing/SKILL.md` holds 7,798 of its 7,800 characters, `docs/01-specs/WORKFLOW.md` 43,088 of its
+  43,100.
 
 ## Verification
 
 ## Deviations
 
-- From the security review's finding: criterion 1's report also names the refs that reach each finding's commit, and
-  criterion 4's rule on a finding gains a case, a finding that only pull requests opened from forks reach, which is
-  reported with them and stops nothing, since anyone can open such a pull request.
+- From the security review's findings: criterion 1's report also names the refs that reach each finding's commit, and
+  criterion 4's rule on a finding gains a case. In a public repository, a finding that only the refs of pull requests
+  reach, each opened by someone outside the project, is listed apart, neither a stop nor urgent, since anyone can open
+  such a pull request.
 
 ## Outcome
