@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -222,6 +222,11 @@ name, and the hub's file names each moment besides. A worker started by the hub 
 
 ## Approval
 
+Approved by the person on 2026-11-25, in the hub's session, as written, with its four choices: the shared file holds
+for parts of one item too; the hub decides, and in doubt the later item waits; the item merged second is always brought
+up to date; and the list goes only into the brief of the item that starts. The hub passed the approval on to this
+item's session, where the person confirmed it the same day.
+
 ## Log
 
 - The branch was cut from `origin/main` after `git fetch`, and its upstream unset, so that no push can follow
@@ -236,6 +241,7 @@ name, and the hub's file names each moment besides. A worker started by the hub 
 - In a scratch repository, two branches that changed lines 2 and 4 of a five-line file merged without a conflict; two
   that changed lines 2 and 3 conflicted.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
