@@ -46,7 +46,10 @@ full: what is in scope, what is out of scope, the boundaries, the criteria.
 
 ## Strategy
 
-<!-- trivial: delete. small: a few lines. full: plan, assumptions, risks, and the split into parallel parts if any. -->
+<!--
+trivial: delete. small: a few lines. full: plan, assumptions, risks, the split into parallel parts if any, and the
+strongest model tier or the max effort if the work needs them.
+-->
 
 ## Approval
 

@@ -1,5 +1,5 @@
 {
-  "description": "In the sessions of an installation's home and of the projects its registry gives this host, worktrees included, and nowhere else: delivers each part of the core rules and the record template, each by a hook of its own, when a session or the checker starts; the lessons of the project, its technologies and the host when a session starts, and, to a session that runs as no agent, the hub's procedure in the home's main working tree and the worker's in its worktrees and in the projects; refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
+  "description": "In the sessions of an installation's home and of the projects its registry gives this host, worktrees included, and nowhere else: delivers each part of the core rules and the record template, each by a hook of its own, when a session or the checker starts; the lessons of the project, its technologies and the host, and the models that the home's settings map to the kit's model tiers, when a session starts, and, to a session that runs as no agent, the hub's procedure in the home's main working tree and the worker's in its worktrees and in the projects; refuses the commands that merge, push to the default branch, force a push or skip a push's hooks, and writes the effort level into work-item records.",
   "hooks": {
     "SessionStart": [
       {
@@ -50,6 +50,12 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/lessons.mjs", "host"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/models.mjs"],
             "timeout": 10
           },
           {

@@ -51,8 +51,8 @@
 
 - **Simple first.** Native features of the platform before custom code. Curate or write ad hoc; never import a
   collection wholesale.
-- **Quality first.** Work that needs judgement runs on a strong model, and on the strongest one when it is too
-  complex for the default.
+- **Quality first.** Work runs on a model fit to its size and risk, on the strongest one when it is too complex for
+  the default, and is checked by a strong model, never weaker than the work.
 - **Nothing leaves without approval.** The hub may research and open pull requests. Merge and deploy belong to the
   person.
 - **Records are data.** State lives in structured records, so status, indexes and history are derived, not kept by

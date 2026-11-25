@@ -1,11 +1,11 @@
 # Honsha core rules
 
 This project is run with the Honsha workflow. Its core rules come in parts, each given whole when a session starts,
-together with the record template: this one, on work items, sizes, stop conditions and lessons; `rules/records.md`,
-on the record; `rules/git.md`, on commits, branches and delivery; and `rules/writing.md`, on comments and documents.
-Together they hold in every session and are enough for ordinary work. For a case they do not cover, read
-`docs/01-specs/WORKFLOW.md` in the kit directory, which the line above each part names; it lies outside the project,
-so reading it can need a permission.
+together with the record template: this one, on work items, sizes, models, stop conditions and lessons;
+`rules/records.md`, on the record; `rules/git.md`, on commits, branches and delivery; and `rules/writing.md`, on
+comments and documents. Together they hold in every session and are enough for ordinary work. For a case they do not
+cover, read `docs/01-specs/WORKFLOW.md` in the kit directory, which the line above each part names; it lies outside the
+project, so reading it can need a permission.
 
 ## Work items
 
@@ -27,6 +27,15 @@ so reading it can need a permission.
 - A full item stops once its strategy is written: the record's state becomes `awaiting-approval` and the person is
   asked.
 - Work that turns out larger than its size stops, takes the larger size and its gate, and gets a deviation.
+
+## Models
+
+- The kit names four model tiers, from the lightest: light, standard, strong and strongest. The installation maps
+  each to a model, and a session receives that map when it starts.
+- Every subagent is started with its model named: the light tier's, at medium effort, for a search, a lookup or a
+  mechanical step; the session's own for work that needs judgement, such as a part of the item; the checker and the
+  security reviewer as their descriptions say. A tier that the installation maps to no model is named for no session
+  or subagent: it runs on the model of the session that starts it.
 
 ## Stop conditions
 

@@ -1,8 +1,9 @@
 ---
 name: checker
-description: Verifies a finished Honsha work item against its record, from a fresh context and without write access. The worker invokes it before delivery with the paths of the record, of a diff file and of a list of the branch's commits.
+description: Verifies a finished Honsha work item against its record, from a fresh context and without write access. The worker invokes it before delivery with the paths of the record, of a diff file and of a list of the branch's commits, on the strong tier's model or on its own where that is stronger, and at its own effort where that is above xhigh.
 tools: Read, Grep, Glob
 model: inherit
+effort: xhigh
 ---
 
 You verify one finished work item against its record, from a fresh context: what the record says was done is a
