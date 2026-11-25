@@ -460,6 +460,25 @@ scanner: the six choices and the trial's download listed under "For the person" 
   its characters from their code points, and the source holds none.
 - `skills/security-testing/SKILL.md` holds 7,798 of its 7,800 characters, `docs/01-specs/WORKFLOW.md` 43,088 of its
   43,100.
+- The verification ran again on `675bb17`, and passed. The third security review, of the diff since `0252bd3`, passes
+  and confirms both findings fixed. Its three weak points, none exploitable as written, are left to the person, who
+  reads them in the pull request: 1, the project's own bots, a deleted account or a removed collaborator counting as
+  outsiders, where the finding is still listed; 2, `{owner}/{repo}`, which `gh` may fill from another remote than the
+  one the scan read, in a clone with more than one; 3, the list of refs no longer capped, which lets a stranger lengthen
+  the report, as many findings in one commit already could. Each fix would change a rule or the report again, and call
+  for another review.
+- The first check, of `675bb17` (full), fails on two findings: the reads of the kit's pull request 61 and of its
+  repository's visibility went beyond the boundary with no deviation; and the comment on the mirror's `info/attributes`
+  said they unset `diff`, where `!diff` leaves it unspecified. Fixed in a commit of its own: those reads, and the
+  trial's second download of the same archive for its diagnosis, are under "Deviations"; the comment says what the line
+  does and why `-diff` would not do, and a line of the opening comment wider than the file's others is wrapped. The fix
+  changes comments only, so no further security review is due.
+- The check found no run of the real scanner on the final script, since the trial's last round ran before `0252bd3`.
+  The script as it now stands ran in the trial's scratch repository, with the remote's default branch moved for the run
+  to a branch whose `.gitleaksignore` lists only the npm token, then put back: exit 1, in 9.4 seconds, 5 refs and 12
+  commits read, the four other findings with their lines masked and their refs, the Slack token's `refs/tags/v1`, the
+  GitLab token's "no branch or tag, only refs/pull/1/head", the others' branches and tag. No value, identity or path of
+  the scratchpad was in the output; the clone was unchanged, and no temporary folder was left.
 
 ## Verification
 
@@ -469,5 +488,11 @@ scanner: the six choices and the trial's download listed under "For the person" 
   criterion 4's rule on a finding gains a case. In a public repository, a finding that only the refs of pull requests
   reach, each opened by someone outside the project, is listed apart, neither a stop nor urgent, since anyone can open
   such a pull request.
+- Beyond the boundary on what is read, from the checker's finding: to try the command that GitHub's piece gives for
+  who opened a pull request, the session read the kit's pull request 61 through GitHub's API, with
+  `gh pr view 61 --json isCrossRepository`, then `--json authorAssociation`, which `gh pr view` lacks, and
+  `gh api repos/{owner}/{repo}/pulls/61 --jq .author_association`, and the kit's repository's visibility, with
+  `gh repo view --json visibility`. The trial's first round downloaded the same archive of gitleaks a second time,
+  checked against the pin, for its diagnosis, and it was deleted after.
 
 ## Outcome

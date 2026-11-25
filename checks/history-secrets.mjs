@@ -19,9 +19,9 @@
 // security review put them, and prints each other one by commit, file, line and rule, with its fingerprint, whether the
 // default branch holds its commit, the refs that reach it, which tell a branch or a tag from a ref such as a pull
 // request's, which someone outside the project can add, and its line read from the mirror, with the value found and
-// every run of characters that could be a value masked. It never prints a value, a commit's author or the remote's address, which can hold a
-// credential, nor a control character of the history: what it prints reaches a session's transcript, which leaves the
-// host.
+// every run of characters that could be a value masked. It never prints a value, a commit's author or the remote's
+// address, which can hold a credential, nor a control character of the history: what it prints reaches a session's
+// transcript, which leaves the host.
 //
 // Everything it downloads or makes is in a temporary folder outside the clone, deleted when it ends, on an error too:
 // it changes nothing in the clone and installs nothing. Exit code 0 when it finds nothing, 1 with findings, and 2 on an
@@ -237,8 +237,8 @@ function remoteOf(clone) {
  * objects, unless the clone is shallow or partial and lacks some of them.
  *
  * The repository's own attributes could mark a file of text `binary` or `-diff`, and `git log -p` would then give no
- * patch for it: the mirror's `info/attributes`, which take precedence, unset the attribute for every file, so that git
- * tells text from binary by the content alone.
+ * patch for it: the mirror's `info/attributes`, which take precedence, leave `diff` unspecified for every file with
+ * `!diff`, so that git tells text from binary by the content alone. `-diff`, which unsets it, would hide every patch.
  * @param {string} clone the clone's top folder, or its git folder when it is bare
  * @param {string} dir
  */
@@ -498,7 +498,7 @@ export const printable = (text) =>
  * @param {string} mirror
  * @param {Finding} finding
  * @param {Set<string>} onDefault
- * @param {Map<string, string>} [reached] the refs that reach each commit already read, since many findings can share one
+ * @param {Map<string, string>} [reached] the refs that reach each commit already read: many findings can share one
  */
 export function describe(mirror, finding, onDefault, reached = new Map()) {
   const line = lineOf(mirror, finding);
