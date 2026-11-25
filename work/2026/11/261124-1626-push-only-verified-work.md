@@ -348,6 +348,19 @@ approval on to this item's session.
   weak point: the comment in `project.yml` still said that the token goes to the kit's script alone. The comment now
   says, as the README does, that the token is in that step's environment alone and that code in the job can still
   read it.
+- The repeated security review of `1d24ac7`, on Opus, passed: that weak point is fixed. Its one weak point, left to the
+  person: the comment does not say, as the README does, that the two checkouts get the token too. It is the wording of
+  a comment whose conclusion holds, and each change to the workflow calls for another review.
+- The checker, on Opus, read `1d24ac7` and failed it with three findings (Verification).
+- Its finding 1: two lines that the work rewrote, in the workflow's contract and in the piece's cost paragraph, ran
+  past 120 characters, which the formatter leaves as they are in prose; both paragraphs are wrapped again. Two more
+  lines of the change ran past it, the notice in `project.yml` and the first line of `services/github/runs.mjs`; the
+  notice is shorter, and the comment wrapped again.
+- Its finding 2: the interface did not name `services/github/runs.mjs`, and its claim that `checks/interface.test.mjs`
+  fails on a script it does not name held only for `checks/` and `hub/`. The interface names the script among those
+  outside it, and the test reads the scripts of each piece of `services/` too: with the name written wrong, it fails.
+- Its finding 3: the comment in `project.yml` on the token did not say that the checkouts get it too, as the last
+  security review's weak point said. The comment now says it, as the README does.
 
 ## Verification
 

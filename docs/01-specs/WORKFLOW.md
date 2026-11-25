@@ -373,9 +373,10 @@ default branch. It meets this contract.
    A later push to a pull request's branch whose new commits change only records, after a run on the branch's earlier
    tip that passed, as the service reports it, leaves out the `setup` and `verify` commands, and its run says so: that
    run checked the same code, the kit's checks still read the records, and the session has run on them those that read
-   the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a pull request and every push to the default branch run them all: the default branch is
-   where what the skip leaves out is caught, such as a record that a formatter of the `verify` list reads, or a default
-   branch that moved between the run on the work and the closing commit.
+   the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a pull request and every
+   push to the default branch run them all: the default branch is where what the skip leaves out is caught, such as a
+   record that a formatter of the `verify` list reads, or a default branch that moved between the run on the work and
+   the closing commit.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
    itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
    branch and its last one. On a push to the default branch, the default branch's name, its tip before the push and the

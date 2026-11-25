@@ -1,6 +1,6 @@
-// Tells whether the latest run of the current workflow on a pull request's earlier tip concluded with success, read from
-// GitHub's API, so that project.yml leaves a project's setup and verification out of a later push that changes only
-// records only after a run that passed (the piece's README, "Checks on pull requests and on the default branch").
+// Tells whether the latest run of the current workflow on a pull request's earlier tip concluded with success, read
+// from GitHub's API, so that project.yml leaves a project's setup and verification out of a later push that changes
+// only records only after a run that passed (the piece's README, "Checks on pull requests and on the default branch").
 //
 //   node services/github/runs.mjs <commit> <branch>
 //

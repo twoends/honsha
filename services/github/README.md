@@ -212,8 +212,9 @@ What it costs: nothing on a free account, within a limit. On a private repositor
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
 minutes count for more than Linux ones. A run of project.yml is one Linux job, counted to the account that owns the
 calling project; on a later push that changes only records, after a run that passed, it holds the checkouts, the read
-of that run and the kit's checks alone, and counts as one minute while they take less. With no payment method on the account, runs stop when that amount is used and nothing
-is billed. On a public repository the standard runners are free.
+of that run and the kit's checks alone, and counts as one minute while they take less. With no payment method on the
+account, runs stop when that amount is used and nothing is billed. On a public repository the standard runners are
+free.
 
 A project's own workflows, such as its application's checks, are the project's: this wiring does not reach them, and
 they run at every push they are wired for, which the rule on pushes (core rules, Delivery) keeps few.

@@ -59,9 +59,12 @@ test("the interface names the marketplace, the plugin and its settings as the ma
   }
 });
 
-/** The scripts of `checks/` and `hub/` that run as commands, by their path from the kit's root. */
+/** The scripts of `checks/`, `hub/` and each piece of `services/` that run as commands, by their path from the root. */
 function scripts() {
-  return ["checks", "hub"]
+  const pieces = entries("services")
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => `services/${entry.name}`);
+  return ["checks", "hub", ...pieces]
     .flatMap((folder) =>
       entries(folder)
         .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs") && !entry.name.endsWith(".test.mjs"))
@@ -94,7 +97,7 @@ test("every script that runs as a command is in the interface, and every command
   }
   for (const { script } of listed) assert.ok(all.includes(script), `${script} does not run as a command`);
   // A script that the text names, inside the interface or as left out of it, is one the kit has.
-  for (const script of found(/`((?:checks|hub)\/[\w-]+\.mjs)`/g, text)) {
+  for (const script of found(/`((?:checks|hub|services\/[\w-]+)\/[\w-]+\.mjs)`/g, text)) {
     assert.ok(all.includes(script), `${script} is named, and does not run as a command`);
   }
   for (const script of new Set(listed.map((command) => command.script))) {
