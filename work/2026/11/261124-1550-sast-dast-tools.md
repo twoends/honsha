@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -421,7 +421,13 @@ choices and the trial's downloads listed under "For the person" included.
 - The hub says that `261123-2103` is merged into the kit's default branch, at `042cf46`: this item, merged second, is
   brought up to date before its merge, and sets the workflow's budget for both. The merge waits for the repeated check
   of the finding above (`honsha:branch-update`).
+- The person accepted the finding (Deviations); the state is `in-progress`.
 
 ## Verification
+
+## Deviations
+
+- The two commits that wrap lines, `7f6dc23` and `286dff4`, make one correction in two commits, which the first check
+  found. Accepted by the person on 2026-11-25, in this item's session.
 
 ## Outcome
