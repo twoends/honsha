@@ -22,7 +22,9 @@ In this order. A step that finds the project in order says so in a line; a gap i
 3. **The settings of the hosting service** that the rules rely on, as the piece lists them under "Settings the rules
    rely on": the merge method, merged branches deleted, alerts on vulnerable dependencies.
 4. **Dependencies,** against the skill `honsha:dependencies`: pinned with a lockfile and installed without install
-   scripts; the package manager's vulnerability report and its list of outdated dependencies.
+   scripts; the waiting period and the refusal of install scripts held by the project's configuration, where its
+   package manager can, with the version of the package manager that applies it; the package manager's vulnerability
+   report and its list of outdated dependencies.
 5. **What the project ignores:** its `.gitignore` holds `.claude/worktrees/`, where the platform makes its worktrees,
    and `.honsha-checker.*`, the checker's input files, which hold a diff; otherwise a commit may take them up. The kit
    needs no other file in the project: its sessions receive it once the project is registered.

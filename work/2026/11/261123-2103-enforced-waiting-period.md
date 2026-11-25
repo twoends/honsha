@@ -195,3 +195,16 @@ Approved by the person on 2026-11-25, in this item's worker session, as written 
   profile key `dynamic-testing`; this item adds none. The item merged second is brought up to date before its merge
   and sets the workflow's budget for both.
 - The approval is written and the state set to `in-progress`.
+- No part runs in parallel: three short texts that must agree, and one number.
+- `skills/dependencies/SKILL.md`: a last bullet, "The package manager holds the rule, where it can", as the strategy
+  describes it, with npm 12's settings, the fix's command and Claude Code's two cases in four sub-bullets. The bullet
+  "Pinned" is unchanged.
+- `skills/assessment/SKILL.md`: step 4 reads the waiting period and the refusal of install scripts held by the
+  project's configuration, where its package manager can, with the version of the package manager that applies it.
+  "What is proposed" and the other steps are unchanged.
+- `docs/01-specs/WORKFLOW.md`, "Dependencies": one sentence after the waiting period's, 194 characters with the
+  paragraph's reflow; the document is now 39487 characters. Its budget in `checks/budgets.test.mjs` goes from 39300 to
+  39500, what this item needs; `261124-1550` raises the same line for its own change.
+- The kit's own `.npmrc` holds `min-release-age=7` and `strict-allow-scripts=true` and no `ignore-scripts`, and
+  `package.json` asks npm `>=12 <13` under `devEngines.packageManager` with `onFail: error`. The kit holds no Claude
+  Code dependency, and its pipeline installs Claude Code with `--global`. The kit meets the rule as the skill words it.
