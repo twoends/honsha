@@ -18,3 +18,7 @@ These rules are the same in every project that has dependencies. A project adds 
 - **Any other version waits.** A version is taken only when it was released at least 7 days earlier, so that a release
   withdrawn or found compromised in its first days is not taken. Ordinary updates come from the periodic review
   (`honsha:review`).
+- **Claude Code is not held back.** The waiting period does not apply to Claude Code, the platform the kit runs in:
+  the kit follows the version that the host runs. The host updates it on its own schedule, and the kit's hooks, agents
+  and skills are written for that version, so a project that held it back would run the kit on a platform older than
+  the one in use.
