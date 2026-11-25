@@ -468,9 +468,11 @@ know the current rules.
 
 A dependency is code the project runs without having written it. So it is pinned, so that a build installs what was
 checked; its known vulnerabilities are looked for and fixed at once; and any other new version waits a few days, so
-that a release withdrawn or found compromised early is not taken. The rules are in the skill `honsha:dependencies`,
-which a work item invokes when it changes a dependency or answers a vulnerability report. Ordinary updates are left
-to the periodic review (`honsha:review`), so that they do not interrupt other work.
+that a release withdrawn or found compromised early is not taken. Where the package manager can hold the wait and
+refuse install scripts, the project's configuration has it do both, so that they hold at every install and not only
+where someone remembers them. The rules are in the skill `honsha:dependencies`, which a work item invokes when it
+changes a dependency or answers a vulnerability report. Ordinary updates are left to the periodic review
+(`honsha:review`), so that they do not interrupt other work.
 
 ---
 
