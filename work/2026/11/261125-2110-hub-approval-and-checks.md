@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: small
 kind: rule
-state: in-progress
+state: done
 areas: []
 created: 2026-11-25
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 60
+model: claude-sonnet-5-5
 effort: high
 checks: []
 ---
@@ -74,7 +74,96 @@ counts.
   row, the board's arrow, step 2 of the flow and the trigger for custom code that named buttons for approvals. The
   specification is part of the change (worker's procedure, While working), so no scope or criterion changes. The
   verification is then run again, and a repeated check reads what changed.
+- The profile has no `dynamic-testing`, and the security review is not due: the change is none of the kinds that the
+  skill names. The second check's one finding, a sentence in Verification that was neither a result nor a report, was
+  moved here; the third check's, clauses in the shortened reports that told what followed each check, was fixed by
+  deleting them.
+- The checks of pull request 60 all passed on the work: the check of personal content, the project's checks, and the
+  verification on Ubuntu and on Windows. The person merged the pull request before this closing commit, so the closing
+  is made on a branch of its own cut from the default branch, in a pull request that holds only this record.
 
 ## Verification
 
+Run on commit 12dfcd7, from the root of the worktree: `node checks/verify.mjs`, which ran the profile's seven
+commands, all passed.
+
+- `npx --no-install prettier --check .`: passed, every file in Prettier style.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 255 tests of
+  255, among them the budgets of the files and the total of a session's start.
+- `claude plugin validate .`: passed with the warnings it gives of every run on the kit: no version, no license file,
+  no icon and no install line in the README. None comes from the change.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, the 2 commits of the branch follow the rules.
+
+### Checker, first check
+
+Verdict: fail, on commit 06a0013. Criteria 1 to 3 met. Findings: the verification was empty; and
+`docs/01-specs/ARCHITECTURE.md` still sent approvals through the messaging app and the board.
+
+### Checker, second check
+
+Verdict: fail, on commit 12dfcd7, reading what changed since 06a0013. Criteria 1 to 5 met. Finding: a sentence in
+Verification that was neither a command's result nor a report.
+
+### Checker, third check
+
+Verdict: fail, on commit 12dfcd7, reading the record alone. Criteria 1 to 5 met. Finding: the shortened reports of the
+first two checks held clauses on what followed each check, which the log already says.
+
+### Checker, fourth check
+
+Read commit 12dfcd7, with the diff and the commit list empty since nothing outside the record had changed.
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The hub's procedure gives approvals and deviations to the person in the worker's session, and the hub says where to
+   give them: met, `agents/hub.md` lines 50-52; the reason is in the workflow (Procedure step 4).
+2. The hub reads a waiting worker's checks once, tells the worker when they have ended, and neither of them polls: met,
+   `agents/hub.md` lines 52-53; `docs/01-specs/WORKFLOW.md` lines 313-315.
+3. The worker's procedure agrees and points to the rule: met, `agents/worker.md` lines 22-24 and 84-85, which point to
+   "core rules, Delivery" and "workflow, Pushes".
+4. Each change fits its budget, or the budget is raised with its reason: met, `checks/budgets.test.mjs` lines 24, 25 and
+   29 and `hooks/hooks.test.mjs` line 110 match the raises the log gives with their reasons, and the recorded test run
+   passed.
+5. The profile's `verify` passes: met. Verification records all seven commands as passed on commit 12dfcd7, and nothing
+   outside the record has changed since.
+
+- **Intent:** in order. The profile says `public: true`, and the intent restates the request without quoting the
+  person.
+- **Scope:** in order. The diff since the last check is empty.
+- **Comments and documents:** in order. The diff since the last check is empty.
+- **Gates:** in order. Nothing outside the record changed, and the record names no hosting service and nothing about a
+  user, a user's project or an installation.
+- **Verification evidence:** in order. Covers formatting (prettier), lint (oxlint, correctness and suspicious
+  categories in `.oxlintrc.json`), types (tsc) and tests (node --test). Static security testing is not in `verify`, and
+  no comment in `.hub/profile.yml` says why. No gate asks for it, so this is not a finding. The profile has no
+  `dynamic-testing`.
+- **Security review:** not due.
+- **Record:** in order. The last check's finding is fixed. The shortened reports of the first, second and third checks
+  now keep only the commit, what was read, the criteria and the findings. What followed each check is in the log.
+  Verification holds only command results and checker reports.
+- **Commits:** in order. No commit since 12dfcd7. Verification records `node checks/commits.mjs` as passed on the
+  branch's 2 commits.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Whether the record's edits since 12dfcd7 left the earlier log entries unchanged. The diff file leaves the record out,
+  and the committed version cannot be compared without git. The one log change visible is an addition at the end of the
+  last bullet (lines 79-80), which is consistent with an append-only log.
+
 ## Outcome
+
+The hub reads a worker's checks once and tells it, and the person gives the approval of a full item's strategy, and the
+acceptance of a deviation, in the worker's own session: both are in the workflow (Procedure, step 4; Pushes), in the
+hub's procedure (Follow) and, as far as the worker is concerned, in the worker's. The architecture no longer sends
+approvals through the messaging app or the board. The budgets of the hub's and the worker's procedures and of the
+workflow are raised by what the text needs, and with them the total of a session's start. Pull request 60 was merged
+with all its checks green; no deferred check is declared.
