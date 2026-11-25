@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: flow
-state: in-progress
+state: done
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 56
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -258,7 +258,91 @@ item's session, where the person confirmed it the same day.
   none of what `honsha:security-review` names, and the profile lists no path for it.
 - The checker failed the item on `b1e1bde` for one finding: Verification held a sentence on the security review,
   which belongs in the log. Both sentences that were not a command's result are now in the log above.
+- The verification passed again on `56ab59e`. The repeated check on it failed for one finding: Verification did not
+  yet hold the first check's report, which this session meant to copy with the last one. Verification now holds each
+  earlier report's verdict and findings; nothing committed changed, so the verification on `56ab59e` stands.
+- The repeated check on `56ab59e` passed. The branch was pushed and pull request 56 opened; its run on `56ab59e`
+  passed: `verify` on Ubuntu and on Windows, `project / checks` and `personal content`.
 
 ## Verification
 
+`node checks/verify.mjs`, on `56ab59e`, from the worktree's root:
+
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 238 tests,
+  0 failed.
+- `claude plugin validate .`: passed.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed, 4 commits.
+
+### Checker report, on `b1e1bde`
+
+**Verdict:** fail
+
+**Findings**
+
+1. The record's "Verification" (line 270) ends with "The security review does not apply: the change touches a skill and documents." The core rules (The record) say that Verification holds the verification commands with their results and the agents' reports, nothing else. This sentence records a decision about the review, so it belongs in the log, which does not have it now (only the strategy says it). Move it into the log.
+
+### Checker report, on `56ab59e`, a repeated check since `b1e1bde`
+
+**Verdict:** fail
+
+**Findings**
+
+1. The record's Verification does not hold the checker report on b1e1bde. `agents/worker.md` step 4 says to copy each checker report under "Verification" with the commit it read. The core rules (The record) say an earlier report keeps its verdict and findings. Verification (record lines 262-273) lists only the seven commands; the first check appears only as a log line (lines 259-260). Fix: add that report's verdict (`fail`) and its one finding under Verification, with b1e1bde.
+
+### Checker report, on `56ab59e`, a repeated check since `56ab59e`
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+The diff since `56ab59e` is empty, so every criterion stands as the earlier checks read it on the branch's whole diff. I re-read the files at HEAD (`56ab59e`) for the evidence below.
+
+1. Shared-file test (lines apart, either merge order, no link in meaning, lockfile or generated file never shared, schema or configuration never shared): met, `skills/parallel-parts/SKILL.md` lines 6-10.
+2. Item open until merged or dropped, run at once only if the test passes, the hub decides and the later one waits in doubt: met, `skills/parallel-parts/SKILL.md` lines 27-30.
+3. Brief lists the other open items and their files, and the worker asks the hub first: met, `skills/parallel-parts/SKILL.md` lines 32-33.
+4. Hub tells the other worker, both logs name the item, file and part, the item merged second is brought up to date, a refused item waits: met, `skills/parallel-parts/SKILL.md` lines 34-38.
+5. A shared budget, raised by each item and set by the item brought up to date: met, `skills/parallel-parts/SKILL.md` lines 39-41.
+6. The description names the four moments: met, `skills/parallel-parts/SKILL.md` line 3.
+7. `agents/hub.md` invokes the skill where another item is open and at the two moments in "Follow": met, `agents/hub.md` lines 36 and 48-49. The rest of the file is unchanged, as the full-diff check found; nothing has changed since then.
+8. Reasons in "Parallel work", the exception in "Keeping a work branch up to date", the budget raised with its reason: met, `docs/01-specs/WORKFLOW.md` lines 166-170 and 325-326, `checks/budgets.test.mjs` line 29 (39300); the reason is in the record's log (lines 249-252).
+9. The profile's `verify` commands pass: met on `56ab59e`, record "Verification" lines 267-276.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting (prettier), lint (oxlint), types (tsc), tests (node --test)
+- **Security review:** not due
+- **Record:** in order
+- **Commits:** in order
+
+The last report's finding is fixed. "Verification" now holds the checker report on `b1e1bde`, with its verdict (`fail`) and its one finding, at record lines 278-284. It also holds the report on `56ab59e`, with its verdict and finding, at lines 286-292. Each earlier report keeps only its verdict and findings, as the core rules (The record) ask. The log gained one bullet at its end (lines 261-263) and nothing above it changed: the Verification block moved down by exactly those three lines.
+
+The record's new uncommitted part still passes the shape that `checks/record.mjs` checks, from reading its code:
+- the sections are the ones a full item keeps;
+- at `in-progress`, every section before Verification is written;
+- the intent quotes nothing.
+
+The new content quotes nothing the person said.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The hosting service's run on the pull request, which the strategy names for criterion 9: the branch is pushed only after this check.
+- `node checks/record.mjs` has a recorded result only for the record as it stood before this fix. Reading its code, the current record passes, and the closing commit runs it again (core rules, Delivery).
+
 ## Outcome
+
+`honsha:parallel-parts` lets two parts of an item, or two items, change one file where their changes lie apart, and
+says how the hub coordinates the items open at once in a project: the list that the brief of each item gives, who
+decides and when, what both logs say, which item is brought up to date before its merge, and how a budget that both
+raise is shared. The hub invokes the skill before an item starts where another is open, and when a worker asks for a
+file another open item changes or one of two items that share a file is merged. The workflow gives the reasons, and
+its budget is raised to 39,300. No check is deferred: every criterion is read from the change itself.
