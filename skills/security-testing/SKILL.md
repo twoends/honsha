@@ -28,8 +28,8 @@ An assessment reads which kinds apply and which the profile has, and proposes an
 - **Dynamic testing is `dynamic-testing`,** a list of commands that every verification runs after `verify`. They
   start a local instance from the checkout and attack it, with no secret: the pipeline's job holds none, and a test
   value stands in for each. On a worker's host too, nothing reaches the instance from the host's environment or from a
-  file of variables that is not committed, and it publishes no port, or only on the host's loopback, so that neither a
-  real credential nor the network around the host is within the scan's reach. The instance and the scanner run best
+  file of variables that is not committed, and it publishes no port, or only on the host's loopback, so that no real
+  credential reaches the instance and no other machine reaches it while it runs. The instance and the scanner run best
   in containers on one network, so that one command runs on every host and in the pipeline, and stops both when the
   scan ends. A passive baseline scan at least; an
   active scan of the instance, which the run throws away, where it is worth its minutes.

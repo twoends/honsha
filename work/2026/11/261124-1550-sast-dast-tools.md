@@ -406,6 +406,13 @@ choices and the trial's downloads listed under "For the person" included.
 - Lines that the work's edits left wider than the kit's documents, 120 characters, are wrapped in two commits of their
   own: one in the new skill, then one in `project.yml`'s comments, the checker's file, the workflow, GitHub's piece
   and the security review's skill. The words are unchanged.
+- The repeated security review, of `286dff4`, passes with no findings, and confirms both fixed weak points. Its one
+  new weak point: the skill's reason said the network around the host was out of the scan's reach, while publishing
+  no port only keeps other machines from reaching the instance, and an active scan that makes the instance call out
+  could still reach the host's network. Fixed in its own commit: the reason now claims only what the rule gives. A
+  network with no way out for an active scan, which the review proposes, is left to the person: it is a further rule
+  for projects, which the trial did not try. The fix changes only the skill, none of the cases the review guards, so
+  no further review is due.
 
 ## Verification
 
