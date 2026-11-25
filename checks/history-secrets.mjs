@@ -11,15 +11,17 @@
 // The scanner is gitleaks, at the version pinned below with its built-in rules. The script downloads the archive for
 // the host's platform and refuses to extract or run it unless its SHA-256 is the pinned one, so that a release replaced
 // after the pin fails. It runs the scanner on every commit of every ref, and on each merge against its first parent,
-// which a plain `git log -p` leaves out, so that what a merge adds of its own is read. The findings are redacted, and the
-// scanner reads no configuration and no ignore file: the script reads the default branch's. It honours no allowance
-// written inline in the history either, since no review has read one there. The scanner sends nothing out.
+// which a plain `git log -p` leaves out, so that what a merge adds of its own is read. The findings are redacted, and
+// the scanner reads no configuration and no ignore file: the script reads the default branch's. It honours no
+// allowance written inline in the history either, since no review has read one there. The scanner sends nothing out.
 //
 // It leaves out the findings whose fingerprints `.gitleaksignore` lists on the default branch, where an item under the
 // security review put them, and prints each other one by commit, file, line and rule, with its fingerprint, whether the
-// default branch holds its commit, and its line read from the mirror, with the value found and every run of characters
-// that could be a value masked. It never prints a value, a commit's author or the remote's address, which can hold a
-// credential: what it prints reaches a session's transcript, which leaves the host.
+// default branch holds its commit, the refs that reach it, which tell a branch of the repository from a pull request
+// that anyone could open, and its line read from the mirror, with the value found and every run of characters that
+// could be a value masked. It never prints a value, a commit's author or the remote's address, which can hold a
+// credential, nor a control character of the history: what it prints reaches a session's transcript, which leaves the
+// host.
 //
 // Everything it downloads or makes is in a temporary folder outside the clone, deleted when it ends, on an error too:
 // it changes nothing in the clone and installs nothing. Exit code 0 when it finds nothing, 1 with findings, and 2 on an
@@ -80,8 +82,8 @@ export const IGNORE_FILE = ".gitleaksignore";
  * What the scanner asks `git log` for, besides `-p -U0`, which it always gives. `--all` takes every ref of the mirror.
  * A merge is read against its first parent, so that what it adds of its own, as in resolving a conflict, is read; the
  * findings of the branch it brings are then reported again under it. `--diff-merges=remerge` would show the merge's own
- * part alone, but the scanner names a file of a conflict it shows `b/<path>`, which no commit holds. Text conversions and
- * external diff programs, which a user's git configuration can name, would change what the scanner reads.
+ * part alone, but the scanner names a file of a conflict it shows `b/<path>`, which no commit holds. Text conversions
+ * and external diff programs, which a user's git configuration can name, would change what the scanner reads.
  */
 export const LOG_OPTIONS = [
   "--all",
@@ -103,12 +105,17 @@ const GIT_LOCATION = [
   "GIT_NAMESPACE",
 ];
 
-/** The environment of git and of the scanner: no other repository, and no configuration of the scanner's own. */
-function environment() {
+/**
+ * The environment of git and of the scanner: no other repository, no configuration of the scanner's own, and no
+ * replacement of a commit by another, which the refs `refs/replace/` would make and the mirror takes: the scanner reads
+ * each commit as it is.
+ */
+export function environment() {
   const env = { ...process.env };
   for (const name of Object.keys(env)) {
     if (GIT_LOCATION.includes(name) || name.startsWith("GITLEAKS_")) delete env[name];
   }
+  env.GIT_NO_REPLACE_OBJECTS = "1";
   return env;
 }
 
@@ -228,6 +235,10 @@ function remoteOf(clone) {
 /**
  * Makes in `dir` a mirror clone of the clone's remote, which holds every ref the remote serves. It borrows the clone's
  * objects, unless the clone is shallow or partial and lacks some of them.
+ *
+ * The repository's own attributes could mark a file of text `binary` or `-diff`, and `git log -p` would then give no
+ * patch for it: the mirror's `info/attributes`, which take precedence, unset the attribute for every file, so that git
+ * tells text from binary by the content alone.
  * @param {string} clone the clone's top folder, or its git folder when it is bare
  * @param {string} dir
  */
@@ -238,9 +249,28 @@ export function makeMirror(clone, dir) {
   const objects = git(clone, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim();
   const borrow = shallow || partial ? [] : ["--reference", objects];
   const mirror = path.join(dir, "mirror.git");
-  // From the clone's folder, as git itself reads a remote given as a relative path.
-  git(clone, ["clone", "--mirror", "--quiet", ...borrow, url, mirror]);
+  // From the clone's folder, as git itself reads a remote given as a relative path; after `--`, so that no address is
+  // read as an option.
+  git(clone, ["clone", "--mirror", "--quiet", ...borrow, "--", url, mirror]);
+  fs.mkdirSync(path.join(mirror, "info"), { recursive: true });
+  fs.writeFileSync(path.join(mirror, "info", "attributes"), "* !diff\n");
   return mirror;
+}
+
+/**
+ * The refs that reach a commit, at most five named: the repository's own, or, when none does, those of pull requests,
+ * which anyone who can open a pull request adds, from a fork too.
+ * @param {string} mirror
+ * @param {string} commit
+ */
+export function reachedBy(mirror, commit) {
+  const refs = git(mirror, ["for-each-ref", "--contains", commit, "--format=%(refname)"])
+    .split(/\r?\n/)
+    .filter(Boolean);
+  const own = refs.filter((ref) => !ref.startsWith("refs/pull/"));
+  const named = own.length > 0 ? own : refs;
+  const list = named.slice(0, 5).join(", ") + (named.length > 5 ? `, and ${named.length - 5} more` : "");
+  return own.length > 0 ? list : `pull requests only: ${list}`;
 }
 
 /**
@@ -401,19 +431,22 @@ function valueSpans(line, finding) {
     const end = line.indexOf(after);
     return end > 0 ? [[0, end]] : null;
   }
+  // Every place that what precedes it stands, since the line can hold it more than once, as an empty value first.
   const run = new RegExp(RUN.source, "y");
+  /** @type {Array<[number, number]>} */
+  const spans = [];
   for (let at = line.indexOf(before); at >= 0; at = line.indexOf(before, at + 1)) {
     const start = at + before.length;
     let end = -1;
-    if (after) end = line.indexOf(after, start + 1);
+    if (after) end = line.indexOf(after, start);
     else {
       run.lastIndex = start;
       const found = run.exec(line);
       if (found) end = start + found[0].length;
     }
-    if (end > start) return [[start, end]];
+    if (end > start) spans.push([start, end]);
   }
-  return null;
+  return spans.length > 0 ? spans : null;
 }
 
 /**
@@ -453,6 +486,14 @@ function lineOf(mirror, finding) {
 }
 
 /**
+ * A text with its control and format characters written as escapes: a path or a line that the history holds could
+ * otherwise drive the terminal, add lines to the report or hide part of it.
+ * @param {string} text
+ */
+export const printable = (text) =>
+  text.replace(/[\p{Cc}\p{Cf}]/gu, (char) => `\\u{${(char.codePointAt(0) ?? 0).toString(16)}}`);
+
+/**
  * The lines that report one finding.
  * @param {string} mirror
  * @param {Finding} finding
@@ -461,10 +502,11 @@ function lineOf(mirror, finding) {
 export function describe(mirror, finding, onDefault) {
   const line = lineOf(mirror, finding);
   return [
-    `${finding.rule} in ${finding.file}, line ${finding.line}, commit ${finding.commit}`,
-    `  fingerprint: ${fingerprint(finding)}`,
+    printable(`${finding.rule} in ${finding.file}, line ${finding.line}, commit ${finding.commit}`),
+    printable(`  fingerprint: ${fingerprint(finding)}`),
     `  on the default branch: ${onDefault.has(finding.commit) ? "yes" : "no"}`,
-    `  line: ${line === null ? "(it could not be read)" : maskLine(line, finding)}`,
+    `  reached by: ${reachedBy(mirror, finding.commit)}`,
+    `  line: ${line === null ? "(it could not be read)" : printable(maskLine(line, finding))}`,
   ];
 }
 

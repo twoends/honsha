@@ -368,7 +368,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
 7. **The static testing of its pipeline's configuration** (workflow, Security testing): free tools that read the
    service's pipeline files, and which of the service's own scanners a free account has.
 8. **The refs it serves beyond branches and tags,** which a mirror clone takes for the scan of the history (workflow,
-   Security testing), and what it keeps that no ref holds, and how that is removed.
+   Security testing), how to tell a pull request opened from a fork, and what the service keeps that no ref holds, and
+   how that is removed.
 
 ### Checks on pull requests and on the default branch
 

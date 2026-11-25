@@ -418,7 +418,37 @@ scanner: the six choices and the trial's download listed under "For the person" 
   part, the commits' author or the remote's path, searched for in each; the clone was unchanged after each run, and no
   temporary folder was left. A merged branch's finding reported again under its merge did not arise, since the merged
   branch held none.
+- The security review of `d9fe419` fails on one finding: anyone who can open a pull request, from a fork of a public
+  repository any account, adds a ref that the scan reads and that stays after the pull request is closed, so a stranger
+  could plant findings that stop every assessment and alarm every review, and the report did not tell them from the
+  repository's own branches. Fixed in a commit of its own, inside the scope: the report names the refs that reach each
+  finding's commit, the repository's own or else pull requests only, and the skill takes a finding that only pull
+  requests opened from forks reach as possibly anyone's, reported with them and stopping nothing. GitHub's piece says
+  how to tell such a pull request, `gh pr view <number> --json isCrossRepository`, tried on pull request 61, and the
+  workflow's point 8 names it. The case changes criterion 4's rule on a finding (Deviations).
+- The review's weak points: 1, a path printed raw, fixed: the script escapes the control and format characters of all
+  it prints from the history. 2, the value placed at the first place of what precedes it in the match, fixed: every
+  place is masked, and an empty value is passed over; the masking stays a heuristic. 3, an error discarding the whole
+  scan, left to the person: the script exits 2 with the message, which the assessment or the review reports, and keeps
+  no partial list that a failed run cannot vouch for. 4, the remote's address given to `git clone` with no `--`, fixed.
+  5, the replacement refs, fixed: git runs with `GIT_NO_REPLACE_OBJECTS=1`. 6, an entry of `.gitleaksignore` not held
+  to the security review by a check, left to the person: the skill's rule in "A finding" already has a project list its
+  tools' ignore files under `security-review`, so that `checks/record.mjs` names a change to them. 7, an interrupted run
+  leaving its mirror, left to the person: the folder is the user's own, made by `mkdtemp`.
+- What the review could not read, the attributes of a bare repository: on this host's git 2.53 the mirror does not read
+  `.gitattributes` from `HEAD`, but it does where `attr.tree` names a tree, as some versions of git do unasked for a bare
+  repository, and a file of text marked `-diff` or `binary` then gives no patch. Fixed with the rest: the mirror's
+  `info/attributes`, which take precedence, unset `diff` for every file. Its test reads the history with
+  `attr.tree=HEAD`, with and without that file.
+- With the case of a fork, `skills/security-testing/SKILL.md` holds 7,728 characters, its budget 7,800;
+  `docs/01-specs/WORKFLOW.md` holds 43,083 of its 43,100. The script's test has 18 tests.
 
 ## Verification
+
+## Deviations
+
+- From the security review's finding: criterion 1's report also names the refs that reach each finding's commit, and
+  criterion 4's rule on a finding gains a case, a finding that only pull requests opened from forks reach, which is
+  reported with them and stops nothing, since anyone can open such a pull request.
 
 ## Outcome

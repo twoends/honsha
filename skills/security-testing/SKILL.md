@@ -78,12 +78,13 @@ still holds it.
   serves, those it keeps for pull requests included, which hold deleted branches' commits; what the service keeps
   beyond any ref is in its piece. A host that cannot run the scanner says so, with the system's message.
 - **Its report** gives the scanner's version, the refs and commits read, and each finding by commit, file, line and
-  rule, with its fingerprint, whether the default branch holds it, and its line with any value masked. A session never
-  reads a value: it opens no file at a finding's commit, and scans with the script alone.
+  rule, with its fingerprint, whether the default branch holds it, the refs that reach it, and its line with any value
+  masked. A session never reads a value: it opens no file at a finding's commit, and scans with the script alone.
 - **A finding is a secret** unless its file, rule and masked line show otherwise, as a test's fixture, an example or an
   identifier does, with the reason written. A secret stops an assessment (core rules, Stop conditions) and is urgent at
   the review: the person gets the list at once, revokes the secret at its provider and decides whether the history
-  changes. No session changes a history, nor writes anywhere public where a live secret is.
+  changes. No session changes a history, nor writes anywhere public where a live secret is. One that only pull requests
+  opened from forks reach, as the service's piece tells, can be anyone's: it is reported with them, and stops nothing.
 - **A public repository's history is public:** a secret there is taken for used, and revoking it is the remedy, since
   forks, clones and archives keep it whatever the history becomes. In a private one revoking comes first too, and a new
   history narrows who reads it later, at the cost of every clone and open branch. Made public, a repository publishes

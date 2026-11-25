@@ -247,7 +247,9 @@ branches, `refs/heads/`, and the tags, `refs/tags/`, GitHub serves for each pull
 tip of its branch, and, while it is open, `refs/pull/<number>/merge`, the merge that GitHub tests. The `head` ref stays
 after the branch is deleted and after the pull request is closed without a merge, so it keeps the branch's commits for
 anyone who can read the repository: `git ls-remote origin 'refs/pull/*'` lists them. The namespace is read-only, and
-only GitHub Support removes a pull request's refs.
+only GitHub Support removes a pull request's refs. Anyone who can open a pull request adds one, from a fork too, which
+any account can make of a public repository: `gh pr view <number> --json isCrossRepository` says `true` for a pull
+request opened from a fork, whose finding the scan reports and stops nothing for.
 
 What GitHub keeps beyond any ref, no clone and no scan reaches:
 

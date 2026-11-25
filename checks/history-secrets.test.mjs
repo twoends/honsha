@@ -11,12 +11,15 @@ import {
   LOG_OPTIONS,
   SCANNER,
   archiveFor,
+  environment,
   fingerprint,
   install,
   isName,
   makeMirror,
   maskLine,
   parseReport,
+  printable,
+  reachedBy,
   readHistory,
   readIgnored,
   scan,
@@ -38,6 +41,7 @@ const VALUES = {
   pull: "FAKEsecretKeptByAPullRequest0123",
   tag: "FAKEsecretOnlyInATag0123456789",
   merge: "FAKEsecretAddedByAMerge0123456789",
+  hidden: "FAKEsecretInAFileMarkedBinary0123",
 };
 
 // Every folder the tests make is in one, deleted at the end.
@@ -121,6 +125,12 @@ function fixture() {
   git(work, ["add", "app.txt"]);
   git(work, ["commit", "-q", "--no-edit"]);
   const merge = git(work, ["rev-parse", "HEAD"]);
+
+  // A file of text that the repository's attributes mark as binary, which `git log -p` would give no patch for.
+  write(work, ".gitattributes", "hidden.txt -diff\n");
+  commit(work, "Mark a file as binary");
+  write(work, "hidden.txt", `token = ${VALUES.hidden}\n`);
+  commit(work, "Add a file marked as binary");
 
   const listed = `${added}:config.env:generic-api-key:1`;
   git(work, ["checkout", "-q", "-b", "stale"]);
@@ -274,6 +284,45 @@ test("the scanner reads what a merge adds of its own, as a conflict's resolution
   assert.ok(!args.some((arg) => arg.startsWith("--config")));
 });
 
+test("the scanner reads a file of text that the repository's attributes mark as binary", () => {
+  const mirror = makeMirror(shared.clone, temporary("honsha-history-mirror-"));
+  assert.equal(fs.readFileSync(path.join(mirror, "info", "attributes"), "utf8"), "* !diff\n");
+  // A bare repository reads the attributes of a tree where `attr.tree` names one, as some versions of git do unasked.
+  const read = ["-c", "attr.tree=HEAD", "log", "-p", "-U0", ...LOG_OPTIONS];
+  assert.ok(git(mirror, read).includes(`+token = ${VALUES.hidden}`));
+  fs.rmSync(path.join(mirror, "info", "attributes"));
+  assert.ok(!git(mirror, read).includes(`+token = ${VALUES.hidden}`));
+});
+
+test("git and the scanner read no other repository, no configuration of the scanner's and no replaced commit", () => {
+  const saved = { ...process.env };
+  Object.assign(process.env, { GIT_DIR: "elsewhere", GITLEAKS_CONFIG: "rules.toml", GIT_NO_REPLACE_OBJECTS: "" });
+  try {
+    const env = environment();
+    assert.equal(env.GIT_DIR, undefined);
+    assert.equal(env.GITLEAKS_CONFIG, undefined);
+    assert.equal(env.GIT_NO_REPLACE_OBJECTS, "1");
+  } finally {
+    for (const name of ["GIT_DIR", "GITLEAKS_CONFIG", "GIT_NO_REPLACE_OBJECTS"]) {
+      if (name in saved) process.env[name] = saved[name];
+      else delete process.env[name];
+    }
+  }
+});
+
+test("a finding names the refs that reach its commit: the repository's own, or else pull requests only", () => {
+  const mirror = makeMirror(shared.clone, temporary("honsha-history-mirror-"));
+  assert.equal(reachedBy(mirror, shared.pulled), "pull requests only: refs/pull/1/head");
+  assert.equal(reachedBy(mirror, shared.tagged), "refs/tags/v1");
+  assert.match(reachedBy(mirror, shared.added), /refs\/heads\/main/);
+  assert.doesNotMatch(reachedBy(mirror, shared.added), /refs\/pull\//);
+});
+
+test("a control or format character of the history is printed as an escape", () => {
+  assert.equal(printable("a\nb\u001b[2Jc‮d"), "a\\u{a}b\\u{1b}[2Jc\\u{202e}d");
+  assert.equal(printable("config/app.env"), "config/app.env");
+});
+
 test("the ignore file is read on the default branch, not on another branch or in the clone's working tree", () => {
   write(shared.clone, IGNORE_FILE, `${shared.listed}\n${shared.tagged}:tagged.txt:generic-api-key:1\n`);
   const mirror = makeMirror(shared.clone, temporary("honsha-history-mirror-"));
@@ -303,6 +352,11 @@ test("a line shows its names, and masks the value found and every run that could
     "password: *************",
   );
   assert.equal(maskLine("export TOKEN", { ...finding, match: "REDACTED" }), "export TOKEN");
+  // What precedes the value stands twice, first before an empty value.
+  assert.equal(
+    maskLine(`{"token": "", "token": "abcdefghijklmnopqrst"}`, { ...finding, match: `"token": "REDACTED"` }),
+    `{"token": "", "token": "********************"}`,
+  );
   // A line that does not show the match: every run of four characters or more.
   assert.equal(maskLine("the key is here", { ...finding, match: "other REDACTED" }), "the key is ****");
   // A report that is not redacted: the value, wherever it stands.
@@ -404,6 +458,8 @@ test("the findings are printed by where they are, with no value, no unmasked lin
   assert.match(output, /^ {2}line: resolved = \*+$/m);
   assert.equal(output.match(/on the default branch: yes/g)?.length, 2);
   assert.equal(output.match(/on the default branch: no/g)?.length, 2);
+  assert.match(output, /^ {2}reached by: pull requests only: refs\/pull\/1\/head$/m);
+  assert.match(output, /^ {2}reached by: refs\/tags\/v1$/m);
   for (const value of [...Object.values(VALUES), "Jane", "jane.roe", "Add the configuration", shared.origin]) {
     assert.ok(!output.includes(value), value);
   }
