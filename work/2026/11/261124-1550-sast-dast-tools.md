@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -279,6 +279,9 @@ host's container engine are not stopped by its application control. The trial ch
 
 ## Approval
 
+Approved by the person on 2026-11-25, in this item's session, as written in `bb38740`, with the trial: the five
+choices and the trial's downloads listed under "For the person" included.
+
 ## Log
 
 - The record was given by the hub when it started the item; its intent is restated as the core rules ask of a public
@@ -300,6 +303,13 @@ host's container engine are not stopped by its application control. The trial ch
   39,300, `templates/profile.yml` 4,627 of 4,700; at a worker's start a session receives 31,119 of the 31,150 that
   `hooks/hooks.test.mjs` allows, measured with a copy of that test left uncommitted and deleted.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The hub decided on the files shared with `261123-2103` (`honsha:parallel-parts`): the two items run at the same time
+  and share three files whose changes lie apart. In `skills/assessment/SKILL.md` this item changes step 1, the other
+  step 4; in `docs/01-specs/WORKFLOW.md` the other changes only "Dependencies", this item the sections its strategy
+  names, with "Security testing" placed after "Security review" so that unchanged lines stand between the two changes;
+  in `checks/budgets.test.mjs` both raise the workflow's budget, which the item merged second sets for both once it is
+  brought up to date.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
