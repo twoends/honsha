@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -228,6 +228,12 @@ above, among them the assessment on the strong tier at high and the light tier a
 definitions without a model. Model and effort of this item: the strong tier at xhigh, its default.
 
 ## Approval
+
+Approved by the person on 2026-11-25, in this item's session, as written, with its choices: the map under `models` in
+the home's `settings.yml`; the map given by a hook at each start; the checker and the security reviewer on the strong
+tier at least, named by the session that starts them as their descriptions say; the defaults of the strategy, the
+assessment on the strong tier at high and the light tier at medium among them; the hub's and the worker's definitions
+without a model.
 
 ## Log
 
