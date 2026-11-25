@@ -59,8 +59,8 @@ Each check below reports a finding for anything it finds wrong.
    a name that begins with a dot. When it was due, Verification holds the security reviewer's reports up to the
    commit you read, the first on the branch's whole diff and each later one on what changed since the one before;
    every finding of every report is confirmed fixed by a later report, or accepted by the person under "Deviations",
-   with who, when and where; and the log says what was done with each weak point. A review due and missing is a finding; one that
-   ran when it was not due is not. Do not review the change's security yourself.
+   with who, when and where; and the log says what was done with each weak point. A review due and missing is a
+   finding; one that ran when it was not due is not. Do not review the change's security yourself.
 8. **The record.** Beyond its shape, which `checks/record.mjs` checks:
    - against The record and Documents: it is no longer than its size calls for, copies nothing that another
      document holds, and its Verification holds what The record says, nothing else;

@@ -10,9 +10,9 @@ the change and not the worker's account of it.
 **When.** The change touches authentication, permissions or secrets, deploy or CI configuration, or the grants, roles
 and policies of a data schema: the cases of the always-full list (core rules, Sizes) that an attacker aims at. Or it
 weakens the project's security testing (`honsha:security-testing`): it removes or narrows one of its commands or rules,
-or silences one of its findings. Or it changes a file that matches a path under `security-review` in the profile: `checks/record.mjs` names those files when it
-runs, and fails a `done` record that holds no review's report. Whatever the item's size. Elsewhere the review does not
-run: it would cost time and tokens and find nothing.
+or silences one of its findings. Or it changes a file that matches a path under `security-review` in the profile:
+`checks/record.mjs` names those files when it runs, and fails a `done` record that holds no review's report. Whatever
+the item's size. Elsewhere the review does not run: it would cost time and tokens and find nothing.
 
 1. After the verification's commands and before the checker, write the diff file as the worker writes it for the
    checker (`agents/worker.md`, Verification), without the record, and invoke the agent with its path and nothing

@@ -403,6 +403,9 @@ choices and the trial's downloads listed under "For the person" included.
      skill says that nothing reaches the instance from either, and that it publishes no port, or only on the loopback.
 - The two fixes are a commit of their own. The verification ran again on it, and the review was repeated on what it
   changed.
+- Lines that the work's edits left wider than the kit's documents, 120 characters, are wrapped in two commits of their
+  own: one in the new skill, then one in `project.yml`'s comments, the checker's file, the workflow, GitHub's piece
+  and the security review's skill. The words are unchanged.
 
 ## Verification
 

@@ -172,11 +172,12 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    `hub/projects.mjs check` where the project holds a `registry.yml`, `checks/verify.mjs`, which runs the `verify`
    list of the profile, and, once it passes, `checks/verify.mjs --dynamic`, which runs the `dynamic-testing` list and
    passes at once when the profile has none. The runner has Docker with Docker Compose, which those commands can use
-   to start the instance and its scanner. The kit's first job runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone,
-   as its profile lists the kit's checks, and at every push: the kit's repository is public, where its runs cost
-   nothing. GitHub checks out the merge of the pull request with its base branch, so the commands test the merged
-   result, and the workflow does not run while the pull request has a conflict; on a push it checks out the pushed
-   commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
+   to start the instance and its scanner. The kit's first job runs `node checks/verify.mjs --setup` and
+   `node checks/verify.mjs` alone, as its profile lists the kit's checks, and at every push: the kit's repository is
+   public, where its runs cost nothing. GitHub checks out the merge of the pull request with its base branch, so the
+   commands test the merged result, and the workflow does not run while the pull request has a conflict; on a push it
+   checks out the pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the
+   commits needs.
    On a push to a pull request's branch, project.yml first runs the kit's `checks/changes.mjs` on the commits that the
    push added, from `github.event.before`, the branch's tip before the push, to `HONSHA_HEAD`. When they change only
    records, [runs.mjs](runs.mjs) reads from GitHub's API, with the run's token, the latest run of the same workflow on

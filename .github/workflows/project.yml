@@ -68,9 +68,10 @@ jobs:
           node-version: 26
       # A later push to a pull request whose commits change only records needs neither the setup nor the verification
       # and dynamic testing commands once the run on the branch's earlier tip passed: that run checked the same code,
-      # and the kit's checks below still read the records. The opening of a pull request has no earlier tip, and the default branch is
-      # checked in full at every push: it is where whatever the skip leaves out is caught. Only both scripts' exit
-      # code 0 writes `false`; a failure of either, like a skipped step, leaves the output empty, and every step runs.
+      # and the kit's checks below still read the records. The opening of a pull request has no earlier tip, and the
+      # default branch is checked in full at every push: it is where whatever the skip leaves out is caught. Only both
+      # scripts' exit code 0 writes `false`; a failure of either, like a skipped step, leaves the output empty, and
+      # every step runs.
       # The actions above take the token as an input; of the steps that run commands, this one alone gets it, in its
       # environment and before any of the project's commands runs. Code in the job can still read it from the runner's
       # memory, so what it may do is what the job may do.

@@ -141,9 +141,10 @@ extended instead.
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas: a
    session that receives the worker's procedure when it starts, or one started as the worker (`agents/worker.md`).
 6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
-   verification commands and its dynamic testing (workflow, Security testing). Where the change touches what an attacker aims at, the security reviewer looks for holes in
-   it, at any size (workflow, Security review). For small and full items the checker then compares the result with
-   the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
+   verification commands and its dynamic testing (workflow, Security testing). Where the change touches what an
+   attacker aims at, the security reviewer looks for holes in it, at any size (workflow, Security review). For small
+   and full items the checker then compares the result with the record and the profile's gates, from a fresh context
+   and without write access (`agents/checker.md`).
    A repeated check reads only what changed (`agents/worker.md`, Verification): a full read of a large branch finds
    something new each time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
@@ -383,11 +384,11 @@ default branch. It meets this contract.
    says which.
    A later push to a pull request's branch whose new commits change only records, after a run on the branch's earlier
    tip that passed, as the service reports it, leaves out the `setup`, `verify` and `dynamic-testing` commands, and its
-   run says so: that run checked the same code, the kit's checks still read the records, and the session has run on them those that read
-   the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a pull request and every
-   push to the default branch run them all: the default branch is where what the skip leaves out is caught, such as a
-   record that a formatter of the `verify` list reads, or a default branch that moved between the run on the work and
-   the closing commit.
+   run says so: that run checked the same code, the kit's checks still read the records, and the session has run on
+   them those that read the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a
+   pull request and every push to the default branch run them all: the default branch is where what the skip leaves
+   out is caught, such as a record that a formatter of the `verify` list reads, or a default branch that moved between
+   the run on the work and the closing commit.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
    itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
    branch and its last one. On a push to the default branch, the default branch's name, its tip before the push and the
