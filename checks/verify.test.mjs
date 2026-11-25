@@ -55,6 +55,50 @@ test("with --setup it stops at the first command that fails, and says so when th
   assert.equal(runner(null, ["--setup"]).status, 1);
 });
 
+const all = [
+  "verify:",
+  "  - node -e \"console.log('verified')\"",
+  "dynamic-testing:",
+  "  - node -e \"console.log('started')\"",
+  "  - node -e \"console.log('scanned')\"",
+  "setup:",
+  "  - node -e \"console.log('installed')\"",
+  "",
+].join("\n");
+
+test("with --dynamic it runs the profile's dynamic testing commands in order, and no other list", () => {
+  const result = runner(all, ["--dynamic"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /started[^]*scanned/);
+  assert.doesNotMatch(result.stdout, /verified|installed/);
+  assert.match(result.stdout, /All 2 dynamic testing commands passed/);
+  const plain = runner(all);
+  assert.match(plain.stdout, /verified/);
+  assert.doesNotMatch(plain.stdout, /started|installed/);
+});
+
+test("with --dynamic it stops at the first command that fails, and says so when there are none", () => {
+  const failing = runner('dynamic-testing:\n  - node -e "process.exit(2)"\n  - node -e "console.log(40 + 2)"\n', [
+    "--dynamic",
+  ]);
+  assert.equal(failing.status, 1);
+  assert.doesNotMatch(failing.stdout, /42/);
+  assert.match(failing.stdout, /failed \(exit code 2\)[^]*Dynamic testing failed/);
+  const none = runner("verify:\n  - npm run check\n", ["--dynamic"]);
+  assert.equal(none.status, 0);
+  assert.match(none.stdout, /lists no dynamic testing commands/);
+  assert.equal(runner(null, ["--dynamic"]).status, 1);
+});
+
+test("refuses two flags together and a flag it does not know, and runs nothing", () => {
+  for (const flags of [["--setup", "--dynamic"], ["--dynamic", "--dynamic"], ["--static"]]) {
+    const result = runner(all, flags);
+    assert.equal(result.status, 1, flags.join(" "));
+    assert.match(result.stderr, /Usage: node checks\/verify\.mjs \[--setup \| --dynamic\]/);
+    assert.doesNotMatch(result.stdout, /verified|started|installed/);
+  }
+});
+
 test("runs the commands in order and stops at the first that fails", () => {
   /** @type {string[]} */
   const seen = [];

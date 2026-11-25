@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Use at a work item's verification, whatever its size, when its change touches authentication, permissions or secrets, deploy or CI configuration, or the grants, roles and policies of a data schema, or changes a path that the profile lists under `security-review`. It holds how the security reviewer is run before the checker, where its report goes, and what a finding does to delivery.
+description: Use at a work item's verification, whatever its size, when its change touches authentication, permissions or secrets, deploy or CI configuration, or the grants, roles and policies of a data schema, weakens the project's security testing, or changes a path that the profile lists under `security-review`. It holds how the security reviewer is run before the checker, where its report goes, and what a finding does to delivery.
 ---
 
 The checker compares the work with its record and is no security audit. A change that touches what an attacker aims
@@ -9,7 +9,8 @@ the change and not the worker's account of it.
 
 **When.** The change touches authentication, permissions or secrets, deploy or CI configuration, or the grants, roles
 and policies of a data schema: the cases of the always-full list (core rules, Sizes) that an attacker aims at. Or it
-changes a file that matches a path under `security-review` in the profile: `checks/record.mjs` names those files when it
+weakens the project's security testing (`honsha:security-testing`): it removes or narrows one of its commands or rules,
+or silences one of its findings. Or it changes a file that matches a path under `security-review` in the profile: `checks/record.mjs` names those files when it
 runs, and fails a `done` record that holds no review's report. Whatever the item's size. Elsewhere the review does not
 run: it would cost time and tokens and find nothing.
 

@@ -310,6 +310,78 @@ choices and the trial's downloads listed under "For the person" included.
   in `checks/budgets.test.mjs` both raise the workflow's budget, which the item merged second sets for both once it is
   brought up to date.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- No part of the change ran in parallel, as the strategy says. The trial ran in a subagent on Opus, in the scratchpad,
+  while this session wrote the skills, the agents, the pipeline and the documents; a lookup in GitHub's documentation
+  and in the tools' own ran in a subagent on Haiku at medium effort.
+- `checks/profile.mjs` reads `dynamic-testing` as it reads `verify` and `setup`, a list of commands, and refuses the
+  same other forms. `checks/verify.mjs --dynamic` runs it as `--setup` runs `setup`; two flags, or a flag it does not
+  know, print the usage and run nothing. Four new tests, and the template's test expects its new example.
+- `templates/profile.yml`: `verify` covers five things, the fifth the static security testing that the skill asks;
+  `dynamic-testing` after `verify`, with the strategy's example; `setup` prepares the checkout for both.
+- `skills/security-testing/SKILL.md` is written as the strategy says: the kinds, where the profile names them, the
+  tools with their examples, a finding, a silenced finding and a found secret.
+- `agents/worker.md`: the skill named for an item that sets up or changes the security testing or answers one of its
+  findings; `dynamic-testing` after `verify` in Verification step 1; a command the host cannot run whatever the change,
+  and the scan for secrets that stops the item. Its first wording held 6,452 characters; shortened, it holds 6,399 of
+  the approved 6,400.
+- `agents/checker.md`: check 6 reads `dynamic-testing`, takes a command the host could not run as not verifiable and a
+  scan for secrets left so as a finding, and says whether `verify` covers static security testing, with `security` in
+  the report's line; check 7 counts a change that weakens the security testing. `agents/security-reviewer.md`: a new
+  point 7, a silenced finding, before the point on any other weakness.
+- `skills/security-review/SKILL.md`: the case in its description and in "When". `skills/assessment/SKILL.md`: step 1
+  reads `verify` and `dynamic-testing` against the kinds of the skill; step 4 is untouched.
+- `.github/workflows/project.yml`: the step "Run the dynamic testing commands of the profile" after the verification,
+  with its condition and no environment of its own; the notice on a run that skips names the dynamic testing too.
+- `services/github/README.md`: the new step and the runner's Docker with Docker Compose in answer 2, the two steps the
+  skip leaves out, the minutes dynamic testing adds, and a section "Static testing of the workflows" naming zizmor and
+  actionlint and which of GitHub's own scanners a free account has. Its facts come from the lookup of 2026-11-25:
+  zizmor's and actionlint's documentation, GitHub's documentation of code scanning and secret scanning, and the
+  software list of GitHub's Ubuntu 24.04 runner image, which lists Docker and Docker Compose 2. Whether push
+  protection is on by default on a public repository was not settled there, so the piece does not say.
+- `docs/01-specs/WORKFLOW.md`: "Profile" names three command keys, the step Verify the dynamic testing, the piece of a
+  service a point 7, the contract's "What it runs" the new list and the skip, the closing paragraph `--dynamic`,
+  "Security review" the new case; "Security testing" stands after "Security review", apart from "Dependencies". Its
+  first wording took the workflow to 42,820 characters; the section was shortened to the reasons, which the skill's
+  rules do not repeat, and the workflow holds 41,633.
+- `docs/01-specs/INTERFACE.md` names the skill and `[--setup | --dynamic]`; `docs/01-specs/ARCHITECTURE.md` and
+  `README.md` add the skill to their lists.
+- Budgets: `agents/worker.md` 6,400, `templates/profile.yml` 5,200 (it holds 5,121), `docs/01-specs/WORKFLOW.md`
+  42,000; the session-start total in `hooks/hooks.test.mjs` 31,550. The other documents stay within theirs: the
+  checker's file 6,724 of 7,600, the reviewer's 5,093 of 6,000, the new skill 5,070 of 6,000 with the line the trial
+  added.
+- The whole test suite passes on the change, 255 tests, with Prettier, oxlint and tsc.
+- Criterion 7, the trial, in a scratch repository in the session's scratchpad, outside the installation, run with
+  `checks/verify.mjs` from this worktree. Its tools, each at a version released at least 7 days earlier and pinned:
+  gitleaks 8.30.1 and ShellCheck 0.11.0 by their images' digests, OWASP ZAP 2.17.0 by the digest of
+  `zaproxy/zap-stable:2.17.0`, built on 2026-11-03, and Node.js 26.13.1 by the digest of its Alpine image. Branch
+  `work/1-findings` adds a fake token in the form of a personal access token and a shell script with an unquoted
+  expansion, and serves pages without `X-Content-Type-Options`; branch `work/2-clean` reads the token from the
+  environment, quotes the expansion, and sends the header.
+- Static testing: the scratch profile's `verify` runs gitleaks on the branch's commits, `git --redact --verbose
+  --log-opts=main..HEAD`, and ShellCheck on each script, both from their images. On `work/1-findings`
+  `node checks/verify.mjs` exits 1: gitleaks reports rule `github-pat` in `config/app.env`, line 2, with the secret
+  redacted, and ShellCheck, run alone, reports SC2086 in `scripts/clean.sh`, line 5. On `work/2-clean` it exits 0.
+  Without `--redact` gitleaks prints the secret it finds; the skill now says that the scan prints no secret, since
+  others read a pipeline's output. `cmd.exe`, this host's default shell for the commands, does not expand
+  `scripts/*.sh`, and ShellCheck's image has no shell: the scratch profile loops over the files in `cmd.exe`'s syntax,
+  which a Linux runner would not read. Writing a command for the default shell of each host is the project's, as the
+  template already says.
+- Dynamic testing: the scratch profile's `dynamic-testing` is the template's example. `compose.scan.yml` runs the
+  application from the pinned Node.js image with a health check, and ZAP once it is healthy, with
+  `zap-baseline.py -t http://app:3000 -c rules.tsv -I -z -silent` and `rules.tsv` setting rule 10021,
+  `X-Content-Type-Options` header missing, to FAIL. `-I` lets only a FAIL fail the run; `-z -silent` keeps ZAP from
+  its check for updates and its other requests, which the baseline script otherwise makes at start, and ZAP's log names
+  no address but the target's. Its working folder is mounted read-only, since the script writes its plan there at
+  every run. On `work/1-findings` `node checks/verify.mjs --dynamic` exits 1, with 1 FAIL, 10021 on `/` and `/about`,
+  and 2 warnings, 10020 and 10038, that `-I` lets through; on `work/2-clean` it exits 0. The run takes about 20
+  seconds with the images present, ZAP itself about 14, and 97 seconds when the images are pulled first, 73 of them
+  for ZAP's image, 3.7 GB unpacked. Nothing was left running.
+- This host's application control, on and enforcing, let both native programs run, though neither is signed:
+  `gitleaks.exe version` printed 8.30.1, and gitleaks scanned the findings branch natively with the same result;
+  `shellcheck.exe --version` printed 0.11.0. gitleaks's archive matched its release's checksums file. ShellCheck's
+  release publishes none, and its archive matched the digest that GitHub gives the release's file.
+- On this host `docker desktop status` read "stopped" while the engine answered `docker info`; the trial went by the
+  engine. This is a lesson of the host, for the person.
 
 ## Verification
 

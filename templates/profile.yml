@@ -25,15 +25,20 @@ areas:
   deploy: { paths: ["deploy/**", ".github/**"] }
   content: { paths: ["prompts/**"] }
 # The verification commands, one on each line, as a list: the kit's scripts read no other form. Each runs in the
-# machine's default shell. Together they cover four things, with the tools of the project's own stack: formatting,
-# lint, types where the language has them, and tests; one command may cover several, as `npm run check` does here.
-# A project that leaves one out says why in a comment beside the list. The checker reports what the list does not
-# cover.
+# machine's default shell. Together they cover five things, with the tools of the project's own stack: formatting,
+# lint, types where the language has them, tests, and the static security testing that `honsha:security-testing` asks
+# of the project; one command may cover several, as `npm run check` does here. A project that leaves one out says why
+# in a comment beside the list. The checker reports what the list does not cover.
 verify:
   - npm run check
-# The commands that prepare a fresh checkout for `verify` and for the project's own git hooks, in the same list form
-# and the same default shell: `checks/verify.mjs --setup` runs them once in each new checkout, an item's worktree or
-# the pipeline's. Left out, nothing is installed. An install runs its packages' scripts unless told not to.
+# The dynamic security testing of a project that serves HTTP (`honsha:security-testing`): commands that start a local
+# instance from the checkout and attack it from outside, which every verification runs after `verify`, in the same list
+# form and default shell. Left out, there is none.
+dynamic-testing:
+  - docker compose -f compose.scan.yml up --abort-on-container-exit --exit-code-from scanner
+# The commands that prepare a fresh checkout for `verify`, `dynamic-testing` and the project's own git hooks, in the
+# same list form and the same default shell: `checks/verify.mjs --setup` runs them once in each new checkout, an item's
+# worktree or the pipeline's. Left out, nothing is installed. An install runs its packages' scripts unless told not to.
 setup:
   - npm ci --ignore-scripts
 # The project's quality gates. The checker reports each as met, not met or not verifiable.

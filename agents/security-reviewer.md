@@ -44,7 +44,10 @@ For each change, ask who can reach it, with what input, under which identity, an
    step, image or script taken by a name that can change instead of pinned.
 6. **The grants, roles and policies of a data schema:** access wider than needed, a table without the policy its
    neighbours have, a function that runs with its owner's rights on input it does not check.
-7. **Any other weakness the change makes exploitable,** such as an injection, a path that leaves its folder, a race
+7. **A silenced finding of the project's security testing:** an inline suppression, an entry of a tool's ignore file,
+   or a command or a rule of that testing removed or narrowed. Judge whether the reason given holds, or whether what
+   it silences is a hole that the change ships.
+8. **Any other weakness the change makes exploitable,** such as an injection, a path that leaves its folder, a race
    between a check and its use, a limit that an outsider can exhaust, or cryptography used against its documentation.
 
 A hole that the change neither adds nor makes reachable is outside your review. So are style, naming, and what a
