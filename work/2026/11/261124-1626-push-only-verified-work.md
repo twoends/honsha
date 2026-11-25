@@ -270,6 +270,28 @@ approval on to this item's session.
   and on each push to the default branch": with the skip on a pull request's later pushes only, that stays true.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- Checked the strategy's assumption against GitHub's documentation, through a subagent on Sonnet: the `pull_request`
+  event's `synchronize` action carries `before` and `after`, `opened` and `reopened` carry no `before`, and
+  `github.event` is the event's whole payload. A step's `env` may read the `github` context. The documentation does not
+  say what a skipped step's output gives; it says that a property that does not exist reads as an empty string, and the
+  conditions compare with `'false'`, so that either way every step runs unless the script wrote `false`.
+- `checks/changes.mjs` and `checks/changes.test.mjs` are written: eight tests, each case of criterion 3 among them. The
+  test of a file moved into `work/` fails without `--no-renames`, since git would list only the new path.
+- `project.yml` gains the step "Tell whether the push changes more than records", and the four steps that install or
+  run `verify` its condition; its opening comment says what a later push on records gets.
+- `rules/git.md` holds the rule as the strategy wrote it. In `agents/worker.md`, step 1 says "Then wait for its
+  checks." without the pointer to the core rules that the strategy gave it, which would have put the file 6 characters
+  over its budget; step 4 keeps the pointer. The file has 5,980 characters of its 6,000, and its budget is not raised.
+- With the rule, a session receives 30,047 characters at start: `TOTAL` in `hooks/hooks.test.mjs` goes from 29,400 to
+  30,150.
+- The workflow gains 2,257 characters, more than the strategy's estimate of about 1,500: the "Pushes" subsection, the
+  skip in the contract's "What it runs", and a sentence on `checks/changes.mjs` beside the kit's other scripts that the
+  wiring runs. Its budget goes from 36,300 to 38,600.
+- The interface names `checks/changes.mjs` among the scripts outside it. The GitHub piece gains the command that waits
+  for the checks, the skip and what it assumes in "What it runs", that the kit's own first job runs at every push, what
+  a run on records costs, and a paragraph on a project's own workflows.
+- Searched the kit for other texts that describe the wiring's steps, the worker's closing commit or the budgets: none
+  but those changed.
 
 ## Verification
 

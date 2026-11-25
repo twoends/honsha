@@ -46,8 +46,9 @@ node <kit directory>/checks/verify.mjs [--setup] [<profile>]
 node <kit directory>/checks/measures.mjs [--json] [--sessions <folder>]
 ```
 
-The kit's other scripts are not part of the interface: `checks/pushed.mjs`, which checks the kit's own pushes, and the
-hooks, which the plugin runs.
+The kit's other scripts are not part of the interface: `checks/pushed.mjs`, which checks the kit's own pushes;
+`checks/changes.mjs`, which a hosting service's wiring runs to tell a push that changes only records; and the hooks,
+which the plugin runs.
 
 ## Templates
 

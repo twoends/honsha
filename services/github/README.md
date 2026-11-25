@@ -19,6 +19,7 @@ With `gh`, GitHub's command-line client.
 | Open a pull request to the default branch  | `gh pr create --base <default-branch> --title "<title>" --body-file <file>` |
 | Read its number and its state              | `gh pr view --json number,state,mergedAt`                                   |
 | Read the results of its checks             | `gh pr checks`                                                              |
+| Wait until its checks finish               | `gh pr checks --watch`                                                      |
 | See who merged it, and with which commit   | `gh pr view <number> --json mergedBy,mergeCommit`                           |
 | Delete a merged branch that is still there | `git push origin --delete <branch>`                                         |
 
@@ -162,10 +163,18 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    none, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and `checks/commits.mjs`,
    `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify`
    list of the profile. The kit's first job runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone,
-   as its profile lists the kit's checks. GitHub checks out the merge of the pull request with its base branch, so the
-   commands test the merged result, and the workflow does not run while the pull request has a conflict; on a push it
-   checks out the pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the
-   commits needs.
+   as its profile lists the kit's checks, and at every push: the kit's repository is public, where its runs cost
+   nothing. GitHub checks out the merge of the pull request with its base branch, so the commands test the merged
+   result, and the workflow does not run while the pull request has a conflict; on a push it checks out the pushed
+   commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
+   On a push to a pull request's branch, project.yml first runs the kit's `checks/changes.mjs` on the commits that the
+   push added, from `github.event.before`, the branch's tip before the push, to `HONSHA_HEAD`. When they change only
+   records, it skips the steps that install npm, run the setup and install Claude Code, and the one that runs
+   `checks/verify.mjs`; a notice on the run says so, and the kit's checks run. The opening of a pull request, whose
+   event has no earlier tip, any failure of the script, and every push to the default branch run every step. The skip
+   assumes that the run on the code has finished: a push that changes only records while it goes cancels it, and the
+   code is then checked by nothing on the pull request until the merge's run on the default branch. So a session waits
+   for that run before it pushes the closing commit (core rules, Delivery).
 3. **What it gives the commands.** project.yml, and the kit's file for its own jobs, set `HONSHA_BRANCH` from
    `github.head_ref`, `HONSHA_BASE` and `HONSHA_HEAD` from the base and head commits of the pull request. On a push,
    `github.ref_name`, `github.event.before` and `github.sha`.
@@ -190,5 +199,9 @@ public branch: a finding shows before the merge, and taking it out of the histor
 What it costs: nothing on a free account, within a limit. On a private repository the minutes of GitHub's runners are
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
 minutes count for more than Linux ones. A run of project.yml is one Linux job, counted to the account that owns the
-calling project. With no payment method on the account, runs stop when that amount is used and nothing is billed. On a
-public repository the standard runners are free.
+calling project; on a push that changes only records it holds the checkouts and the kit's checks alone, and counts as
+one minute while they take less. With no payment method on the account, runs stop when that amount is used and nothing
+is billed. On a public repository the standard runners are free.
+
+A project's own workflows, such as its application's checks, are the project's: this wiring does not reach them, and
+they run at every push they are wired for, which the rule on pushes (core rules, Delivery) keeps few.
