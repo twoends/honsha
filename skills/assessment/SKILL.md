@@ -35,6 +35,13 @@ In this order. A step that finds the project in order says so in a line; a gap i
 9. **Documents:** their size. Duplication and text that no longer holds are the periodic review's (`honsha:review`).
 10. **Open points:** the project's open questions, and the assumptions the adoption rests on that nobody has tried.
 
+## What is proposed
+
+A gap is closed with what the kit gives every project, as the kit and the home hold it: the profile's keys, the wiring
+of the checks, the hosting service's settings, the ignored files, the lessons file. That way projects of different
+technologies run alike. A convention of the project stays only where its technology needs it, never because the project
+already had it.
+
 ## The report
 
 The record of an assessment has the sections of a small item, from the template.

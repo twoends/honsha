@@ -35,7 +35,9 @@ with, and what may start in which project. Read the registry the same way; the k
   `node <kit>/hub/projects.mjs may-start` on it, and start nothing that it or the decision log refuses. Before an item
   starts in a project where another is running, invoke `honsha:parallel-parts`. Then start a new session in a worktree
   of the project's folder, with the record's text in its brief; its worker commits the record on the item's branch and
-  takes the item to a pull request. An item of the home starts in a worktree of the home, as an item of any project
+  takes the item to a pull request. A full item's brief leaves the record to its worker, who commits it together with
+  its strategy, as the first of the commits that the core rules ask of a full item: the brief asks for no commit of the
+  record before it. An item of the home starts in a worktree of the home, as an item of any project
   does. A request that starts at once writes nothing in the home. An item of the backlog leaves it with
   `node <kit>/hub/backlog.mjs take`, which prints its record, only once `may-start` has said yes.
 - **Capture.** An idea for a project, or a request kept for later: write its record from the kit's template, in the
