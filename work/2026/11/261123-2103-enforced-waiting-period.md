@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-23
 updated: 2026-11-25
@@ -171,6 +171,10 @@ would then be refused, never let through, and the item that meets it sees the er
 **For the person.** The change touches four existing files, one more than the profile's `kinds` expects of a rule: the
 fourth is the budget's line. The measure only reports it; nothing fails on it.
 
+## Approval
+
+Approved by the person on 2026-11-25, in this item's worker session, as written in `0d42e39`.
+
 ## Log
 
 - `git config user.email` matches the profile's `commits.address`. The item has no areas, so no area pack is loaded.
@@ -184,3 +188,10 @@ fourth is the budget's line. The measure only reports it; nothing fails on it.
   `min-release-age`, `min-release-age-exclude`, `strict-allow-scripts`, `allow-scripts`, `ignore-scripts`, `before`
   and the project's `.npmrc`. Tried npm 12.2.1, 11.12.1 and 11.20.0 in scratch projects (Strategy).
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- The hub let the two items run at the same time, sharing the three files where their changes lie apart: in
+  `skills/assessment/SKILL.md`, `261124-1550` changes step 1; in `docs/01-specs/WORKFLOW.md`, the sections "Profile",
+  "Procedure", "Security review", the hosting service's contract and a new section "Security testing", away from
+  "Dependencies"; in `checks/budgets.test.mjs`, the workflow's budget line, which both raise. `261124-1550` adds the
+  profile key `dynamic-testing`; this item adds none. The item merged second is brought up to date before its merge
+  and sets the workflow's budget for both.
+- The approval is written and the state set to `in-progress`.
