@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 62
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -479,8 +479,175 @@ scanner: the six choices and the trial's download listed under "For the person" 
   commits read, the four other findings with their lines masked and their refs, the Slack token's `refs/tags/v1`, the
   GitLab token's "no branch or tag, only refs/pull/1/head", the others' branches and tag. No value, identity or path of
   the scratchpad was in the output; the clone was unchanged, and no temporary folder was left.
+- The second check, of `896cef5` since `675bb17`, passes with no findings.
+- The pull request is #62. The kit's pipeline on it, run 45719705642 at `896cef5`, passed: `personal content`,
+  `verify` on Linux and on Windows, and `project / checks`, read once after the hub said the run had ended. Criterion 8
+  is met.
 
 ## Verification
+
+On this host, at `896cef5`, the fix of the first check's findings, with npm 12.2.1, the same results as at `d9fe419`,
+`0252bd3` and `675bb17` but for the count of tests, 269 at `d9fe419`:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 6 commits of the branch follow the rules.
+- `node <kit directory>/hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 273 tests, 273 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version and icon and a licence that the plugin
+  directory would ask for, none of which this change touches.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+- The kit's profile lists no `dynamic-testing`: `node checks/verify.mjs --dynamic` says so and passes.
+
+The first security review, of `d9fe419` (full): verdict `fail`, one finding. `checks/history-secrets.mjs` and
+`skills/security-testing/SKILL.md`: the scan's input can be written by anyone, and the report cannot tell those
+findings apart from the project's own. On a public repository anyone with an account adds `refs/pull/<n>/head` by
+opening a pull request from a fork, and the ref stays after it is closed; each finding gave no ref that reaches its
+commit, so a stranger's closed pull request looked like the project's own deleted branch, and the skill's rules let an
+outsider stop every assessment and raise an urgent alert at every periodic review with planted findings, among which a
+real leak could hide.
+
+The second security review, of `0252bd3` (since `d9fe419`): verdict `fail`, the first finding confirmed fixed for the
+assessment, two findings. 1. `skills/review/SKILL.md` with `skills/security-testing/SKILL.md`: an outsider can still
+raise an urgent alert at every review, since nothing took a finding that only fork pull requests reach off the urgent
+list. 2. `skills/security-testing/SKILL.md` with `services/github/README.md`: the exception went by `isCrossRepository`,
+which says where a branch lived and not who wrote the commit; it applied on a private repository, where no stranger
+can add such a ref, and to a member working from a fork, whose live credential would then not stop the assessment.
+
+The third security review, of `675bb17` (since `0252bd3`):
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `checks/` (`history-secrets.mjs`, `history-secrets.test.mjs`), `docs/01-specs/` (`WORKFLOW.md`),
+`services/github/` (`README.md`), `skills/review/` (`SKILL.md`), `skills/security-testing/` (`SKILL.md`). For context I
+also read `skills/assessment/SKILL.md`, `rules/core.md`, `.hub/profile.yml` and the `public` default in
+`templates/profile.yml` and `checks/profile.mjs`.
+
+**Both findings of the last review are fixed**
+
+1. Fixed: an outsider can no longer raise an urgent alert. `skills/security-testing/SKILL.md:86-88` now says that such a
+   finding is "listed apart, it is neither a stop nor urgent". `skills/review/SKILL.md:20-21` now ties its urgency to
+   that skill ("as that skill says"). The script still prints every finding and classifies none, so a finding set apart
+   is still shown to the person, not dropped.
+2. Fixed: the exception now checks who opened the pull request, not where its branch lived. It applies only "in a
+   public repository" and only when every pull-request ref that reaches the commit was "opened by someone outside the
+   project". `services/github/README.md:251-253` decides that by `author_association`, where `OWNER`, `MEMBER` and
+   `COLLABORATOR` count as the project's, and it drops `isCrossRepository`. `public` defaults to `false`
+   (`templates/profile.yml:19`, `checks/profile.mjs:128`), so a project with no setting gets no exception. The
+   exception also never applies while a branch, a tag or a project member's pull request reaches the commit
+   (`checks/history-secrets.mjs:271-272`, plus the word "each" in the skill). So an outsider's pull request cannot turn
+   a finding the scan would otherwise raise into one that is set apart.
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. `services/github/README.md:252-253`: the check reads the association of whoever opened the pull request, and treats
+   every value other than `OWNER`, `MEMBER` or `COLLABORATOR` as an outsider. That also covers the project's own
+   automation (Dependabot, `github-actions[bot]`, an app it installed), a removed collaborator, a deleted account
+   (`ghost`), a mannequin left by an imported history, and possibly a member whose organisation membership is private,
+   if the person's token cannot see it. A live project credential in such a pull request, closed without a merge and
+   with its branch deleted, would be set apart as neither a stop nor urgent. It cannot be exploited as written: an
+   outsider cannot make the project's bot or a former member commit a project secret, and the finding is still listed.
+   A fix would be to treat a pull request whose `user.type` is `Bot`, or whose author is `ghost` or a mannequin, as not
+   an outsider's unless the person decides otherwise.
+2. `services/github/README.md:251`: in `gh api repos/{owner}/{repo}/pulls/<number>`, gh fills in the repository by its
+   own rules: `GH_REPO`, then the default set by `gh repo set-default`, then a remote ranking that puts `upstream`
+   before `origin`. The scan reads `origin`, or the only remote (`checks/history-secrets.mjs:226-233`). If the two
+   differ, a pull request number is looked up in another repository, and a member's pull request could read as an
+   outsider's. It cannot be exploited by an outsider, because it depends on the person's own clone or environment. A
+   fix would be to name the owner and repository of the remote the scan read, without credentials, instead of the
+   placeholders.
+3. `checks/history-secrets.mjs:272`: the list of refs is no longer capped. Each pull request an outsider opens on a
+   commit adds up to two refs (`head`, and `merge` while it is open) to the "reached by" line of every finding in that
+   commit. That line is printed once per finding (`:510`), so an outsider can multiply the size of the report that
+   reaches the session's transcript. That could push the project's own findings past what the session reads at once.
+   The ability is not new: before this change an outsider could already grow the report without limit by putting many
+   findings in one commit. This change makes it cheaper. A fix would be to print the refs once per commit, or to list
+   each pull request number once in a section of its own.
+
+**Not reviewed**
+
+- What `author_association` actually returns, with the person's token, for bots, deleted accounts, mannequins and
+  members whose organisation membership is private: this needs GitHub's API, which I cannot query from here.
+- Whether GitHub lets someone with no access open a pull request whose head is a branch of the base repository. It
+  does not change the verdict, because the exception never applies while a branch of the project reaches the commit.
+- How the session's tool shortens a very long output from the scan: that is how the platform behaves, and nothing in
+  the repository shows it.
+- The tests in `checks/history-secrets.test.mjs` were read but not run, since I cannot run commands.
+
+The first check, of `675bb17` (full): verdict `fail`, two findings. 1. A boundary was crossed without a deviation: the
+boundary says that, besides the trial, only the list of the kit's own refs on its hosting service is read, and the log
+records two reads of the kit's pull request 61 through the service, `gh pr view <number> --json isCrossRepository` and
+`gh api repos/{owner}/{repo}/pulls/<number> --jq .author_association`, which "Deviations" did not declare. 2. A comment
+says the opposite of the code: `checks/history-secrets.mjs:239-241` says the mirror's `info/attributes` "unset the
+attribute for every file", while line 256 writes `* !diff`, which leaves it unspecified; "unset" is git's name for
+`-diff`, the state the line undoes. Line 22 of the opening comment is 143 characters long, past the file's 120.
+
+The second check, of `896cef5` (since `675bb17`):
+
+### Checker report
+
+**Verdict:** pass
+
+Both findings of the last check are fixed:
+
+1. The reads beyond the boundary are now declared under "Deviations". They are the reads of pull request 61
+   (`gh pr view`, `gh api …/pulls/61`), the read of the repository's visibility, and the trial's second download of the
+   same archive.
+2. The comment at `checks/history-secrets.mjs:239-241` now matches line 256 (`* !diff`). It says `!diff` leaves `diff`
+   unspecified, and that `-diff` would unset it and hide every patch. The opening comment's long line is wrapped (lines
+   22-24), and no comment line in the file is wider than 120 characters.
+
+**Acceptance criteria**
+
+1. Script behaviour and opening comment: met. The diff changes comments only, and the opening comment
+   (`checks/history-secrets.mjs:1-28`) still says what the script does and what it refuses.
+2. The pin, gitleaks 8.30.1 with six SHA-256s: met, `checks/history-secrets.mjs:44-74`. The diff does not change it.
+3. The test's coverage: met. The diff does not change `checks/history-secrets.test.mjs`. The attributes case is at
+   lines 287-293.
+4. The history section of `honsha:security-testing`: met. The diff does not change it.
+5. The assessment and review steps: met. The diff does not change them.
+6. The documents agree with criteria 1, 4 and 5: met. The comment changes contradict nothing in them.
+7. Trial: met, according to the log at record lines 410-420 and 476-481. The new run used the script as it now stands:
+   exit 1, 9.4 seconds, 5 refs and 12 commits, four findings with masked lines and their refs, and no value in the
+   output.
+8. Verify, security review, checker and pipeline: verify passed and the third security review passed (Verification).
+   The pipeline on the pull request is not verifiable from here (Not verified).
+
+- **Intent:** in order. The diff and the new text in the record quote none of the person's words (`public: true`).
+- **Scope:** in order. All three hunks are comment changes in `checks/history-secrets.mjs`, a file this item creates.
+- **Comments and documents:** in order.
+- **Gates:** in order. All four gates are met by a comment-only diff.
+- **Verification evidence:** in order. The record gives results at `896cef5` for every `verify` command,
+  `checks/record.mjs` and `checks/commits.mjs` (kit and project), and `--dynamic`, since no `dynamic-testing` is listed.
+  Covers formatting (prettier), lint (oxlint), types (tsc) and tests (node --test). It does not cover static security
+  testing, and `.hub/profile.yml` has no comment saying why. No gate asks for it, so this is not a finding; the kit's
+  own security testing is item `261125-1850`.
+- **Security review:** in order. Verification holds the three reports up to `675bb17`:
+  - Each finding is confirmed fixed by a later report.
+  - The log says what was done with each weak point.
+  - The diff since `675bb17` changes comments only, so no further review was due on it.
+- **Record:** in order.
+- **Commits:** in order. `896cef5` "Declare the reads beyond the boundary, and say that the mirror's attributes leave
+  diff unspecified" is the checker's fix in a commit of its own. It has the `Work-Item: 261125-1913` trailer, and its
+  addresses match the profile.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- The kit's pipeline on the pull request (criterion 8): the branch is pushed only after this check, so no run exists
+  yet.
 
 ## Deviations
 
@@ -496,3 +663,19 @@ scanner: the six choices and the trial's download listed under "For the person" 
   checked against the pin, for its diagnosis, and it was deleted after.
 
 ## Outcome
+
+An assessment now scans a repository's whole history for secrets as its first step, and the periodic review scans
+again each repository it reads, with `node <kit directory>/checks/history-secrets.mjs`. The script pins gitleaks 8.30.1
+by the SHA-256 of six archives, reads every ref the hosting service serves through a mirror clone outside the clone,
+the refs of pull requests included, each merge against its first parent, and prints each finding by commit, file, line
+and rule, with its fingerprint, the refs that reach it and its line masked, never a value, an author or the remote's
+address; it installs nothing and changes nothing in the clone. `honsha:security-testing` holds the rules: a secret
+stops an assessment and is urgent at the review, its revocation and any change of history are the person's, a public
+repository's history is public already, and the findings answered go into `.gitleaksignore` under the security review.
+A finding that only pull requests of outsiders reach, in a public repository, is listed apart. The workflow, the
+interface, the architecture, the README and GitHub's piece say so. The trial on this host showed the four planted
+values reported, the fifth left out by the ignore file, and no value printed.
+
+Left to the person: the three weak points of the last security review, and those of the first that were not fixed;
+the move to Betterleaks, gitleaks being feature complete; and the guard's blindness to a push run from a script, which
+the trial met. No check is deferred.
