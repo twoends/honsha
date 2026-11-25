@@ -9,8 +9,8 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
   installation can run on the person's own computer; nothing in the design depends on which machine it is.
 - **Hub:** a long-lived Claude Code session whose working directory is the home repository, with the procedure of the
   kit's agent `honsha:hub`.
-- **Channels:** a messaging app for capture, quick questions, approvals and notifications; the Claude app and a board
-  page for everything longer.
+- **Channels:** a messaging app for capture, quick questions and notifications; the Claude app, where the person gives
+  an approval in the worker's own session, and a board page for everything longer.
 - **Execution:** one worker session per work item, in a git worktree of the project, with that project's profile.
 - **State:** Markdown files with front matter, in git. The home holds the hub's records, each project holds its own. The
   files are the source of truth, not the query engine: questions go through a derived index (architecture, Files and
@@ -28,7 +28,7 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Host              | Runs everything; reachable without any personal device                                                                                                           | Linux VPS                                                          |
 | Hub session       | Understands the three verbs (evaluate, ask, dispatch). Reads and writes the home. Never edits project code itself                                                | The kit's agent `honsha:hub`, in a Claude Code session in the home |
-| Messaging         | Text, links, voice notes and screenshots in; replies, notifications and approvals out; allowlisted senders only                                                  | Claude Code Channels (research preview)                            |
+| Messaging         | Text, links, voice notes and screenshots in; replies and notifications out, among them where an approval waits; allowlisted senders only                         | Claude Code Channels (research preview)                            |
 | App access        | Full conversations with the hub and with any worker, from phone or browser                                                                                       | Remote Control in server mode                                      |
 | Worker            | Executes one work item in a worktree of its project and opens the pull request                                                                                   | Background session (research preview)                              |
 | Reader            | Reads untrusted content: pages, transcripts, third-party repositories. Read-only tools, no secrets, no repository access                                         | Subagent defined in the kit                                        |
@@ -43,7 +43,8 @@ assumptions (architecture, Assumptions to verify). Terms are defined in the [vis
 flowchart LR
   P((Person)) -- text, links, voice, screenshots --> M[Messaging]
   P -- conversation --> A[Claude app]
-  P -- view, approve --> B[Board]
+  P -- view --> B[Board]
+  P -- approve --> W
   M --> H[Hub session]
   A --> H
   H -- untrusted content --> R[Reader]
@@ -246,7 +247,8 @@ board. Both limits are settings in the home.
    was there). Parts of the request that are independent are run in parallel by the worker and integrated before
    verification (workflow, Parallel work). Separate requests that are independent of each other run at
    the same time, within the limits of the host and the project.
-2. A full-size item stops here: the strategy is sent for approval. Trivial and small items continue.
+2. A full-size item stops here: the person approves the strategy in the worker's session. Trivial and small items
+   continue.
 3. A worker runs in a worktree with the profile, the core rules and the packs of the item's areas.
 4. Where the change touches what an attacker aims at, the security reviewer looks for holes in it first. The checker
    verifies the result. Their reports go into the record and the pull request.
@@ -261,14 +263,14 @@ reviews of radar entries; proactive research. All of them go through the hub and
 
 ## Native first
 
-| Need                            | First version                     | Replaced by custom code if                                     |
-| ------------------------------- | --------------------------------- | -------------------------------------------------------------- |
-| Messaging in and out            | Channels with the Telegram plugin | Voice notes or images do not arrive, or approvals need buttons |
-| Conversation from phone and web | Remote Control server mode        | It does not survive reboots or disconnections reliably         |
-| Running work items              | Background sessions               | State cannot be read reliably by the board                     |
-| Timed runs                      | Host timers that message the hub  | —                                                              |
-| Board                           | A generated page                  | —                                                              |
-| Isolation of untrusted content  | A restricted subagent             | Tool restrictions prove insufficient; then a separate process  |
+| Need                            | First version                     | Replaced by custom code if                                      |
+| ------------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| Messaging in and out            | Channels with the Telegram plugin | Voice notes or images do not arrive, or a notice needs a button |
+| Conversation from phone and web | Remote Control server mode        | It does not survive reboots or disconnections reliably          |
+| Running work items              | Background sessions               | State cannot be read reliably by the board                      |
+| Timed runs                      | Host timers that message the hub  | —                                                               |
+| Board                           | A generated page                  | —                                                               |
+| Isolation of untrusted content  | A restricted subagent             | Tool restrictions prove insufficient; then a separate process   |
 
 The hub must not depend on a conversation's memory: a session can be restarted at any time and resume from the files.
 

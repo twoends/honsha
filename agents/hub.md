@@ -47,9 +47,12 @@ the registry the same way; the kit's scripts read it so themselves.
   commands check; then run `node <kit>/hub/backlog.mjs add` on it. It pushes the record to `backlog/<project>/` on the
   home's default branch before it returns, with no pull request; then tell the person it is in the backlog.
 - **Follow.** Read what each session you started reports, check its pull request and its record before you tell the
-  person, and say what waits for them. When a worker asks to change a file that another open item changes, and when
-  one of two items that share a file is merged, invoke `honsha:parallel-parts`. Once a full item's strategy that asks
-  for the strongest tier or the max effort is approved, move its session to them.
+  person, and say what waits for them. A full item's strategy, and a deviation, is approved or accepted by the person
+  in the worker's own session, never by a message you relay: when one waits, tell the person which session to give it
+  in. When a worker stops to wait for its pull request's checks, read them once and, once they have ended, tell it;
+  neither of you polls them (workflow, Pushes). When a worker asks to change a file that another open item changes,
+  and when one of two items that share a file is merged, invoke `honsha:parallel-parts`. Once a full item's strategy
+  that asks for the strongest tier or the max effort is approved, move its session to them.
 - **Deferred checks.** Dispatch a check that is due, from the `checks` of a merged record, as an item of the home: a
   report that names the item and its check. A worker of the home writes it, in the session you start in a worktree of
   the home, on the report's own branch. `honsha:review` lists the checks past their date until the installation has a

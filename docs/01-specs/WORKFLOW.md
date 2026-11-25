@@ -137,7 +137,9 @@ extended instead.
 3. **Start.** A branch is created in the project and the record moves into it; one in the backlog is taken from there
    (workflow, The backlog).
 4. **Strategy.** Small: a few lines, then continue. Full: the strategy is written and the item stops for the
-   approval, as the core rules say (Sizes; Commits and branches).
+   approval, as the core rules say (Sizes; Commits and branches). The person gives it, and accepts a deviation, in the
+   worker's own session: a relayed approval can be refused by that session's permission checks, and the person's own
+   words there are its plain record. The hub tells the person where one waits.
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas: a
    session that receives the worker's procedure when it starts, or one started as the worker (`agents/worker.md`).
 6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
@@ -308,6 +310,9 @@ A message is read as a title in the history; the reasons are in the record, so t
   push once the run on the work has passed (workflow, Checks on pull requests and on the default branch). The session
   waits for that run, and reads its result, before it pushes the closing commit: a newer push cancels an older run of
   the same pull request, and the push on records would then run everything.
+- No session polls the checks. A worker that has pushed reads them once when it has reason to; if one still runs, it
+  says so and ends its turn, to be told. The hub, woken by that stop, reads them once (`agents/hub.md`, Follow) and,
+  once they have ended, tells the worker, which reads them once and makes its closing commit.
 - The rule is the same on a public repository, whose runs some services do not count: the time a run takes and the
   fault a second run hides do not depend on its price.
 
