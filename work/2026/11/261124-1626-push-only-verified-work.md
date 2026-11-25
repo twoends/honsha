@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -374,6 +374,7 @@ approval on to this item's session.
   is the first script of a piece; either the test reads the pieces, or the interface narrows what it says of its test.
   Both reach past the approved scope, and a departure from it is a stop condition: the state is `blocked`, and the
   person decides whether to accept the test's extension as a deviation.
+- The person accepted the test's extension (Deviations); the item resumes, and the state is `in-progress`.
 
 ## Verification
 
@@ -399,5 +400,10 @@ approval on to this item's session.
 
   The caller's file of each project of the installation lies outside the kit: the hub dispatches its change, as items
   of those projects, after this pull request is merged.
+
+- The checker's repeated check of `84365ea` found that `checks/interface.test.mjs` now reads the scripts of each piece
+  of `services/` too, outside the scope and the extension above. The interface says that its test fails on a script it
+  does not name, and `services/github/runs.mjs` is the first script of a piece. The person accepted the test's
+  extension on 2026-11-25, in the hub's session; the hub passed the decision on to this item's session.
 
 ## Outcome
