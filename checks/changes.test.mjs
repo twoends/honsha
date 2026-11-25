@@ -7,7 +7,7 @@ import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { RECORD, judge } from "./changes.mjs";
+import { RECORD, judge, shown } from "./changes.mjs";
 
 const script = fileURLToPath(new URL("./changes.mjs", import.meta.url));
 const WORK = "work/2026/11/261124-1626-push-only-verified-work.md";
@@ -118,21 +118,31 @@ test("a change to any other file exits 1 and names it", () => {
   const both = commit({ [WORK]: "# Record, again\n", "src/app.js": "export const a = 1;\n" });
   const { status, output } = run(dir, [start, both]);
   assert.equal(status, 1);
-  assert.match(output, /"src\/app\.js" is not a record/);
+  assert.match(output, /^src\/app\.js is not a record/);
 });
 
-test("a file's name is printed so that no line begins as a command to the runner", () => {
+test("a file's name is printed with no command to the runner in it", () => {
+  assert.equal(shown("src/app-1_v2.js"), "src/app-1_v2.js");
+  assert.equal(shown('a b#[]:;="\n'), "a%20b%23%5B%5D%3A%3B%3D%22%0A");
+  assert.equal(shown("è"), "%C3%A8");
   const { dir, git, start } = repository();
   // Built without the working tree, where this system may refuse such names.
   const blob = git(["hash-object", "-w", "--stdin"], "code\n");
   const entries = git(["ls-tree", "-z", start]);
-  for (const name of ["!\n::set-output name=verify::false\n!", "::notice::Only records"]) {
+  for (const name of [
+    "!\n::set-output name=verify::false\n!",
+    "::notice::Only records",
+    "##[set-output name=verify;]false",
+    "x\r##[add-mask]y",
+  ]) {
     const tree = git(["mktree", "-z"], `${entries}100644 blob ${blob}\t${name}\0`);
     const head = git(["commit-tree", tree, "-p", start, "-m", "Change"]);
     const { status, output } = run(dir, [start, head]);
     assert.equal(status, 1, name);
     assert.match(output, /is not a record/, name);
-    for (const line of output.split(/\r?\n|\r/)) assert.ok(!line.startsWith("::"), line);
+    for (const line of output.split(/\r?\n|\r/)) {
+      assert.ok(!line.startsWith("::") && !line.includes("##["), JSON.stringify(line));
+    }
   }
 });
 

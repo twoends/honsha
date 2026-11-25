@@ -332,6 +332,18 @@ approval on to this item's session.
   conditions and what the token may read replace what the skip assumed. The workflow's "Pushes" and its contract say
   that the skip follows a run that passed; the interface's line on `project.yml` names the permissions its caller
   grants. The workflow is 46 characters over the budget this item gave it, which goes from 38,600 to 38,700.
+- The repeated security review of `20db06c`, on Opus, passed: findings 1 and 2 and weak point 1 are fixed, and it
+  names three weak points (Verification).
+- Its weak point 1: the runner also reads a command in the form `##[`, anywhere in a line, and a JSON string keeps `#`,
+  `[` and `]`. The script now writes each character of a name but letters, digits and `_ . / -` as `%` and its bytes in
+  hexadecimal, and the test adds names in that form.
+- Its weak point 2, left to the person: `project.yml` no longer caps the token, so a caller that grants more, or names
+  no permissions, gives the job more. Naming both permissions in `project.yml` would stop at its start every caller
+  without `actions: read`, which the person's decision keeps working (Deviations). The README now says that code in
+  the job can read the token from the runner's memory, so that what the token may do is what the whole job may do.
+- Its weak point 3, left to the person: a passed run of another pull request from the same branch, against another
+  base, would count. The caller's branch filter gives every such run the default branch as its base, and the documents
+  already name a base that moved.
 
 ## Verification
 

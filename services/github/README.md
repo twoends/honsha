@@ -194,8 +194,9 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    so in a private repository of a free account, it is shown and nothing more.
 6. **What it may not do.** The workflow's token has read access to the contents and to the runs of Actions, and
    nothing else: the caller grants no more. Besides the checkouts, only the step that reads the earlier run gets the
-   token, in its environment and before any of the project's commands runs. The checkouts leave no token in the git
-   configuration. The actions are pinned to a commit.
+   token in its environment, before any of the project's commands runs; code that runs in the job can still read it
+   from the runner's memory, so what the token may do is what the whole job may do. The checkouts leave no token in the
+   git configuration. The actions are pinned to a commit.
 
 The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
 the kit's hook checks a push only in a clone that has it (the kit's README). On Linux it runs
