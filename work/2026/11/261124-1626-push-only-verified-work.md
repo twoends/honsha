@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -309,7 +309,37 @@ approval on to this item's session.
   GitHub's cache needs a new action and another design of the skip; refusing the skip on a pull request from a fork
   narrows the finding without closing it. A finding that cannot be fixed inside the scope is a stop condition: the
   state is `blocked`, and the person decides.
+- The person chose to read the earlier run's result from GitHub's API (Deviations); the item resumes, and the state is
+  `in-progress`.
+- GitHub's documentation, read through a subagent on Sonnet, says that a called workflow's permissions can only be the
+  same as its caller's or fewer, and that the `github` context of a called workflow, its token included, is its
+  caller's. It does not say what happens to a called workflow that asks for more than its caller grants; in the
+  kit's experience GitHub then refuses to start the run. The list of a workflow's runs takes `head_sha` and `event`,
+  and each run carries `id`, `event`, `head_sha`, `status`, `conclusion`, `workflow_id` and `pull_requests`.
 
 ## Verification
+
+## Deviations
+
+- The security review of `5bb799e` found that the skip read only which files a push changed, not whether the run on
+  the branch's earlier tip passed (finding 1, Verification). The person decided on 2026-11-25, in the hub's session,
+  that the skip happens only when that run concluded with success, read from GitHub's API, and that whatever the read
+  cannot tell runs everything; the hub passed the decision on to this item's session. The person accepts the extension
+  of the approved scope that this brings:
+  - criterion 4 holds with one more condition: a later push to a pull request's branch whose new commits change only
+    records skips the steps only when the latest run of the same workflow on the branch's earlier tip, from the same
+    branch of the same repository, concluded with success;
+  - a script of the GitHub piece with its test, `services/github/runs.mjs` and `services/github/runs.test.mjs`, reads
+    that run;
+  - `actions: read` is granted in the kit's own `verify.yml`, to its `project` job alone, and in the caller's file that
+    the piece shows, where a project may leave it out: its checks keep working, and its pushes on records run
+    everything;
+  - `project.yml` names no permission of its own any more: a called workflow may only keep or lower what its caller
+    grants, and one that named `actions: read` would ask more than a caller without it grants. The caller's
+    `permissions` is the one limit;
+  - the interface's line on the piece's workflow names the permissions that its caller grants.
+
+  The caller's file of each project of the installation lies outside the kit: the hub dispatches its change, as items
+  of those projects, after this pull request is merged.
 
 ## Outcome
