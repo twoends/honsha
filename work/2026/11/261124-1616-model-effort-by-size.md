@@ -280,6 +280,16 @@ without a model.
   12,541 characters of rules and template, 12,390 of lessons and models, 6,188 of the worker's procedure, 31,119 in
   all; the total goes from 30,150 to 31,150, since every session starts subagents and receives the map only so.
   `agents/hub.md` measures 5,989 of 6,000 after a paragraph of "Dispatch" was wrapped again.
+- The security review is not due, as the boundaries say: the diff touches no authentication, permission, secret,
+  deploy or CI configuration or data schema.
+- The checker's first check, on `0f30411`, failed on one finding: the architecture gave a small item that the hub
+  raises for a risk the higher effort too, where the hub's procedure raises only its tier. The architecture's
+  sentence now says the strong tier at the same effort.
+- Of what it could not verify: the platform's documentation, in the lookup above, also says that the tool that starts
+  a subagent takes an effort for that start, which overrides the definition's, so the light tier's effort and the
+  checker's effort above xhigh can be given. The phrase in quotation marks in the intent names the principle of the
+  installation's decision that the intent describes, and quotes no words of the person; the intent stays as the hub
+  wrote it.
 
 ## Verification
 

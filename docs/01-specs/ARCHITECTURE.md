@@ -303,10 +303,10 @@ The hub must not depend on a conversation's memory: a session can be restarted a
   setting.
 - An item's session runs on the tier and effort of its size, which the hub gives it when it starts it
   (`agents/hub.md`). Most items are trivial or small, one concern with a clear acceptance, which a standard model at
-  high effort does well. Full items, which have more than one reasonable design or touch an interface or data, run on
-  the strong tier at the higher effort, as does a small item where the hub sees a risk. The strongest tier, or the
-  highest effort, is used when a full item's work is too complex for the default: its strategy says so, the person
-  approves that choice with it, and the hub then moves the item's session.
+  high effort does well; a small item where the hub sees a risk takes the strong tier at the same effort. Full items,
+  which have more than one reasonable design or touch an interface or data, run on the strong tier at the higher
+  effort. The strongest tier, or the highest effort, is used when a full item's work is too complex for the default:
+  its strategy says so, the person approves that choice with it, and the hub then moves the item's session.
 - The checker and the security reviewer run on the strong tier at least, at xhigh effort, and on the work's model and
   effort where those are higher: a cheaper model is safe for the work because a strong check follows it, and a check
   is never weaker than the work it reads. The platform lets a definition fix a model only by name, and takes an
