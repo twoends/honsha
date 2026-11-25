@@ -36,6 +36,7 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     defaultBranch: null,
     verify: [],
     setup: [],
+    dynamicTesting: [],
     commitsAddress: null,
     kinds: null,
     public: false,
@@ -44,6 +45,26 @@ test("a profile without the keys gives nothing to run and nothing to match", () 
     securityReview: [],
   });
   assert.deepEqual(parseProfile("verify: []\ncommits: {}\n").verify, []);
+});
+
+test("reads the dynamic testing commands as the verification commands, one on each line, apart from them", () => {
+  const text = [
+    "verify:",
+    "  - npm test",
+    "dynamic-testing:",
+    "  - docker compose up --detach --wait app # the instance",
+    "  - 'docker compose run --rm scanner'",
+    "setup:",
+    "  - npm ci",
+  ].join("\n");
+  const profile = parseProfile(text);
+  assert.deepEqual(profile.dynamicTesting, [
+    "docker compose up --detach --wait app",
+    "docker compose run --rm scanner",
+  ]);
+  assert.deepEqual(profile.verify, ["npm test"]);
+  assert.deepEqual(profile.setup, ["npm ci"]);
+  assert.deepEqual(parseProfile("dynamic-testing: []\n").dynamicTesting, []);
 });
 
 test("reads the setup commands as the verification commands, one on each line, apart from them", () => {
@@ -109,6 +130,10 @@ test("refuses a form it does not read, instead of passing in silence", () => {
   // An indented line that is no item would end the list there, and the commands after it would not run.
   assert.throws(() => parseProfile("setup:\n  npm ci --prefix app\n"), /`setup` must be a list/);
   assert.throws(() => parseProfile("verify:\n  - npm test\n  npm run lint\n"), /`verify` must be a list/);
+  assert.throws(() => parseProfile("dynamic-testing: [docker compose up]\n"), /`dynamic-testing` must be a list/);
+  assert.throws(() => parseProfile("dynamic-testing: docker compose up\n"), /`dynamic-testing` must be a list/);
+  assert.throws(() => parseProfile("dynamic-testing:\n  - \n"), /`dynamic-testing` holds an empty command/);
+  assert.throws(() => parseProfile("dynamic-testing:\n  - one\n  two\n"), /`dynamic-testing` must be a list/);
   assert.deepEqual(parseProfile("verify:\n  - npm test\n  # a note\n\ngates:\n  - one\n").verify, ["npm test"]);
   assert.throws(() => parseProfile("commits: yes\n"), /commits/);
   assert.throws(() => parseProfile("commits:\n  address: '('\n"), /regular expression/);
@@ -128,6 +153,7 @@ test("the profile's template is one the reader accepts, with every key the reade
     defaultBranch: "main",
     verify: ["npm run check"],
     setup: ["npm ci --ignore-scripts"],
+    dynamicTesting: ["docker compose -f compose.scan.yml up --abort-on-container-exit --exit-code-from scanner"],
     commitsAddress: "@example\\.org$",
     kinds: { feature: 10, fix: 5, upkeep: 5 },
     public: false,

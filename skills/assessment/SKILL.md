@@ -13,7 +13,9 @@ directory.
 In this order. A step that finds the project in order says so in a line; a gap is a finding.
 
 1. **Profile:** present, or what it would hold, against the template `templates/profile.yml` in the kit directory:
-   `verify` covering formatting, lint, types and tests, as the template says; `setup`, which installs in a fresh
+   `verify` covering formatting, lint, types, tests and static security testing, as the template says, and
+   `dynamic-testing`, each with the kinds that the skill `honsha:security-testing` asks of the project's files and
+   surface; `setup`, which installs in a fresh
    checkout what `verify` and the project's own git hooks need, wherever its packages are; gates, kinds, the lessons
    file.
 2. **Checks on pull requests and the default branch:** the wiring the piece shows under "Checks on pull requests and

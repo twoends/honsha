@@ -169,17 +169,20 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    On Linux, with Node.js 26 and the npm the caller names, if any, it prepares the checkout with the kit's
    `checks/verify.mjs --setup`, which runs the `setup` list of the profile and installs nothing when the profile has
    none, then runs from `project/` the kit's `checks/record.mjs`, on a pull request only, and `checks/commits.mjs`,
-   `hub/projects.mjs check` where the project holds a `registry.yml`, and `checks/verify.mjs`, which runs the `verify`
-   list of the profile. The kit's first job runs `node checks/verify.mjs --setup` and `node checks/verify.mjs` alone,
-   as its profile lists the kit's checks, and at every push: the kit's repository is public, where its runs cost
-   nothing. GitHub checks out the merge of the pull request with its base branch, so the commands test the merged
-   result, and the workflow does not run while the pull request has a conflict; on a push it checks out the pushed
-   commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the commits needs.
+   `hub/projects.mjs check` where the project holds a `registry.yml`, `checks/verify.mjs`, which runs the `verify`
+   list of the profile, and, once it passes, `checks/verify.mjs --dynamic`, which runs the `dynamic-testing` list and
+   passes at once when the profile has none. The runner has Docker with Docker Compose, which those commands can use
+   to start the instance and its scanner. The kit's first job runs `node checks/verify.mjs --setup` and
+   `node checks/verify.mjs` alone, as its profile lists the kit's checks, and at every push: the kit's repository is
+   public, where its runs cost nothing. GitHub checks out the merge of the pull request with its base branch, so the
+   commands test the merged result, and the workflow does not run while the pull request has a conflict; on a push it
+   checks out the pushed commit. The checkout fetches the whole history (`fetch-depth: 0`), which the check of the
+   commits needs.
    On a push to a pull request's branch, project.yml first runs the kit's `checks/changes.mjs` on the commits that the
    push added, from `github.event.before`, the branch's tip before the push, to `HONSHA_HEAD`. When they change only
    records, [runs.mjs](runs.mjs) reads from GitHub's API, with the run's token, the latest run of the same workflow on
    that earlier tip, from the same branch of the same repository. When that run passed, project.yml skips the steps
-   that install npm, run the setup and install Claude Code, and the one that runs `checks/verify.mjs`; a notice on the
+   that install npm, run the setup and install Claude Code, and the two that run `checks/verify.mjs`; a notice on the
    run says so, and the kit's checks run. A run that skipped them passed only after such a run on its own earlier tip,
    so a chain of them goes back to a run that checked the code. Everything runs otherwise: at the opening of a pull
    request, whose event has no earlier tip; after a run that failed, was cancelled, still goes or never ran, as for a
@@ -212,9 +215,27 @@ What it costs: nothing on a free account, within a limit. On a private repositor
 counted against an amount that the account has included each month, each job rounded up to a whole minute, and Windows
 minutes count for more than Linux ones. A run of project.yml is one Linux job, counted to the account that owns the
 calling project; on a later push that changes only records, after a run that passed, it holds the checkouts, the read
-of that run and the kit's checks alone, and counts as one minute while they take less. With no payment method on the
-account, runs stop when that amount is used and nothing is billed. On a public repository the standard runners are
-free.
+of that run and the kit's checks alone, and counts as one minute while they take less. A project's dynamic testing adds
+to every other run the minutes that the pull of its images, the start of its instance and its scan take. With no
+payment method on the account, runs stop when that amount is used and nothing is billed. On a public repository the
+standard runners are free.
 
 A project's own workflows, such as its application's checks, are the project's: this wiring does not reach them, and
 they run at every push they are wired for, which the rule on pushes (core rules, Delivery) keeps few.
+
+## Static testing of the workflows
+
+A project's pipeline configuration on GitHub is its workflow files, `.github/workflows/`, which its static security
+testing reads (workflow, Security testing). Two free tools under the MIT licence read them, each run from the command
+line on any host and in the pipeline:
+
+- **zizmor** looks for the holes of a workflow: untrusted input in a script, permissions wider than needed, actions not
+  pinned to a commit, credentials left in the checkout. It comes as a Python package, a Rust crate and a container
+  image. With `--offline` it makes no request, and leaves out the few audits that read GitHub's API.
+- **actionlint** checks a workflow's syntax and expressions, and runs ShellCheck on the scripts of its steps when
+  ShellCheck is installed. It comes as release binaries and a container image.
+
+GitHub's own scanners are no part of the rules. Its code scanning with CodeQL and its secret scanning are free on a
+public repository; on a private one of a free personal account code scanning is not offered, and both need a paid
+product of GitHub's on a repository of an organisation. Where one of them is on at no cost, it is a further stop, as
+the alerts on dependencies are.

@@ -11,7 +11,11 @@
 // checkout for the `verify` commands and for the project's own git hooks, run once in each new checkout, a worktree
 // or a pipeline's, and not at each verification, since an install takes minutes.
 //
-//   node checks/verify.mjs [--setup] [<profile>]
+// With `--dynamic` it runs the profile's `dynamic-testing` list, in the same way: the commands that start a local
+// instance of the project and attack it from outside, run after the `verify` commands at every verification. They are
+// kept apart from `verify`, which a worker runs more than once and which must run on a host without a container engine.
+//
+//   node checks/verify.mjs [--setup | --dynamic] [<profile>]
 
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -40,25 +44,38 @@ export function run(commands, { spawn = spawnSync, log = console.log } = {}) {
   return true;
 }
 
+/**
+ * What each flag runs, none for the verification: the profile's list, and how the output names it.
+ * @type {Map<string, { key: "verify" | "setup" | "dynamicTesting", what: string, failed: string }>}
+ */
+const LISTS = new Map([
+  ["", { key: "verify", what: "verification", failed: "Verification failed." }],
+  ["--setup", { key: "setup", what: "setup", failed: "Setup failed." }],
+  ["--dynamic", { key: "dynamicTesting", what: "dynamic testing", failed: "Dynamic testing failed." }],
+]);
+
 function main() {
   const args = process.argv.slice(2);
-  const setup = args.includes("--setup");
-  const file = args.find((arg) => arg !== "--setup") ?? ".hub/profile.yml";
+  const flags = args.filter((arg) => arg.startsWith("--"));
+  const list = flags.length > 1 ? undefined : LISTS.get(flags[0] ?? "");
+  if (!list) {
+    console.error("Usage: node checks/verify.mjs [--setup | --dynamic] [<profile>]");
+    return 1;
+  }
+  const { key, what, failed } = list;
+  const file = args.find((arg) => !arg.startsWith("--")) ?? ".hub/profile.yml";
   const profile = readProfile(file);
   if (!profile) {
     console.error(`There is no profile at ${file}.`);
     return 1;
   }
-  const commands = setup ? profile.setup : profile.verify;
-  const what = setup ? "setup" : "verification";
+  const commands = profile[key];
   if (commands.length === 0) {
     console.log(`${file} lists no ${what} commands.`);
     return 0;
   }
   const passed = run(commands);
-  console.log(
-    passed ? `\nAll ${commands.length} ${what} commands passed.` : `\n${setup ? "Setup" : "Verification"} failed.`,
-  );
+  console.log(passed ? `\nAll ${commands.length} ${what} commands passed.` : `\n${failed}`);
   return passed ? 0 : 1;
 }
 

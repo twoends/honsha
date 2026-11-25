@@ -11,6 +11,8 @@
 //     - npm run check
 //   setup:
 //     - npm ci --ignore-scripts
+//   dynamic-testing:
+//     - docker compose -f compose.scan.yml up --abort-on-container-exit --exit-code-from scanner
 //   security-review:
 //     - "deploy/**"
 //   commits:
@@ -35,7 +37,7 @@ const ITEM = /^\s*-\s+(.*)$/;
 const TECHNOLOGY = /^[A-Za-z0-9][\w.+-]*$/;
 
 /**
- * @typedef {{ defaultBranch: string | null, verify: string[], setup: string[],
+ * @typedef {{ defaultBranch: string | null, verify: string[], setup: string[], dynamicTesting: string[],
  *   commitsAddress: string | null, kinds: Record<string, number> | null, public: boolean,
  *   stack: string[], lessons: string | null, securityReview: string[] }} Profile
  */
@@ -107,8 +109,8 @@ function unreadable(pattern) {
 }
 
 /**
- * Returns `{ defaultBranch, verify, setup, commitsAddress, kinds, public, stack, lessons, securityReview }` from the
- * text of a profile.
+ * Returns `{ defaultBranch, verify, setup, dynamicTesting, commitsAddress, kinds, public, stack, lessons,
+ * securityReview }` from the text of a profile.
  * Throws when one of these keys is written in a form the reader does not accept.
  * @param {string} text
  * @returns {Profile}
@@ -120,6 +122,7 @@ export function parseProfile(text) {
     defaultBranch: null,
     verify: [],
     setup: [],
+    dynamicTesting: [],
     commitsAddress: null,
     kinds: null,
     public: false,
@@ -162,10 +165,10 @@ export function parseProfile(text) {
         "profile: `direct-commits` no longer exists: the default branch changes only through pull requests, in every repository",
       );
     }
-    if (key === "verify" || key === "setup") {
+    if (key === "verify" || key === "setup" || key === "dynamic-testing") {
       const commands = list(lines, index, value, `profile: \`${key}\` must be a list with one command on each line`);
       if (commands.some((command) => command === "")) throw new Error(`profile: \`${key}\` holds an empty command`);
-      profile[key] = commands;
+      profile[key === "dynamic-testing" ? "dynamicTesting" : key] = commands;
     }
     if (key === "security-review") {
       const form = "profile: `security-review` must be a list with one path pattern on each line";

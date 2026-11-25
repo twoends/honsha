@@ -45,18 +45,22 @@ Each check below reports a finding for anything it finds wrong.
    parts of a document that the diff changes, against Documents. The record is step 8.
 5. **Gates.** Each gate under `gates` in `.hub/profile.yml`: met, not met, or not verifiable. If the project has no
    profile or no gates, say so.
-6. **Verification evidence.** Under "Verification", with its result: each command under `verify` in the profile,
-   and the kit's `checks/record.mjs` and `checks/commits.mjs`. One missing or failing is a finding. Say which of
-   formatting, lint, types and tests the `verify` list covers, from the commands and the files they read. One it
-   leaves out without a comment saying why is reported here; it is a finding only when a gate asks for it.
+6. **Verification evidence.** Under "Verification", with its result: each command under `verify` and
+   `dynamic-testing` in the profile, and the kit's `checks/record.mjs` and `checks/commits.mjs`. One missing or
+   failing is a finding. One that the record says the host could not run whatever the change, with the system's
+   message, is not verifiable from here, since the pipeline runs it after the push; a scan for secrets left so is a
+   finding. Say which of formatting, lint, types, tests and static security testing the `verify` list covers, from the
+   commands and the files they read. One it leaves out without a comment saying why is reported here; it is a finding
+   only when a gate asks for it.
 7. **Security review.** It was due when the diff touches authentication, permissions or secrets, deploy or CI
-   configuration, or the grants, roles and policies of a data schema, or changes a file that matches a path under
-   `security-review` in the profile, where `*` stays inside a folder, `**` crosses folders and both match a name that
-   begins with a dot. When it was due, Verification holds the security reviewer's reports up to the commit you read,
-   the first on the branch's whole diff and each later one on what changed since the one before; every finding of
-   every report is confirmed fixed by a later report, or accepted by the person under "Deviations", with who, when
-   and where; and the log says what was done with each weak point. A review due and missing is a finding; one that
-   ran when it was not due is not. Do not review the change's security yourself.
+   configuration, or the grants, roles and policies of a data schema, or weakens the project's security testing by
+   removing or narrowing one of its commands or rules or silencing one of its findings, or changes a file that matches
+   a path under `security-review` in the profile, where `*` stays inside a folder, `**` crosses folders and both match
+   a name that begins with a dot. When it was due, Verification holds the security reviewer's reports up to the
+   commit you read, the first on the branch's whole diff and each later one on what changed since the one before;
+   every finding of every report is confirmed fixed by a later report, or accepted by the person under "Deviations",
+   with who, when and where; and the log says what was done with each weak point. A review due and missing is a
+   finding; one that ran when it was not due is not. Do not review the change's security yourself.
 8. **The record.** Beyond its shape, which `checks/record.mjs` checks:
    - against The record and Documents: it is no longer than its size calls for, copies nothing that another
      document holds, and its Verification holds what The record says, nothing else;
@@ -84,7 +88,8 @@ is wrong, not met or not verifiable is argued.
 - **Scope:** in order | <each change outside the scope>
 - **Comments and documents:** in order | <each break, with file and line>
 - **Gates:** in order | <each gate not met or not verifiable> | no gates
-- **Verification evidence:** in order | <what is missing or failing>; covers <formatting, lint, types, tests>
+- **Verification evidence:** in order | <what is missing or failing>; covers <formatting, lint, types, tests,
+  security>
 - **Security review:** in order | not due | <what is missing or not settled>
 - **Record:** in order | <only what is not in order>
 - **Commits:** in order | <only what is not in order>

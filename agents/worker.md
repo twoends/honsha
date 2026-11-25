@@ -33,7 +33,8 @@ core rules in your context always hold, and this file does not repeat them: it i
   every search, exploration, piece of research and review. Before splitting, invoke the skill
   `honsha:parallel-parts`, which holds the test.
 - For an item that assesses a project, invoke the skill `honsha:assessment`; for one that adds, removes or updates a
-  dependency, changes a lockfile or answers a vulnerability report, `honsha:dependencies`.
+  dependency, changes a lockfile or answers a vulnerability report, `honsha:dependencies`; for one that sets up or
+  changes the security testing or answers one of its findings, `honsha:security-testing`.
 - At a stop condition, write the reason in the log, commit the record and tell the person; do not guess a way around
   it.
 - When the item turns out larger than its size, commit the work as far as it got, with the record at that size; the
@@ -48,9 +49,11 @@ What the verification writes into the record stays uncommitted until the closing
 
 1. From the project's root, run the kit's checks, `node <kit directory>/checks/record.mjs` and
    `node <kit directory>/checks/commits.mjs`, and `node <kit directory>/hub/projects.mjs check` where the root holds
-   a `registry.yml`; then every other command listed under `verify` in the profile. Write each command and its result
-   under "Verification".
-   A command that fails is fixed or reported; it is never left out.
+   a `registry.yml`; then every other command listed under `verify` in the profile, then those under
+   `dynamic-testing`. Write each command and its result under "Verification".
+   A command that fails is fixed or reported; it is never left out. One that the host cannot run whatever the change,
+   as a native program its application control refuses, is written with the system's message, and the pipeline's run
+   on the work gives its result; not a scan for secrets, whose finding would then be pushed: that stops the item.
 2. When the description of the skill `honsha:security-review` says that the change calls for it, whatever the item's
    size, invoke the skill now: the security review runs before the checker.
 3. A trivial item is verified at this point.

@@ -141,9 +141,10 @@ extended instead.
 5. **Execute.** A worker runs in a worktree, with the core rules, the profile and the packs of the item's areas: a
    session that receives the worker's procedure when it starts, or one started as the worker (`agents/worker.md`).
 6. **Verify.** The kit's checks of the record and of the commits run from the kit directory, then the profile's
-   verification commands. Where the change touches what an attacker aims at, the security reviewer looks for holes in
-   it, at any size (workflow, Security review). For small and full items the checker then compares the result with
-   the record and the profile's gates, from a fresh context and without write access (`agents/checker.md`).
+   verification commands and its dynamic testing (workflow, Security testing). Where the change touches what an
+   attacker aims at, the security reviewer looks for holes in it, at any size (workflow, Security review). For small
+   and full items the checker then compares the result with the record and the profile's gates, from a fresh context
+   and without write access (`agents/checker.md`).
    A repeated check reads only what changed (`agents/worker.md`, Verification): a full read of a large branch finds
    something new each time, so repeated full reads do not converge, and the first one already covered the branch.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
@@ -246,9 +247,10 @@ once:
 ## Profile
 
 `.hub/profile.yml` in each project. The template `templates/profile.yml` holds every key, with what it holds;
-`checks/profile.mjs` reads the keys the kit's scripts use, and refuses a form it cannot read. Two keys are commands:
-`verify`, which every verification runs, and `setup`, which prepares a fresh checkout for them once, in an item's
-worktree and in the pipeline alike, so that what a project needs installed is written in one place and not guessed.
+`checks/profile.mjs` reads the keys the kit's scripts use, and refuses a form it cannot read. Three keys are commands:
+`verify`, which every verification runs; `dynamic-testing`, which it runs after them where the project serves HTTP
+(workflow, Security testing); and `setup`, which prepares a fresh checkout for both once, in an item's worktree and in
+the pipeline alike, so that what a project needs installed is written in one place and not guessed.
 Per-project customisation is limited to this file and to the project's own rules. The procedure, sizes, states and
 record format are not customised.
 
@@ -358,6 +360,8 @@ no protection at all: what a service adds beyond that is a further stop, never s
    that service.
 6. **The source of the kit's marketplace** that a host installs the plugin from (architecture, Kit), with the commands
    that install it and that move a host's registration of the marketplace to that source.
+7. **The static testing of its pipeline's configuration** (workflow, Security testing): free tools that read the
+   service's pipeline files, and which of the service's own scanners a free account has.
 
 ### Checks on pull requests and on the default branch
 
@@ -374,16 +378,17 @@ default branch. It meets this contract.
    Then the kit's checks, from the kit's default branch, or from the branch under check in the kit's own repository:
    the check of the record, on a pull request only, since it belongs to a work branch; the check of the commits, and
    the registry's check where the project's root holds a registry. Then the `verify` commands, as the profile writes
-   them. All of them in a clean checkout that holds the history of the branch, and nothing else. On the
-   merge of the branch with the default branch where the service offers that, on the tip of the branch otherwise, and on
-   the pushed commit for a push; the piece says which.
+   them, and once they pass its `dynamic-testing` commands, on a runner with a container engine. All of them in a clean
+   checkout that holds the history of the branch, and nothing else. On the merge of the branch with the default branch
+   where the service offers that, on the tip of the branch otherwise, and on the pushed commit for a push; the piece
+   says which.
    A later push to a pull request's branch whose new commits change only records, after a run on the branch's earlier
-   tip that passed, as the service reports it, leaves out the `setup` and `verify` commands, and its run says so: that
-   run checked the same code, the kit's checks still read the records, and the session has run on them those that read
-   the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a pull request and every
-   push to the default branch run them all: the default branch is where what the skip leaves out is caught, such as a
-   record that a formatter of the `verify` list reads, or a default branch that moved between the run on the work and
-   the closing commit.
+   tip that passed, as the service reports it, leaves out the `setup`, `verify` and `dynamic-testing` commands, and its
+   run says so: that run checked the same code, the kit's checks still read the records, and the session has run on
+   them those that read the record (core rules, Delivery). Whatever cannot be told runs everything. The opening of a
+   pull request and every push to the default branch run them all: the default branch is where what the skip leaves
+   out is caught, such as a record that a formatter of the `verify` list reads, or a default branch that moved between
+   the run on the work and the closing commit.
 3. **What it gives the commands.** Three environment variables, because such a checkout is often not on the branch
    itself: `HONSHA_BRANCH`, the name of the branch; `HONSHA_BASE` and `HONSHA_HEAD`, the commit before the first of the
    branch and its last one. On a push to the default branch, the default branch's name, its tip before the push and the
@@ -395,8 +400,8 @@ default branch. It meets this contract.
    seeing the result.
 6. **What it may not do.** Change the repository, merge, deploy, or hold more than the right to read the repository.
 
-In the kit, `node checks/verify.mjs` runs the `verify` list of a profile, and with `--setup` its `setup` list, which the
-wiring runs first; `node checks/commits.mjs` reads the three
+In the kit, `node checks/verify.mjs` runs the `verify` list of a profile, with `--setup` its `setup` list, which the
+wiring runs first, and with `--dynamic` its `dynamic-testing` list; `node checks/commits.mjs` reads the three
 variables, also when they name the default branch (workflow, The backlog), and `node checks/record.mjs` reads
 `HONSHA_BRANCH`. `node checks/changes.mjs <base> <head>`, given the branch's tip before a push and after it, exits 0
 when the push changes only records, and 1 otherwise or whenever it cannot tell.
@@ -481,8 +486,9 @@ changes a dependency or answers a vulnerability report. Ordinary updates are lef
 The checker compares the work with its record and is no security audit: a change can do all that its record says and
 still open a hole. So a change that touches what an attacker aims at is read before delivery by a second agent, the
 security reviewer, whatever the item's size: authentication, permissions or secrets, deploy or CI configuration, the
-grants, roles and policies of a data schema, which are the always-full list's cases of that kind, and the paths that
-the profile lists under `security-review`. Elsewhere it would cost time and tokens and find nothing, so it does not
+grants, roles and policies of a data schema, which are the always-full list's cases of that kind, a change that weakens
+the project's security testing (workflow, Security testing), and the paths that the profile lists under
+`security-review`. Elsewhere it would cost time and tokens and find nothing, so it does not
 run.
 
 - It reads from a fresh context with read-only tools, as the checker does, and is given the diff without the record:
@@ -495,6 +501,29 @@ run.
   that begins with a dot, as a file of secrets often has, where Node.js's own matcher skips one.
 
 The worker's procedure is in the skill `honsha:security-review`, the reviewer's in `agents/security-reviewer.md`.
+
+---
+
+## Security testing
+
+The security review reads one change. Static and dynamic testing read the whole project at every verification, with
+tools that know classes of holes that no reader keeps in mind. The rules are in the skill `honsha:security-testing`.
+
+- **Static testing is part of `verify`:** a secret or an injection can come in any change, and there the worker finds
+  it before the push, while a committed secret is not yet on the hosting service. A job of the pipeline would find it
+  only after the push; the security reviewer runs no commands, and reads only some changes.
+- **Dynamic testing has a list of its own,** since it needs a running instance, minutes, and a container engine that
+  not every host has. It attacks a local instance started from the checkout with no secret: it tests the change before
+  its merge, harms no environment and needs nobody's leave. It runs at every verification and not on a date: with the
+  tools and their rules pinned, a run on unchanged code finds nothing new.
+- **Free tools, pinned with their rules:** the rules rely on nothing that a hosting service sells, and rules fetched at
+  each run would fail on code that did not change.
+- **Setting a finding aside calls for the security review:** it is a judgement on a possible hole, which the worker
+  that wrote the change does not make alone.
+- **A host that cannot run a command** leaves it to the pipeline (`agents/worker.md`, Verification), except the scan
+  for secrets, whose finding would then already be on the hosting service.
+- **Cost.** Dynamic testing adds the minutes of its instance and its scan to every run that verifies, which a private
+  repository's account pays for; a push that changes only records leaves it out.
 
 ---
 
