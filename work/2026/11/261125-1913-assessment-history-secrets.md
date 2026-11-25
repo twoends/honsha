@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-25
 updated: 2026-11-25
@@ -296,6 +296,9 @@ refs of pull requests included. The trial and the lookup check them.
 
 ## Approval
 
+Approved by the person on 2026-11-25, in this item's session, as written in `6014d40`, with gitleaks 8.30.1 as the
+scanner: the six choices and the trial's download listed under "For the person" included.
+
 ## Log
 
 - The record was given by the hub when it started the item; its intent is restated as the core rules ask of a public
@@ -361,6 +364,7 @@ refs of pull requests included. The trial and the lookup check them.
   scanner whose rules no longer change; the workflow's budget, now about 43,000; the reading of the pull request's
   checks. The scope and the criteria stand as written.
 - The state is `awaiting-approval`; the work waits for the person's approval, in this session.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
