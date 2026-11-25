@@ -68,6 +68,12 @@ counts.
   new budget by 70, and the workflow's from 42000 to 42500 for the 577 characters of its two new passages. A session
   that receives the worker's procedure at its start counts it at its budget, so the total in `hooks/hooks.test.mjs`
   is raised from 31550 to 31750 by the same 200 characters.
+- The checker, called before the verification was written into the record, failed it on that, and on a conflict that
+  the first commit left: `docs/01-specs/ARCHITECTURE.md` still sent approvals through the messaging app and the board,
+  which reach the hub, not the worker's session. A commit of its own updates it: the channels' line, the messaging
+  row, the board's arrow, step 2 of the flow and the trigger for custom code that named buttons for approvals. The
+  specification is part of the change (worker's procedure, While working), so no scope or criterion changes. The
+  verification is then run again, and a repeated check reads what changed.
 
 ## Verification
 
