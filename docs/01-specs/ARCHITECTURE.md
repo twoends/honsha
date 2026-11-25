@@ -78,7 +78,7 @@ The template, shared by every installation. Indicative layout:
 rules/                 the always-on rules, in parts of one topic each
 skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review, a security review
 agents/                hub, worker, reader, checker, security reviewer
-hooks/                 session and checker start, and the hub's or the worker's procedure; the guard on shell commands; write the effort level into records
+hooks/                 session and checker start, the installation's models, and the hub's or the worker's procedure; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits
 hub/                   the hub's code: the registry of projects, the moves between their states, the backlog
 services/<name>/       what is specific to one hosting service: commands, settings, wiring of the checks
@@ -125,7 +125,8 @@ work/                  the kit's own work records
   is said with the places a rule can go (workflow, Where the rules are). The checker, a subagent, receives the same
   files when it starts, from hooks matched to it alone. A session also receives the lessons of its project, its
   technologies and its host, one hook for each level, from the project and from the home that the plugin's setting
-  `home` names (workflow, Lessons). A session that runs as no agent receives a procedure too, from a hook of its own:
+  `home` names (workflow, Lessons), and, from another hook, the models that the home's settings map to the kit's tiers
+  (architecture, Models). A session that runs as no agent receives a procedure too, from a hook of its own:
   the hub's in the home's main working tree, the worker's in the home's worktrees and in the projects. The sessions
   that an application or another session starts run as no agent, and a session started as an agent has that agent's
   file as its system prompt.
@@ -136,7 +137,7 @@ One per user, private.
 
 ```
 registry.yml           projects: name, repository, folder on each host, state, assessment, chosen items; written by hub/projects.mjs (workflow, Joining an installation)
-settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host
+settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host, models of the kit's tiers
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, Decisions)
 inbox/                 one file per item received, with its verdict
@@ -294,20 +295,34 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 
 ## Models
 
-- Everything that needs judgement runs on a strong model: the hub, workers, the checker, the security reviewer. The
-  default is Opus. The strongest model is used when the work is too complex for the default: for a full item the
-  strategy says so, and the person approves that choice with the strategy.
-- The checker and the security reviewer run on the model of the session that calls them, so neither is weaker than
-  the work it reads.
-- A cheaper model is fixed only for mechanical steps: the reader's extraction and summarising, searching, bulk
-  formatting.
-- The assignment is written once, in the kit's agent and skill definitions. There is no per-activity table. A model
-  given when a session is started overrides the definition. A session that receives the hub's or the worker's
-  procedure at start, and does not run as that agent, runs on the model it was started with: the person's choice in
-  the application, or the one that the hub gives an item's session when it starts it.
-- Each record holds the model and the effort level of the session that did the work, so the choice can be reviewed
-  later with data. Who writes each is in the core rules (The record): the effort level reaches a hook after an edit,
-  the model reaches no hook. The policy is revisited with that data, or when usage limits are reached.
+- The kit names four model tiers, from the lightest: light, standard, strong and strongest (core rules, Models), and
+  no model. An installation maps each tier to a model under `models` in the home's `settings.yml`, by a name that the
+  platform accepts both when it starts a session and when it starts a subagent; every session of the installation
+  receives the map when it starts, from a hook (architecture, Kit). Which models exist, and which a plan makes
+  affordable, change more often than the rule; the model that a name stands for on a provider is the platform's own
+  setting.
+- An item's session runs on the tier and effort of its size, which the hub gives it when it starts it
+  (`agents/hub.md`). Most items are trivial or small, one concern with a clear acceptance, which a standard model at
+  high effort does well. Full items, which have more than one reasonable design or touch an interface or data, run on
+  the strong tier at the higher effort, as does a small item where the hub sees a risk. The strongest tier, or the
+  highest effort, is used when a full item's work is too complex for the default: its strategy says so, the person
+  approves that choice with it, and the hub then moves the item's session.
+- The checker and the security reviewer run on the strong tier at least, at xhigh effort, and on the work's model and
+  effort where those are higher: a cheaper model is safe for the work because a strong check follows it, and a check
+  is never weaker than the work it reads. The platform lets a definition fix a model only by name, and takes an
+  installation's map only when a subagent is started, so their definitions fix the effort and tell the session that
+  starts them which model to name.
+- An assessment runs on the strong tier at high effort: its findings choose the work that brings a project in, and it
+  reads more than it reasons. The hub runs on the strong tier, the model the person starts it with.
+- Every other subagent is started with its model named: a search, a lookup or a mechanical step on the light tier,
+  since the session that asked reads its result; work that needs judgement on the session's own.
+- A model or an effort given when a session or a subagent is started overrides its definition. The kit's agents name
+  no model: a session that runs as the hub or the worker, or receives its procedure at start, runs on the model it was
+  started with, the person's choice in the application or the one that the hub gives an item's session.
+- Each record holds the model and the effort level of the session that did the work, and the measures count each
+  model's tokens by item, its subagents' included, so the choice can be reviewed later with data. Who writes each is
+  in the core rules (The record): the effort level reaches a hook after an edit, the model reaches no hook. The policy
+  is revisited with that data, or when usage limits are reached.
 
 ---
 

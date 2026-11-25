@@ -8,6 +8,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { BUDGET, LEVELS } from "./lessons.mjs";
+import { BUDGET as MODELS } from "./models.mjs";
 import { trees } from "./place.mjs";
 import { HUB, WORKER, context } from "./procedure.mjs";
 import { scratchHome } from "./scratch-home.mjs";
@@ -61,9 +62,11 @@ const files = (list) => list.map((handler) => handler.args.slice(1).join(" ")).t
 const RULES = "${CLAUDE_PLUGIN_ROOT}/hooks/rules.mjs";
 const LESSONS = "${CLAUDE_PLUGIN_ROOT}/hooks/lessons.mjs";
 const PROCEDURE = "${CLAUDE_PLUGIN_ROOT}/hooks/procedure.mjs";
+const MODEL_MAP = "${CLAUDE_PLUGIN_ROOT}/hooks/models.mjs";
 const start = hooks.SessionStart.flatMap((/** @type {any} */ group) => group.hooks);
 const rulesAtStart = start.filter((/** @type {any} */ handler) => handler.args?.[0] === RULES);
 const procedures = start.filter((/** @type {any} */ handler) => handler.args?.[0] === PROCEDURE);
+const maps = start.filter((/** @type {any} */ handler) => handler.args?.[0] === MODEL_MAP);
 
 test("each part of the core rules, and the template, has a hook at a session's start and one for the checker alone", () => {
   assert.ok(hooks.SessionStart.every((/** @type {any} */ group) => group.matcher === undefined));
@@ -78,12 +81,14 @@ test("each part of the core rules, and the template, has a hook at a session's s
   );
 });
 
-test("each level of lessons, and the procedure, has a hook at a session's start, and nothing else starts there", () => {
+test("each level of lessons, the models and the procedure have a hook at a session's start, and nothing else starts there", () => {
   const lessons = start.filter((/** @type {any} */ handler) => handler.args?.[0] === LESSONS);
   assert.deepEqual(files(lessons), LEVELS.toSorted());
+  assert.equal(maps.length, 1);
+  assert.deepEqual(maps[0].args, [MODEL_MAP]);
   assert.equal(procedures.length, 1);
   assert.deepEqual(procedures[0].args, [PROCEDURE]);
-  assert.equal(rulesAtStart.length + lessons.length + procedures.length, start.length);
+  assert.equal(rulesAtStart.length + lessons.length + maps.length + procedures.length, start.length);
 });
 
 test("the opening of the core rules names each of their other parts", () => {
@@ -95,14 +100,14 @@ test("the opening of the core rules names each of their other parts", () => {
 // Claude Code replaces a hook's output over 10,000 characters with a file path and a short preview, which would take
 // that part out of the context without a word: a part that reaches PART is split into two topics, never shortened.
 // TOTAL is what every session pays at start, a choice rather than a limit of the platform: it is raised by a work item
-// that says why, or answered by moving a rule that only some situations need into a skill. The lessons count at their
-// budget, since their files are the installation's and the hook that gives them keeps each level under it. The total
-// holds the procedure too that a session which runs as no agent receives, the hub's in the home's main working tree and
+// that says why, or answered by moving a rule that only some situations need into a skill. The lessons and the models
+// count at their budgets, since their files are the installation's and their hooks keep each output under it. The
+// total holds the procedure too that a session which runs as no agent receives, the hub's in the home's main working tree and
 // the worker's in its worktrees and the projects, as a session started as that agent receives the same file as its
 // system prompt: a session receives one of the two, and each counts at its file's budget, so that the file can grow to
 // that budget without reaching the total.
 const PART = 9000;
-const TOTAL = 30150;
+const TOTAL = 31150;
 
 test("each hook gives its whole file under the limit for one output, and a session's start stays under the total", () => {
   let total = 0;
@@ -113,7 +118,7 @@ test("each hook gives its whole file under the limit for one output, and a sessi
     assert.ok(text.length < PART, `${file}: ${text.length} characters`);
     total += text.length;
   }
-  const lessons = LEVELS.length * BUDGET;
+  const lessons = LEVELS.length * BUDGET + MODELS;
   // The kit's clone is a project of the scratch home, so a session in it that runs as no agent gets the worker's.
   assert.equal(output(procedures[0], { hook_event_name: "SessionStart", cwd: root }), context(WORKER));
   for (const file of [WORKER, HUB]) {
@@ -125,7 +130,7 @@ test("each hook gives its whole file under the limit for one output, and a sessi
     const counted = procedure.slice(0, procedure.indexOf("\n\n") + 2).length + budget;
     assert.ok(
       total + lessons + counted <= TOTAL,
-      `${total} characters of rules, ${lessons} of lessons and ${counted} of ${file} at a session's start`,
+      `${total} characters of rules, ${lessons} of lessons and models and ${counted} of ${file} at a session's start`,
     );
   }
   for (const handler of hooks.SubagentStart.flatMap((/** @type {any} */ group) => group.hooks)) {

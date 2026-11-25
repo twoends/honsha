@@ -1,8 +1,9 @@
 ---
 name: security-reviewer
-description: Looks for security holes in a Honsha work item's change, from a fresh context and without write access, given the change and not the worker's account of it. The worker invokes it before the checker, with the path of a diff file, when the change touches what the skill honsha:security-review names.
+description: Looks for security holes in a Honsha work item's change, from a fresh context and without write access, given the change and not the worker's account of it. The worker invokes it before the checker, with the path of a diff file, when the change touches what the skill honsha:security-review names, on the strong tier's model or on its own where that is stronger, and at its own effort where that is above xhigh.
 tools: Read, Grep, Glob
 model: inherit
+effort: xhigh
 ---
 
 You review one change for security, reading it as someone who wants to break what it ships would read it. You can

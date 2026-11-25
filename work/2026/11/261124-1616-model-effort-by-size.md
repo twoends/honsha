@@ -254,6 +254,32 @@ without a model.
   30,150; `agents/hub.md` 5,651 of 6,000, `agents/worker.md` 5,980 of 6,000, `agents/checker.md` 6,186 of 7,600,
   `agents/security-reviewer.md` 4,682 of 6,000.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval.
+- After the approval, `honsha:parallel-parts` was invoked. The hook and its test went to a part, on the local branch
+  `work/261124-1616-model-effort-by-size.hook` in a worktree of its own, cut from the approval's commit, with its
+  `--setup` run there; a subagent on the session's model writes it, changing only `hooks/models.mjs`,
+  `hooks/models.test.mjs`, `hooks/hooks.json` and, if needed, `hooks/place.mjs` and `hooks/scratch-home.mjs`. This
+  session writes the documents and definitions, none of those files.
+- Wrote the core rules' section "Models" and the topic in their opening line; the hub's tier and effort by size, the
+  raise of a small item and the move of a full item's session; the checker's and the security reviewer's `effort` and
+  descriptions; the hub's and the worker's definitions without `model`; the template's strategy comment; the
+  architecture's "Models", "Kit" and "Home"; the vision's "Quality first"; the interface's `models`; the README's
+  `hooks/` row and the model of a session started as an agent. `agents/hub.md` measures 5,987 characters, within its
+  6,000, so its budget stays.
+- A search of the kit outside `work/`, `node_modules/` and the lockfile for the names of models, their families and
+  providers finds only the package of the platform's command line, which the pipeline installs.
+- The part returned one commit, `be5eae7`: `hooks/models.mjs`, its test, its entry in `hooks/hooks.json`, and
+  `homeFile` in `hooks/place.mjs`, which reads any file of the home's default branch and which the registry's reading
+  now uses. Its own decisions: an empty `models` maps no model; a bare `null`, `true` or `false` is no name; one
+  indentation for every entry; and, in the home, a default branch that git cannot find gives a line that says so,
+  since no registry was read there before. Read it, then merged it into the item's branch as a fast-forward, the
+  documents being uncommitted and in other files; its branch and worktree were removed. Its commit fails one
+  assertion of `hooks/hooks.test.mjs`, which this session's commit answers.
+- In the hook: a comment said that the opening of the core rules gives the reason where the place is unknown; it is
+  the hook of the core rules, in their place. The test held a byte order mark as a raw character, now an escape.
+- `hooks/hooks.test.mjs` counts the models' hook among those at start and its `BUDGET`, 390, in the total. Measured:
+  12,541 characters of rules and template, 12,390 of lessons and models, 6,188 of the worker's procedure, 31,119 in
+  all; the total goes from 30,150 to 31,150, since every session starts subagents and receives the map only so.
+  `agents/hub.md` measures 5,989 of 6,000 after a paragraph of "Dispatch" was wrapped again.
 
 ## Verification
 

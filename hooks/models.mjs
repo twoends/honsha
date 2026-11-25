@@ -121,8 +121,8 @@ export function context(home) {
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
-    // Outside the installation's folders, or where it cannot be read, a session gets no map (`hooks/place.mjs`); the
-    // opening part of the core rules says why in the second case.
+    // Outside the installation's folders, or where it cannot be read, a session gets no map (`hooks/place.mjs`); in the
+    // second case the hook of the core rules gives the reason in their place.
     if (inside(session().at)) process.stdout.write(context(process.env.CLAUDE_PLUGIN_OPTION_HOME || ""));
   } catch {
     // The session starts all the same, but the person sees that the map is missing.

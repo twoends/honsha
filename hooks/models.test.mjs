@@ -114,7 +114,7 @@ test("a name of the longest length accepted is read, and one character more is r
 test("a file with CRLF line ends is read as one with LF, and a refused line keeps its number", () => {
   assert.deepEqual(parse(FULL.replace(/\n/g, "\r\n")), parse(FULL));
   assert.deepEqual(parse("models:\r\n  light: model-a\r\n  heavy: model-e\r\n"), { unreadable: 3 });
-  assert.deepEqual(parse("﻿models:\r\n  light: model-a\r\n"), { map: { light: "model-a" } });
+  assert.deepEqual(parse("\uFEFFmodels:\r\n  light: model-a\r\n"), { map: { light: "model-a" } });
 });
 
 test("no line that the hook can give is longer than its budget, and the budget is no more than the longest needs", () => {
