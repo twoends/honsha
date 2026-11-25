@@ -97,6 +97,11 @@ jobs:
   # repository's own token, whatever the repository's visibility.
   project:
     uses: ./.github/workflows/project.yml
+    # As a project's caller grants it: `actions: read` lets project.yml read whether the run on a pull request's earlier
+    # tip passed, before it leaves the verification out of a push that changes only records. This job alone needs it.
+    permissions:
+      contents: read
+      actions: read
     with:
       # The profile runs `claude plugin validate .`; the same version as the job above.
       claude-code: "2.1.325"

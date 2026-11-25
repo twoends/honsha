@@ -79,9 +79,10 @@ What the verification writes into the record stays uncommitted until the closing
 What follows the checker makes the closing commit.
 
 1. Push the branch and open the pull request to the default branch, with the hosting service's command-line client,
-   whose commands are in `services/<name>/README.md` in the kit directory.
+   whose commands are in `services/<name>/README.md` in the kit directory. Then wait for its checks.
 2. Write the outcome. A criterion that only a future event can verify goes into `checks` with its date and what to
    look at.
 3. Write `pr`, `updated` and `model`, and set the state to `done`.
-4. Make the closing commit, run the kit's record check on it again, and push it to the open pull request.
+4. Make the closing commit, run on it the checks that read the record (core rules, Delivery), and push it to the open
+   pull request.
 5. Stop there: the person reviews and merges.

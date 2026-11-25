@@ -46,8 +46,10 @@ node <kit directory>/checks/verify.mjs [--setup] [<profile>]
 node <kit directory>/checks/measures.mjs [--json] [--sessions <folder>]
 ```
 
-The kit's other scripts are not part of the interface: `checks/pushed.mjs`, which checks the kit's own pushes, and the
-hooks, which the plugin runs.
+The kit's other scripts are not part of the interface: `checks/pushed.mjs`, which checks the kit's own pushes;
+`checks/changes.mjs`, which a hosting service's wiring runs to tell a push that changes only records;
+`services/github/runs.mjs`, which GitHub's wiring runs to read whether the run on a pull request's earlier tip passed;
+and the hooks, which the plugin runs.
 
 ## Templates
 
@@ -95,7 +97,7 @@ item was chosen.
 - The trailers: `Work-Item: <id>` on every commit of a work branch, `Backlog: <id>` on the commits of the backlog.
 - What the piece of a hosting service gives an installation's pipeline is named in that piece: for GitHub, the
   workflow `.github/workflows/project.yml`, which a project's own workflow calls, with its inputs `claude-code` and
-  `npm`.
+  `npm` and the permissions that the caller grants it.
 
 ## Identifiers
 

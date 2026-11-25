@@ -1,5 +1,6 @@
 # Prepares a project's checkout with its profile's `setup` commands, then runs the kit's checks and the project's
-# `verify` commands, on the project's pull requests and on each push to its default branch.
+# `verify` commands, on the project's pull requests and on each push to its default branch. A later push to a pull
+# request that changes only records, after a run that passed, gets the kit's checks alone.
 #
 # A project's own workflow calls this one; the caller file is shown in services/github/README.md,
 # under "Checks on pull requests and on the default branch", and what the wiring has to do is the
@@ -23,8 +24,9 @@ on:
         required: false
         default: ""
 
-permissions:
-  contents: read
+# No permissions here: the token holds what the caller grants, `contents: read` and, for the skip on records,
+# `actions: read`. A called workflow may only keep or lower its caller's permissions, and one that named
+# `actions: read` would ask more than a caller that has not added it grants.
 
 # No concurrency group here: the caller's own group covers this run, and the same group in the
 # called workflow would cancel the run already going.
@@ -64,9 +66,29 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
+      # A later push to a pull request whose commits change only records needs neither the setup nor the verification
+      # commands once the run on the branch's earlier tip passed: that run checked the same code, and the kit's checks
+      # below still read the records. The opening of a pull request has no earlier tip, and the default branch is
+      # checked in full at every push: it is where whatever the skip leaves out is caught. Only both scripts' exit
+      # code 0 writes `false`; a failure of either, like a skipped step, leaves the output empty, and every step runs.
+      # The actions above take the token as an input; of the steps that run commands, this one alone gets it, in its
+      # environment and before any of the project's commands runs. Code in the job can still read it from the runner's
+      # memory, so what it may do is what the job may do.
+      - name: Tell whether the push changes more than records
+        id: changes
+        if: github.event_name == 'pull_request'
+        env:
+          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if node ../kit/checks/changes.mjs "$BEFORE" "$HONSHA_HEAD" &&
+            node ../kit/services/github/runs.mjs "$BEFORE" "$HONSHA_BRANCH"; then
+            echo "verify=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Records only, after a run that passed: the setup and the verification are left out."
+          fi
       # Before the setup, whose first `npm ci` refuses an npm outside the project's `devEngines`.
       - name: Install npm
-        if: inputs.npm != ''
+        if: inputs.npm != '' && steps.changes.outputs.verify != 'false'
         env:
           VERSION: ${{ inputs.npm }}
         run: |
@@ -75,9 +97,10 @@ jobs:
       # The profile says what a fresh checkout of the project needs, wherever its packages are: the pipeline installs
       # none of the project's packages itself.
       - name: Prepare the checkout with the setup commands of the profile
+        if: steps.changes.outputs.verify != 'false'
         run: node ../kit/checks/verify.mjs --setup
       - name: Install Claude Code
-        if: inputs.claude-code != ''
+        if: inputs.claude-code != '' && steps.changes.outputs.verify != 'false'
         env:
           VERSION: ${{ inputs.claude-code }}
         # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
@@ -92,4 +115,5 @@ jobs:
         if: hashFiles('project/registry.yml') != ''
         run: node ../kit/hub/projects.mjs check
       - name: Run the verification commands of the profile
+        if: steps.changes.outputs.verify != 'false'
         run: node ../kit/checks/verify.mjs

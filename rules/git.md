@@ -33,3 +33,10 @@ A part of the Honsha core rules, which `rules/core.md` opens.
 - Before delivery the profile's verification commands run. Where `honsha:security-review` applies, at any size, the
   security reviewer then looks for holes in the change. For small and full items the checker, `honsha:checker`, then
   compares the result with the record from a fresh context.
+- A work branch is pushed only with work that has passed those steps, and as seldom as its commits allow: the work,
+  then the closing commit; a fix once verified and checked again, a line of the log never alone. The session then
+  waits for the checks that the hosting service runs on the work, and never starts them again: a failure that comes
+  from the change is fixed; one that does not is reported to the person, who decides, and nothing is pushed for it.
+  Once they pass, the closing commit is pushed and its run is not waited for: it changes only the record, and the
+  session has run on it the checks that read the record, the kit's checks of the record and of the commits and those
+  of the verification commands that read it, such as a formatter.
