@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: rule
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-24
 updated: 2026-11-25
@@ -364,7 +364,16 @@ approval on to this item's session.
 - The repeated security review of `a784f87`, on Opus, passed: that weak point is fixed. Its one weak point:
   `actions/setup-node` takes the token as an input too, which neither the comment nor the README said. Both now say
   that the actions take the token as an input and that, of the steps that run commands, the one that reads the
-  earlier run alone gets it, so that no list of actions has to be kept in step with the workflow.
+  earlier run alone gets it, so that no list of actions has to be kept in step with the workflow. That change left a
+  line of the README's paragraph short, wrapped again in a commit of its own.
+- The repeated security review of `84365ea`, on Opus, passed with no finding and no weak point.
+- The repeated check of `84365ea`, on Opus, found the three findings of the last check fixed, and failed with one
+  more (Verification): the change to `checks/interface.test.mjs`, which now reads the scripts of each piece of
+  `services/` too, lies outside the scope and the extension the person accepted, and the record declares it nowhere
+  but in the log. The interface says that its test fails on a script it does not name, and `services/github/runs.mjs`
+  is the first script of a piece; either the test reads the pieces, or the interface narrows what it says of its test.
+  Both reach past the approved scope, and a departure from it is a stop condition: the state is `blocked`, and the
+  person decides whether to accept the test's extension as a deviation.
 
 ## Verification
 
