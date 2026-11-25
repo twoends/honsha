@@ -252,6 +252,12 @@ item's session, where the person confirmed it the same day.
   budget is raised from 38,700 to 39,300.
 - No other document says when the skill applies: the README and the interface only name it, and the architecture's
   dispatch stays true.
+- The verification passed on `b1e1bde`. The kit's checks of the record and of the commits ran as the profile's last
+  two commands, from the kit itself; the root holds no `registry.yml`.
+- The security review does not apply: the change touches a skill, the hub's procedure, a document and a budget test,
+  none of what `honsha:security-review` names, and the profile lists no path for it.
+- The checker failed the item on `b1e1bde` for one finding: Verification held a sentence on the security review,
+  which belongs in the log. Both sentences that were not a command's result are now in the log above.
 
 ## Verification
 
