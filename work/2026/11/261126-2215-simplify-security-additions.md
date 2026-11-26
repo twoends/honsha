@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-26
 updated: 2026-11-26
@@ -80,6 +80,9 @@ items left to the person are weighed here too, each fixed if the fix is small an
   word `shellcheck`; `README.md:121`, which names ShellCheck among the kit's checks, a few words. A line that the hub
   keeps for another item is changed there, and this item relies on it only once that item is merged.
 - The budgets' lines that the other items share are set to what this change needs, and the log says so.
+- In `honsha:assessment`, step 5, which reads `legacy`, is `261126-2214`'s if the person drops that key there: this
+  item changes none of that step's lines, and keeps any change of its own to other steps, with unchanged lines between,
+  so that git merges both in either order.
 - Nothing is set on GitHub, and nothing is read there: the commands of the piece move and keep their form, but for the
   read of a pull request's author, which takes the form that the piece's other reads already have.
 - The trial runs in the scratchpad, on a scratch repository served as its own remote, with fake values read by name;
@@ -374,6 +377,9 @@ security testing's and the review's, which goes, and two new lines for GitHub's 
 
 ## Approval
 
+Approved by the person on 2026-11-26, in this item's session, as written in `bc7d2cb`, with the line on
+`honsha:assessment` that "Boundaries" took from the hub's note before the approval.
+
 ## Log
 
 - 2026-11-26: the record was created on this branch, from `origin/main` at `516e0db`, with the intent as the hub gave
@@ -391,3 +397,8 @@ security testing's and the review's, which goes, and two new lines for GitHub's 
   inline silences of oxlint are all of `security/detect-non-literal-regexp` (13) and `security/detect-unsafe-regex`
   (15); no command of GitHub's piece is cited by its section from outside the piece but the posture's two, which stay
   in `README.md`.
+- The strategy was committed, and the person asked for the approval. The hub then wrote that `261126-2214` changes
+  step 5 of `honsha:assessment`, which reads `legacy`, if the person drops that key, and nothing else of that skill;
+  "Boundaries" says how this item keeps apart from it. No other file changes hands.
+- The person approved the strategy (Approval); the state is `in-progress`. The item has no areas, so no area's pack is
+  loaded.
