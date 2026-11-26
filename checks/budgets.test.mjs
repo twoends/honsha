@@ -32,7 +32,7 @@ const budgets = {
   "agents/security-reviewer.md": 6000,
   "skills/security-testing/SKILL.md": 7200,
   "services/github/README.md": 16500,
-  "services/github/security.md": 17100,
+  "services/github/security.md": 17200,
   "templates/profile.yml": 5200,
   "docs/01-specs/WORKFLOW.md": 48000,
   "docs/01-specs/INTERFACE.md": 9000,

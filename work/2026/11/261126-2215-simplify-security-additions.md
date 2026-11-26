@@ -471,10 +471,17 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   that run in a project: left to the person, as an item of its own.
 - `services/github/security.md` then holds 17,081 characters, and its budget is 17,100; the security testing's skill
   holds 7,190.
+- The fix, `9fbeb8e`, passed the verification again, and its repeated review passes: both weak points fixed, no
+  finding, one new weak point. GitHub's `security.md` gave a workflow file as what gets past the environment's limit
+  on the default branch, where any file that the deploying job runs does, a build script or a package's script among
+  them: fixed, the sentence names any such file, its workflow among them. Of what that review could not read: the
+  guard refuses no command that moves the default branch through the service's API without a pull request, which a
+  ruleset that requires one refuses on the server: left to the person, since the guard stops a mistake and is no
+  boundary, and the text claims no more of it. `security.md` then holds 17,126 characters, and its budget is 17,200.
 
 ## Deviations
 
-- Criterion 1: `services/github/security.md` holds 17,081 characters, not at most 15,500. Its commands take 2,665, and
+- Criterion 1: `services/github/security.md` holds 17,126 characters, not at most 15,500. Its commands take 2,665, and
   each read keeps the answers by which a reading tells a protection on from off and an empty list from one it could not
   read; the cut came from what three sections repeated, from the read that serves no project and from the wording. Its
   budget is set to what it holds.
