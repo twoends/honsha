@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
 requested-by: person
 source: 261125-1956
-pr: null
-model: null
+pr: 63
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -450,8 +450,164 @@ reads listed under "For the person" included.
 - The second repeated check, of the diff since `6a008ff` at `9b4599f`, fails on one finding: the line above on the
   first repeated check says that its two findings were each fixed in a commit of their own, where both were fixed in
   one, `4c56e17`, and `9b4599f` only wraps a line of it. So it is: both in `4c56e17`.
+- The verification ran on `cff6207`, which adds that line, and passed.
+- The third repeated check, of `cff6207` since `9b4599f`, passes with no finding. The branch is pushed at `cff6207`,
+  and the pull request is #63. Its checks were still running when read once after the opening.
+- The kit's pipeline on #63, run 45887000587 at `cff6207`, passed: `personal content`, `project / checks`, and
+  `verify` on Linux and on Windows, read once after the hub said the run had ended. Criterion 8 is met.
 
 ## Verification
+
+On this host, at `cff6207`, with npm 12.2.1, the same results as at each earlier commit that the log names, but for
+the count of commits:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 15 commits of the branch follow the rules.
+- `node <kit directory>/hub/projects.mjs check`: not run, the root holds no `registry.yml`.
+- `npx --no-install prettier --check .`: passed.
+- `npx --no-install oxlint`: passed.
+- `npx --no-install tsc -p .`: passed.
+- `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 274 tests, 274 pass.
+- `claude plugin validate .`: passed, with warnings on the plugin's version and icon and a licence that the plugin
+  directory would ask for, none of which this change touches.
+- `node checks/record.mjs`: passed.
+- `node checks/commits.mjs`: passed.
+- The kit's profile lists no `dynamic-testing`: `node checks/verify.mjs --dynamic` says so and passes.
+
+The first security review, of `7683fb6` (full): verdict `fail`, one finding. `services/github/README.md`: the reads of
+the open alerts fetched one page, 30 alerts by default, so the reading looked complete when it was not; on a public
+repository an outsider could push a real alert on a secret off the page with strings that match a pattern GitHub
+detects, and the secret would never be made urgent.
+
+The second security review, of `71f0745` (since `7683fb6`): verdict `fail`, the first finding confirmed fixed, one
+finding. `services/github/README.md`: the narrowed read of the older branch protection dropped
+`required_pull_request_reviews`, its `bypass_pull_request_allowances` and `restrictions`, so a protection that takes
+direct pushes, or lets one account past the pull request, read as refusing direct pushes, and such a change after the
+assessment left the reading unchanged.
+
+The third security review, of `c28a94c` (since `71f0745`): verdict `fail`, the second finding confirmed fixed, one
+finding. `services/github/README.md`: the older protection's `allow_force_pushes.enabled` says whether everyone may
+force-push, and its REST answer shows no list of the accounts named to force-push past it, so a home whose older
+protection lets a named account force-push read as refusing forced pushes.
+
+The fourth security review, of `76960b9` (since `c28a94c`): verdict `pass`, the third finding confirmed fixed, no
+finding. The fifth, of `02e518b` (since `76960b9`), the sixth, of `24e6c16` (since `02e518b`), and the seventh, of
+`6a008ff` (since `24e6c16`): verdict `pass`, no finding.
+
+The eighth security review, of `9b4599f` (since `6a008ff`):
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `services/github/` (README.md, the changed paragraph and the section "The protections it gives free" it
+points to); `checks/` (commits.mjs, the reading of the default branch, to check the new sentence against it)
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. Weak point 1 of the last review (`services/github/README.md:104-105`) is fixed. The sentence now says the check of
+   the commits fails on a direct commit that is not the backlog's, "though not on a merge, which it takes for a pull
+   request's". That matches `checks/commits.mjs:176-178`: on the default branch, `if (commit.merge) continue;` skips
+   every merge commit whether it came from a pull request or from a direct push. It also matches the assumption the
+   script's header states at `checks/commits.mjs:20-24`. The paragraph drops its old sentence on the bypass list ("An
+   account on a ruleset's bypass list passes every rule of it, so the home's ruleset refuses only forced pushes and
+   deletion"), but nothing is lost. That fact is still stated where the paragraph points:
+   `services/github/README.md:130-132` says no account goes on the bypass list and the home's ruleset holds only
+   "Restrict deletions" and "Block force pushes". The new wording, that GitHub lets any account that can write push
+   there "whatever its ruleset holds", claims no stop the server does not give.
+2. Weak point 2 of the last review (a direct push that also edits the home's caller workflow) is unchanged by this diff
+   and is still the person's to decide.
+
+**Not reviewed**
+
+- Whether the home repository's live ruleset on GitHub matches what `services/github/README.md:130-132` describes. That
+  cannot be read from the clone.
+
+The first check, of `02e518b` (full): verdict `fail`, four findings. 1. The record says which protections the kit's
+own public repository lacks, which its boundary rules out: the trial's log gives `[]` for the rules of its default
+branch, `404` "Branch not protected" and `404` "no analysis found", and says neither repository has a ruleset, as the
+piece repeated. 2. Criteria 5 and 7 met in part with no entry under "Deviations": the reads of a ruleset and of an
+alert's locations never ran, the endpoint of private reporting was not checked against GitHub's pages, and no answer
+for "not readable" was seen. 3. Criterion 1's comparison was changed, from the last reading to the assessment's record
+and the home's decision log, with no entry under "Deviations". 4. `services/github/README.md` contradicted itself on
+the home's default branch: one paragraph said that only the backlog's account may push there, where the new section's
+ruleset leaves direct pushes open to every account that can write.
+
+The repeated check, of `6a008ff` (since `02e518b`): verdict `fail`, the four findings settled, two findings. 1.
+`services/github/README.md`: the paragraph on the home restated two rules of the section on the protections, the
+bypass list and the home's ruleset, so a rule stood in two places. 2. The record's log reduced the seventh security
+review's first weak point to `checks/commits.mjs`, where the report places it also in the piece's sentence, which read
+broader than that check.
+
+The second repeated check, of `9b4599f` (since `6a008ff`): verdict `fail`, the two findings settled, one finding. The
+record's log said that the first repeated check's two findings were each fixed in a commit of their own, where both
+were fixed in `4c56e17`.
+
+The third repeated check, of `cff6207` (since `9b4599f`):
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The posture skill, its description, its steps in order, no service named, at most 4,500 characters: met. The diff
+   since `9b4599f` is empty, so the criterion stands as the last check found it.
+2. `honsha:assessment` reads the posture first and its own steps go: met, unchanged by this diff.
+3. `honsha:review` reads the posture in each repository, puts what is urgent first, and names it in its description:
+   met, unchanged by this diff.
+4. `honsha:security-testing` points to the posture, its rules on the scan's findings are unchanged, and its
+   description says when it applies: met, unchanged by this diff.
+5. GitHub's piece covers the five protections, the token's default permissions and the three kinds of alerts, checked
+   against GitHub's pages: met in the part that "Deviations" does not exclude (a ruleset's read and an alert's
+   locations untried, no answer seen for "not readable"), unchanged by this diff.
+6. The workflow, interface, architecture, README and budgets: met, unchanged by this diff.
+7. The trial on both repositories, with each answer's form in the log: met in the part that "Deviations" does not
+   exclude, as for criterion 5, unchanged by this diff.
+8. Verify, the security review, the checker and the pipeline: verify passed at `cff6207` (Verification). The eighth
+   security review passes at `9b4599f`, and `cff6207` changes only the record. This report passes. The pipeline on the
+   pull request is not verifiable from here (Not verified).
+
+- **Intent:** in order. The lines added since `9b4599f` (log lines 450-453, the Verification preamble and the summary
+  of the second repeated check) quote nothing the person said.
+- **Scope:** in order. The diff is empty, and `cff6207` touches only the record.
+- **Comments and documents:** in order. The diff adds no comment and changes no document besides the record.
+- **Gates:** in order. No gate is touched by this diff, since no file of the kit changes.
+- **Verification evidence:** in order. Every `verify` command of `.hub/profile.yml` has a result at `cff6207`, as do
+  the kit's `checks/record.mjs` and `checks/commits.mjs`. The profile lists no `dynamic-testing`, and the record says
+  so. The `verify` list covers formatting (`prettier --check`), lint (`oxlint` with `correctness` and `suspicious`,
+  `.oxlintrc.json`), types (`tsc -p .`) and tests (`node --test`). It covers no static security testing, and the
+  profile has no comment saying why. No gate asks for it, so this is not a finding; the record puts the kit's own
+  security testing out of scope (`261125-1850`).
+- **Security review:** in order. The review was due for the branch. Verification holds reports one to eight. The
+  findings of the first, second and third are confirmed fixed by the second, third and fourth. The log says what was
+  done with each weak point, the eighth review's second left to the person. Since `9b4599f` only the record changed,
+  and nothing triggers a review for it; the profile lists no `security-review` paths.
+- **Record:** in order. The last report's finding is fixed. Log line 441 still says "each fixed in a commit of its
+  own", as an append-only log must. Lines 450-452 correct it by a new line: "both in `4c56e17`". That matches the
+  subjects of `4c56e17` ("Point the paragraph on the home to the section on the protections, and say that the check of
+  commits reads no merge") and `9b4599f` ("Wrap the line of the home's paragraph that the last commit left too wide").
+  The summary of the second repeated check under Verification matches its log line. The "15 commits" under
+  Verification matches the branch's commits from `6404117` to `cff6207`.
+- **Commits:** in order. `cff6207`, "Say that both findings of the first repeated check were fixed in one commit", is
+  one imperative sentence. Its last paragraph holds `Work-Item: 261125-2038` and the co-author trailer with no blank
+  line between them. Its author and committer addresses match the profile's `commits.address`. It is a fix asked by the
+  checker, in a commit of its own.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 8's run of the kit's pipeline on the pull request. Nothing in the record shows the branch pushed or the
+  pull request opened yet.
+- Whether the home's live ruleset on GitHub matches what `services/github/README.md` describes. That is read on the
+  service, not in the clone.
 
 ## Deviations
 
@@ -476,3 +632,18 @@ reads listed under "For the person" included.
   account. The person accepted it on 2026-11-26, in this item's session: the branch is pushed as it is.
 
 ## Outcome
+
+An assessment and the periodic review read a repository's security posture with one skill, `honsha:security-posture`:
+the scan of the history first, the kinds of security testing that its files call for, the pipeline's wiring and its
+token, the hosting service's settings, the protections it gives free, each asked of the person and never turned on by
+a session, and its open alerts, read with no secret's value. `honsha:assessment` and `honsha:review` invoke it in place
+of their own steps, and `honsha:security-testing` keeps the rules of the scan's findings. A review compares with the
+assessment's record and the person's answers in the home's decision log, and a repository made public, or a setting
+or a protection turned off, is urgent. GitHub's piece says where GitHub gives each protection free, how the person
+turns it on and how each is read: only the rules of the rulesets in force with an empty bypass list count, the home's
+ruleset refuses only forced pushes and deletion, and the open alerts are read over every page. The skill holds 4,431
+of a skill's 6,000 characters, so the later items' readings have room.
+
+Left to the person: the weak points of the security reviews that the pull request lists; the reads of a ruleset's
+bypass list and of an alert's locations, untried until a repository has one; the protections of the kit's own
+repository. No check is deferred.
