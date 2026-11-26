@@ -25,8 +25,9 @@ In this order. A step that finds the project in order says so in a line; a gap i
    and `.honsha-checker.*`, the checker's input files, which hold a diff; otherwise a commit may take them up. The kit
    needs no other file in the project: its sessions receive it once the project is registered.
 5. **The project's own rules,** such as `CLAUDE.md`, for anything that conflicts with the core rules; earlier
-   documents to list under `legacy`, as the template says; an existing lessons file, for entries that belong at
-   another level: only lessons about this repository stay in it (core rules, Lessons).
+   workflow documents, which an item deletes once the adoption no longer reads them, as git keeps them; an existing
+   lessons file, for entries that belong at another level: only lessons about this repository stay in it (core rules,
+   Lessons).
 6. **Records,** where there are any: complete front matter, sizes and kinds.
 7. **Measures,** where items have been merged: `node <kit directory>/checks/measures.mjs` run in the project; items
    over their kind's expectation; size budgets the project sets on its documents, close to their limit.

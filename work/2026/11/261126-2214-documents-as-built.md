@@ -240,6 +240,32 @@ it.
   `legacy` in `rules/writing.md`, Documents, and step 5 of `skills/assessment/SKILL.md`, and nothing else in those two
   files; the hub tells `261126-2213` and `261126-2215`.
 - The person approved the strategy, with `legacy` dropped (Approval); the state is `in-progress`.
+- The architecture: key facts, components and diagram as the strategy says, with rows for the hooks and the scripts,
+  which point to "Kit" and to the interface's "Commands"; the layout's lines of skills, agents and templates, without
+  `board/`; the home's layout without `hosts.yml` and `inbox/`, its settings as `max-workers` and `models`, its radar
+  as entries read by the review; a project's layout as what the kit reads and writes there (interface, Files), its own
+  rules in the platform's places, and its earlier workflow documents deleted. "Files and index" is "Files", without the
+  index. Flows: "Ask", "Dispatch", "Joining" and "Review", each pointing to where it is specified; "Evaluate" and
+  "Scheduled" are gone. "Native first" holds the principle without the table of planned pieces. "Security" keeps four
+  points; the reader, the senders, the data credentials and the host's hardening are gone. Assumptions: A5, with where
+  it is tested; open points: O10. Deleted: A1, A2, A3, A8, A9, O02, O06, O07.
+- The vision: "What it does" is one hub, ask, dispatch, the shared layer, the periodic review and traceability; the
+  tools sent as links leave the problem; "Evaluate, never install" becomes a principle on installing; the glossary
+  loses the reader, and "Verdict" is the checker's and the security reviewer's.
+- The README: its opening, its line on the architecture, and O10 as the example of an identifier.
+- The workflow: the key fact on the home, step 8 of "Procedure", "Deferred checks", "Derived views", the reference of
+  "The record" to "Files", and the line on earlier documents in "Comments and documents".
+- `templates/profile.yml` without `description`, `merge-deploys`, `data`, `playbooks` and `legacy`; `.hub/profile.yml`
+  without `description` and `merge-deploys`. The readers of every key the template keeps are those of the strategy's
+  table. `rules/writing.md` without the exception of `legacy`; step 5 of `honsha:assessment` reads a project's earlier
+  workflow documents for an item that deletes them.
+- Searched again outside `work/` for the parts and keys that went: what remains is `agents/hub.md` and
+  `honsha:review`, which name a scheduler only to say what holds until an installation has one, as a reader needs to
+  know; and the comment of `source` in `templates/record.md` and in the workflow's front matter, which `261126-2213`
+  takes (criterion 8).
+- For the hub, outside this item: the README's requirements count a session of the desktop application with the kit
+  installed among what is not tried; the README's table has no row for `hub/`; no rule of the kit says how a session
+  treats untrusted content, now that the reader is gone from the documents.
 
 ## Verification
 

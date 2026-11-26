@@ -3,8 +3,6 @@
 # refuses a form it cannot read. The values below are examples.
 # The project's name, the one the home's registry gives it.
 name: example-project
-# What the project is, in one line.
-description: One line on what the project is.
 # The language of the project's documents and records (core rules, Work items). English when left out.
 language: en
 # The technologies whose lessons the project's sessions load from the home (workflow, Lessons). It names files of the
@@ -12,8 +10,6 @@ language: en
 stack: [node, postgres, docker]
 # The branch that changes only through pull requests. Left out, the kit's scripts take `main` or `master`.
 default-branch: main
-# True when merging into the default branch deploys the project: that merge is then its deploy.
-merge-deploys: true
 # True when the project's repository is public, which the kit cannot learn from a hosting service: its records then
 # restate the request and quote nothing the person said (core rules, The record). Left out, the project is private.
 public: false
@@ -70,15 +66,3 @@ parallel:
   exclusive: [integration-db]
 # The file, inside the project, that holds the lessons about this repository only; its name is the project's choice.
 lessons: LESSONS.md
-# The read-only data sources an answer about the project may use. `secret` is the name of a secret on the host, never
-# its value.
-data:
-  - { name: metrics, kind: postgres-readonly, secret: EXAMPLE_RO_URL }
-# The documents that say how a recurring question is answered from those sources.
-playbooks:
-  - docs/playbooks/weekly-metrics.md
-# Folders of documents written before the project adopted the kit's workflow. They stay where they are, unchanged, so
-# that questions about history can read them; nothing in them is converted, and the core rules leave them out
-# (Documents). New work follows the workflow from the day of adoption.
-legacy:
-  - docs/old-worklogs

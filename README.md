@@ -1,7 +1,7 @@
 # Honsha
 
-Honsha (本社, "head office") is one place from which a person runs all their software projects with AI agents: send
-it anything, ask it anything about the projects, tell it what to build.
+Honsha (本社, "head office") is one place from which a person runs all their software projects with AI agents: ask
+it about the projects, tell it what to build.
 
 This repository is the **kit**: the shareable part of the system, packaged as a Claude Code plugin. Everything
 specific to a user, a project or an installation lives in that user's separate home repository, never here.
@@ -128,7 +128,8 @@ remarks that there is no licence and no icon, which matters only for a submissio
 ## Documents
 
 - [Vision](docs/00-vision/VISION.md): what it does, for whom, principles, non-goals, glossary.
-- [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, flows, security, assumptions to verify.
+- [Architecture](docs/01-specs/ARCHITECTURE.md): components, repositories, files, flows, security, models,
+  assumptions to verify and open design points.
 - [Interface](docs/01-specs/INTERFACE.md): what an installation may rely on, and the one part of the kit that its
   documents cite.
 - [Workflow](docs/01-specs/WORKFLOW.md): the reasons behind the rules, and the specifications of the kit's own
@@ -136,6 +137,6 @@ remarks that there is no licence and no icon, which matters only for a submissio
   contract, decisions, measures, how a project joins an installation.
 
 The rules every session receives are the files of `rules/`, opened by `rules/core.md`; the rules only some situations
-need are in `skills/` and `templates/`. The workflow points to them and gives their reasons. Identifiers such as O02
+need are in `skills/` and `templates/`. The workflow points to them and gives their reasons. Identifiers such as O10
 are open design points (architecture, Open design points). Why a rule is as it is can be read in the document where a
 reason helps, or in the record of the change that made it, under `work/`.

@@ -3,13 +3,13 @@
 ## Key facts
 
 - **Name:** Honsha (本社, "head office").
-- **What:** one place from which a person runs all their software projects with AI agents. Send it anything, ask it
-  anything about the projects, tell it what to build.
+- **What:** one place from which a person runs all their software projects with AI agents: ask it about the projects,
+  tell it what to build.
 - **Who:** a developer who works on several repositories with Claude Code. Distributed as a template: each user
   installs it with their own accounts.
-- **Core loop:** send or ask → the hub evaluates, answers, or starts work in the right project with the right rules →
-  the person approves → the result arrives as a pull request → everything is recorded.
-- **Where:** an always-on Linux host. No personal device has to be switched on.
+- **Core loop:** ask or request → the hub answers, or starts work in the right project with the right rules → the
+  person approves → the result arrives as a pull request → everything is recorded.
+- **Where:** a host, the machine where the home and the projects' clones are and the sessions run.
 - **Success sign:** all projects are managed from a single point.
 
 ---
@@ -21,29 +21,24 @@
 - Rules and workflow files are copied into every repository and drift apart. Lessons about the machine are relearned
   per project.
 - Every session starts from the same context whatever the task, and the model is chosen by hand.
-- Interesting tools and techniques arrive as links and short videos. Judging them takes time, so most are forgotten or
-  adopted without scrutiny.
 - "What is the status of project X" has no quick answer, because the state of the work is prose kept by hand.
 
 ---
 
 ## What it does
 
-1. **One channel.** A conversation with the hub from a messaging app and from a web interface. Text, links, voice
-   notes and screenshots are accepted.
-2. **Evaluate.** Anything sent is judged against the registered projects and the tools already in use. The verdict is
-   Adopt, Trial, Watch or Ignore, with the reasons and, when useful, how to fit it in. The hub also looks for relevant
-   things on a schedule.
-3. **Ask.** Status of a project, history of past work and verdicts, and questions about how a project is performing,
-   answered from records and from the project's own data.
-4. **Dispatch.** "Develop this on project X" becomes a work item in that project, executed with that project's rules,
+1. **One hub.** A conversation with one session, the hub, in the user's home repository: it answers about the
+   projects, keeps requests for later and starts work.
+2. **Ask.** Status of a project and history of past work, answered from its records, its pull requests and the
+   measures of its merged items.
+3. **Dispatch.** "Develop this on project X" becomes a work item in that project, executed with that project's rules,
    delivered as a pull request.
-5. **Shared layer.** One workflow, one set of rules grouped by kind of work, and one way of capturing lessons, used by
+4. **Shared layer.** One workflow, one set of rules grouped by kind of work, and one way of capturing lessons, used by
    every project and adjusted per project through a profile.
-6. **Tool radar.** For every tool in use: the current choice, the alternatives, the evidence, and what would overturn
-   it. Reviewed on a schedule.
-7. **Board.** A page that shows projects, open work, running sessions and what is waiting for approval.
-8. **Traceability.** Every item sent, every verdict, every piece of work and every answer leaves a record in git.
+5. **Periodic review.** On a date, every repository of the installation is read again: vulnerabilities, security
+   posture, accounts and credentials, the radar of the tools in use, deferred checks, lessons, documents and measures.
+   What it finds becomes work items that the person chooses.
+6. **Traceability.** Every piece of work, and every report that answers a question, leaves a record in git.
 
 ---
 
@@ -55,10 +50,10 @@
   the default, and is checked by a strong model, never weaker than the work.
 - **Nothing leaves without approval.** The hub may research and open pull requests. Merge and deploy belong to the
   person.
-- **Records are data.** State lives in structured records, so status, indexes and history are derived, not kept by
-  hand.
+- **Records are data.** State lives in structured records, so status, lists and history are derived, not kept by hand.
 - **Personal is separate.** Everything specific to a user sits outside the template.
-- **Evaluate, never install.** The hub proposes adoption; adopting is a reviewed change like any other.
+- **Never installed outside a work item.** A tool, a skill or a plugin is adopted through a reviewed change like any
+  other.
 - **English by default.** A project that says nothing gets its documents in English; a project can set another
   language in its profile.
 
@@ -77,20 +72,19 @@
 
 ## Glossary
 
-| Term              | Meaning                                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------------------- |
-| Hub               | The running system on the host: the agent a person talks to, with its channel and board                    |
-| Kit               | The template repository: workflow, rules, skills, agent definitions, hooks, templates, board               |
-| Home              | A user's private repository: project registry, settings, inbox with verdicts, radar, reports               |
-| Project           | A registered repository                                                                                    |
-| Profile           | A project's configuration for the kit: areas, verification commands, quality gates, data sources           |
-| Work item         | One unit of work in a project, with one record                                                             |
-| Record            | The file that holds a work item's intent, plan, log, verification and outcome                              |
-| Area              | A kind of work (deploy, backend, content, …) with its rule pack                                            |
-| Verdict           | The outcome of evaluating an inbox item                                                                    |
-| Radar             | The list of tools in use, each with choice, alternatives, evidence and review date                         |
-| Host              | A machine where sessions run                                                                               |
-| Worker            | A session that executes one work item                                                                      |
-| Reader            | A restricted agent that reads untrusted content and returns a summary                                      |
-| Checker           | A read-only agent that verifies a result against its record                                                |
-| Security reviewer | A read-only agent that looks for security holes in a change, given the change and not its author's account |
+| Term              | Meaning                                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Hub               | The session in the home from which the person runs the projects, with the kit's agent `honsha:hub`               |
+| Kit               | The template repository: workflow, rules, skills, agent definitions, hooks, checks, the hub's scripts, templates |
+| Home              | A user's private repository: project registry, settings, decisions, inventory, backlog, radar, lessons, reports  |
+| Project           | A registered repository                                                                                          |
+| Profile           | A project's configuration for the kit: areas, verification commands, quality gates                               |
+| Work item         | One unit of work in a project, with one record                                                                   |
+| Record            | The file that holds a work item's intent, plan, log, verification and outcome                                    |
+| Area              | A kind of work (deploy, backend, content, …) with its rule pack                                                  |
+| Verdict           | The outcome of a checker's or a security reviewer's report: pass or fail                                         |
+| Radar             | The tools in use, one entry each in the home, with its review date                                               |
+| Host              | A machine where sessions run                                                                                     |
+| Worker            | A session that executes one work item                                                                            |
+| Checker           | A read-only agent that verifies a result against its record                                                      |
+| Security reviewer | A read-only agent that looks for security holes in a change, given the change and not its author's account       |
