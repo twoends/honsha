@@ -286,6 +286,19 @@ it.
 - The hub's leave: this item changes that comment of `hub/projects.mjs`, the one line, no code; `261126-2213` has leave
   for another comment of the same file, far from it. The comment now gives as its reason that every record stays where
   it was written. Declared under "Deviations", with the first finding.
+- The person accepted both deviations. The fixes are commit `76022ec`, which by mistake also carries the
+  verification's results and the first reports, kept for the closing commit (`agents/worker.md`, Verification); the
+  branch is not rewritten, and the closing commit holds the verification as it then stands. The fix touches nothing
+  the security review guards, so no repeated review runs.
+- The hub: `261126-2213` changes, in the architecture's "Models", the bullet on the tier and effort of an item's size.
+  This branch changes nothing in "Models", that bullet and its neighbours included.
+- The verification on `76022ec` passed, all 11 commands. The repeated check, on `76022ec`, of the diff since
+  `c192a55`: `fail`, with two findings. The first, step 5 of `honsha:assessment` shortened past the condition that
+  criterion 7 names, which the workflow cites the skill for: it states again that earlier workflow documents are
+  deleted once the adoption no longer reads them, so the skill ends 12 characters longer than on the default branch,
+  declared under "Deviations"; shortening its other clauses to make room would change what they say. The second, the
+  comment of `hub/projects.mjs` claiming that every record stays where it was written, which a record of the backlog
+  does not: it now names every merged record, the same line under the hub's leave.
 - For the hub, outside this item: the README's requirements count a session of the desktop application with the kit
   installed among what is not tried; the README's table has no row for `hub/`; no rule of the kit says how a session
   treats untrusted content, now that the reader is gone from the documents.
@@ -454,5 +467,9 @@ The first check, on `c192a55` and the record as it then stood, of the diff from 
   for that one line.
 
 Both accepted by the person on 2026-11-26, in this item's session.
+
+- The Boundaries say that every document the change touches shrinks, but `skills/assessment/SKILL.md` ends 12
+  characters longer than on the default branch, well within its budget: its step 5 states when a project's earlier
+  workflow documents are deleted, which is where the workflow points for it. The repeated check found it.
 
 ## Outcome
