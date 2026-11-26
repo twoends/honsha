@@ -48,31 +48,28 @@ security testing and before the home's inventory, which follows the rule this it
 
 ### In scope
 
-- A new skill, `skills/credentials/SKILL.md`, `honsha:credentials`: the rules on the accounts and credentials of an
-  installation and of its projects, and on what its sessions can reach; the inventory, what it holds and where; what a
-  provider that holds the installation's data or credentials is weighed for in its radar entry.
 - `skills/security-posture/SKILL.md`: a step that reads who and what can reach a repository, its collaborators and
-  pending invitations, its deploy keys, its secrets by name and its environments, each against the inventory and the
-  rules; what a reading keeps of it, and what the review finds urgent; its description.
-- `skills/review/SKILL.md`: a step that reads the inventory's dates, and the account and the token that the hosting
-  service's client holds on the host; its step on the radar, which reads a provider's entry for its own security too;
-  its description.
+  pending invitations, its deploy keys, its secrets by name and its environments, with the rules it reads them against
+  and the home's inventory; what a reading keeps of it, and what the review finds urgent; its description.
+- `skills/review/SKILL.md`: a step on the accounts and credentials of the installation and of its projects: what the
+  home's inventory holds and where, the rules it is read against, its dates, the account and the token that the hosting
+  service's client holds on the host, and the connectors and plugins that reach the sessions; its step on the radar,
+  which weighs a provider's own security too; its description.
 - `services/github/README.md`: the commands that read a repository's collaborators and invitations, its deploy keys,
   its secrets by name and its environments, and the account's second factor and the token's scopes and expiry, each
   printing no value, with their answers; where GitHub keeps a credential that deploys so that only the default
   branch's runs reach it, by visibility and plan; what the kit's commands need of the token that `gh` holds.
-- `agents/worker.md`: the skill named for an item that adds, changes or removes an account, a credential, or a connector
-  or a plugin. `agents/security-reviewer.md`: a credential that deploys, given to a run that a pull request starts,
-  among what it looks for under deploy and CI configuration.
+- `agents/security-reviewer.md`: a credential that deploys, given to a run that a pull request starts, among what it
+  looks for under deploy and CI configuration.
 - `docs/01-specs/WORKFLOW.md`: a section "Accounts and credentials" with the reasons; what "What the piece of a service
-  says", "Security posture" and "Upkeep review" say of it. `docs/01-specs/INTERFACE.md`: the skill's name, and the
-  home's inventory among the files the kit reads. `docs/01-specs/ARCHITECTURE.md`: the skill and the inventory in its
-  layouts, and a point of "Security". `README.md`: the skill in its list.
-- `checks/budgets.test.mjs`: the workflow's and the worker's budgets. `hooks/hooks.test.mjs`: the total of a session's
-  start, by as much as the worker's budget rises, if its margin does not hold it.
+  says", "Security posture" and "Upkeep review" say of it. `docs/01-specs/INTERFACE.md`: the home's inventory among the
+  files the kit reads. `docs/01-specs/ARCHITECTURE.md`: the inventory in the home's layout, and a point of "Security".
+- `checks/budgets.test.mjs`: the workflow's budget, and the review's if its step does not fit a skill's.
 
 ### Out of scope
 
+- A new skill, and any change to the worker's file, the README or the total of a session's start: the rules go where
+  they are read (Strategy).
 - The inventory and any of its entries: the home's item `261125-2040`, which follows the rule written here.
 - Anything set on a service or a host: a second factor turned on, a token narrowed, created, replaced or revoked, a
   secret moved or set, a connector limited. Each is the person's.
@@ -91,8 +88,8 @@ security testing and before the home's inventory, which follows the rule this it
 
 ### Boundaries
 
-- Nothing breaks (interface, Changes to the interface): a skill and a file of the home are added; no name, command, key
-  or file's shape that the interface lists changes.
+- Nothing breaks (interface, Changes to the interface): a file of the home is added; no name, command, key or file's
+  shape that the interface lists changes.
 - The rules name no hosting service: GitHub's places, plans and commands are in its piece.
 - No value reaches a session: every command of the piece and of the trial prints names, roles, dates, scopes and
   booleans, never a secret's or a token's value; no command that shows a client's token is run. A session sets no
@@ -110,67 +107,63 @@ security testing and before the home's inventory, which follows the rule this it
 
 ### Acceptance criteria
 
-1. `skills/credentials/SKILL.md`, named `credentials`, has a description that says when it applies: a work item that
-   adds, changes, replaces or removes an account, a token, a key or a secret of an installation or of one of its
-   projects, or a connector or a plugin that reaches its sessions; the home's inventory written; the security posture
-   and the periodic review that read them. It holds, each with its reason where the reason helps:
-   1. a second factor on every account that can write to a repository, a host, a project's data or its deployment, or
-      that holds a credential, of the strongest kind the service offers;
-   2. each token and key with the narrowest scopes and reach that its work needs; an expiry, or where the service gives
-      none a date by which it is replaced, within a year, and within 90 days for one that a session can read;
-   3. a credential that deploys, or that writes outside the repository, given only to the default branch's runs, never
-      to a run that a pull request starts; where the service cannot hold that for a repository, kept out of its
-      pipeline;
-   4. a credential that may have been exposed replaced at once, and the old one revoked, by the person;
-   5. no session reads, prints or sets a credential's value;
-   6. the connectors and plugins that reach the installation's sessions: each in the inventory with what its tools can
-      change, and one whose tools change a service's data given only to the sessions whose work needs it, as the person
-      chooses;
-   7. the inventory: `inventory.md` in the home; its entries of accounts, credentials, hosts, connectors and plugins,
-      what each holds, by name and never by value, and the date each is read again; how a project's item that adds,
-      replaces or removes a credential reaches it;
-   8. a provider that holds the installation's data or credentials, weighed in its radar entry for its own security: the
-      second factor it offers, the scopes and expiry its credentials can have, where it keeps the data, its record of
-      incidents; a provider of the inventory with no radar entry is a finding.
-
-   It names no hosting service, and holds at most 6,000 characters.
-2. `honsha:security-posture` reads, in a step of its own, a repository's collaborators with their role and its pending
+1. `honsha:security-posture` reads, in a step of its own, a repository's collaborators with their role and its pending
    invitations, its deploy keys and whether each writes, its secrets by name with where each is kept, and its
-   environments with the branches whose runs enter each, never a value; each against the home's inventory and the rules
-   of `honsha:credentials`, with what makes a finding; what a reading keeps holds them by name; at the review, access
-   that neither the last reading nor the inventory holds is urgent. Its description names the step, and it stays within
-   6,000 characters.
-3. `honsha:review` reads the inventory's dates, and reports each that has passed or falls before the next review, with
-   what its entry reaches; the account and the token that the hosting service's client holds on the host, against their
-   entries; the connectors and plugins that its own session received, against theirs. Its step on the radar reads a
-   provider's entry for its own security. Its description names them.
-4. GitHub's piece holds a command for each reading of criteria 2 and 3: collaborators, invitations, deploy keys, the
+   environments with the branches whose runs enter each, never a value. It states what they are read against: a
+   credential that deploys, or that writes outside the repository, is given only to the default branch's runs, never to
+   a run that a pull request starts, and where the service cannot hold that for the repository it stays out of its
+   pipeline; a deploy key writes only where its work writes; access that the home's inventory lacks is a finding. What a
+   reading keeps holds them by name, and at the review access that neither the last reading nor the inventory holds is
+   urgent. Its description names the step; it names no hosting service, and stays within 6,000 characters.
+2. `honsha:review` holds, in a step of its own:
+   1. the home's inventory, `inventory.md`: its entries of accounts, credentials, hosts, connectors and plugins of the
+      installation and of its projects, what each holds, by name and never by value, and the date each is read again;
+   2. what the inventory is read against: a second factor on every account that can write to a repository, a host, a
+      project's data or its deployment, or that holds a credential, of the strongest kind the service offers; each
+      credential with the narrowest scopes and reach that its work needs, and an expiry, or where the service gives
+      none a date by which it is replaced, within a year, and within 90 days for one that a session can read; one that
+      may have been exposed replaced at once, and the old one revoked, by the person; a connector or a plugin whose
+      tools change a service's data reaching only the sessions whose work needs it, as the person chooses; no session
+      reads, prints or sets a value;
+   3. what it reports: each date that has passed or falls before the next review, with what its entry reaches; the
+      account and the token that the hosting service's client holds on the host, against their entries; the connectors
+      and plugins that its own session received, against theirs; without an inventory, the proposal of one.
+
+   Its step on the radar weighs a provider that holds the installation's data or credentials for its own security too:
+   the second factor it offers, the scopes and expiry its credentials can have, where it keeps the data, its record of
+   incidents; a provider of the inventory with no radar entry is a finding. Its description names them. It names no
+   hosting service, and stays within 6,000 characters unless its budget is raised with why.
+3. GitHub's piece holds a command for each reading of criteria 1 and 2: collaborators, invitations, deploy keys, the
    secrets of Actions at the repository's, the organisation's and each environment's level, of Dependabot and of
    Codespaces, the environments and their branch policies, the account's second factor, and the token's scopes and
    expiry. Each prints no value, and comes with its answers for none, some, not given and not readable. It says where
    GitHub keeps a credential that deploys so that only the default branch's runs reach it, by visibility and plan, and
    what the rule asks where GitHub gives no such place; and what the kit's commands need of the token that `gh` holds.
-   Each statement is checked against GitHub's pages, and each command is tried as criterion 7 says or marked untried.
-5. The worker's file names `honsha:credentials` for an item that adds, changes or removes an account, a credential, or a
-   connector or a plugin; the security reviewer's file names a credential that deploys, given to a run that a pull
-   request starts.
-6. The workflow gives the reasons in a section of its own, and its sections "What the piece of a service says",
-   "Security posture" and "Upkeep review" say what criteria 1 to 4 make true; the interface names the skill and the
-   inventory; the architecture lists them and points to the rules from "Security"; the README lists the skill; each
-   raised budget says why; nothing in the kit contradicts the new rules.
-7. The trial: each read command of the piece, on the repositories of the installation's registry. Each answers as the
+   Each statement is checked against GitHub's pages, and each command is tried as criterion 6 says or marked untried.
+4. The security reviewer's file names a credential that deploys, or that writes outside the repository, given to a run
+   that a pull request starts.
+5. The workflow gives the reasons in a section of its own, why the rules have no skill of their own among them, and its
+   sections "What the piece of a service says", "Security posture" and "Upkeep review" say what criteria 1 to 3 make
+   true; the interface names the inventory among the home's files; the architecture lists it in the home's layout and
+   points to the rules from "Security"; each raised budget says why; the kit has no new skill; nothing in the kit
+   contradicts the new rules.
+6. The trial: each read command of the piece, on the repositories of the installation's registry. Each answers as the
    piece says, and none prints a value. The log gives each answer's form, and nothing of its content.
-8. The profile's `verify` commands pass, the security review and the checker pass, and the kit's pipeline passes on the
+7. The profile's `verify` commands pass, the security review and the checker pass, and the kit's pipeline passes on the
    pull request.
 
 ## Strategy
 
-**Why a skill of its own.** The rules apply wherever a credential is added or changed: in a project's item that moves a
-deploy secret, in the home's item that writes the inventory, at a host's setup. The posture runs only at an assessment
-and at a review, and reads; the rules say what it reads against. So the rules go into a skill that the worker invokes
-for such an item (workflow, Where the rules are), and the posture and the review point to it for what a reading
-compares. The readings of a repository go into the posture, which was written with room for them, and their commands
-into the service's piece, as the posture's other reads are.
+**Why no skill of its own.** Each skill of the kit puts its description into every session of an installation, used or
+not, and the worker's file names each one that an item invokes; each is one more place where a rule must stay in step.
+A skill pays for that only where a work item applies its rules and no skill or agent it already receives reaches it.
+These rules are applied by the person, on the services and the hosts, and read by the assessment and the review. The
+one that a change must meet, a credential that deploys kept from a pull request's runs, is checked by the security
+reviewer, which reads every change that touches secrets, permissions or the pipeline's configuration. So each rule goes
+where it is read: a repository's access into the posture, which was written with room for it, beside its other reads;
+the accounts, the credentials, what reaches the sessions, the inventory and the providers into the review, which reads
+the home; the rule on a change into the reviewer's file; the commands into the service's piece; the reasons into the
+workflow.
 
 **The rules, and why.**
 
@@ -190,15 +183,18 @@ into the service's piece, as the posture's other reads are.
   a pull request starts executes the workflow files of its own branch, so whoever can push a branch, a session among
   them, could have it print or send the credential. Where the service cannot limit a credential to the default branch's
   runs, as on a private repository of a plan that gives no environments, the credential stays out of the pipeline, and
-  the project deploys in another way, which its own item chooses.
+  the project deploys in another way, which its own item chooses. The posture reads it in every repository, and the
+  security reviewer in every change of a workflow.
+- A deploy key writes only where its work writes: a key has no account and no second factor, and one that writes can do
+  much more than push.
 - Replaced at once, and the old one revoked, when a credential may have been seen by anyone it was not given to: in a
   commit, a log, a transcript, a message, an alert of the service, or on a host that was lost or reached by someone
   else. The person replaces and revokes it; a secret found in a commit stays under the rule of
   `honsha:security-testing`.
 - No value in a session: what a session reads stays in its transcript on the host, and what a pipeline prints in its
-  log. So a session reads, writes and passes credentials by name, never prints or sets a value, and runs no command that
-  prints one, such as one that shows a client's token. The person sets each value, on the service or on the host. The
-  scan of the history and the reading of the service's alerts already hold this rule; it now holds for every reading.
+  log. So a session reads credentials by name, never prints or sets a value, and runs no command that prints one, such
+  as one that shows a client's token; the person sets each value, on the service or on the host. The scan of the
+  history and the reading of the service's alerts already hold this rule; it now holds for every reading.
 - What reaches the sessions: the platform gives an installation's sessions connectors, plugins and servers whose tools
   can change other services, such as a database or a store, and a session steered by what it reads can use them. Each
   is in the inventory with what its tools can change; one whose tools change a service's data reaches only the sessions
@@ -220,31 +216,32 @@ connector and plugin of the installation and of its projects, by name and never 
 
 Each entry has the date it is read again, within a year, as a radar entry has its review date. It is Markdown, read by
 the person and by the review, as the decision log is: no script reads it, so the kit fixes what it holds and not its
-layout. A project's item that adds, replaces or removes a credential names it, by name, in its outcome; the inventory
-takes it in an item of the home, and the review names what the inventory lacks. The interface lists the file, since a
-skill of the kit reads it.
+layout. The review's step holds that list, since the review is its reader, and the home's item that writes the
+inventory reads it there. The review and the posture name what the inventory lacks, so a credential that an item of a
+project adds reaches it at the next reading at the latest. The interface lists the file, since a skill of the kit reads
+it.
 
 **A provider.** A service that holds the installation's data or credentials, such as a hosting service, a model
 provider, a database, a store, a domain's registrar or a host's provider, is a way in that no rule of the kit reaches.
 Its radar entry weighs, beside its cost, its exposure of the data and its maturity: the second factor it offers its
 accounts, and whether an account can be made to require one; the scopes and the expiry its credentials can have; where
-it keeps the data; its record of incidents, and how it tells its users of one. The review reads the entry again on its
-date, and a provider of the inventory with no radar entry is a finding.
+it keeps the data; its record of incidents, and how it tells its users of one. The review's step on the radar reads it
+on the entry's date, and a provider of the inventory with no radar entry is a finding.
 
 **The readings.**
 
 - The posture's new step, after the open alerts: the collaborators with their role, and the invitations pending; the
   deploy keys, and whether each writes; the secrets by name, with where each is kept, the repository, an environment or
-  an organisation; the environments, with the branches whose runs enter each. Each against the inventory and the rules:
-  one that the inventory lacks, a key that writes where its work only reads, and a credential that deploys within reach
-  of a pull request's run are findings, each with its item proposed. What a reading keeps holds the access by name, so
-  that the review compares; access that neither the last reading nor the inventory holds came outside any work item,
-  and is urgent.
-- The review's new step, after the posture: the inventory's dates, each that has passed or falls before the next review
-  named with what its entry reaches; the account and the token that the hosting service's client holds on the host,
-  read as the piece says, against their entries; the connectors and plugins that the review's own session received,
-  which it sees by their tools, against theirs. Its step on the radar reads a provider's entry for its own security.
-  Without an inventory, the review proposes one.
+  an organisation; the environments, with the branches whose runs enter each. Each against the rules above that concern
+  a repository, and against the inventory: one that the inventory lacks, a key that writes where its work only reads,
+  and a credential that deploys within reach of a pull request's run are findings, each with its item proposed. What a
+  reading keeps holds the access by name, so that the review compares; access that neither the last reading nor the
+  inventory holds came outside any work item, and is urgent.
+- The review's new step, after the posture: what the inventory holds and the rules it is read against; the inventory's
+  dates, each that has passed or falls before the next review named with what its entry reaches; the account and the
+  token that the hosting service's client holds on the host, read as the piece says, against their entries; the
+  connectors and plugins that the review's own session received, which it sees by their tools, against theirs. Its step
+  on the radar weighs a provider's own security. Without an inventory, the review proposes one.
 - The assessment reads the access through the posture, its first step, and needs no change.
 
 **GitHub's piece.**
@@ -269,35 +266,33 @@ date, and a provider of the inventory with no radar entry is a finding.
 
 **The documents and their budgets,** measured as characters:
 
-- `skills/credentials/SKILL.md`, new, about 4,500 of the 6,000 of a skill.
-- `skills/security-posture/SKILL.md`, at 4,431, takes about 800; `skills/review/SKILL.md`, at 4,457, about 600.
-- `docs/01-specs/WORKFLOW.md`, at 45,039 of 45,100, takes about 1,800 for the section's reasons and the piece's point: a
-  budget of about 46,900.
-- `agents/worker.md`, at 6,530 of 6,600, takes about 120 for the skill's line: a budget of 6,700. The worker's procedure
-  counts at its budget in the total of a session's start, in `hooks/hooks.test.mjs`, which rises by as much if its
-  margin does not hold it.
-- `agents/security-reviewer.md`, at 5,093 of 6,000, takes about 120; `docs/01-specs/INTERFACE.md`, at 7,041 of 9,000,
-  about 250. GitHub's piece has no budget.
+- `skills/security-posture/SKILL.md`, at 4,431 of 6,000, takes about 900: about 5,350.
+- `skills/review/SKILL.md`, at 4,457 of 6,000, takes about 1,500, for the inventory's list, the rules and the radar's
+  provider: about 5,950. Where it passes 6,000, its budget rises by what it needs, since it holds what the home's
+  inventory holds, which no other skill reads; the later items that extend the review raise it, or move a step, with
+  their own reason.
+- `docs/01-specs/WORKFLOW.md`, at 45,039 of 45,100, takes about 1,700 for the section's reasons and the piece's point: a
+  budget of about 46,800.
+- `agents/security-reviewer.md`, at 5,093 of 6,000, takes about 150; `docs/01-specs/INTERFACE.md`, at 7,041 of 9,000,
+  about 200. GitHub's piece has no budget.
+- The worker's file, the README and the total of a session's start do not change.
 
 **The files.** Changed: `skills/security-posture/SKILL.md`, `skills/review/SKILL.md`, `services/github/README.md`,
-`agents/worker.md`, `agents/security-reviewer.md`, `docs/01-specs/WORKFLOW.md`, `docs/01-specs/INTERFACE.md`,
-`docs/01-specs/ARCHITECTURE.md`, `README.md`, `checks/budgets.test.mjs`, and `hooks/hooks.test.mjs` if its total must
-rise. New: `skills/credentials/SKILL.md`. Ten or eleven existing files, beyond the three that a capability is expected
-to touch: the rule reaches every list of the kit's skills, the two agents that must apply it, and the specifications,
-and the measures will show it.
+`agents/security-reviewer.md`, `docs/01-specs/WORKFLOW.md`, `docs/01-specs/INTERFACE.md`,
+`docs/01-specs/ARCHITECTURE.md` and `checks/budgets.test.mjs`. No new file. Eight existing files, beyond the three that
+a capability is expected to touch: the rules land where each is read, and the measures will show it.
 
 **Plan.** After the approval, a second lookup of GitHub's pages, on what the first left open (Log), runs in a subagent
-on the light tier at medium effort, while this session runs the trial, reading by name only, and writes the skill and
-the steps of the posture and of the review. Then GitHub's piece, from the lookup and the trial; then the worker's and
-the reviewer's files, the workflow, the interface, the architecture, the README and the budgets. The change is not split
-into parallel parts (`honsha:parallel-parts`): the skill, the posture, the review, the piece and the workflow say one
-thing in several places and rely on each other's wording, and `checks/interface.test.mjs` reads the skills' folder with
-the interface. Then the verification; the security review, due since the change rules permissions and secrets and how
-they are read, where a value must never reach a transcript; the checker; the pull request and its checks, read as the
-workflow's rule on pushes says; and the closing commit. The work runs on the strong tier at xhigh, as a full item does.
+on the light tier at medium effort, while this session runs the trial, reading by name only, and writes the steps of the
+posture and of the review. Then GitHub's piece, from the lookup and the trial; then the reviewer's file, the workflow,
+the interface, the architecture and the budgets. The change is not split into parallel parts (`honsha:parallel-parts`):
+the posture, the review, the piece and the workflow say one thing in several places and rely on each other's wording.
+Then the verification; the security review, due since the change rules permissions and secrets and how they are read,
+where a value must never reach a transcript; the checker; the pull request and its checks, read as the workflow's rule
+on pushes says; and the closing commit. The work runs on the strong tier at xhigh, as a full item does.
 
-**How each criterion is shown.** 1 to 6: the files, read by the checker, and the budgets by their test. 7: the trial, in
-the log. 8: the verification on this host, the reports, and the pull request's run.
+**How each criterion is shown.** 1 to 5: the files, read by the checker, and the budgets by their test. 6: the trial, in
+the log. 7: the verification on this host, the reports, and the pull request's run.
 
 **Assumptions,** from the first lookup or still open, which the second lookup and the trial check.
 
@@ -330,14 +325,17 @@ the log. 8: the verification on this host, the reports, and the pull request's r
   comes.
 - Most of these rules rest on what the person does on a service, which no command of the kit enforces: the review reads
   them again, where a service shows them.
+- A work item that adds a credential to a project reads none of these rules but the reviewer's: the posture and the
+  review find at their next reading what it did otherwise, and the inventory takes it then.
+- The posture and the review come close to a skill's budget, which the later items that extend them meet sooner.
 - GitHub changes what it gives: the piece already says to check its statements against GitHub's pages.
 - `261125-1850` may raise a line of `checks/budgets.test.mjs` too: each item raises it by what it needs, and the one
   brought up to date sets the sum.
 
 **For the person.** Choices made here, each against an alternative:
 
-- One skill for the rules, which an item that adds a credential invokes, with the readings in the posture and the
-  review; not the rules in the posture, which no such item reads.
+- No skill of its own: the rules where they are read, in the posture, the review and the reviewer's file; not a skill
+  `honsha:credentials`, which every session would pay for and few items would invoke.
 - A year at most for any credential, and 90 days for a token that a session can read; not a year for every one. The
   shorter limit costs a token's replacement each quarter on each host.
 - The inventory as one Markdown file, `inventory.md`, which the kit names by what it holds and not by its layout, each
@@ -390,6 +388,12 @@ the log. 8: the verification on this host, the reports, and the pull request's r
   token's; whether a deploy key can expire; the lists of Dependabot's and Codespaces' secrets.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval, in this
   session.
+- Before approving, the person asked whether a new skill was worth its cost: each puts its description into every
+  session of the installation and is one more place to keep in step, and few items would invoke this one. The strategy
+  is rewritten with no skill of its own: the repository's access in the posture, the accounts, the credentials, what
+  reaches the sessions, the inventory and the providers in the review, the one rule that a change must meet in the
+  security reviewer's file. The worker's file, the README and the total of a session's start no longer change. The
+  first strategy is in commit `540660d`. The state stays `awaiting-approval`.
 
 ## Verification
 
