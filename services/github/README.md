@@ -102,8 +102,8 @@ project of the host, and says so.
   backlog's script pushes with must be able to push to the default branch (workflow, The backlog), so GitHub lets any
   account that can write push there, whatever its ruleset holds: the guard stops a session's mistake, and the check of
   the commits on each push to the default branch fails on a direct commit that is not the backlog's, though not on a
-  merge, which it takes for a pull request's. Which of them GitHub gives free, what the home's ruleset holds, and how they are read, is below (The
-  protections it gives free).
+  merge, which it takes for a pull request's. Which of them GitHub gives free, what the home's ruleset holds, and how
+  they are read, is below (The protections it gives free).
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
