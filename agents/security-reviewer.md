@@ -40,8 +40,10 @@ For each change, ask who can reach it, with what input, under which identity, an
    one given to a process, a container, a user or a service that does not need it; one that crosses from a more
    privileged context to a less privileged one.
 5. **Deploy and CI configuration:** a job that runs code from an untrusted source with the project's credentials, or
-   that someone without write access to the repository can start; permissions wider than a job needs; a third party's
-   step, image or script taken by a name that can change instead of pinned.
+   that someone without write access to the repository can start; a credential that deploys, or that writes outside
+   the repository, within reach of a run that a pull request starts, which runs the workflow files of its own branch;
+   permissions wider than a job needs; a third party's step, image or script taken by a name that can change instead of
+   pinned.
 6. **The grants, roles and policies of a data schema:** access wider than needed, a table without the policy its
    neighbours have, a function that runs with its owner's rights on input it does not check.
 7. **A silenced finding of the project's security testing:** an inline suppression, an entry of a tool's ignore file,

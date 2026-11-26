@@ -67,7 +67,9 @@ What the kit reads or writes in a project and in a home, by its path from the re
 - In the home, besides what every project holds: the registry, `registry.yml`; the backlog,
   `backlog/<project>/<id>-<slug>.md`; the lessons of a technology, `lessons/tech/<technology>.md`, and those of a host,
   `lessons/host/<host>.md`, named by the machine's name in lower case; the decision log, `decisions.md`, whose choices
-  the hub applies; `settings.yml`, whose `max-workers` caps the workers on a host and whose `models` maps each of the
+  the hub applies; the inventory, `inventory.md`, of the accounts, credentials, hosts, connectors and plugins of the
+  installation and of its projects, by name and never by value, whose entries the periodic review names
+  (`honsha:review`); `settings.yml`, whose `max-workers` caps the workers on a host and whose `models` maps each of the
   kit's model tiers, `light`, `standard`, `strong` and `strongest`, to a model, one key per tier.
 - The home is the repository whose folder the plugin's setting `home` names; it holds `registry.yml` at its root.
 
