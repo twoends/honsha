@@ -450,10 +450,31 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   through the shared run it failed with that message.
 - The part was brought into this branch by a fast-forward to `ce14442`, as nothing else was committed here since
   `42bd307`; its worktree and branch were then removed.
+- The security review of `1b9ac27` passes, with no finding and four weak points (Verification). What was done with
+  each:
+  1. No command lints a shell script that the kit adds later outside the workflows' steps, until a posture reading
+     names the missing kind: left to the person, as the approved strategy chose, since the one shell script the kit
+     tracks quotes its arguments and is under `security-review`.
+  2. The skill's exemption of a script that only hands its arguments on rested on a reader's judgement, though an
+     unquoted `$@` is what ShellCheck finds there: fixed, the exemption names the quoted arguments, as
+     `exec node <script> "$@"` hands them.
+  3. GitHub's `security.md` had lost the qualifier that the environment's limit holds no further than what protects the
+     default branch: fixed, it says that an account that lands a workflow file on the default branch has its runs
+     enter, and that against a session the limit holds as far as the session is kept off that branch.
+  4. The profile is not under `security-review`, and `checks/record.mjs` reads the branch's own list: left to the
+     person, the first for the cost the strategy gives, the second in `261126-2213`'s file.
+  Of what the review could not read: whether gitleaks writes on its error output in a clean run over a whole mirror
+  is answered in part by the trial, where a clean mirror's scan wrote nothing there, and by the branch's scan, which
+  fails on such a line and passed in this item's runs and in pull request 65's pipeline; a repository where it did
+  would fail closed. That `checks/history-secrets.mjs` runs `git` by its name from the clone's folder, which on Windows
+  may find a `git.exe` committed there, unconfirmed, is in the code before this item and in the kit's other scripts
+  that run in a project: left to the person, as an item of its own.
+- `services/github/security.md` then holds 17,081 characters, and its budget is 17,100; the security testing's skill
+  holds 7,190.
 
 ## Deviations
 
-- Criterion 1: `services/github/security.md` holds 16,822 characters, not at most 15,500. Its commands take 2,665, and
+- Criterion 1: `services/github/security.md` holds 17,081 characters, not at most 15,500. Its commands take 2,665, and
   each read keeps the answers by which a reading tells a protection on from off and an empty list from one it could not
   read; the cut came from what three sections repeated, from the read that serves no project and from the wording. Its
   budget is set to what it holds.

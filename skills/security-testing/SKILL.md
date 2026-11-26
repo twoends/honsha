@@ -12,8 +12,8 @@ A project receives each kind that its files and its surface call for:
 - **Secrets committed by mistake:** every project, since any change can commit one.
 - **The security rules of each of its languages,** where a free tool has them.
 - **Its shell scripts, its container files and its pipeline's configuration,** where it has them; a script that only
-  hands its arguments to another program holds nothing for a linter. The hosting service's piece,
-  `services/<name>/security.md` in the kit directory, names tools that read its pipeline's files.
+  hands its quoted arguments to another program, as `exec node <script> "$@"` does, holds nothing for a linter. Its
+  hosting service's `services/<name>/security.md`, in the kit directory, names tools that read its pipeline's files.
 - **Dynamic testing:** where the project serves HTTP, as a web application or an API does.
 
 The security posture (`honsha:security-posture`) reads which kinds apply and which the profile has.
@@ -73,7 +73,7 @@ still holds it.
   service serves, those it keeps for pull requests included, which hold deleted branches' commits; what the service
   keeps beyond any ref is in its piece. A host that cannot run the scanner says so, with the system's message.
 - **A session never reads a value:** it opens no file at a finding's commit, and scans with the script alone, whose
-  report gives each finding by where it is, its line masked.
+  report masks each finding's line.
 - **A finding is a secret** unless its file, rule and masked line show otherwise, as a test's fixture, an example or an
   identifier does, with the reason written. A secret stops an assessment (core rules, Stop conditions) and is urgent at
   the review: the person gets the list at once, revokes the secret at its provider and decides whether the history

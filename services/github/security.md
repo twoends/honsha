@@ -133,10 +133,12 @@ runs, which no read here covers, and a run that Dependabot starts gets Dependabo
 the default branch's files with its secrets. So a credential that deploys, or that writes outside the repository, is an
 environment's secret: its deployment branches are "Selected branches and tags" with the default branch by its name, and
 only the job that deploys names the environment, in a workflow on `push` to the default branch, `workflow_dispatch` or
-`schedule` alone. The limit stops an account that writes to the repository and does not administer it; one that
-administers it can change the branches, so against a session the limit holds only where the host's token cannot
-administer the repository, as a fine-grained token whose Administration and Environments permissions only read,
-untried with `gh`, and the posture reads the branches at every reading. GitHub gives
+`schedule` alone. The limit keeps out every other branch's runs, and holds no further than what protects the default
+branch: an account that lands a workflow file there, by a push or by merging a pull request, has that file's runs enter
+the environment, and one that administers the repository can change the branches. Against a session it holds as far as
+the session is kept off the default branch, by the guard and by the rule that the person merges, and where the host's
+token cannot administer the repository, as a fine-grained token whose Administration and Environments permissions only
+read, untried with `gh`; the posture reads the branches at every reading. GitHub gives
 environment secrets and deployment branches on a public repository on every plan, and on a private one with GitHub Pro,
 Team or Enterprise; on the free plan's private repository its pages give neither, so the posture counts no such limit
 there, whatever the API lists, and such a credential stays out of the pipeline. Required reviewers and wait timers are
