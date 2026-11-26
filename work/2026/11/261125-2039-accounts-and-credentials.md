@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
@@ -349,6 +349,9 @@ the log. 7: the verification on this host, the reports, and the pull request's r
 
 ## Approval
 
+Approved by the person on 2026-11-26, in this item's session, as written in `c6f74cd`: the choices and the trial's
+reads listed under "For the person" and "Boundaries" included.
+
 ## Log
 
 - The hub gave the record from the home's backlog when it started the item; its intent is restated as the core rules
@@ -394,6 +397,16 @@ the log. 7: the verification on this host, the reports, and the pull request's r
   reaches the sessions, the inventory and the providers in the review, the one rule that a change must meet in the
   security reviewer's file. The worker's file, the README and the total of a session's start no longer change. The
   first strategy is in commit `540660d`. The state stays `awaiting-approval`.
+- The person approved the strategy (Approval); the state is `in-progress`.
+- The hub lets `261125-1850` change, after its approval, one line in three files that this item changes too. In
+  `docs/01-specs/INTERFACE.md`, `261125-1850` changes the paragraph of "Commands" that names the kit's other scripts,
+  and this item the home's files under "Files". In `docs/01-specs/ARCHITECTURE.md`, `261125-1850` changes the kit's
+  layout's `checks/` line, and this item the home's layout and "Security". In `services/github/README.md`,
+  `261125-1850` changes the zizmor bullet of "Static testing of the workflows", and this item adds the reads of a
+  repository's access and the account's token, in sections of their own. This item rewords and moves none of the lines
+  of `261125-1850`. Once `261125-1850` is merged, the profile lists `skills/security-posture/SKILL.md` under
+  `security-review`, whose review this item already calls for; whichever of the two merges second is brought up to date
+  first (`honsha:branch-update`), as the hub says.
 
 ## Verification
 
