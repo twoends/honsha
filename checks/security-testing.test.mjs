@@ -380,16 +380,23 @@ test("a scanner that writes an error fails the scan, though it exits 0 with an e
   git(root, ["add", "."]);
   git(root, ["commit", "-q", "-m", "a"]);
   installAll(root);
-  const run = context(root, {
-    program: (name, args) => {
-      const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
-      fs.writeFileSync(report, "[]");
-      return { status: 0, stderr: "ERR [git] fatal: Invalid revision range\n" };
-    },
-  });
+  /** @param {string} stderr */
+  const scanner = (stderr) =>
+    context(root, {
+      program: (name, args) => {
+        const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
+        fs.writeFileSync(report, "[]");
+        return { status: 0, stderr };
+      },
+    }).context;
   assert.throws(
-    () => gitleaks(run.context, "main"),
+    () => gitleaks(scanner("ERR [git] fatal: Invalid revision range\n"), "main"),
     /^Error: gitleaks failed: ERR \[git\] fatal: Invalid revision range$/,
+  );
+  // A control character that git's message quotes from the history is printed as an escape.
+  assert.throws(
+    () => gitleaks(scanner(`ERR [git] fatal: bad ref ${String.fromCodePoint(0x1b)}[2J\n`), "main"),
+    /^Error: gitleaks failed: ERR \[git\] fatal: bad ref \\u\{1b\}\[2J$/,
   );
 });
 

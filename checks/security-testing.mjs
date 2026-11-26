@@ -396,9 +396,10 @@ export function gitleaks(context, defaultBranch) {
     });
     if (result.error) throw new Error(`gitleaks could not run: ${result.error.message}`);
     // gitleaks exits 0, with an empty report, when the `git log` it runs fails: at the log level it is given, an error
-    // is the only thing it writes, so any line it writes fails the scan.
+    // is the only thing it writes, so any line it writes fails the scan. Printed with its control characters escaped,
+    // as a finding is, since git's message can quote what the history holds.
     if (result.status !== 0 || result.stderr.trim() !== "") {
-      throw new Error(`gitleaks failed: ${result.stderr.trim() || `exit code ${result.status}`}`);
+      throw new Error(`gitleaks failed: ${printable(result.stderr.trim()) || `exit code ${result.status}`}`);
     }
     const found = parseReport(fs.readFileSync(report, "utf8"));
     const ignored = readIgnored(context.root);

@@ -430,6 +430,18 @@ downloads listed under "For the person" included, the first choice as oxlint wit
   reported. A `# zizmor: ignore[...]` comment above one step's `run` left the same finding in the next step reported.
   A file that git takes for binary by its content shows no patch to gitleaks, as in the history scan, which `--text`
   would change for both: not this item's.
+- The fix is `ec28760`. The verification ran again on it and passed. The repeated security review, of the diff since
+  `5cf6104`, passes with no finding and three weak points:
+  1. If GitHub left `job.workflow_repository` or `job.workflow_sha` empty, `project.yml` would check out the caller's
+     own repository as the kit: left to the person. A step that refuses empty values would change the workflow that
+     every project calls; GitHub's documentation lists both, and a project without the kit's files would fail its
+     first run.
+  2. The reason in `.oxlintrc.json` said that `checks/profile.mjs` refuses a `lessons` outside the project, while it
+     reads the path's text alone, and a `LESSONS.md` committed as a link would lead out: the reason fixed, now a
+     `lessons` whose path leads out; the link is left to the person, beyond this item.
+  3. gitleaks's error reached the output with its control characters: fixed, it is printed as a finding is, with a
+     test. What it could not judge, the job context's type that actionlint prints, the runs answered: the ignore
+     matched on this host, and the copy with a mistyped input was still reported.
 
 ## Verification
 
