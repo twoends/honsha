@@ -433,6 +433,17 @@ reads listed under "For the person" included.
   guard); it now says that GitHub lets any account that can write push there, that the guard stops a session's
   mistake, and that the check of the commits on the default branch fails on a direct commit that is not the backlog's.
   A repeated review reads it.
+- The verification ran on `6a008ff`, and passed. The seventh security review, of the diff since `24e6c16`, passes with
+  no finding and confirms the weak point fixed. Its two weak points, left to the person, lie outside this item's files
+  and were there before it: `checks/commits.mjs` reads no merge commit on a default branch, taking each for a pull
+  request's, so a merge made locally and pushed to the home's default branch would pass it; and a direct push that also
+  changes the home's own workflow file runs that file, which could leave the check out.
+- The repeated check, of the diff since `02e518b` at `6a008ff`, fails on two findings, each fixed in a commit of its
+  own. 1: the piece's paragraph on the home restated two rules of its section on the protections, the bypass list and
+  the home's ruleset; it now points there. 2: the line above was wrong on the seventh review's first weak point, which
+  lies also in the piece's sentence, broader than `checks/commits.mjs`, since that check reads no merge on a default
+  branch; the sentence now says that it fails on a direct commit that is not the backlog's, though not on a merge, as
+  that weak point proposed. The change touches what the security review guards, so a repeated review reads it.
 
 ## Verification
 
