@@ -427,6 +427,12 @@ reads listed under "For the person" included.
   change and the repeated check wait for that decision. The state is `blocked`.
 - The person decided, on 2026-11-26 in this item's session, that the branch is pushed as it is (Deviations); the state
   is `in-progress`.
+- The verification ran on `24e6c16`, and passed. The sixth security review, of the diff since `02e518b` at `24e6c16`,
+  passes with no finding. Its weak point, fixed in a commit of its own: the piece said that the rules and the guard
+  keep the sessions from the home's default branch, where the guard stops a mistake and is no boundary (workflow, The
+  guard); it now says that GitHub lets any account that can write push there, that the guard stops a session's
+  mistake, and that the check of the commits on the default branch fails on a direct commit that is not the backlog's.
+  A repeated review reads it.
 
 ## Verification
 

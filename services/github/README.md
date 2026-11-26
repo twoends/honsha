@@ -100,9 +100,10 @@ project of the host, and says so.
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
   works the same with them: they add a stop on the server and change no rule. In the home, the account that the
   backlog's script pushes with must be able to push to the default branch (workflow, The backlog). An account on a
-  ruleset's bypass list passes every rule of it, so the home's ruleset refuses only forced pushes and deletion, and any
-  account that can write may push there: the rules and the guard keep the sessions from it. Which of them GitHub gives
-  free, and how they are read, is below (The protections it gives free).
+  ruleset's bypass list passes every rule of it, so the home's ruleset refuses only forced pushes and deletion, and
+  GitHub lets any account that can write push there: the guard stops a session's mistake, and the check of the commits
+  on each push to the default branch fails on a direct commit that is not the backlog's (workflow, The backlog). Which
+  of them GitHub gives free, and how they are read, is below (The protections it gives free).
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
