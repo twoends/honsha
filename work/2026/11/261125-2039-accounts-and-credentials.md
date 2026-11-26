@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: done
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
 requested-by: person
 source: 261125-1956
-pr: null
-model: null
+pr: 64
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -469,7 +469,204 @@ reads listed under "For the person" and "Boundaries" included.
   see them. Fixed by wrapping the five paragraphs again, with no word changed. Its points not verified: GitHub's
   statements, which the two lookups read (Log); and whether the reads that take an environment's name ran, which the
   trial's entry says they did, for each environment the list gave.
+- The fix, `c46c011`, gets no repeated security review: `git diff -w --word-diff` from `1f79820` shows no word changed,
+  only where lines break, so it touches nothing that the review guards. The verification passed again on it, and the
+  checker's repeated check reads it.
+- The repeated check read `c46c011`, in a subagent on Opus at its own effort: verdict `fail`, the first check's
+  finding confirmed fixed, and one finding: "Verification" held the first check's verdict and finding only in the log.
+  Fixed in "Verification", which stays uncommitted until the closing commit, so the fix is no commit of its own; a
+  further repeated check reads the record, with no change of the branch since `c46c011`.
+- The second repeated check read `c46c011` and the record: verdict `pass`, no finding (Verification).
+- Pushed the work, up to `c46c011`, and opened pull request 64 to `main`. Its four checks were still running when read,
+  so the session waits to be told that they have ended, as the workflow's rule on pushes says.
+- The hub said that they had ended; read once with `gh pr checks 64`, the four passed on `c46c011`: `verify` on Linux
+  and on Windows, `personal content` and `project / checks`.
 
 ## Verification
 
+On `c46c011`, from the repository's root, on this host:
+
+- `node <kit directory>/checks/record.mjs`: passed, the record has the shape the rules ask for.
+- `node <kit directory>/checks/commits.mjs`: passed, the 6 commits of the branch follow the rules.
+- No `registry.yml` at the root, so no `hub/projects.mjs check`.
+- `node checks/verify.mjs`, the profile's `verify` list: all 7 commands passed.
+  - `npx --no-install prettier --check .`: passed.
+  - `npx --no-install oxlint`: passed.
+  - `npx --no-install tsc -p .`: passed.
+  - `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 274 tests, 274
+    passed.
+  - `claude plugin validate .`: passed, with warnings on the manifest's version, a licence, an icon and the README's
+    install line, none of which this change touches.
+  - `node checks/record.mjs`: passed.
+  - `node checks/commits.mjs`: passed.
+- `node checks/verify.mjs --dynamic`: the profile lists no dynamic testing commands.
+
+The first security review, on `a1977ec`: verdict `pass`; findings: none.
+
+The repeated security review, on `1f79820`, of the diff since `a1977ec`:
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `checks/` (budgets.test.mjs), `docs/01-specs/` (WORKFLOW.md), `services/github/` (README.md). For context:
+`.hub/profile.yml`, `skills/security-posture/SKILL.md`, `skills/review/SKILL.md`.
+
+**Confirmation of the three weak points the fix answers**
+
+1. Admin token and the environment's limit: **fixed as a claim.** `services/github/README.md:249-253` now says the
+   limit stops only an account that can write to the repository but does not administer it. It says the limit holds
+   against a session only when the host's token cannot administer the repository. `docs/01-specs/WORKFLOW.md:588` says
+   an administering token can widen the limit. Neither file still claims protection that does not exist. What remains
+   is listed as weak point 1.
+2. Fork pull requests, `pull_request_target` and `workflow_run`: **fixed.** `services/github/README.md:243-249` now
+   covers three things: the private repository's setting that sends secrets to fork runs, which it says no reading
+   covers; the two events, which run the default branch's files with its secrets; and a new rule that the deploying job
+   runs on no event a pull request starts. What remains is listed as weak point 2.
+3. Encoding of an environment's name: **fixed.** `services/github/README.md:236-238` now percent-encodes every
+   character other than a letter, a digit, `-`, `_` and `.`, and names `'` explicitly. No kept character ends a
+   single-quoted argument in bash. None ends one in PowerShell either: its typographic quotes U+2018 to U+201B are not
+   letters, so they are encoded. Names are now also marked as data. What remains is listed as weak point 3.
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. `docs/01-specs/WORKFLOW.md:588` and `services/github/README.md:253`: "which the posture then reads" treats a reading
+   of the branches as the check against an administering token. That reading only sees a change that was left in
+   place.
+   - In the README's default setup the host's token administers the repository: a classic `repo` token on the person's
+     own repository.
+   - A steered session could widen the environment's branches, push a branch whose run sends the credential, and
+     restore the policy between two readings.
+   - With the same token it could also delete the inactive deployment records that would show a run from another ref.
+   - No rule says what follows when the token administers: neither "the credential stays out of the pipeline" nor "the
+     session's token must not administer". `skills/security-posture/SKILL.md:48-49` keeps a credential out only "where
+     the piece says that the service cannot hold that limit", and the piece says only that the posture reads.
+   - Why this is not a finding: the change does not add this hole. An administering token reaches the credential
+     anyway, for example by lifting the default branch's protection and pushing to it, so the environment limit was
+     never the barrier against it. The fix only describes that reach honestly.
+2. `services/github/README.md:243-249`, two gaps:
+   - The private repository's setting that sends secrets to fork runs is left unread. As far as I know, GitHub's REST
+     API can read it at `repos/<owner>/<repository>/actions/permissions/fork-pr-workflows-private-repos`; I could not
+     check that from here.
+   - The rule bars only events "that a pull request starts". Other events can be started by someone who cannot write
+     to the repository, `issue_comment` above all (anyone can comment on a public repository). They also run on the
+     default branch's ref, pass the environment's branch check and receive its secrets.
+   - A deploy job on `issue_comment` that checks out a pull request's head would meet the rule as written. As far as I
+     know, zizmor's trigger audit names only `pull_request_target` and `workflow_run`, so "which the static testing of
+     the workflows looks for" does not cover such a job.
+   - Why this cannot be exploited as written: the change ships no such workflow. Also, a fork run's ref does not match
+     the environment's default-branch policy, so the setting exposes repository-level secrets to read-only
+     collaborators, not the deploy credential.
+3. `services/github/README.md:236-237`: the encoding text is loose in two ways.
+   - "a letter" does not say whether non-ASCII letters count.
+   - "`%` and its two hexadecimal digits" is wrong for a character that UTF-8 writes in more than one byte.
+   - A name that is just `.` or `..` stays a dot segment in the path.
+   - Why this cannot be exploited as written: none of these can end the quoted argument. The worst result is a wrong or
+     malformed read-only path, and the README treats a failure as no answer.
+
+**Not reviewed**
+
+- Without network access I could not check what the change says GitHub does:
+  - that `pull_request_target` uses the default branch's files and ref;
+  - which fine-grained permissions are needed to change an environment or its branch policies;
+  - that the private repository's fork setting can be read through the API;
+  - whether GitHub accepts `.` or `..` as an environment name.
+- The fine-grained token with read-only Administration and Environments is, in the change's own words, untried with
+  `gh`. Whether it actually keeps a session from widening the limit, while letting the posture still read the settings,
+  cannot be judged from here.
+
+The first check, on `1f79820`, of the branch against `origin/main`: verdict `fail`; findings: 1. The diff leaves four
+document lines past the 120 characters that `.prettierrc.json` and the kit's documents wrap to, and one paragraph not
+wrapped again: `skills/security-posture/SKILL.md:10`, `docs/01-specs/WORKFLOW.md:554`,
+`docs/01-specs/WORKFLOW.md:602-603`, `services/github/README.md:253`, `services/github/README.md:263`. Fix: wrap these
+paragraphs again at 120.
+
+The second check, a repeated one, on `c46c011`, of the diff since `1f79820`: verdict `fail`; findings: 1. Verification
+does not hold the checker's report on `1f79820`, in full or as its verdict and findings. Fix: add that check's verdict
+and finding under "Verification", before this report.
+
+The third check, a repeated one, on `c46c011` and the record as it then stood, of the diff since `c46c011`, which was
+empty:
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The posture reads access in a step of its own, against the rules and the inventory, keeps it by name, flags as
+   urgent at review what is unexplained, and its description fits the budget: met. The branch is unchanged since
+   `c46c011`. The step is at `skills/security-posture/SKILL.md:44`.
+2. The review has a step on accounts and credentials (the inventory, the rules, what it reports) and weighs a
+   provider's own security in its radar step: met, unchanged. See `skills/review/SKILL.md:23` and
+   `skills/review/SKILL.md:47`. The budget is 6,700, with its reason at `checks/budgets.test.mjs:19-20` and
+   `checks/budgets.test.mjs:34`.
+3. GitHub's piece has the reads, where a deploying credential is kept, and the account and its token: met, unchanged.
+   See `services/github/README.md:199`, `:240` and `:259`. Whether its statements match GitHub's pages is not
+   verifiable from here (Not verified).
+4. The security reviewer's file names a deploying credential within reach of a run that a pull request starts: met,
+   unchanged, at `agents/security-reviewer.md:44`.
+5. The workflow section, the three sections that point to it, the inventory in the interface and the architecture, the
+   raised budgets with their reasons, and no new skill: met, unchanged. See `docs/01-specs/WORKFLOW.md:568`,
+   `:572-590` and `:601`, `docs/01-specs/INTERFACE.md:70`, `docs/01-specs/ARCHITECTURE.md:144` and `:298`, and
+   `checks/budgets.test.mjs:36`.
+6. The trial, with each answer given only by its form: met as recorded, in the log of
+   `work/2026/11/261125-2039-accounts-and-credentials.md:420-429`.
+7. The verify commands, the security review and the checker pass, and so does the pipeline on the pull request: partly
+   not verifiable.
+   - The verify commands passed on `c46c011` (record, Verification, lines 487-496).
+   - The security review passed on `1f79820` (lines 501-505).
+   - The checker passes with this report.
+   - The pull request's pipeline runs after the push, so it is not verifiable from here.
+
+- **Intent:** in order
+- **Scope:** in order. The diff since `c46c011` is empty.
+- **Comments and documents:** in order. The diff adds no comment and changes no document.
+- **Gates:** in order. None of the four gates of `.hub/profile.yml` is touched by an empty diff. The record's new lines
+  quote nobody and name nothing of a user or an installation.
+- **Verification evidence:** in order. `checks/record.mjs`, `checks/commits.mjs` and all 7 `verify` commands passed on
+  `c46c011`. The profile has no `dynamic-testing` commands. The `verify` list covers formatting, lint, types and tests.
+  It has no static security testing command and no comment saying why. That is not a finding, since no gate asks for
+  one.
+- **Security review:** in order.
+  - The review was due, and both reports are in Verification: the first on `a1977ec`, on the whole diff, and the second
+    on `1f79820`, on the diff since then. Both passed with no finding.
+  - `c46c011` only re-wraps lines, and the log says why it was not reviewed again (lines 472-474).
+  - The log says what was done with each weak point (lines 446-465).
+- **Record:** in order. The last report's finding is fixed: Verification now holds the first check's verdict and
+  finding (lines 577-581), then the second check's (lines 583-585). Both come after the security reviewer's reports and
+  before this report. The security reviewer's last report is the only one kept in full. The log records the fix (lines
+  475-478).
+- **Commits:** in order. There is no commit since `c46c011`, and the commit list is empty.
+
+**Findings**
+
+none
+
+**Not verified**
+
+- GitHub's statements in `services/github/README.md` (plans, scopes, headers, permissions): I have no network access
+  here. The two lookups in the log (lines 378-391 and 410-419) read GitHub's pages.
+- The kit's pipeline on the pull request (criterion 7): it runs after the push.
+- `checks/record.mjs` on the record as it stands now: Verification gives its result on `c46c011`, before the
+  uncommitted Verification changes. It runs again on the closing commit.
+
 ## Outcome
+
+The security posture reads who and what can reach a repository, by name and never by value, against the rules on a
+credential that deploys and on deploy keys and against the home's inventory, and at the review takes access that
+neither the last reading nor the inventory holds as urgent. The periodic review says what the home's inventory,
+`inventory.md`, holds and the rules on accounts, credentials and connectors that it is read against, names the dates
+due before the next review, reads the client's account and token against their entries, and weighs a provider's own
+security in its step on the radar. GitHub's piece holds the reads, where a credential that deploys is kept and what an
+environment's limit holds against, and what the kit's commands need of `gh`'s token; the security reviewer looks for
+a credential that deploys within reach of a pull request's run; the workflow gives the reasons, and the interface and
+the architecture name the inventory. The rules have no skill of their own. Pull request 64's checks passed on
+`c46c011`.
+
+Left to the person, as the log says: the five weak points of the two security reviews that were not fixed. The
+inventory itself is the home's item `261125-2040`. No deferred check.
