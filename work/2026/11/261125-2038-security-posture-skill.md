@@ -402,8 +402,48 @@ reads listed under "For the person" included.
   passes and confirms the third finding fixed. Its weak point, fixed in a commit of its own: the sentence that counts a
   rule as on could be read as asking the wiring's job of every rule, so the home's ruleset, which holds no required
   check, would always read as off; the job is now asked of the required check alone. The fix touches what the review
-  guards, so a repeated review reads it.
+  guards, so a repeated review reads it. A line of the fix wider than 120 characters, which the formatter leaves in
+  prose, is wrapped in a commit of its own before that review.
+- The fifth security review, of the diff since `76960b9` at `02e518b`, passes, with no finding and no weak point, and
+  confirms the weak point fixed. The verification ran again on `02e518b`, and passed.
+- The verification had also run on `7683fb6`, before the first security review, and on `941d302`, before its line was
+  wrapped; both passed.
+- The first check, of `02e518b` (full), fails on four findings. 4: GitHub's piece still said that in the home only the
+  backlog's account may push to the default branch, where the home's ruleset now refuses only forced pushes and
+  deletion; fixed in a commit of its own, the piece now says that any account that can write may push there, and that
+  the rules and the guard keep the sessions from it. 2 and 3: the criteria met in part, and the comparison of a review
+  changed, are written under "Deviations". 1: the record's log says, by the trial's answers, which protections the
+  kit's own repository lacks, which the boundary ruled out; the piece's two sentences that said the same of "the
+  repositories where the commands ran" go in that commit, while the log, whose lines the commits from `7683fb6` hold,
+  stays as written, since it only grows and so does the branch (Deviations).
+- GitHub's REST reference for repositories, read in a subagent on Haiku at medium effort, gives
+  `GET /repos/{owner}/{repo}/private-vulnerability-reporting` with a boolean `enabled`, as the piece says; it names no
+  other answer but `422` and no scope.
+- Read without a token on 2026-11-26: GitHub answers anyone that the kit's `main` is not protected, and gives `[]` for
+  the rules of that branch.
 
 ## Verification
+
+## Deviations
+
+- Criterion 1, from the first two security reviews' weak points: a review commits nothing, so no reading of a review's
+  is kept to compare with. The review compares with the assessment's record of the repository and with the person's
+  answers in the home's decision log, a protection turned on as well as one declined, and names what neither holds. The
+  reading keeps the repository's visibility, and a repository made public, or a setting or a protection that either has
+  on and is now off or not read, is urgent. With it, two choices approved under "For the person" change: no account is
+  on a ruleset's bypass list, in the home neither, since an account there passes every rule of the ruleset, and the
+  home's ruleset holds only the refusals of forced pushes and deletion; and, from the third security review, the older
+  branch protection counts for no protection, since its answer does not show who may force-push past it.
+- Criteria 5 and 7, in part. Two reads of the piece are untried, a ruleset's bypass list with its checks and an alert's
+  locations: neither repository of the trial had a ruleset or an alert, and making one would set something on the
+  service, which the boundary rules out; the piece marks both untried. Every read ran as the administrator of both
+  repositories, so the answers to an account that does not administer one were not seen: the piece reads
+  `viewerPermission` first, and the posture then reads the clone alone.
+- The boundary on what the record says, from the first check's finding 1: the trial's log says, by its answers, that
+  the kit's own public repository has no rule or older protection in force on its default branch, no ruleset, and no
+  analysis of code scanning. The commits from `7683fb6` hold it, and the branch only grows. GitHub shows anyone the
+  first two without a token (Log), and the checks of the kit's pull requests show that code scanning does not run on
+  them. Nothing of the home's protections is said beyond what GitHub gives every private repository of a free personal
+  account. The branch is pushed only on the person's decision.
 
 ## Outcome

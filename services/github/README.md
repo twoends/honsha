@@ -99,8 +99,10 @@ project of the host, and says so.
 - **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
   works the same with them: they add a stop on the server and change no rule. In the home, the account that the
-  backlog's script pushes with must be allowed to push to the default branch (workflow, The backlog), and nothing
-  else may be. Which of them GitHub gives free, and how they are read, is below (The protections it gives free).
+  backlog's script pushes with must be able to push to the default branch (workflow, The backlog). An account on a
+  ruleset's bypass list passes every rule of it, so the home's ruleset refuses only forced pushes and deletion, and any
+  account that can write may push there: the rules and the guard keep the sessions from it. Which of them GitHub gives
+  free, and how they are read, is below (The protections it gives free).
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
@@ -144,9 +146,8 @@ With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows,
   does not give rulesets, `403` "Upgrade to GitHub Pro or make this repository public to enable this feature". A rule
   counts as on only where the second, read for each ruleset that the first names, gives `active` and `bypass_actors`
   `[]`, and the required check only with the wiring's job among that ruleset's `checks`; `null` in `bypass_actors` is
-  not read, since GitHub shows the list only to an account that may change the ruleset. The second is untried: neither
-  repository where the commands ran had a ruleset. The older branch protection, under Settings, Branches, counts for
-  none of these, though GitHub enforces it: its answer,
+  not read, since GitHub shows the list only to an account that may change the ruleset. The second is untried. The
+  older branch protection, under Settings, Branches, counts for none of these, though GitHub enforces it: its answer,
   `GET repos/<owner>/<repository>/branches/<default branch>/protection`, does not show the accounts that may force-push
   past it, so a repository that has only the older protection is asked for the ruleset.
 
@@ -182,7 +183,7 @@ gh api --paginate 'repos/<owner>/<repository>/code-scanning/alerts?state=open&pe
 
 GitHub gives each alert on a secret with the secret's value unless `hide_secret=true` asks it not to, and the filter
 prints only the fields it names, so neither alone lets a value through: an alert on a secret is never read into a
-session in another way. Where one is, without its value, untried, since no alert was open where the commands ran:
+session in another way. Where one is, without its value, untried:
 
 ```
 gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts/<number>/locations?per_page=100' --jq '.[] | {type, path: .details.path, line: .details.start_line, commit: .details.commit_sha}'
