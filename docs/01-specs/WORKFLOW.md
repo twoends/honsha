@@ -348,6 +348,7 @@ service replaces with their own. This section says what such a piece holds; `ser
 
 The rules rely on nothing that a service enforces or sells. They hold with a free account, where a service may give
 no protection at all: what a service adds beyond that is a further stop, never something a user of the kit must have.
+Where a service gives one free, the security posture asks the person to turn it on (workflow, Security posture).
 
 ### What the piece of a service says
 
@@ -358,15 +359,17 @@ no protection at all: what a service adds beyond that is a further stop, never s
 3. **The settings the rules rely on:** pull requests are merged with the method the core rules name (Delivery), merged
    branches are deleted, and, where the service has them, alerts on vulnerable dependencies are on without automatic
    pull requests (workflow, Dependencies).
-4. **What the service can enforce on its side, and under which conditions:** a default branch that refuses direct and
-   forced pushes; a check that must pass before a merge; an identity that can push branches and open pull requests but
-   cannot merge.
-5. **The wiring of the checks** (workflow, Checks on pull requests and on the default branch), and what it costs on
-   that service.
+4. **What the service can enforce and scan on its side, under which conditions, and where it gives each free:** a
+   default branch that refuses direct and forced pushes; a check that must pass before a merge; an identity that can
+   push branches and open pull requests but cannot merge; its scanning for secrets, with the refusal of a push that
+   holds one; its code scanning; private reporting of vulnerabilities. With the commands that read each, and those
+   that read its open alerts and print no secret's value (workflow, Security posture).
+5. **The wiring of the checks** (workflow, Checks on pull requests and on the default branch), what it costs on that
+   service, and how the repository's default permissions of the pipeline's token are read.
 6. **The source of the kit's marketplace** that a host installs the plugin from (architecture, Kit), with the commands
    that install it and that move a host's registration of the marketplace to that source.
 7. **The static testing of its pipeline's configuration** (workflow, Security testing): free tools that read the
-   service's pipeline files, and which of the service's own scanners a free account has.
+   service's pipeline files.
 8. **The refs it serves beyond branches and tags,** which a mirror clone takes for the scan of the history (workflow,
    Security testing), how to tell a pull request that an outsider opened, and what the service keeps that no ref holds,
    and how that is removed.
@@ -539,13 +542,34 @@ tools that know classes of holes that no reader keeps in mind. The rules are in 
 
 ---
 
+## Security posture
+
+Between two readings of a repository a setting changes, a protection goes off, an alert opens and new files call for a
+kind of testing, so the periodic review reads again what the assessment read: the testing, the pipeline, the hosting
+service's side and the history. Both read it with one skill, `honsha:security-posture`, so that they read the same and
+a later reading is added in one place.
+
+- **The protections a service gives free are asked for:** the rules rely on none, but each is a stop on the server,
+  which the guard is not (workflow, The guard). A session never turns one on: each limits what the person's own account
+  can do, as a rule that binds administrators too or a required check that holds a merge while the service fails. One
+  the person declines is kept in the home's decision log (workflow, Decisions), and not asked again.
+- **The open alerts are read,** since they reach the person as notifications that nothing turns into work, and without
+  a secret's value, as the history is scanned.
+- **Code scanning is never the required check:** its rules are the service's and change by themselves (workflow,
+  Security testing).
+- **A repository made public, or a setting or a protection off since its assessment, is urgent:** it changed outside
+  any work item, by a mistake or by an account that should not have. A review commits nothing, so it compares with the
+  assessment's record and the person's answers in the home's decision log.
+
+---
+
 ## Upkeep review
 
 Documents and logs grow by small additions, each reasonable on its own: a rule restated where it is needed, a
 paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
-working, so a review on a date looks for it, together with the radar's dates, the dependencies, the secrets in the
-histories, the deferred checks, the lessons and the measures. What it reads and how it reports are in the skill
-`honsha:review`.
+working, so a review on a date looks for it, together with the radar's dates, the dependencies, the security posture
+of each repository (workflow, Security posture), the deferred checks, the lessons and the measures. What it reads and
+how it reports are in the skill `honsha:review`.
 
 ---
 

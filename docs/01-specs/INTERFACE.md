@@ -23,7 +23,8 @@ this one changes only as "Changes to the interface" says.
   `honsha:checker`, which verifies a finished item against its record; and `honsha:security-reviewer`, which looks for
   security holes in a change before the checker.
 - Skills: `honsha:assessment`, `honsha:branch-update`, `honsha:dependencies`, `honsha:parallel-parts`, `honsha:review`,
-  `honsha:security-review` and `honsha:security-testing`. The description of each says when it applies.
+  `honsha:security-posture`, `honsha:security-review` and `honsha:security-testing`. The description of each says when
+  it applies.
 - The pack of an area: the skill `honsha:area-<name>`, for the area of that name in a project's profile.
 
 ## Commands

@@ -1,6 +1,6 @@
 ---
 name: review
-description: Use for the periodic review of an installation, on the date its radar and upkeep review is due or when the person asks for one. It holds what the review reads and how it reports: vulnerabilities, secrets in the history, ordinary updates, radar dates, deferred checks, lessons, documents and measures. It changes nothing.
+description: Use for the periodic review of an installation, on the date its radar and upkeep review is due or when the person asks for one. It holds what the review reads and how it reports: vulnerabilities, the security posture with the secrets in the history, ordinary updates, radar dates, deferred checks, lessons, documents and measures. It changes nothing.
 ---
 
 Documents and logs grow by small additions, each reasonable on its own, and dependencies age while nobody looks: the
@@ -16,9 +16,10 @@ that is behind or has changes not committed.
 1. **Vulnerabilities.** The package manager's vulnerability report, in each repository with dependencies. A finding is
    urgent: its fix is a work item that starts the same day (`honsha:dependencies`). Name the package, the advisory,
    the version that fixes it and whether that version is out.
-2. **Secrets in the history.** `node <kit directory>/checks/history-secrets.mjs` in each repository
-   (`honsha:security-testing`, The history): it reads what reached the hosting service outside a work item. A secret
-   that `.gitleaksignore` does not yet answer is urgent, as that skill says, and the person gets it at once.
+2. **Security posture.** The security posture of each repository (`honsha:security-posture`), compared with what its
+   assessment read and the person decided: the secrets in its history, the kinds of security testing its files now
+   call for, its wiring, and the hosting service's settings, protections and open alerts. What it finds urgent comes
+   first in the report.
 3. **Ordinary updates.** Each direct dependency of a project is covered by a radar entry of the installation, with a
    review date. The outdated dependencies are listed with the package manager, each with the newest version that
    `honsha:dependencies` lets an item take. The updates worth making become one work item, full if it holds a major
@@ -42,6 +43,6 @@ that is behind or has changes not committed.
    session lines the script could not read, which grows when the platform changes the format of its files.
 
 The report comes first with what is urgent; then the proposed work items, each with its size by the core rules
-(Sizes) and one line of why; then the findings on documents; then the measures and the items over their kind's
-expectation. It ends with the one question the person must answer to start the proposed work. When nothing needs
-doing, it says so in two lines.
+(Sizes) and one line of why, and the protections asked of the person; then the findings on documents; then the
+measures and the items over their kind's expectation. It ends with the one question the person must answer to start
+the proposed work. When nothing needs doing, it says so in two lines.

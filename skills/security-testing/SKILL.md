@@ -1,6 +1,6 @@
 ---
 name: security-testing
-description: Use when a work item assesses a project, sets up or changes its static or dynamic security testing, or answers one of their findings, and when an assessment or the periodic review scans a repository's whole history for secrets. It holds which kinds of security testing a project receives, where the profile names them, how their tools are chosen, what a finding, a silenced finding and a found secret do, and the scan of the history.
+description: Use when a work item sets up or changes a project's static or dynamic security testing, or answers one of their findings, and when the security posture, at an assessment or the periodic review, reads which kinds a repository calls for or scans its whole history for secrets. It holds which kinds of security testing a project receives, where the profile names them, how their tools are chosen, what a finding, a silenced finding and a found secret do, and the scan of the history.
 ---
 
 Static testing reads the project's files and history; dynamic testing attacks a running instance from outside. Both
@@ -16,7 +16,7 @@ A project receives each kind that its files and its surface call for:
   hosting service, `services/<name>/README.md` in the kit directory, names tools that read its pipeline's files.
 - **Dynamic testing:** where the project serves HTTP, as a web application or an API does.
 
-An assessment reads which kinds apply and which the profile has, and proposes an item for each that is missing.
+The security posture (`honsha:security-posture`) reads which kinds apply and which the profile has.
 
 ## Where the profile names them
 
@@ -40,7 +40,7 @@ An assessment reads which kinds apply and which the profile has, and proposes an
 
 - Free, run from the command line on any host and in the pipeline, with no account. A hosting service's own scanners
   can be paid on private repositories, and the rules rely on nothing a service sells; one that a service gives free
-  is a further stop.
+  is a further stop, which the security posture asks for.
 - A dependency, pinned and taken at a new version as `honsha:dependencies` says: a package of the project's lockfile,
   a container image by its digest, or a release by its checksum.
 - Its rules pinned with it, read from the tool or the repository: rules fetched at each run change without a work
@@ -73,10 +73,10 @@ set, for languages; ShellCheck for shell scripts; hadolint for container files; 
 A scan of a branch misses a secret committed before the project had one, or pushed outside a work item: every clone
 still holds it.
 
-- **The scan,** `node <kit directory>/checks/history-secrets.mjs` in the repository's clone, is the first step of every
-  assessment, and runs at every periodic review in each repository it reads. It reads every ref the hosting service
-  serves, those it keeps for pull requests included, which hold deleted branches' commits; what the service keeps
-  beyond any ref is in its piece. A host that cannot run the scanner says so, with the system's message.
+- **The scan,** `node <kit directory>/checks/history-secrets.mjs` in the repository's clone, is the first step of the
+  security posture, at every assessment and periodic review. It reads every ref the hosting service serves, those it
+  keeps for pull requests included, which hold deleted branches' commits; what the service keeps beyond any ref is in
+  its piece. A host that cannot run the scanner says so, with the system's message.
 - **Its report** gives the scanner's version, the refs and commits read, and each finding by commit, file, line and
   rule, with its fingerprint, whether the default branch holds it, the refs that reach it, and its line with any value
   masked. A session never reads a value: it opens no file at a finding's commit, and scans with the script alone.

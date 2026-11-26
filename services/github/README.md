@@ -6,7 +6,8 @@ service).
 
 Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
 on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
-the repository settings and the alerts below.
+the repository settings and the alerts below. The reads of the protections and of the open alerts were tried on a
+public and on a private repository of a free personal account.
 GitHub changes what it offers: check a statement about what it gives or what it costs against GitHub's own pages
 before relying on it.
 
@@ -40,8 +41,8 @@ gh repo edit --enable-merge-commit --enable-squash-merge=false --enable-rebase-m
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,deleteBranchOnMerge
 ```
 
-The first command sets them; the second reads them, as an assessment does (`honsha:assessment`). A free account
-has these settings.
+The first command sets them; the second reads them, as the security posture does (`honsha:security-posture`). A free
+account has these settings.
 
 Two things on the site are not used:
 
@@ -98,12 +99,101 @@ project of the host, and says so.
 - **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
   pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
   works the same with them: they add a stop on the server and change no rule. In the home, the account that the
-  backlog's script pushes with must be allowed to push to the default branch (workflow, The backlog), and nothing
-  else may be.
+  backlog's script pushes with must be able to push to the default branch (workflow, The backlog), so GitHub lets any
+  account that can write push there, whatever its ruleset holds: the guard stops a session's mistake, and the check of
+  the commits on each push to the default branch fails on a direct commit that is not the backlog's, though not on a
+  merge, which it takes for a pull request's. Which of them GitHub gives free, what the home's ruleset holds, and how
+  they are read, is below (The protections it gives free).
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
   not by GitHub. In a repository owned by an organisation an account can have a role that reads but does not write.
+
+## The protections it gives free
+
+The security posture (`honsha:security-posture`) reads each protection below, and asks the person for each one that is
+off where GitHub gives it at no cost. The person turns it on, in the repository's settings on the site; a session never
+does. The commands name the owner and the repository of the remote that the clone fetches from, not `{owner}/{repo}`,
+which `gh` fills by its own rules and can take from another remote. First, what the repository is and what the account
+may do there:
+
+```
+gh repo view <owner>/<repository> --json visibility,viewerPermission
+```
+
+With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows, so the posture reads the clone alone.
+
+- **A default branch that refuses direct and forced pushes and its deletion.** Free on a public repository on every
+  plan; on a private one with GitHub Pro for a personal account, or GitHub Team for an organisation. Under Settings,
+  Rules, Rulesets: a branch ruleset on the default branch, active, with "Restrict deletions", "Block force pushes" and
+  "Require a pull request before merging" with no approval required, since the person merges pull requests that nobody
+  else reviews. No account is on the ruleset's bypass list, since an account there passes every rule of the ruleset. In
+  the home, whose default branch takes the backlog's direct commits, the ruleset holds the first two rules only: the
+  third would refuse those commits, and a required check could too.
+- **A required check:** in the same ruleset, "Require status checks to pass" with the wiring's job, as `gh pr checks`
+  names it, `checks / checks` for a project's file and `project / checks` in the kit, without "Require branches to be
+  up to date before merging": the kit merges the default branch into a work branch only on a conflict, a need or a
+  request (core rules, Commits and branches). It holds back a change that fails its checks, not a hostile one: a pull
+  request runs the workflow file of its own branch, so one that changes the wiring can report the check as passed, and
+  the person reads such a change before the merge.
+
+  ```
+  gh api repos/<owner>/<repository>/rules/branches/<default branch> --jq 'map({type, ruleset_id})'
+  gh api repos/<owner>/<repository>/rulesets/<ruleset id> --jq '{enforcement, bypass_actors, checks: [.rules[]? | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]}'
+  ```
+
+  The first lists the rules in force on the branch, each with the ruleset that holds it: `deletion`,
+  `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none; where GitHub
+  does not give rulesets, `403` "Upgrade to GitHub Pro or make this repository public to enable this feature". A rule
+  counts as on only where the second, read for each ruleset that the first names, gives `active` and `bypass_actors`
+  `[]`, and the required check only with the wiring's job among that ruleset's `checks`; `null` in `bypass_actors` is
+  not read, since GitHub shows the list only to an account that may change the ruleset. The second is untried. The
+  older branch protection, under Settings, Branches, counts for none of these, though GitHub enforces it: its answer,
+  `GET repos/<owner>/<repository>/branches/<default branch>/protection`, does not show the accounts that may force-push
+  past it, so a repository that has only the older protection is asked for the ruleset.
+
+- **Secret scanning, with push protection,** which refuses a push that holds a secret it knows. Free on a public
+  repository; on a private one it needs GitHub Secret Protection, which GitHub sells to organisations on Team or
+  Enterprise Cloud, and a personal account's private repository has neither. Under Settings, Advanced Security.
+  `gh api repos/<owner>/<repository> --jq .security_and_analysis` gives `secret_scanning` and
+  `secret_scanning_push_protection`, each `enabled` or `disabled`, and prints nothing where GitHub does not offer them.
+- **Code scanning,** with CodeQL's default setup. Free on a public repository; on a private one it needs GitHub Code
+  Security, which GitHub sells to organisations. Under Settings, Advanced Security, CodeQL analysis, Default. It is
+  never the required check: its queries are GitHub's, updated regularly, and default setup pins none in the repository,
+  so a check on it can fail on code that did not change (`honsha:security-testing`, The tools).
+  `gh api repos/<owner>/<repository>/code-scanning/default-setup --jq .state` gives `configured` or `not-configured`,
+  and `403` "Code scanning is not enabled for this repository" where GitHub does not offer it.
+- **Private reporting of vulnerabilities,** which lets someone outside the project report a hole without making it
+  public. Public repositories only. Under Settings, Advanced Security.
+  `gh api repos/<owner>/<repository>/private-vulnerability-reporting` gives `{"enabled":true}` or `false`, and `404`
+  on a private repository.
+
+### The open alerts
+
+Each command prints a line for each open alert, and nothing with exit status 0 when there is none; a failure exits
+with another status, its message on the error output, and is no answer. GitHub gives a list in pages, of 30
+alerts unless asked for more, and `gh api` reads one page unless `--paginate` has it follow every page: read without
+it, the alerts past the first page would go unseen, and anyone who can open an issue on a public repository can push a
+real alert there with strings that only look like secrets.
+
+```
+gh api --paginate 'repos/<owner>/<repository>/dependabot/alerts?state=open&per_page=100' --jq '.[] | {number, package: .dependency.package.name, severity: .security_advisory.severity, advisory: .security_advisory.ghsa_id, fixed: .security_vulnerability.first_patched_version.identifier}'
+gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts?state=open&hide_secret=true&per_page=100' --jq '.[] | {number, secret_type, validity, publicly_leaked}'
+gh api --paginate 'repos/<owner>/<repository>/code-scanning/alerts?state=open&per_page=100' --jq '.[] | {number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path}'
+```
+
+GitHub gives each alert on a secret with the secret's value unless `hide_secret=true` asks it not to, and the filter
+prints only the fields it names, so neither alone lets a value through: an alert on a secret is never read into a
+session in another way. Where one is, without its value, untried:
+
+```
+gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts/<number>/locations?per_page=100' --jq '.[] | {type, path: .details.path, line: .details.start_line, commit: .details.commit_sha}'
+```
+
+Secret scanning also reads a public repository's issues, pull requests, discussions and wiki, where no clone reaches;
+the location's `type` names them. The alerts on secrets answer `404` "Secret scanning is disabled on this repository"
+where scanning is off or not offered; those on code answer `404` "no analysis found" where code scanning is offered
+and has not run, and `403` where it is not offered.
 
 ## Checks on pull requests and on the default branch
 
@@ -199,7 +289,12 @@ It answers the contract for the checks (workflow, Checks on pull requests and on
    nothing else: the caller grants no more. The actions take the token as an input; of the steps that run commands,
    only the one that reads the earlier run gets it, in its environment, before any of the project's commands runs.
    Code that runs in the job can still read it from the runner's memory, so what the token may do is what the whole job
-   may do. The checkouts leave no token in the git configuration. The actions are pinned to a commit.
+   may do. The checkouts leave no token in the git configuration. The actions are pinned to a commit. A workflow that
+   names no `permissions`, as a project's own may, gets the repository's default for the token, set under Settings,
+   Actions, General, Workflow permissions, on every plan:
+   `gh api repos/<owner>/<repository>/actions/permissions/workflow` gives `default_workflow_permissions`, `read` for
+   the setting that reads only, and `can_approve_pull_request_reviews`, `false` when the token cannot approve a pull
+   request.
 
 The kit's third job, `personal content`, is its own and no part of the contract: the kit's repository is public, and
 the kit's hook checks a push only in a clone that has it (the kit's README). On Linux it runs
@@ -235,10 +330,8 @@ line on any host and in the pipeline:
 - **actionlint** checks a workflow's syntax and expressions, and runs ShellCheck on the scripts of its steps when
   ShellCheck is installed. It comes as release binaries and a container image.
 
-GitHub's own scanners are no part of the rules. Its code scanning with CodeQL and its secret scanning are free on a
-public repository; on a private one of a free personal account code scanning is not offered, and both need a paid
-product of GitHub's on a repository of an organisation. Where one of them is on at no cost, it is a further stop, as
-the alerts on dependencies are.
+GitHub's own scanners, its secret scanning and its code scanning, are further stops where GitHub gives them free (The
+protections it gives free), and no part of the rules.
 
 ## The refs of the history
 
