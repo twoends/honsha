@@ -444,6 +444,12 @@ reads listed under "For the person" included.
   lies also in the piece's sentence, broader than `checks/commits.mjs`, since that check reads no merge on a default
   branch; the sentence now says that it fails on a direct commit that is not the backlog's, though not on a merge, as
   that weak point proposed. The change touches what the security review guards, so a repeated review reads it.
+- A line of that fix wider than 120 characters is wrapped in a commit of its own, `9b4599f`. The verification ran on
+  `9b4599f`, and passed. The eighth security review, of the diff since `6a008ff`, passes with no finding, and confirms
+  the weak point fixed; the second stays the person's.
+- The second repeated check, of the diff since `6a008ff` at `9b4599f`, fails on one finding: the line above on the
+  first repeated check says that its two findings were each fixed in a commit of their own, where both were fixed in
+  one, `4c56e17`, and `9b4599f` only wraps a line of it. So it is: both in `4c56e17`.
 
 ## Verification
 
