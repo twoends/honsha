@@ -5,16 +5,17 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
 requested-by: person
 source: 261124-1550
-pr: null
-model: null
+pr: 65
+model: claude-opus-5-5
 effort: xhigh
-checks: []
+checks:
+  - { due: 2026-11-30, what: "The run of the push that merges pull request 65 into main shows, in its jobs verify on Linux and on Windows and project / checks, `node checks/security-testing.mjs gitleaks` reading the push's own commits, from the commit before the push, and passing, and the setup and the other three commands of the security testing passing" }
 ---
 
 ## Intent
@@ -457,8 +458,118 @@ downloads listed under "For the person" included, the first choice as oxlint wit
      stands without them, and the counts are in this log.
   Of what it could not verify: actionlint's latest release, read again on 2026-11-26, is still 1.7.12 of 2026-03-30,
   as ShellCheck's is 0.11.0 and gitleaks's 8.30.1, so no later release of the three qualifies.
+- The fix is `8e52869`. The verification ran again on it and passed. The third repeated security review, of the diff
+  since `cce6385`, passes with no finding and no weak point. The repeated check reads the same diff.
+- The repeated check, of `8e52869`, passes with no finding (Verification). The branch was pushed at `8e52869`, through
+  the kit's hook, and pull request 65 opened; its four checks were still running at the first read.
+- Told that they had ended, read once: all four pass. `261125-2039` was merged into `main` before they ran, at
+  `f9adbb8`, so the run checked this branch merged with it; the hub has the branch brought up to date before its merge,
+  as it said. In the jobs' logs: the setup installed the four programs from their Linux and Windows archives, each with
+  the pinned digest, in about 1.5 seconds on Linux and 2 on Windows, after `npm ci`; `gitleaks` read the branch's 6
+  commits from the pull request's base in 0.7 seconds on Linux and 1.0 on Windows, and each of the three other commands
+  took under 0.1 seconds on Linux and 0.2 on Windows. The verification step took 16 seconds on Linux and 102 on
+  Windows, most of it the tests'.
 
 ## Verification
+
+On this host, at `8e52869`, with Node.js 26.13.0 and npm 12.2.1, in the worktree after its setup:
+
+- `node <kit directory>/checks/record.mjs`: passed; it names 8 paths under `security-review` that the branch changes,
+  and the security review as due.
+- `node <kit directory>/checks/commits.mjs`: passed, 6 commits.
+- `node checks/verify.mjs`: all 11 commands passed, in 111 seconds:
+  - `npx --no-install prettier --check .`: passed.
+  - `npx --no-install oxlint`: passed, with the security rules.
+  - `npx --no-install tsc -p .`: passed.
+  - `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: passed, 292 tests.
+  - `node checks/security-testing.mjs gitleaks`: passed, 6 commits read from `287ce93` to `8e52869`, no finding.
+  - `node checks/security-testing.mjs shellcheck`: passed, 1 script.
+  - `node checks/security-testing.mjs actionlint`: passed, 2 workflow files.
+  - `node checks/security-testing.mjs zizmor`: passed, 2 workflow files.
+  - `claude plugin validate .`: passed, with the warnings the README names.
+  - `node checks/record.mjs`: passed.
+  - `node checks/commits.mjs`: passed.
+- The profile lists no `dynamic-testing`: the kit serves no HTTP.
+- The kit's pipeline on pull request 65, at `8e52869` merged with `main` at `f9adbb8`, run `45900827260`: `verify
+  (ubuntu-latest, Node.js 26)` passed in 36 seconds, `verify (windows-latest, Node.js 26)` in 2 minutes 28 seconds,
+  `project / checks` in 33 seconds, `personal content` in 9 seconds.
+
+The security review of `5cf6104` (full): verdict `pass`, no findings, six weak points (Log).
+
+The repeated security review of `ec28760` (since `5cf6104`): verdict `pass`, no findings, three weak points (Log).
+
+The second repeated security review, of `cce6385` (since `ec28760`): verdict `pass`, no findings, two weak points
+(Log).
+
+The third repeated security review, of `8e52869` (since `cce6385`):
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** the root folder: `.oxlintrc.json` (the only file in the diff since cce6385). For context I also read `checks/profile.mjs` (the `lessons` and `stack` guards the comment cites), and checked `checks/releases.mjs` and `checks/security-testing.mjs` for any pin change.
+
+**Findings**
+
+none
+
+The last review had no findings, so this fix had nothing to confirm.
+
+**Weak points**
+
+none
+
+The diff only rewords the comment that gives the reason for turning off `security/detect-non-literal-fs-filename` and `security/detect-object-injection`. It drops the counts from the rules' first run, and the rules stay off, as before. The reason still holds against the code. In `checks/profile.mjs`, `TECHNOLOGY` (line 38) allows a `stack` entry only as a plain name whose first character is a letter or digit, so it contains no separator and cannot be `..`. Lines 157 to 163 refuse a `lessons` value that starts with a path separator or a drive letter, or that contains a `..` segment. No rule, override or ignore pattern is added, removed or narrowed.
+
+**Not reviewed**
+
+- The commit at 8e52869 also says it declares that a pin names no path inside its archive. The diff has no change to a pin: `checks/releases.mjs` and `checks/security-testing.mjs` are not in it. If that declaration is in the work item's record, it is excluded from this review by design and was not read.
+
+The first check, of `cce6385` (full): verdict `fail`, two findings. 1. Criterion 1 asks that a pin hold the program's
+path inside each archive, and no pin holds one, with no deviation declared. 2. The reason in `.oxlintrc.json` holds the
+counts of this item's first run, which are history in a comment.
+
+The repeated check, of `8e52869` (since `cce6385`):
+
+### Checker report
+
+**Verdict:** pass
+
+**Acceptance criteria**
+
+1. The pins of gitleaks, ShellCheck, actionlint and zizmor with their digests, the install that refuses a wrong digest and extracts the program alone, both used by `checks/history-secrets.mjs`: met, with the program's path declared under "Deviations". `checks/releases.mjs:18-22` types a pin's archive as `{ file, sha256 }`. `checks/releases.mjs:200-205` refuses an archive with none, with two, or with an entry outside the extraction folder, as the deviation says. No document outside the record says that a pin holds a path.
+2. The `--setup` install under `node_modules/.cache/honsha-tools/`, run by the profile's setup: met at the last check. The diff touches none of its files, and `.hub/profile.yml:23-25` is unchanged.
+3. The `gitleaks` scan of the branch: met at the last check. The diff touches none of its files.
+4. `shellcheck`, `actionlint` and `zizmor`: met at the last check. The diff touches none of their files.
+5. The plugin's recommended rules and `no-new-func`, with a reason beside each rule turned off: met. `.oxlintrc.json:26-33` keeps the two rules off with their reason, now without the run's counts. The reason's claims hold against `checks/profile.mjs:38` and `checks/profile.mjs:157-162`.
+6. The four commands in `verify`, the comment on HTTP, the `security-review` paths: met, `.hub/profile.yml:8-47`.
+7. Each finding of the first run fixed or silenced, and listed in the log: met. The counts that left `.oxlintrc.json` stand in the record's log, lines 389-399.
+8. Tests of both new scripts, with no network: met at the last check. The diff touches none of their files.
+9. README, interface, architecture and GitHub's piece: met at the last check. The diff touches none of them.
+10. The application control, the downloads and the time of each command, here and in the pipeline: met for this host, in the record's log, lines 358-383. The pipeline's times are not verifiable from here.
+11. `verify` passes, the security review and the checker pass, the pipeline passes: met for `verify` and the security review at `8e52869` (Verification). The pipeline on the pull request is not verifiable from here.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests, security
+- **Security review:** in order
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+The last report's two findings are fixed:
+
+1. The pin's missing program path is now declared under "Deviations", with its reason, and the deviation matches the code (`checks/releases.mjs:18-22`, `checks/releases.mjs:200-205`).
+2. The reason in `.oxlintrc.json:26-31` no longer holds the first run's counts. It gives only the reason, in the present tense, and the counts are in the record's log.
+
+**Not verified**
+
+- The pipeline's run on the pull request, and its time for each command (criteria 10 and 11): the branch is pushed only after this check.
 
 ## Deviations
 
@@ -469,3 +580,21 @@ downloads listed under "For the person" included, the first choice as oxlint wit
   already fixes each archive, and so where the program stands in it.
 
 ## Outcome
+
+The kit has its own static security testing, in `verify`, on this host and in the pipeline alike. The commands are:
+
+- `node checks/security-testing.mjs gitleaks`: scans each commit of the branch for secrets.
+- `shellcheck`: reads the shell scripts.
+- `actionlint` and `zizmor`: read the workflow files.
+- `oxlint`: runs the security rules of `eslint-plugin-security`.
+
+Each program is a release pinned by the SHA-256 of its archives in `checks/releases.mjs`, the one module that the
+history scan reads too, installed by the setup. All four run under this host's application control, so no command is
+left to the pipeline. The first run's findings are fixed or silenced with their reasons. The profile lists under
+`security-review` the files that guard and those of the security review and testing.
+
+Left to the person, from the reviews: the weak points that the log lists as left. Told here, not this item's: the
+history scan, `checks/history-secrets.mjs`, takes gitleaks's exit code alone, and gitleaks exits 0 with an empty report
+when its `git log` fails.
+
+A deferred check, in `checks`: the run of the push that merges this pull request into `main`.
