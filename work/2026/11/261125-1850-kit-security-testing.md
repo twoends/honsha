@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
@@ -291,12 +291,15 @@ the log if it appears.
    and without `checks/record.mjs`: it enforces the review, but most of its changes touch only how a record is read.
 5. The downloads the approval gives leave for, each from its tool's release on GitHub unless named otherwise:
    `gitleaks_8.30.1_windows_x64.zip`, about 8 MB; `shellcheck-v0.11.0.zip`, 8.1 MB;
-   `actionlint_1.7.12_windows_amd64.zip`, 2.5 MB, and `actionlint_1.7.12_checksums.txt`, 1 KB; zizmor's `zizmor-x86_64-pc-windows-msvc.zip` at the release the
-   work takes, 8.5 MB at 1.32.0; from the npm registry, `eslint-plugin-security` 4.2.1 with `safe-regex` and
-   `regexp-tree`, about 1 MB, and, only if the fallback is needed, ESLint with its dependencies, a few MB. Each new
-   worktree's setup downloads the four archives again.
+   `actionlint_1.7.12_windows_amd64.zip`, 2.5 MB, and `actionlint_1.7.12_checksums.txt`, 1 KB; zizmor's
+   `zizmor-x86_64-pc-windows-msvc.zip` at the release the work takes, 8.5 MB at 1.32.0; from the npm registry,
+   `eslint-plugin-security` 4.2.1 with `safe-regex` and `regexp-tree`, about 1 MB, and, only if the fallback is needed,
+   ESLint with its dependencies, a few MB. Each new worktree's setup downloads the four archives again.
 
 ## Approval
+
+Approved by the person on 2026-11-26, in this item's session, as written in `ba187ef`: the five choices and the
+downloads listed under "For the person" included, the first choice as oxlint with ESLint as the fallback.
 
 ## Log
 
@@ -319,15 +322,26 @@ the log if it appears.
   actionlint 1.7.12, of 2026-03-30, under MIT, with a checksums file and builds for the six platforms; `-shellcheck`
   names the ShellCheck it runs, and `.github/actionlint.yaml` ignores an error by a regular expression. zizmor 1.33.1
   came out on 2026-11-22 and 1.32.0 on 2026-11-02, under MIT, as release binaries with GitHub's digests and no
-  checksums file, no build for Windows on Arm; `--offline` turns off every request; `# zizmor: ignore[<audit>]` silences a finding
-  inline, and `zizmor.yml` in `.github/` or the root configures it; exit codes 11 to 14 give a finding's severity.
-  `eslint-plugin-security` 4.2.1 holds 15 rules, all in its recommended set. oxlint's JavaScript plugins are alpha;
-  whether they run this plugin was not found. Semgrep's rules are under the Semgrep Rules License, and no Windows build
-  of Opengrep was found. Whether actionlint knows `job.workflow_repository` and `job.workflow_sha` was not found.
+  checksums file, no build for Windows on Arm; `--offline` turns off every request; `# zizmor: ignore[<audit>]`
+  silences a finding inline, and `zizmor.yml` in `.github/` or the root configures it; exit codes 11 to 14 give a
+  finding's severity. `eslint-plugin-security` 4.2.1 holds 15 rules, all in its recommended set. oxlint's JavaScript
+  plugins are alpha; whether they run this plugin was not found. Semgrep's rules are under the Semgrep Rules License,
+  and no Windows build of Opengrep was found. Whether actionlint knows `job.workflow_repository` and
+  `job.workflow_sha` was not found.
 - Measured: `docs/01-specs/INTERFACE.md` 7,041 characters of its 9,000; `skills/security-testing/SKILL.md` 7,852 of
   7,900, which this item does not change.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval, in this
   item's session, and for the hub's answer on the three lines in the files of `261125-2039`.
+- The hub agreed on 2026-11-26 that, after the approval, this item changes the three lines, which lie apart from what
+  `261125-2039` changes in the same files: in `docs/01-specs/INTERFACE.md`, this item the paragraph of "Commands" that
+  names the kit's other scripts, `261125-2039` its sections "Agents and skills" and "Files"; in
+  `docs/01-specs/ARCHITECTURE.md`, this item the layout's `checks/` line, `261125-2039` its `skills/` line and the
+  home's section; in `services/github/README.md`, this item the bullet on zizmor in "Static testing of the workflows",
+  `261125-2039` its reads of a repository's access near "The protections it gives free" and "The open alerts". Nothing
+  else in those files changes here, and none of `261125-2039`'s lines is reworded or moved. Once one of the two is
+  merged, the hub has the other brought up to date with `honsha:branch-update` before its merge.
+- The lines of the strategy that went past 120 characters were wrapped again, with no word changed.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
