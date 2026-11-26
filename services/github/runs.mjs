@@ -18,6 +18,7 @@
 
 import { pathToFileURL } from "node:url";
 
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: two counted runs
 const COMMIT = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 // An owner and a name as GitHub allows them; a name of dots alone would climb the API's path.
 const REPOSITORY = /^[A-Za-z0-9][A-Za-z0-9-]*\/(?!\.+$)[\w.-]+$/;

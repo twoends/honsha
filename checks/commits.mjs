@@ -194,6 +194,7 @@ export function check({ cwd = ".", env = process.env } = {}) {
   }
   const id = WORK_BRANCH.exec(branch)?.[1];
   if (!id) problems.push(`the branch \`${branch || "(none)"}\` is not named work/<id>-<slug>`);
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- the project's own profile's
   const address = profile?.commitsAddress ? new RegExp(profile.commitsAddress) : null;
   for (const commit of commits) {
     /** @param {string} problem */

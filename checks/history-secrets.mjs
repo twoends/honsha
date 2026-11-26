@@ -8,12 +8,13 @@
 // remote, borrowing the clone's objects so that only what the clone lacks is fetched; the clone's own refs, which a
 // fetch with pruning would change, are not touched.
 //
-// The scanner is gitleaks, at the version pinned below with its built-in rules. The script downloads the archive for
-// the host's platform and refuses to extract or run it unless its SHA-256 is the pinned one, so that a release replaced
-// after the pin fails. It runs the scanner on every commit of every ref, and on each merge against its first parent,
-// which a plain `git log -p` leaves out, so that what a merge adds of its own is read. The findings are redacted, and
-// the scanner reads no configuration and no ignore file: the script reads the default branch's. It honours no
-// allowance written inline in the history either, since no review has read one there. The scanner sends nothing out.
+// The scanner is gitleaks, at the version that `checks/releases.mjs` pins, with its built-in rules. The script
+// downloads the archive for the host's platform and refuses to extract or run it unless its SHA-256 is the pinned one,
+// so that a release replaced after the pin fails. It runs the scanner on every commit of every ref, and on each merge
+// against its first parent, which a plain `git log -p` leaves out, so that what a merge adds of its own is read. The
+// findings are redacted, and the scanner reads no configuration and no ignore file: the script reads the default
+// branch's. It honours no allowance written inline in the history either, since no review has read one there. The
+// scanner sends nothing out.
 //
 // It leaves out the findings whose fingerprints `.gitleaksignore` lists on the default branch, where an item under the
 // security review put them, and prints each other one by commit, file, line and rule, with its fingerprint, whether the
@@ -30,50 +31,12 @@
 //   node checks/history-secrets.mjs
 
 import { spawnSync } from "node:child_process";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-/**
- * The scanner, pinned as `honsha:dependencies` says: a version released at least 7 days before it was taken, and the
- * SHA-256 of each archive the kit's hosts run, from the release's checksums file, which matches the digests that the
- * release lists. A new version is a work item of the kit.
- */
-export const SCANNER = {
-  name: "gitleaks",
-  version: "8.30.1",
-  /** @type {Record<string, { file: string, sha256: string }>} by `<platform>-<arch>`, as Node.js names them */
-  archives: {
-    "darwin-arm64": {
-      file: "gitleaks_8.30.1_darwin_arm64.tar.gz",
-      sha256: "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5",
-    },
-    "darwin-x64": {
-      file: "gitleaks_8.30.1_darwin_x64.tar.gz",
-      sha256: "dfe101a4db2255fc85120ac7f3d25e4342c3c20cf749f2c20a18081af1952709",
-    },
-    "linux-arm64": {
-      file: "gitleaks_8.30.1_linux_arm64.tar.gz",
-      sha256: "e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080",
-    },
-    "linux-x64": {
-      file: "gitleaks_8.30.1_linux_x64.tar.gz",
-      sha256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
-    },
-    "win32-arm64": {
-      file: "gitleaks_8.30.1_windows_arm64.zip",
-      sha256: "b95f5e4f5c425cedca7ee203d9afd29597e692c4924a12ed42f970537c72cc0f",
-    },
-    "win32-x64": {
-      file: "gitleaks_8.30.1_windows_x64.zip",
-      sha256: "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e",
-    },
-  },
-};
-
-const RELEASE = `https://github.com/gitleaks/gitleaks/releases/download/v${SCANNER.version}/`;
+import { GITLEAKS as SCANNER, archiveFor, install } from "./releases.mjs";
 
 /** The scanner's ignore file, read on the default branch. */
 export const IGNORE_FILE = ".gitleaksignore";
@@ -150,73 +113,6 @@ function attempt(dir, args) {
   } catch {
     return null;
   }
-}
-
-/**
- * The pinned archive for a platform, or nothing for one the pin does not cover.
- * @param {string} platform
- * @param {string} arch
- */
-export function archiveFor(platform, arch) {
-  return Object.hasOwn(SCANNER.archives, `${platform}-${arch}`) ? SCANNER.archives[`${platform}-${arch}`] : undefined;
-}
-
-/**
- * The system's `tar`. Git for Windows puts ahead of Windows's own on the path a GNU tar that reads no zip archive, the
- * form of the scanner's Windows release, so on Windows it is called by its path.
- * @param {string} platform
- * @param {NodeJS.ProcessEnv} [env]
- */
-export function tarProgram(platform, env = process.env) {
-  return platform === "win32" ? path.join(env.SystemRoot ?? env.windir ?? "C:\\Windows", "System32", "tar.exe") : "tar";
-}
-
-/** @param {string} url */
-async function download(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`The download of ${url} failed: ${response.status} ${response.statusText}.`);
-  return Buffer.from(await response.arrayBuffer());
-}
-
-/**
- * Extracts one file of an archive, the program alone, so that no other entry of the archive is written.
- * @param {string} archive
- * @param {string} dir
- * @param {string} member
- * @param {string} platform
- */
-function extract(archive, dir, member, platform) {
-  const result = spawnSync(tarProgram(platform), ["-xf", archive, "-C", dir, member], { encoding: "utf8" });
-  if (result.error) throw new Error(`tar could not run: ${result.error.message}`);
-  if (result.status !== 0) throw new Error(`tar failed on ${path.basename(archive)}: ${result.stderr.trim()}`);
-}
-
-/**
- * Downloads an archive of the scanner into a folder, checks its SHA-256, and extracts the program from it only if the
- * digest is the pinned one. Returns the program's path.
- * @param {string} dir
- * @param {{
- *   archive: { file: string, sha256: string },
- *   platform: string,
- *   fetchBytes?: (url: string) => Promise<Buffer>,
- *   unpack?: (archive: string, dir: string, member: string, platform: string) => void,
- * }} options
- */
-export async function install(dir, { archive, platform, fetchBytes = download, unpack = extract }) {
-  const bytes = await fetchBytes(RELEASE + archive.file);
-  const digest = crypto.createHash("sha256").update(bytes).digest("hex");
-  if (digest !== archive.sha256) {
-    throw new Error(
-      `${archive.file} has the SHA-256 ${digest}, not the pinned ${archive.sha256}: it is neither extracted nor run.`,
-    );
-  }
-  const file = path.join(dir, archive.file);
-  fs.writeFileSync(file, bytes);
-  const member = platform === "win32" ? `${SCANNER.name}.exe` : SCANNER.name;
-  unpack(file, dir, member, platform);
-  const program = path.join(dir, member);
-  if (!fs.existsSync(program)) throw new Error(`${archive.file} holds no ${member}.`);
-  return program;
 }
 
 /**
@@ -432,6 +328,7 @@ function valueSpans(line, finding) {
     return end > 0 ? [[0, end]] : null;
   }
   // Every place that what precedes it stands, since the line can hold it more than once, as an empty value first.
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- a sticky copy of the constant `RUN`
   const run = new RegExp(RUN.source, "y");
   /** @type {Array<[number, number]>} */
   const spans = [];
@@ -523,7 +420,7 @@ export function describe(mirror, finding, onDefault, reached = new Map()) {
 
 /** @type {Scanner} */
 export const gitleaks = {
-  install: (dir, archive, platform) => install(dir, { archive, platform }),
+  install: (dir, archive, platform) => install(dir, { release: SCANNER, archive, platform }),
   version: (program) => {
     const result = spawnSync(program, ["version"], { encoding: "utf8", env: environment() });
     if (result.error) throw new Error(`${SCANNER.name} could not run: ${result.error.message}`);
@@ -568,7 +465,7 @@ export async function scan({
   out = console.log,
   err = console.error,
 } = {}) {
-  const archive = archiveFor(platform, arch);
+  const archive = archiveFor(SCANNER, platform, arch);
   if (!archive) {
     err(
       `${SCANNER.name} ${SCANNER.version} is pinned for ${Object.keys(SCANNER.archives).join(", ")}, not ${platform}-${arch}.`,

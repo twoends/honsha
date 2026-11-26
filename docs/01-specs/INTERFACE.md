@@ -49,9 +49,9 @@ node <kit directory>/checks/measures.mjs [--json] [--sessions <folder>]
 ```
 
 The kit's other scripts are not part of the interface: `checks/pushed.mjs`, which checks the kit's own pushes;
-`checks/changes.mjs`, which a hosting service's wiring runs to tell a push that changes only records;
-`services/github/runs.mjs`, which GitHub's wiring runs to read whether the run on a pull request's earlier tip passed;
-and the hooks, which the plugin runs.
+`checks/security-testing.mjs`, the kit's own static security testing; `checks/changes.mjs`, which a hosting service's
+wiring runs to tell a push that changes only records; `services/github/runs.mjs`, which GitHub's wiring runs to read
+whether the run on a pull request's earlier tip passed; and the hooks, which the plugin runs.
 
 ## Templates
 

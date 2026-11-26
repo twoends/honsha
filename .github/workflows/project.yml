@@ -92,6 +92,9 @@ jobs:
         if: inputs.npm != '' && steps.changes.outputs.verify != 'false'
         env:
           VERSION: ${{ inputs.npm }}
+        # Outside the lockfile, which holds the project's packages and not the package manager, at the version that
+        # the caller names.
+        # zizmor: ignore[adhoc-packages]
         run: |
           npm install --global "npm@$VERSION"
           npm --version
@@ -105,7 +108,9 @@ jobs:
         env:
           VERSION: ${{ inputs.claude-code }}
         # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
-        # not name.
+        # not name. Outside the lockfile, as `honsha:dependencies` has a pipeline install Claude Code, at the version
+        # that the caller names.
+        # zizmor: ignore[adhoc-packages]
         run: npm install --global --allow-scripts=@anthropic-ai/claude-code "@anthropic-ai/claude-code@$VERSION"
       - name: Check the record of the work item
         if: github.event_name == 'pull_request'

@@ -4,5 +4,44 @@
     "correctness": "error",
     "suspicious": "error"
   },
+  // The security rules of JavaScript (`honsha:security-testing`): those of eslint-plugin-security, which oxlint runs as
+  // a JavaScript plugin, pinned by the lockfile, and oxlint's own `no-new-func`; its `no-eval` and `no-implied-eval`
+  // are in the categories above.
+  "jsPlugins": ["eslint-plugin-security"],
+  "rules": {
+    "no-new-func": "error",
+    "security/detect-bidi-characters": "error",
+    "security/detect-buffer-noassert": "error",
+    "security/detect-child-process": "error",
+    "security/detect-disable-mustache-escape": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-invisible-characters": "error",
+    "security/detect-new-buffer": "error",
+    "security/detect-no-csrf-before-method-override": "error",
+    "security/detect-non-literal-regexp": "error",
+    "security/detect-non-literal-require": "error",
+    "security/detect-possible-timing-attacks": "error",
+    "security/detect-pseudoRandomBytes": "error",
+    "security/detect-unsafe-regex": "error",
+    // Off: the kit's scripts read the files of the repository or the home they run for, by paths and keys taken from
+    // their own arguments, their constants and those files, with the rights of a session or a pipeline that runs that
+    // repository's own code anyway. The one path that a project's file leads into the home, a technology's lessons, is
+    // a plain name, and `checks/profile.mjs` refuses any other, as it refuses a `lessons` whose path leads out of the
+    // project: a guard there, not these rules, which flag every path and key alike, so that a comment at each place
+    // would bury the one that matters.
+    "security/detect-non-literal-fs-filename": "off",
+    "security/detect-object-injection": "off"
+  },
+  "overrides": [
+    {
+      // A test builds its patterns from its own constants and fixtures, and runs on no input from outside: a pattern
+      // that backtracked would fail the test, not let anything through.
+      "files": ["**/*.test.mjs"],
+      "rules": {
+        "security/detect-non-literal-regexp": "off",
+        "security/detect-unsafe-regex": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["node_modules/**"]
 }

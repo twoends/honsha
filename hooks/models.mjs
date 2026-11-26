@@ -30,10 +30,13 @@ export const BUDGET = 390;
 const NAME = /^[A-Za-z0-9][\w.:[\]-]{0,63}$/;
 // Bare values that YAML reads as no string at all: a session must not take one for a model's name.
 const NOT_A_NAME = /^(?:null|Null|NULL|true|True|TRUE|false|False|FALSE)$/;
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part opens with `#`
 const BLANK = /^\s*(?:#.*)?$/;
 const INDENTED = /^\s/;
 const KEY = /^models\s*:(.*)$/;
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part needs a `#`
 const NOTHING = /^(?:[ \t]+#.*)?[ \t]*$/;
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: its parts take characters apart
 const ENTRY = /^( +)([^\s:]+):[ \t]+(\S+)(?:[ \t]+#.*)?[ \t]*$/;
 
 const OPENING = "Honsha models of this installation";

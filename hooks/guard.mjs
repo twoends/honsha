@@ -113,6 +113,7 @@ export function simpleCommands(line, { marks = false, escapes = true, braces = f
   let word = null;
   /** @type {string | null} */
   let quote = null;
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from the constants above
   const descriptor = new RegExp(`^${braces ? BRACED : DESCRIPTOR}$`);
   // Whether the word so far holds a quoted or escaped character: Bash then never reads its digits as a file descriptor.
   let literal = false;
@@ -189,7 +190,9 @@ function program(words, braces = false) {
   // A redirection is neither the program nor an argument: `2>&1`, `>file`, `&>file`, and `>`, `>&`,
   // `>|` or `&>` with the file as the next word. It may stand before the program as well as after it.
   const prefix = braces ? BRACED : DESCRIPTOR;
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from the constants above
   const alone = new RegExp(String.raw`^${prefix}?(>>|>\||>&?|<&?)$`);
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from the constants above
   const redirection = new RegExp(`^${prefix}?[<>]`);
   let start = 0;
   while (start < words.length) {
@@ -249,6 +252,7 @@ function defaultBranches(cwd) {
 export function gitDirectory(base, dir, platform = process.platform, exists = fs.existsSync) {
   const paths = platform === "win32" ? path.win32 : path.posix;
   const plain = paths.resolve(base, dir);
+  // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its optional part opens with `/`
   const drive = /^\/([A-Za-z])(?:\/(.*))?$/.exec(dir);
   if (platform !== "win32" || !drive || exists(plain)) return plain;
   return paths.resolve(`${drive[1].toUpperCase()}:/`, drive[2] ?? "");
@@ -321,6 +325,7 @@ function mergePatterns(services = SERVICES) {
   for (const name of fs.readdirSync(services)) {
     try {
       const list = JSON.parse(fs.readFileSync(path.join(services, name, "merge-commands.json"), "utf8")).merge;
+      // oxlint-disable-next-line security/detect-non-literal-regexp -- the kit's own patterns
       for (const pattern of list) patterns.push(new RegExp(pattern));
     } catch {
       // A piece without the file, or with one that cannot be read, lists no command.
@@ -380,6 +385,7 @@ export function readPath(dir, where, powershell, platform = process.platform) {
   if (!windows) return paths.resolve(dir, where);
   if (parts.includes("..")) return null;
   if (!where.startsWith("/")) return paths.resolve(dir, where);
+  // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its optional part opens with `/`
   const drive = /^\/([a-z])(?:\/(.*))?$/.exec(path.posix.resolve(where));
   return drive ? paths.resolve(`${drive[1].toUpperCase()}:\\`, drive[2] ?? "") : null;
 }

@@ -73,6 +73,7 @@ export function createdAt(id) {
  */
 function frontMatter(text, key) {
   const head = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- a key that the script itself names
   const line = new RegExp(`^${key}:\\s*([^#\\r\\n]*)`, "m").exec(head);
   const value = line?.[1].trim() ?? "";
   return value === "" || value === "null" ? null : value;

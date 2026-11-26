@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -9,11 +8,8 @@ import test, { after } from "node:test";
 import {
   IGNORE_FILE,
   LOG_OPTIONS,
-  SCANNER,
-  archiveFor,
   environment,
   fingerprint,
-  install,
   isName,
   makeMirror,
   maskLine,
@@ -24,8 +20,8 @@ import {
   readIgnored,
   scan,
   scannerArgs,
-  tarProgram,
 } from "./history-secrets.mjs";
+import { GITLEAKS as SCANNER } from "./releases.mjs";
 
 // The fixture commits with the identity git finds, which a machine that runs the tests may not have.
 Object.assign(process.env, {
@@ -153,22 +149,6 @@ const shared = fixture();
 /** @param {string} dir */
 const refsOf = (dir) => git(dir, ["for-each-ref", "--format=%(refname) %(objectname)"]);
 
-test("the pin covers Windows, Linux and macOS on x64 and arm64, and refuses another platform", () => {
-  for (const platform of ["win32", "linux", "darwin"]) {
-    for (const arch of ["x64", "arm64"]) {
-      const archive = archiveFor(platform, arch);
-      assert.ok(archive, `${platform}-${arch}`);
-      const name = { win32: "windows", linux: "linux", darwin: "darwin" }[platform];
-      const form = platform === "win32" ? "zip" : "tar.gz";
-      assert.equal(archive.file, `gitleaks_${SCANNER.version}_${name}_${arch}.${form}`);
-      assert.match(archive.sha256, /^[0-9a-f]{64}$/);
-    }
-  }
-  assert.equal(archiveFor("linux", "ia32"), undefined);
-  assert.equal(archiveFor("freebsd", "x64"), undefined);
-  assert.equal(archiveFor("constructor", ""), undefined);
-});
-
 test("a platform with no pinned archive exits 2 before anything is downloaded or made", async () => {
   const temp = temporary("honsha-history-temp-");
   /** @type {string[]} */
@@ -194,61 +174,6 @@ test("a platform with no pinned archive exits 2 before anything is downloaded or
   assert.match(errors.join("\n"), /not freebsd-x64/);
   assert.equal(installed, false);
   assert.deepEqual(fs.readdirSync(temp), []);
-});
-
-test("Windows's own tar extracts the archive, not one that comes first on the path", () => {
-  assert.equal(tarProgram("win32", { SystemRoot: "C:\\Windows" }), path.join("C:\\Windows", "System32", "tar.exe"));
-  assert.equal(tarProgram("linux", {}), "tar");
-  assert.equal(tarProgram("darwin", {}), "tar");
-});
-
-test("an archive whose checksum differs stops before anything is written or extracted", async () => {
-  const dir = temporary("honsha-history-install-");
-  let unpacked = false;
-  await assert.rejects(
-    install(dir, {
-      archive: SCANNER.archives["linux-x64"],
-      platform: "linux",
-      fetchBytes: async () => Buffer.from("not the archive"),
-      unpack: () => {
-        unpacked = true;
-      },
-    }),
-    /neither extracted nor run/,
-  );
-  assert.equal(unpacked, false);
-  assert.deepEqual(fs.readdirSync(dir), []);
-});
-
-test("an archive with the pinned checksum is fetched from the release and its program alone extracted", async () => {
-  const bytes = Buffer.from("an archive");
-  const archive = { file: "scanner.zip", sha256: crypto.createHash("sha256").update(bytes).digest("hex") };
-  for (const [platform, member] of [
-    ["win32", "gitleaks.exe"],
-    ["linux", "gitleaks"],
-  ]) {
-    const dir = temporary("honsha-history-install-");
-    /** @type {string[]} */
-    const urls = [];
-    /** @type {string[]} */
-    const members = [];
-    const program = await install(dir, {
-      archive,
-      platform,
-      fetchBytes: async (url) => {
-        urls.push(url);
-        return bytes;
-      },
-      unpack: (file, into, name) => {
-        assert.equal(fs.readFileSync(file, "utf8"), "an archive");
-        members.push(name);
-        fs.writeFileSync(path.join(into, name), "");
-      },
-    });
-    assert.deepEqual(urls, [`https://github.com/gitleaks/gitleaks/releases/download/v${SCANNER.version}/scanner.zip`]);
-    assert.deepEqual(members, [member]);
-    assert.equal(program, path.join(dir, member));
-  }
 });
 
 test("the mirror holds every ref the remote serves, a pull request's with a deleted branch's commit, and borrows the clone's objects", () => {

@@ -1,0 +1,9 @@
+# The configuration of actionlint, which `checks/security-testing.mjs actionlint` runs on the workflow files.
+paths:
+  .github/workflows/project.yml:
+    ignore:
+      # GitHub's documentation of the contexts lists `job.workflow_repository` and `job.workflow_sha`, the repository
+      # and the commit of the workflow file that defines the job, which the pinned actionlint does not know yet. The
+      # pattern names the two properties on the job context's type alone, so that the same name on another object, as
+      # a mistyped input, is still reported.
+      - 'property "workflow_(repository|sha)" is not defined in object type \{check_run_id: number; container: '
