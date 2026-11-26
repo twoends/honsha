@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-26
-updated: 2026-11-26
+updated: 2026-11-27
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 66
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -302,19 +302,27 @@ it.
 - For the hub, outside this item: the README's requirements count a session of the desktop application with the kit
   installed among what is not tried; the README's table has no row for `hub/`; no rule of the kit says how a session
   treats untrusted content, now that the reader is gone from the documents.
+- The entries from the person's acceptance of the first two deviations to the second fix were written above the
+  previous one, by mistake; this one and those after it follow in order. The third check, on `b9408db`: `pass`. Its
+  report gives the files it read by their absolute paths on this host, which the public record cannot hold: they are
+  copied from the repository's root.
+- The branch pushed at `b9408db`, and pull request #66 opened to `main`, its description from this record. Its four
+  checks were still running when first read.
+- Told by the hub that they had ended, read once: run 45909230507 on `b9408db` passed its four checks, the personal
+  content, `project / checks`, and `verify` on Linux and on Windows.
 
 ## Verification
 
-On `c192a55`, on this host:
+On `b9408db`, on this host, as on `c192a55` and `76022ec` before it:
 
-- `node <kit directory>/checks/record.mjs`: passed. `node <kit directory>/checks/commits.mjs`: passed, 3 commits.
+- `node <kit directory>/checks/record.mjs`: passed. `node <kit directory>/checks/commits.mjs`: passed, 5 commits.
 - `node checks/verify.mjs`, the profile's `verify` list: all 11 commands passed.
   - `npx --no-install prettier --check .`: passed.
   - `npx --no-install oxlint`: passed.
   - `npx --no-install tsc -p .`: passed.
   - `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 292 tests, 292
     passed.
-  - `node checks/security-testing.mjs gitleaks`: 3 commits from `516e0db` to `c192a55`, 0 findings.
+  - `node checks/security-testing.mjs gitleaks`: 5 commits from `516e0db` to `b9408db`, 0 findings.
   - `node checks/security-testing.mjs shellcheck`, `actionlint`, `zizmor`: nothing found.
   - `claude plugin validate .`: passed, with the warning that the plugin has no version (O10) and the directory's
     remarks on the licence and the icon.
@@ -375,87 +383,81 @@ none
   host (under the removed `data` key) did so outside the kit. Whether those credentials are still scoped to their
   project's sessions cannot be seen from this repository.
 
-The first check, on `c192a55` and the record as it then stood, of the diff from `origin/main`:
+The first check, on `c192a55`, of the diff from `origin/main`: verdict `fail`; findings:
+
+1. Criterion 7 says the workflow names no inbox, yet `docs/01-specs/WORKFLOW.md`:107 still does, in the comment of
+   `source`, as `templates/record.md`:13 does; the hub kept both with `261126-2213`, and no deviation declares it.
+2. `README.md` and `skills/assessment/SKILL.md` grow, against the Boundaries' "every document it changes shrinks", and
+   no deviation declares it.
+3. The comment at `hub/projects.mjs`:43 gives a project's earlier documents as its reason, false once `legacy` goes,
+   and the log names it to no one.
+
+The repeated check, on `76022ec`, of the diff since `c192a55`: verdict `fail`; findings:
+
+1. Step 5 of `skills/assessment/SKILL.md` no longer says that earlier workflow documents are deleted once the adoption
+   no longer reads them, though criterion 7 names it and the workflow cites the skill for it; no deviation declares it.
+2. The comment at `hub/projects.mjs`:43 says that every record stays where it was written, which a record of the
+   backlog does not.
+
+The third check, a repeated one, on `b9408db` and the record as it then stood, of the diff since `76022ec`:
 
 ### Checker report
 
-**Verdict:** fail
+**Verdict:** pass
+
+Both findings of the last report, on `76022ec`, are fixed:
+
+1. Step 5 of `skills/assessment/SKILL.md` again says that earlier workflow documents are deleted once the adoption no
+   longer reads them (lines 27-28). This matches `docs/01-specs/WORKFLOW.md`:459-460 and
+   `docs/01-specs/ARCHITECTURE.md`:163. The growth is as the third deviation states. Against the installed kit at
+   `516e0db`, the changed clause goes from 55 to 67 characters and the rest of the step is the same text wrapped
+   differently, so the skill ends 12 characters longer. The person accepted this on 2026-11-27.
+2. The comment at `hub/projects.mjs`:43 now names "every merged record", and that holds:
+   - A backlog record reaches the default branch through `hub/backlog.mjs` without a pull request (`rules/git.md`,
+     Delivery).
+   - It leaves `backlog/` when its item starts (`docs/01-specs/ARCHITECTURE.md`:179).
+   - A merged record in `work/` or `reports/` stays where it is, which is what `RECORD_FOLDERS` relies on.
 
 **Acceptance criteria**
 
-1. The architecture names no part that the kit lacks; its flows are ask, dispatch, joining and review: met. See
-   `docs/01-specs/ARCHITECTURE.md`:6-51 (key facts, components, diagram), 63-76 (the skills, agents and templates match
-   `skills/`, `agents/` and `templates/`), 124-135 (`settings.yml` holds only `max-workers` and `models`, which
-   `skills/parallel-parts/SKILL.md`:43 reads; radar read by `skills/review/SKILL.md`:47), 191-217 and 230-242. A search
-   outside `work/` finds no board, inbox, scheduler, index, messaging, data source, playbook or always-on host in it.
-2. A5 and O10 stay, the other eight are deleted, none is reused, and the examples exist: met. See
-   `docs/01-specs/ARCHITECTURE.md`:3, 283 and 294, and `README.md`:140. No file outside `work/` cites a deleted
-   identifier.
-3. "Files and index" is renamed "Files" and every reference follows: met. See `docs/01-specs/ARCHITECTURE.md`:17 and
-   166, and `docs/01-specs/WORKFLOW.md`:91. The old heading appears nowhere outside `work/`.
-4. The vision is kept to what is built, and "Verdict" belongs to the checker and the security reviewer: met. See
-   `docs/00-vision/VISION.md`:6-12, 30-41 and 75-90.
-5. The README's opening and its list of documents: met. See `README.md`:3-4 and 131-132.
-6. No `description`, `merge-deploys`, `data`, `playbooks` or `legacy` in either profile; every kept key has a reader;
-   `checks/profile.mjs` and its test are unchanged: met. See `templates/profile.yml` and `.hub/profile.yml`. Each reader
-   was checked, for example `checks/profile.mjs`:141-200, `hub/projects.mjs`:287 and `agents/security-reviewer.md`:60.
-   The readers are listed key by key in the Strategy's table, which the log points to.
-7. The workflow names no inbox, verdict of an inbox, scheduler or `merge-deploys`; `legacy` is gone, and earlier
-   workflow documents are deleted: not met. `docs/01-specs/WORKFLOW.md`:107 still reads
-   `source: null # inbox item or parent work item, when there is one` (finding 1). The rest holds:
-   - `docs/01-specs/WORKFLOW.md`:13-16, 154, 213-216, 263 and 459-461;
-   - `docs/01-specs/ARCHITECTURE.md`:163-164;
-   - `skills/assessment/SKILL.md`:27-28;
-   - the core rules' rule on documents, which now has no exception for them (`rules/writing.md`:17-20).
-8. Each reference left wrong in a file of another open item is changed with the hub's leave or named to the hub: met
-   for what the log names. `docs/01-specs/WORKFLOW.md`:91 is changed. The comment of `source` in
-   `templates/record.md`:13 and `docs/01-specs/WORKFLOW.md`:107 is named to `261126-2213`. See finding 3 for a comment
-   left wrong elsewhere.
-9. The outcome and the pull request say what an installation changes: not verifiable. Both are written with the
-   closing commit.
-10. Every verification command of the profile passes: met. Verification records all 11 `verify` commands passing on
-    `c192a55`.
+1. The architecture names no part the kit lacks: not touched by this diff.
+2. Identifiers A5 and O10 kept, the others deleted: not touched by this diff.
+3. "Files and index" renamed "Files": not touched by this diff.
+4. The vision as built: not touched by this diff.
+5. The README's opening and list of documents: not touched by this diff.
+6. The profile's dropped keys, and a reader for each kept key: not touched by this diff.
+7. The workflow, the architecture, the core rules and `honsha:assessment` say that earlier workflow documents are
+   deleted: met for the skill, `skills/assessment/SKILL.md`:27-28. The comment of `source` is still a declared and
+   accepted deviation.
+8. References in files of other open items: met. Both changed lines are under the hub's leave: the one line of
+   `hub/projects.mjs`:43 and step 5 of the skill (Log, Deviations).
+9. The outcome and the pull request name what each breaking part changes: not touched by this diff. The outcome comes
+   with the closing commit.
+10. Every verification command passes: met as recorded. Verification on `b9408db` lists all 11 commands as passed.
 
-- **Intent:** the change makes a comment of the kit untrue without naming it (finding 3).
-- **Scope:** two documents grow, against the Boundaries (finding 2). The departure from criterion 7 is not declared
-  (finding 1).
-- **Comments and documents:** in order.
-- **Gates:** in order. All four are met: the rules name no hosting service; nothing about a user or an installation;
-  no script changed; no decision-log entry cited.
-- **Verification evidence:** in order. The `verify` list covers formatting (Prettier), lint (oxlint), types (tsc),
-  tests (`node --test`) and static security testing (oxlint's security rules, gitleaks, ShellCheck, actionlint,
-  zizmor). No `dynamic-testing` is in the profile, and the kit's `checks/record.mjs` and `checks/commits.mjs` are
-  recorded as passed.
-- **Security review:** in order. The report is on `c192a55` and covers the branch's whole diff from `origin/main`, with
-  no findings. The log says what was done with each of the three weak points.
-- **Record:** it has no "Deviations" section for the departures in findings 1 and 2; otherwise in order.
-- **Commits:** in order.
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests, security
+- **Security review:** not due
+- **Record:** in order
+- **Commits:** in order
 
 **Findings**
 
-1. Criterion 7 says the workflow names no inbox, yet `docs/01-specs/WORKFLOW.md`:107 still does, in the comment of
-   `source`. The same line is in `templates/record.md`:13. The hub kept both with `261126-2213` (log, "The hub's answer
-   on the files of the other items"). The Boundaries say "One refused becomes a deviation", but the record has no
-   "Deviations" section and the log counts the line under criterion 8 instead. Fix: declare it under "Deviations".
-2. The Boundaries say "every document it changes shrinks", but two documents grow, and no deviation declares it:
-   - `README.md` grows by about 13 characters and one line: the list of documents (131-132) adds about 40 characters,
-     and the opening (3-4) loses about 27.
-   - `skills/assessment/SKILL.md` grows by about 45 characters and one line: step 5, lines 27-30.
-
-   The skill is under the 6,000-character budget of `checks/budgets.test.mjs`; the recorded test run passed. Fix:
-   declare it under "Deviations", or shrink both files.
-
-3. `hub/projects.mjs`:43 reads "A report merged before its home ran as a project stays where it was written, as a
-   project's earlier documents do." With `legacy` dropped, a project's earlier documents are deleted once its adoption
-   no longer reads them (`docs/01-specs/ARCHITECTURE.md`:163-164, `docs/01-specs/WORKFLOW.md`:459-461). So the
-   comment's reason is now false. The diff does not change it, and the log names it to no one. The log's search for
-   what went looked for the key `legacy`, not for this wording. Fix: rewrite the comment or name it to the hub.
+none
 
 **Not verified**
 
-- The hub's leave for files of `261126-2213` and `261126-2215`, and which files those items hold, are known only from
-  this record's log. Nothing in the repository shows them, so the Boundaries on other items' files and criterion 8 are
-  checked only against what the log says.
+- Whether the log entry for this fix was added at the end of the log, or put in front of the entry "For the hub,
+  outside this item", which now comes last. The diff leaves out the record, and the record as it stood at `76022ec`
+  cannot be read here.
+- Whether the default branch has moved past `516e0db` in `skills/assessment/SKILL.md`. I made the 12-character
+  comparison against the installed kit at `516e0db`, which the record gives as the branch's base.
+
+Files read: `work/2026/11/261126-2214-documents-as-built.md`, `skills/assessment/SKILL.md`, `hub/projects.mjs`,
+`.hub/profile.yml`
 
 ## Deviations
 
@@ -463,13 +465,30 @@ The first check, on `c192a55` and the record as it then stood, of the diff from 
   still names an inbox item, as `templates/record.md` does. The hub keeps both with `261126-2213`, which takes them into
   its own change (Log), as the Boundaries foresee for a file that another item holds.
 - The change reaches a file outside "In scope": the comment of `hub/projects.mjs` that gave a project's earlier
-  documents as its reason, false once `legacy` goes, now gives every record's. The checker found it; the hub gave leave
-  for that one line.
+  documents as its reason, false once `legacy` goes, now gives that of every merged record. The checker found it; the
+  hub gave leave for that one line.
 
 Both accepted by the person on 2026-11-26, in this item's session.
 
 - The Boundaries say that every document the change touches shrinks, but `skills/assessment/SKILL.md` ends 12
   characters longer than on the default branch, well within its budget: its step 5 states when a project's earlier
-  workflow documents are deleted, which is where the workflow points for it. The repeated check found it.
+  workflow documents are deleted, which is where the workflow points for it. The repeated check found it. Accepted by
+  the person on 2026-11-27, in this item's session.
 
 ## Outcome
+
+The kit's architecture, vision and README describe only what is built. The architecture names no board, reader,
+inbox, index, scheduler, messaging channel, `hosts.yml`, data source or always-on host. Its flows are ask, dispatch,
+joining and the periodic review, its section on files is "Files", and of its identifiers only A5 and O10 remain. The
+profile's template and the kit's profile hold only keys that a script, a skill, an agent's file or a rule reads.
+`legacy` is gone with its exception in the core rules, so a project's earlier workflow documents are deleted once its
+adoption no longer reads them. The workflow and `honsha:assessment` say so. All criteria hold but one line of criterion
+7: the comment of `source` that names an inbox item, which `261126-2213` changes (Deviations).
+
+What an installation changes, each in an item of its own, with nothing failing until then:
+
+- it deletes `description`, `merge-deploys`, `data`, `playbooks` and `legacy` from its projects' profiles and its
+  home's;
+- a document of its own that cites A1, A2, A3, A8, A9, O02, O06 or O07 states the point in its own words, or drops it.
+
+Pull request #66. No deferred check.
