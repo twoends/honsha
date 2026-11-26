@@ -72,11 +72,13 @@ export function parseRegistry(text) {
   let inPaths = false;
   const lines = text.split(/\r?\n/);
   lines.forEach((line, index) => {
+    // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part opens with `#`
     if (/^\s*(#.*)?$/.test(line) || line === "projects:" || line === "projects: []") return;
     const fail = () => {
       throw new Error(`${REGISTRY}, line ${index + 1}: not in the shape this script writes: ${line}`);
     };
     const first = /^ {2}- name: (.+)$/.exec(line);
+    // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part opens with a space
     const key = /^ {4}([a-z]+):(?: (.+))?$/.exec(line);
     const host = /^ {6}([^:\s]+): (.+)$/.exec(line);
     if (first) {

@@ -31,6 +31,7 @@ import fs from "node:fs";
 /** The kinds a project has when its profile names none. */
 export const DEFAULT_KINDS = { feature: 10, fix: 5, upkeep: 5, change: 10 };
 
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part opens with `#`
 const BLANK = /^\s*(#.*)?$/;
 const ITEM = /^\s*-\s+(.*)$/;
 // A technology names a file of the home's lessons, so it may not lead out of their folder.
@@ -48,8 +49,10 @@ const TECHNOLOGY = /^[A-Za-z0-9][\w.+-]*$/;
  */
 function scalar(raw) {
   const text = raw.trim();
+  // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its alternatives never overlap
   const single = /^'((?:[^']|'')*)'(?:\s+#.*)?$/.exec(text);
   if (single) return single[1].replace(/''/g, "'");
+  // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its alternatives never overlap
   const double = /^"((?:[^"\\]|\\.)*)"(?:\s+#.*)?$/.exec(text);
   if (double) return double[1].replace(/\\(["\\])/g, "$1");
   return text.replace(/(^|\s+)#.*$/, "");
@@ -213,6 +216,7 @@ export function parseProfile(text) {
   });
   if (profile.commitsAddress !== null) {
     try {
+      // oxlint-disable-next-line security/detect-non-literal-regexp -- compiled to refuse a wrong one
       RegExp(profile.commitsAddress);
     } catch {
       throw new Error("profile: `commits.address` is not a regular expression");

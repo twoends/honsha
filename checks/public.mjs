@@ -33,6 +33,7 @@ function placeholder(address) {
  */
 function wordPattern(words) {
   const escaped = words.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from words, each escaped
   return new RegExp(`(?<![\\p{L}\\p{N}])(?:${escaped.join("|")})(?![\\p{L}\\p{N}])`, "iu");
 }
 

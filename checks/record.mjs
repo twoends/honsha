@@ -43,6 +43,7 @@ export const WORK_BRANCH = /^work\/((\d{2})(\d{2})\d{2}-\d{4})-([^/]+)$/;
 const SIZES = ["trivial", "small", "full"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 // A quote line that says nothing: the template's placeholder, or a bare `>`.
+// oxlint-disable-next-line security/detect-unsafe-regex -- linear: its one optional part opens with `…`
 const EMPTY_QUOTE = /^>\s*(?:…\s*)?$/;
 // The heading of a security review's report below Verification; like a checker report's, it may name the commit read.
 const REVIEW_REPORT = /^Security review report\b/;
@@ -74,6 +75,7 @@ export function parseRecord(text) {
   for (const line of match[1].split(/\r?\n/)) {
     const top = /^([a-z][\w-]*):\s*(.*)$/.exec(line);
     if (top) {
+      // oxlint-disable-next-line security/detect-unsafe-regex -- quadratic at worst, on one front matter line
       const [, value, comment = ""] = /^(.*?)(?:\s+#\s*(.*))?$/.exec(top[2]) ?? [];
       last = { value: unquote(value ?? ""), comment, more: [] };
       if (fields.has(top[1])) fields.set(`${top[1]} (again)`, last);
@@ -160,11 +162,14 @@ export function readTemplate(text) {
   /** @type {Map<string, string[] | null>} */
   const keys = new Map();
   for (const [key, { comment }] of record.fields) {
+    // oxlint-disable-next-line security/detect-unsafe-regex -- linear: each repetition opens with `|`
     const choices = /^[\w-]+(?:\s*\|\s*[\w-]+)+$/.test(comment) ? comment.split("|").map((word) => word.trim()) : null;
     keys.set(key, choices);
   }
   const size = `(?:${SIZES.join("|")})`;
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from the constant list of sizes
   const label = new RegExp(`\\b(${size}(?: and ${size})*):`, "g");
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- built from the constant list of sizes
   const lead = new RegExp(`^(${size}(?: and ${size})*)\\b`);
   const kept = sections(record.body).map(({ name, text: content, subsections }) => {
     const comment = /<!--([\s\S]*?)-->/.exec(content)?.[1].replace(/\s+/g, " ").trim() ?? "";
@@ -240,6 +245,7 @@ function expression(pattern) {
       source += inside(name);
     }
   });
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- the profile's own, its names escaped
   return new RegExp(`^${source}$`, "s");
 }
 

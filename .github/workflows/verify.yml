@@ -59,6 +59,9 @@ jobs:
       # since PowerShell would fail the step only on the exit code of its last command.
       - name: Install the npm that package.json asks
         shell: bash
+        # Outside the lockfile, which holds the project's packages and not the package manager, at an exact version,
+        # which the registry never publishes twice.
+        # zizmor: ignore[adhoc-packages]
         run: |
           npm install --global npm@12.2.2
           npm --version
@@ -66,7 +69,9 @@ jobs:
         run: node checks/verify.mjs --setup
       - name: Install Claude Code, for the plugin validator
         # The package's `postinstall` fetches the native binary; npm 12 runs no install script that `allow-scripts` does
-        # not name.
+        # not name. Outside the lockfile, as `honsha:dependencies` has a pipeline install Claude Code, at an exact
+        # version, which the registry never publishes twice.
+        # zizmor: ignore[adhoc-packages]
         run: npm install --global --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@2.1.325
       - name: Run the verification commands of the profile
         run: node checks/verify.mjs
@@ -94,9 +99,11 @@ jobs:
 
   # The workflow every project calls runs here on the kit's own pull requests and pushes, so that both of its paths
   # are known to run before a project relies on them. Called from this repository, it reads the kit with this
-  # repository's own token, whatever the repository's visibility.
+  # repository's own token, whatever the repository's visibility. A job's reusable workflow given as `./` is read at the
+  # caller's own commit, not from a checkout, so the hole zizmor's `self-repository` names does not arise; its `$/`
+  # form is newer than the pinned actionlint, which refuses it.
   project:
-    uses: ./.github/workflows/project.yml
+    uses: ./.github/workflows/project.yml # zizmor: ignore[self-repository]
     # As a project's caller grants it: `actions: read` lets project.yml read whether the run on a pull request's earlier
     # tip passed, before it leaves the verification out of a push that changes only records. This job alone needs it.
     permissions:

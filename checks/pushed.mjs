@@ -120,6 +120,7 @@ export function allowedAddress(cwd) {
     // so the check finds more, never less.
     return null;
   }
+  // oxlint-disable-next-line security/detect-non-literal-regexp -- the kit's own profile's
   return address ? new RegExp(address) : null;
 }
 
@@ -177,6 +178,7 @@ export function commitFindings(commit, cwd, words, allowed = null) {
       file = name === "/dev/null" ? null : name.replace(/^b\//, "");
       continue;
     }
+    // oxlint-disable-next-line security/detect-unsafe-regex -- linear: its optional part opens with `,`
     const hunk = /^(@@+) .*?\+(\d+)(?:,\d+)? @@+/.exec(text);
     if (hunk) {
       parents = hunk[1].length - 1;

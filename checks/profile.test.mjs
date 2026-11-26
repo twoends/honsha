@@ -168,7 +168,13 @@ test("the kit's own profile is one the reader accepts", () => {
   assert.ok(profile);
   assert.equal(profile.defaultBranch, "main");
   assert.ok(profile.verify.length > 0);
-  assert.deepEqual(profile.setup, ["npm ci --ignore-scripts"]);
+  assert.deepEqual(profile.setup, ["npm ci --ignore-scripts", "node checks/security-testing.mjs --setup"]);
+  for (const command of ["gitleaks", "shellcheck", "actionlint", "zizmor"]) {
+    assert.ok(profile.verify.includes(`node checks/security-testing.mjs ${command}`), command);
+  }
+  for (const file of ["hooks/guard.mjs", "checks/pushed.mjs", "checks/security-testing.mjs", ".oxlintrc.json"]) {
+    assert.ok(profile.securityReview.includes(file), file);
+  }
   assert.ok(profile.commitsAddress);
 });
 

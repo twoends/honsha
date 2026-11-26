@@ -342,6 +342,66 @@ downloads listed under "For the person" included, the first choice as oxlint wit
   merged, the hub has the other brought up to date with `honsha:branch-update` before its merge.
 - The lines of the strategy that went past 120 characters were wrapped again, with no word changed.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- The pins, read on 2026-11-26 from each release with `gh api`. zizmor published 1.33.0 and 1.33.1 on 2026-11-22, so
+  the newest release published at least 7 days earlier is 1.32.0, of 2026-11-02; its five archives' SHA-256 are
+  GitHub's digests. ShellCheck 0.11.0's five are GitHub's digests too. actionlint's checksums file,
+  `actionlint_1.7.12_checksums.txt`, 1,130 bytes, was downloaded: its six lines match GitHub's digests of the six
+  archives. gitleaks's pin is unchanged.
+- `checks/releases.mjs` holds the four pins and the install moved from `checks/history-secrets.mjs`, which now imports
+  both. The install takes the program as the one entry of the archive with its name, in whatever folder, since
+  ShellCheck's archives hold it in a folder of their own, and refuses one outside the folder it is extracted into. Its
+  test took the four tests of the pin and the install from the history scan's, and adds three: every pin's shape, the
+  program's name, and the entry found or refused.
+- `checks/security-testing.mjs` and its test, 13 tests with no network. zizmor's `--help` added `--color=never` to its
+  arguments. Its first line test of a shell script is a parser of words, not the regular expression first written,
+  which the security rules took for unsafe.
+- The setup on this host downloaded the four archives for Windows x64, 8.4, 8.1, 2.5 and 8.5 MB, each with the pinned
+  digest, in 20 seconds. Under this host's application control, which enforces, each program ran and printed its
+  version: gitleaks 8.30.1, ShellCheck 0.11.0, actionlint 1.7.12, zizmor 1.32.0. No command is left to the pipeline.
+- A trial of the scan of a branch, in a scratch repository: a fake token in the branch's own commit was found; one that
+  a merge of `main` brought was not; one added by a merge's conflict resolution was found, named `b/shared.txt` with
+  its line unreadable, as the history scan's item had seen with the remerge diff; one in a file that `.gitattributes`
+  marks `-diff` was found; a fingerprint listed in `.gitleaksignore` was left out. The trial found a hole in the first
+  form of the script: gitleaks read the working tree, and a `.gitleaks.toml` put there allowed every path, so the scan
+  found nothing. The script now gives gitleaks the repository's common git folder, where a branch commits nothing, and
+  with the file still in the working tree the three findings came back. With the git folder, the file marked `-diff` is
+  read even without `GIT_ATTR_SOURCE`; the script keeps it, so that no tree's attributes apply whatever git finds.
+- The first run of the four commands on the kit:
+  - `gitleaks`: no finding in the branch's two commits, in 1.3 seconds.
+  - `shellcheck`: no finding in `.githooks/pre-push`, the one shell script, in 0.8 seconds.
+  - `actionlint`: two findings in `project.yml`, the contexts `job.workflow_repository` and `job.workflow_sha`, which
+    actionlint 1.7.12 does not know, and which the kit's pipeline runs on every pull request: silenced in
+    `.github/actionlint.yaml`, for that file and that message, with the reason. Then nothing, in 0.4 seconds.
+  - `zizmor`: five findings, all low. `adhoc-packages`, four: npm and Claude Code installed with `--global` in
+    `verify.yml` and `project.yml`, the package manager and the platform that `honsha:dependencies` has a pipeline
+    install so, at an exact version or the caller's: silenced above each step's `run`, with the reason. Comment lines
+    above the key were tried on a copy first: zizmor honours them for a step, not for a job's `uses`.
+    `self-repository`, one: the job `project` of `verify.yml` names its reusable workflow as `./`, which GitHub reads at
+    the caller's own commit and not from a checkout, so the hole the audit names does not arise; its `$/` form, new on
+    GitHub since 2026-07-30, is refused by actionlint 1.7.12, as a copy showed: silenced on the line, with the reason.
+    Then nothing, in 0.4 seconds. Its auditor persona shows four more, among them `excessive-permissions` on
+    `project.yml`, which takes its caller's permissions by design; the command runs the default persona.
+- `eslint-plugin-security` 4.2.1 brought three packages, with `safe-regex` 2.1.1 and `regexp-tree` 0.1.27, and no
+  install script; `npm audit` found no vulnerability. A fixture in the scratchpad, linted with the kit's
+  configuration: each of the plugin's 15 rules reported its case but `detect-object-injection`, which reported 49 places
+  of the kit, and `no-new-func` reported its own; a case under `// oxlint-disable-next-line <rule> -- <reason>` was not
+  reported. So oxlint runs the plugin's rules, and ESLint is not needed.
+- The plugin's first run on the kit, in 2.3 seconds: 275 findings. `detect-non-literal-fs-filename` 177 and
+  `detect-object-injection` 49, every one a path or a key from the kit's arguments, constants or the files of the
+  repository or the home it runs for; the eleven of the guard are indices of arrays: both rules are off in
+  `.oxlintrc.json`, with the reason. `detect-non-literal-regexp` 29 and `detect-unsafe-regex` 18 stay on, below the
+  count that would bury the one that matters, and since a pattern built from input and a regular expression that
+  backtracks are what an attacker could aim at the guard and the record's checks: off in the tests alone, by an
+  override with the reason, 18 findings; each of the 28 in the scripts silenced on its line with its reason, the
+  patterns built from the kit's constants, escaped words or the project's own profile, and the regular expressions read
+  one by one, each linear but the record's reading of a front matter line, quadratic at worst on that one line. The one
+  other finding in the scripts, the first line test of `checks/security-testing.mjs`, was rewritten. Two findings of
+  oxlint's own in the new test were fixed.
+- `README.md`, its rows of `checks/` and `.hub/profile.yml` and its paragraph on checking a change; the three lines in
+  the files of `261125-2039`, as the hub agreed; the profile's setup, `verify` and `security-review`, which the kit's
+  profile reader reads: 11 commands, 2 of setup, 19 paths. `docs/01-specs/INTERFACE.md` holds 7,111 characters of its
+  9,000. `checks/profile.test.mjs`, whose test of the kit's own profile named its one command of setup, now names both,
+  the four new commands and four of the paths.
 
 ## Verification
 

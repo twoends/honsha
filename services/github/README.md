@@ -325,8 +325,8 @@ testing reads (workflow, Security testing). Two free tools under the MIT licence
 line on any host and in the pipeline:
 
 - **zizmor** looks for the holes of a workflow: untrusted input in a script, permissions wider than needed, actions not
-  pinned to a commit, credentials left in the checkout. It comes as a Python package, a Rust crate and a container
-  image. With `--offline` it makes no request, and leaves out the few audits that read GitHub's API.
+  pinned to a commit, credentials left in the checkout. It comes as release binaries, a Python package, a Rust crate
+  and a container image. With `--offline` it makes no request, and leaves out the few audits that read GitHub's API.
 - **actionlint** checks a workflow's syntax and expressions, and runs ShellCheck on the scripts of its steps when
   ShellCheck is installed. It comes as release binaries and a container image.
 
