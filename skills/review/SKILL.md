@@ -17,8 +17,9 @@ that is behind or has changes not committed.
    urgent: its fix is a work item that starts the same day (`honsha:dependencies`). Name the package, the advisory,
    the version that fixes it and whether that version is out.
 2. **Security posture.** The security posture of each repository (`honsha:security-posture`), compared with what its
-   assessment read: the secrets in its history, the kinds of security testing its files now call for, its wiring, and
-   the hosting service's settings, protections and open alerts. What it finds urgent comes first in the report.
+   assessment read and the person decided: the secrets in its history, the kinds of security testing its files now
+   call for, its wiring, and the hosting service's settings, protections and open alerts. What it finds urgent comes
+   first in the report.
 3. **Ordinary updates.** Each direct dependency of a project is covered by a radar entry of the installation, with a
    review date. The outdated dependencies are listed with the package manager, each with the newest version that
    `honsha:dependencies` lets an item take. The updates worth making become one work item, full if it holds a major

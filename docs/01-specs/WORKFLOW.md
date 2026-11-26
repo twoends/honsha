@@ -558,8 +558,8 @@ a later reading is added in one place.
 - **Code scanning is never the required check:** its rules are the service's and change by themselves (workflow,
   Security testing).
 - **A repository made public, or a setting or a protection off since its assessment, is urgent:** it changed outside
-  any work item, by a mistake or by an account that should not have. The assessment's record is the reading compared
-  with, since a review commits nothing.
+  any work item, by a mistake or by an account that should not have. A review commits nothing, so it compares with the
+  assessment's record and the person's answers in the home's decision log.
 
 ---
 

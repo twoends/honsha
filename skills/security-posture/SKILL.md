@@ -26,15 +26,15 @@ so.
    default branch; its token, which holds no more than the piece names; and, where the service has one, the
    repository's default for a pipeline's token, set to read only, since every workflow that names no permissions gets
    it.
-4. **The settings** that the piece lists under "Settings the rules rely on": the merge method, merged branches deleted,
-   and alerts on vulnerable dependencies without automatic pull requests.
+4. **The settings** that the piece lists under "Settings the rules rely on".
 5. **The protections given free:** each one that the piece says the service gives this repository at no cost, by its
    visibility and the account's plan. A default branch that refuses direct and forced pushes and its deletion, but for
    what the piece says of the home; the wiring's check, required before a merge; the service's scanning for secrets,
    with the refusal of a push that holds one; its code scanning; private reporting of vulnerabilities. One that is off
    is asked of the person, who turns it on as the piece says. A session never turns one on: each limits what the
-   person's own account can do. One the person declines goes into the home's decision log, and later readings name it
-   in a line without asking again; one the service sells is named in a line, and is no gap.
+   person's own account can do. The person's answer, on or declined, goes into the home's decision log, and later
+   readings name a declined one in a line without asking again; one the service sells is named in a line, and is no
+   gap.
 6. **The open alerts** of the service on dependencies, secrets and code, each read with the piece's command, which
    prints no secret's value. One on a dependency is a vulnerability (`honsha:dependencies`). One on a secret is a secret
    found in the history (`honsha:security-testing`, The history), wherever the service found it. One on code is a
@@ -46,6 +46,6 @@ so.
 In the record of the assessment, and in the review's report, for each repository: its visibility, the commit read and
 the date the service was read; the scan of the history as it printed it, the scanner's version, the refs and commits
 read and each finding, with the reason of each set aside; and, for each setting and protection, whether it is on, off,
-not given free or not read. A review commits nothing, so it compares with the assessment's record of the repository,
-in the home: a repository made public, or a setting or a protection that was on and is now off or not read, changed
-outside any work item, and is urgent.
+not given free or not read. A review commits nothing, so it compares with the assessment's record of the repository
+and the home's decision log, and names what neither holds. A repository made public, or a setting or a protection
+that either has on and is now off or not read, changed outside any work item, and is urgent.

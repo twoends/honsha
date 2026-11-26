@@ -371,6 +371,21 @@ reads listed under "For the person" included.
   that fails, not a hostile one, since a pull request runs the workflow file of its own branch.
 - With the fix, `skills/security-posture/SKILL.md` holds 4,468 characters, `skills/review/SKILL.md` 4,431, and
   `docs/01-specs/WORKFLOW.md` 45,002, its budget 45,100.
+- The verification ran again on `71f0745`, and passed.
+- The repeated security review, of the diff since `7683fb6` at `71f0745`, confirms the finding fixed and fails on a new
+  one, which the fix brought: its narrower read of the older branch protection dropped the pull request it requires,
+  that requirement's allowances and the protection's restrictions, so a protection that takes direct pushes, or lets
+  one account past the pull request, read as on, and its weakening after the assessment went unseen. Fixed in a commit
+  of its own: the read prints the three, and the protection counts as on only with a pull request required and no
+  account allowed past it, but in the home. Both new filters ran on an object of the API, with exit status 0.
+- Its weak points. 1, fixed: `bypass_actors` `[]` counts as on, and `null`, which GitHub gives an account that may not
+  change the ruleset, as not read. 2, fixed: a protection turned on after the assessment was compared as off, and what
+  no reading held went unnamed; the person's answers, a protection turned on as well as one declined, go into the
+  home's decision log, the review compares with it beside the assessment's record, and names what neither holds. 3,
+  fixed: an empty output is no alert only with exit status 0. 4, fixed: the read of a ruleset gives the names of its
+  required checks, untried as the rest of that command.
+- The posture's step 4 named the settings that the piece lists; it now points to the piece alone. Sizes:
+  `skills/security-posture/SKILL.md` 4,431, `skills/review/SKILL.md` 4,457, `docs/01-specs/WORKFLOW.md` 45,039.
 
 ## Verification
 
