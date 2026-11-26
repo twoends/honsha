@@ -407,6 +407,42 @@ reads listed under "For the person" and "Boundaries" included.
   of `261125-1850`. Once `261125-1850` is merged, the profile lists `skills/security-posture/SKILL.md` under
   `security-review`, whose review this item already calls for; whichever of the two merges second is brought up to date
   first (`honsha:branch-update`), as the hub says.
+- The second lookup of GitHub's pages ran in a subagent on Haiku at medium effort. Found: on the free plan environment
+  secrets are given on public repositories only, deployment branches on a private repository with Pro or Team, and
+  required reviewers and wait timers on public repositories only on the free, Pro and Team plans; a deploy key has no
+  expiry; `X-OAuth-Scopes` lists a token's scopes, and no page describes `GitHub-Authentication-Token-Expiration`;
+  `gh`'s manual names `repo`, `read:org` and `gist` as the least scopes, has a fine-grained token given through
+  `GH_TOKEN`, and has `--show-token` print the token; the `workflow` scope adds and updates workflow files; the list of
+  Dependabot's secrets gives names and dates only. Left open: an explicit sentence that a pull request's run from a
+  branch of the repository receives its secrets, where the security hardening page's statement that write access reads
+  every secret stands for it; whether "Protected branches only" counts rulesets, which the piece sidesteps by naming
+  the default branch; the fine-grained permission of each read, which the piece leaves untried.
+- The trial ran each read command of the piece with this host's `gh` token on the three repositories of the
+  installation's registry, one public and two private, all of a free personal account, through a script in the
+  scratchpad that printed of each answer only its exit status, its number of lines, and the keys and types of its first
+  line; the commands that take an environment's name ran for each environment the list gave. Nothing was set on the
+  service. Each list answered exit 0 with a line per entry in its filter's shape, or with none; the secrets that an
+  organisation shares answered `422` "Validation Failed" in each repository, as the piece says of a personal account's;
+  the collaborators' list names the owner as `admin`; `gh auth status` printed the token masked and a line of scopes;
+  `gh api -i user` gave `X-OAuth-Scopes` and `X-Accepted-OAuth-Scopes`, and `two_factor_authentication` `null`, as the
+  piece says of a token without `read:user` or `user`. No command printed a value. The header of an expiry stays
+  untried.
+- Decided, from the lookups: the piece counts no limit of an environment on a private repository of the free plan,
+  whatever the API lists there, since GitHub's pages give neither environment secrets nor deployment branches on it,
+  and a rule rests on nothing that a service does not say it gives.
+- Wrote the posture's step "Access" and its part of "What is kept", and the review's step "Accounts and credentials",
+  with the list of what the inventory holds and the rules it is read against, and its radar step on a provider's own
+  security; renumbered the review's later steps. Wrote GitHub's sections "Who and what can reach a repository", with
+  "Where a credential that deploys is kept", and "The account and its token"; the security reviewer's line; the
+  workflow's section "Accounts and credentials", the piece's ninth point and the changes to "Security posture" and
+  "Upkeep review"; the inventory in the interface's "Files" and in the architecture's home and "Security". Prettier
+  added a blank line in the review's step.
+- Measured: `skills/security-posture/SKILL.md` 5,628 characters; `skills/review/SKILL.md` 6,676, so its budget is 6,700,
+  with the reason beside the security testing's in `checks/budgets.test.mjs`, as the strategy foresaw;
+  `docs/01-specs/WORKFLOW.md` 47,593, so its budget is 47,600: about 2,550 more, beyond the strategy's 1,700, for the
+  section's reasons, the piece's ninth point and the two sections that name the new reading; written once and then
+  rewritten shorter, with each reason kept. `agents/security-reviewer.md` 5,264, `docs/01-specs/INTERFACE.md` 7,264.
+- The profile's `verify` commands pass on the work before its commit.
 
 ## Verification
 

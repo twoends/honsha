@@ -141,6 +141,7 @@ registry.yml           projects: name, repository, folder on each host, state, a
 settings.yml           quiet period, notification rules, allowlisted senders, worker limit per host, models of the kit's tiers
 hosts.yml              hosts and their capabilities
 decisions.md           choices about this installation and standing preferences, those in force (workflow, Decisions)
+inventory.md           accounts, credentials, hosts, connectors and plugins, by name, never by value (workflow, Accounts and credentials)
 inbox/                 one file per item received, with its verdict
 backlog/               work items not yet started, per project; written by hub/backlog.mjs (workflow, The backlog)
 radar/                 one file per tool
@@ -292,6 +293,10 @@ The hub must not depend on a conversation's memory: a session can be restarted a
 6. **The host is minimal.** Key-only SSH, a firewall, a dedicated user, automatic security updates, no public service
    unless the board needs one.
 7. **Sessions run with explicit permissions,** not with permission checks disabled.
+8. **Accounts and credentials reach no further than their work.** A second factor on every account that can write,
+   credentials narrow and expiring, a credential that deploys only for the default branch's runs, and every account,
+   credential, host and connector listed in the home's inventory by name, never by value, and read again on a date
+   (workflow, Accounts and credentials).
 
 ---
 

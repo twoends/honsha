@@ -7,7 +7,8 @@ service).
 Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
 on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
 the repository settings and the alerts below. The reads of the protections and of the open alerts were tried on a
-public and on a private repository of a free personal account.
+public and on a private repository of a free personal account, and those of a repository's access and of the
+account's token on a public and on private repositories of such an account, except where they say they are untried.
 GitHub changes what it offers: check a statement about what it gives or what it costs against GitHub's own pages
 before relying on it.
 
@@ -194,6 +195,93 @@ Secret scanning also reads a public repository's issues, pull requests, discussi
 the location's `type` names them. The alerts on secrets answer `404` "Secret scanning is disabled on this repository"
 where scanning is off or not offered; those on code answer `404` "no analysis found" where code scanning is offered
 and has not run, and `403` where it is not offered.
+
+## Who and what can reach a repository
+
+The security posture reads, in each repository, who and what can write to it or read its pipeline's secrets
+(`honsha:security-posture`). As for the protections, the commands name the owner and the repository of the clone's
+remote, and an account whose `viewerPermission` is not `ADMIN` leaves them to the clone alone. Each reads every page
+and prints a line for each entry, with names, roles, dates and booleans only, and nothing, with exit status 0, where
+the list is empty; GitHub gives no secret's value in any of them. A failure exits with another status, its message on
+the error output, and is no answer.
+
+```
+gh api --paginate 'repos/<owner>/<repository>/collaborators?affiliation=all&per_page=100' --jq '.[] | {login, role: .role_name}'
+gh api --paginate 'repos/<owner>/<repository>/invitations?per_page=100' --jq '.[] | {invitee: .invitee.login, permissions, created_at}'
+gh api --paginate 'repos/<owner>/<repository>/keys?per_page=100' --jq '.[] | {id, title, read_only, added_by, created_at, last_used}'
+gh api --paginate 'repos/<owner>/<repository>/actions/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
+gh api --paginate 'repos/<owner>/<repository>/actions/organization-secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
+gh api --paginate 'repos/<owner>/<repository>/dependabot/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
+gh api --paginate 'repos/<owner>/<repository>/codespaces/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
+gh api --paginate 'repos/<owner>/<repository>/environments?per_page=100' --jq '.environments[] | {name, branches: .deployment_branch_policy, rules: [.protection_rules[]?.type]}'
+gh api --paginate 'repos/<owner>/<repository>/environments/<environment>/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
+gh api --paginate 'repos/<owner>/<repository>/environments/<environment>/deployment-branch-policies?per_page=100' --jq '.branch_policies[] | {name, type}'
+```
+
+- **The collaborators,** each with its `role`: `admin`, `maintain`, `write`, `triage`, `read`, or the name of an
+  organisation's own role. `affiliation=all` takes in those who reach the repository through an organisation's teams,
+  and the owner of a personal account's repository is listed, as `admin`. Then the invitations not yet accepted, each
+  a collaborator once it is.
+- **The deploy keys:** `read_only` is `false` for one that writes, which can do what an organisation's administrator
+  can; `added_by` and `last_used` say who added it and when it was last used. A deploy key has no expiry. The public
+  key itself is left out, as no reading needs it.
+- **The secrets,** by name and date: those of Actions at the repository's level; those an organisation shares with the
+  repository, which answer `422` "Validation Failed" in a repository of a personal account, where there are none;
+  those of Dependabot, which only the runs that Dependabot starts receive; those of Codespaces, which a codespace of the
+  repository receives; and each environment's.
+- **The environments:** `branches` is `null` where the runs of every branch may enter, has `protected_branches` `true`
+  where those of the protected branches may, and `custom_branch_policies` `true` where those of the branches and tags
+  of the last command may, each by its `name` and its `type`, `branch` or `tag`. `rules` names the environment's
+  protection rules, such as `branch_policy`, `required_reviewers` and `wait_timer`. An environment's name goes into the
+  path encoded as in a URL.
+
+### Where a credential that deploys is kept
+
+Any account that can write to a repository reads every secret of the repository's level, through a run of a branch
+that it pushes, a pull request's included; a run of a pull request from a fork receives none, and a run that
+Dependabot starts receives Dependabot's alone. So a credential that deploys, or that writes outside the repository, is
+an environment's secret: the environment's deployment branches are "Selected branches and tags" with the default branch
+by its name, which holds whatever protects the branch, and only the job that deploys names the environment. GitHub
+gives environment secrets and deployment branches on a public repository on every plan, and on a private one with
+GitHub Pro, Team or Enterprise. On a private repository of the free plan its pages give neither, so the posture counts
+no such limit there, whatever the API lists, and such a credential stays out of the pipeline. Required reviewers and
+wait timers are given, on the free, Pro and Team plans, on public repositories only.
+
+## The account and its token
+
+`gh` keeps one token for the account it signs in on a host, and every session of the host uses it. The kit's commands
+need it to push branches and open pull requests, to push a change to a workflow file, and to read the checks, the
+settings, the rulesets, the alerts and the access above. By GitHub's pages a classic token does that with `repo`,
+`read:org` and `workflow`, which is untried with those scopes alone. `gh`'s manual names `repo`, `read:org` and `gist` as the least it takes, and whether it refuses a token
+without `gist` is untried. A scope beyond these, such as one that deletes repositories or administers an organisation,
+is none of the kit's. A fine-grained token reaches only the repositories it names, and GitHub's REST reference gives
+the permission that each read needs; `gh`'s manual has such a token given through `GH_TOKEN`, and the permissions with
+which `gh` runs the kit's commands are untried.
+
+The token that `gh auth login` gets in the browser has no expiry. A personal access token, classic or fine-grained,
+has the expiry chosen when it is made, and may have none unless an organisation sets a limit; GitHub revokes a token
+unused for a year. The person makes one on the site, under Settings, Developer settings, with the expiry that the rules
+allow (`honsha:review`, Accounts and credentials), and gives it to `gh` on the host as `gh auth login` asks: a session
+never does, since the value would reach its transcript.
+
+```
+gh auth status
+gh api -i user --jq '{login, two_factor_authentication}'
+```
+
+The first gives the account and the token's scopes, with the token masked; `gh auth status --show-token` and
+`gh auth token` print it whole, and are never run. The second gives the answer's headers before its body:
+`X-OAuth-Scopes` lists the scopes of a classic or an OAuth token, and a token with an expiry is answered with
+`GitHub-Authentication-Token-Expiration` too, which the pages of GitHub's documentation do not describe and which is
+untried. In the body, `two_factor_authentication` is `true` or `false` for a token that holds `read:user` or `user`,
+which nothing else of the kit needs, and `null` otherwise: the person then reads it on the site, under Settings,
+Password and authentication.
+
+GitHub requires a second factor of every account that contributes code. It offers passkeys, security keys, an
+authenticator app, GitHub Mobile and text messages, and advises an authenticator app over text messages. In an
+organisation, its owners can require a second factor of its members, and
+`gh api --paginate 'orgs/<organisation>/members?filter=2fa_disabled&per_page=100' --jq '.[].login'` lists, to an owner
+alone, those who have none; untried.
 
 ## Checks on pull requests and on the default branch
 

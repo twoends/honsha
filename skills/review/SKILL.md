@@ -1,6 +1,6 @@
 ---
 name: review
-description: Use for the periodic review of an installation, on the date its radar and upkeep review is due or when the person asks for one. It holds what the review reads and how it reports: vulnerabilities, the security posture with the secrets in the history, ordinary updates, radar dates, deferred checks, lessons, documents and measures. It changes nothing.
+description: Use for the periodic review of an installation, on the date its radar and upkeep review is due or when the person asks for one. It holds what the review reads and how it reports: vulnerabilities, the security posture with the secrets in the history, the accounts and credentials with what the home's inventory holds, ordinary updates, radar dates with a provider's own security, deferred checks, lessons, documents and measures. It changes nothing.
 ---
 
 Documents and logs grow by small additions, each reasonable on its own, and dependencies age while nobody looks: the
@@ -18,25 +18,48 @@ that is behind or has changes not committed.
    the version that fixes it and whether that version is out.
 2. **Security posture.** The security posture of each repository (`honsha:security-posture`), compared with what its
    assessment read and the person decided: the secrets in its history, the kinds of security testing its files now
-   call for, its wiring, and the hosting service's settings, protections and open alerts. What it finds urgent comes
-   first in the report.
-3. **Ordinary updates.** Each direct dependency of a project is covered by a radar entry of the installation, with a
+   call for, its wiring, the hosting service's settings, protections and open alerts, and its access. What it finds
+   urgent comes first in the report.
+3. **Accounts and credentials.** The home's inventory, `inventory.md`, holds an entry for each account, credential,
+   host, connector and plugin of the installation and of its projects, by name and never by value, each with the date
+   it is read again, within a year:
+   - an account: its service and name, who uses it, what it can write, its second factor, and the applications it
+     authorised, with what they reach;
+   - a credential: its name as the service shows it, its kind, its account, where it is kept, its scopes and reach,
+     what uses it, when it was made, and its expiry or the date by which it is replaced;
+   - a host: who reaches it, with which keys, and the credentials it holds;
+   - a connector or a plugin: the sessions it reaches, what its tools can change, and the person's choice.
+
+   It is read against these rules. Every account that can write to a repository, a host, a project's data or its
+   deployment, or that holds a credential, has a second factor, the strongest kind its service offers. Each credential
+   holds the narrowest scopes and reach its work needs, and expires or is replaced within a year, within 90 days one
+   that a session can read, and at once, the old one revoked, one that may have been exposed. A connector or a plugin
+   whose tools change a service's data reaches only the sessions whose work needs it, as the person chooses. The person
+   sets each value, and no session reads one. Name each date that has passed or falls before the next review, with
+   what its entry reaches; read the account and the token that the hosting service's client holds on the host, as its
+   piece says, and the connectors and plugins of this session, against their entries. Without an inventory, propose
+   one.
+
+4. **Ordinary updates.** Each direct dependency of a project is covered by a radar entry of the installation, with a
    review date. The outdated dependencies are listed with the package manager, each with the newest version that
    `honsha:dependencies` lets an item take. The updates worth making become one work item, full if it holds a major
    upgrade and small otherwise. A review that finds none moves the entries' review dates.
-4. **Radar.** The radar entries whose review date is today or past.
-5. **Deferred checks.** The checks that merged records declare under `checks` whose date has passed with no outcome
+5. **Radar.** The radar entries whose review date is today or past. The entry of a provider that holds the
+   installation's data or credentials weighs, beside its cost, its exposure of the data and its maturity, its own
+   security: the second factor it offers, the scopes and expiry its credentials can have, where it keeps the data, its
+   record of incidents. A provider of the inventory with no entry is a finding.
+6. **Deferred checks.** The checks that merged records declare under `checks` whose date has passed with no outcome
    in the home: each is named, with its item and what it asks.
-6. **Lessons.** A lesson tied to a version of a tool whose upgrade the radar records is reviewed. A level that gives
+7. **Lessons.** A lesson tied to a version of a tool whose upgrade the radar records is reviewed. A level that gives
    less than its files hold (workflow, Lessons) is answered by promoting a lesson of general worth to the kit,
    reviewing one tied to a version, or deleting one that no longer holds; its budget is raised only by a work item
    that says why. A technology or host lesson that has proved generally valid can be proposed for the kit, which
    takes only reviewed lessons, since the home that holds them is personal.
-7. **Documents.** The documents and logs of the kit, of the home and of each project, for a rule stated in more than
+8. **Documents.** The documents and logs of the kit, of the home and of each project, for a rule stated in more than
    one place, text that no longer holds or is history, and anything that contradicts another document (core rules,
    Documents); the core rules and the agents' files for rules that could move to a script or a skill (workflow, Where
    the rules are). Each document's size. The findings become one work item.
-8. **Measures.** `node <kit directory>/checks/measures.mjs` in each repository with merged items. The items merged
+9. **Measures.** `node <kit directory>/checks/measures.mjs` in each repository with merged items. The items merged
    since the last review, each with its size, kind and times; every item that touched more existing files than its
    kind expects, with the files it touched and what they have in common, which points to where the project is too
    coupled; the median agent time and output tokens by size and kind, the basis for estimates; and the count of

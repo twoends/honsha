@@ -373,6 +373,11 @@ Where a service gives one free, the security posture asks the person to turn it 
 8. **The refs it serves beyond branches and tags,** which a mirror clone takes for the scan of the history (workflow,
    Security testing), how to tell a pull request that an outsider opened, and what the service keeps that no ref holds,
    and how that is removed.
+9. **Who and what can reach a repository, and the client's token:** the commands that read a repository's
+   collaborators, deploy keys, secrets by name and environments, the scopes and expiry of the token that the service's
+   client holds, and the account's second factor, each printing no value; where a credential that deploys is kept so
+   that only the default branch's runs reach it, and on which plans the service gives that place; what the kit's
+   commands need of the token (workflow, Accounts and credentials).
 
 ### Checks on pull requests and on the default branch
 
@@ -544,9 +549,9 @@ tools that know classes of holes that no reader keeps in mind. The rules are in 
 
 ## Security posture
 
-Between two readings of a repository a setting changes, a protection goes off, an alert opens and new files call for a
-kind of testing, so the periodic review reads again what the assessment read: the testing, the pipeline, the hosting
-service's side and the history. Both read it with one skill, `honsha:security-posture`, so that they read the same and
+Between two readings of a repository a setting changes, a protection goes off, an alert opens, a key or an account
+gains access and new files call for a kind of testing, so the periodic review reads again what the assessment read: the
+testing, the pipeline, the hosting service's side, who and what can reach the repository, and the history. Both read it with one skill, `honsha:security-posture`, so that they read the same and
 a later reading is added in one place.
 
 - **The protections a service gives free are asked for:** the rules rely on none, but each is a stop on the server,
@@ -557,9 +562,34 @@ a later reading is added in one place.
   a secret's value, as the history is scanned.
 - **Code scanning is never the required check:** its rules are the service's and change by themselves (workflow,
   Security testing).
-- **A repository made public, or a setting or a protection off since its assessment, is urgent:** it changed outside
-  any work item, by a mistake or by an account that should not have. A review commits nothing, so it compares with the
-  assessment's record and the person's answers in the home's decision log.
+- **A repository made public, a setting or a protection off since its assessment, or access that nothing records, is
+  urgent:** it changed outside any work item, by a mistake or by an account that should not have. A review commits
+  nothing, so it compares with the assessment's record, the person's answers in the home's decision log and the home's
+  inventory (workflow, Accounts and credentials).
+
+---
+
+## Accounts and credentials
+
+An installation acts through accounts, the person's and those of each project's data and deployment, and a session
+holds some of their credentials, which what reaches its context can steer it to use. So each reaches no further and
+lives no longer than its work needs, and all are listed in the home's inventory, by name, for the review to read again
+on a date. The person applies these rules, and they are stated where they are read: a repository's access in the
+security posture, the rest in the periodic review (`honsha:review`). A skill of their own would put its description
+into every session for the few items that would invoke it, and the one rule that a change must meet is the security
+reviewer's.
+
+- **A second factor, the strongest the service offers:** a password alone is taken by phishing or by a leak, and a code
+  by text message by whoever moves the number to another card.
+- **Narrow scopes and an expiry, shorter for a token that a session can read:** a token does what its scopes allow while
+  it is valid. The review reads the dates, so that a credential is replaced before it stops a session.
+- **A credential that deploys reaches only the default branch's runs:** a pull request's run executes the workflow
+  files of its own branch, so whoever can push a branch, a session among them, could have it print or send the
+  credential.
+- **No value in a session:** what a session reads stays in its transcript on the host.
+- **The inventory is Markdown:** no script reads it, so the kit fixes what it holds and not its layout.
+- **A provider's own security is weighed in its radar entry:** one that holds the installation's data or credentials is
+  a way in that no rule of the kit reaches, and it changes what it offers.
 
 ---
 
@@ -568,7 +598,8 @@ a later reading is added in one place.
 Documents and logs grow by small additions, each reasonable on its own: a rule restated where it is needed, a
 paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
 working, so a review on a date looks for it, together with the radar's dates, the dependencies, the security posture
-of each repository (workflow, Security posture), the deferred checks, the lessons and the measures. What it reads and
+of each repository (workflow, Security posture), the accounts and credentials of the home's inventory (workflow,
+Accounts and credentials), the deferred checks, the lessons and the measures. What it reads and
 how it reports are in the skill `honsha:review`.
 
 ---
