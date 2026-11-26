@@ -478,6 +478,17 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   guard refuses no command that moves the default branch through the service's API without a pull request, which a
   ruleset that requires one refuses on the server: left to the person, since the guard stops a mistake and is no
   boundary, and the text claims no more of it. `security.md` then holds 17,126 characters, and its budget is 17,200.
+- The hub wrote that `261126-2213` changes the sentence of `honsha:dependencies` on the size of a fix of a known
+  vulnerability. This branch does not change that skill.
+- The fix, `488f083`, passed the verification again, and its repeated review passes: the weak point fixed, no finding.
+  Its one weak point, that a file the deploying job reads without running it, such as a lockfile or `.npmrc`, is not
+  named beside the files it runs: left to the person, since the sentence before it says that the limit holds no further
+  than what protects the default branch, which covers every such file, and another round of review would cost more
+  than the word guards.
+- The checker's first check, of `488f083`: `fail`, two findings. Both fixed: `honsha:security-testing` named "its
+  piece" where it pointed to what the service keeps beyond any ref and to who opened a pull request, which are in
+  `services/<name>/security.md`, and now names that file once, the second pointer, which said the same, gone; the
+  version check's place in `checks/releases.mjs` is declared under "Deviations". The skill holds 7,200 characters.
 
 ## Deviations
 
@@ -485,3 +496,7 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   each read keeps the answers by which a reading tells a protection on from off and an empty list from one it could not
   read; the cut came from what three sections repeated, from the read that serves no project and from the wording. Its
   budget is set to what it holds.
+- Criterion 5 and "In scope" put the version check among the functions of `checks/history-secrets.mjs`. It is in
+  `checks/releases.mjs`, `checkVersion`, beside the pins whose arguments for the version it reads, and both scans take
+  it from there: the kit's security testing checks with it the version of actionlint and zizmor too, which the history
+  scan does not pin.

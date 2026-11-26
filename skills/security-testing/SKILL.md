@@ -49,7 +49,7 @@ The security posture (`honsha:security-posture`) reads which kinds apply and whi
   the pipeline (`agents/worker.md`, Verification), but not the scan for secrets, so that scanner is one that every host
   runs, such as one written in the language of the project's own package manager.
 
-Examples, each free: gitleaks, secretlint or detect-secrets for secrets; Semgrep's community edition, with a pinned rule
+Free examples: gitleaks, secretlint or detect-secrets for secrets; Semgrep's community edition, with a pinned rule
 set, for languages; ShellCheck for shell scripts; hadolint for container files; OWASP ZAP's baseline scan for HTTP.
 
 ## A finding
@@ -70,16 +70,17 @@ A scan of a branch misses a secret committed before the project had one, or push
 still holds it.
 
 - **The scan,** `node <kit directory>/checks/history-secrets.mjs` in the repository's clone, reads every ref the hosting
-  service serves, those it keeps for pull requests included, which hold deleted branches' commits; what the service
-  keeps beyond any ref is in its piece. A host that cannot run the scanner says so, with the system's message.
+  service serves, those it keeps for pull requests included, which hold deleted branches' commits; what it keeps
+  beyond any ref, and who opened a pull request, are in `services/<name>/security.md`. A host that cannot run the
+  scanner says so, with the system's message.
 - **A session never reads a value:** it opens no file at a finding's commit, and scans with the script alone, whose
   report masks each finding's line.
 - **A finding is a secret** unless its file, rule and masked line show otherwise, as a test's fixture, an example or an
   identifier does, with the reason written. A secret stops an assessment (core rules, Stop conditions) and is urgent at
   the review: the person gets the list at once, revokes the secret at its provider and decides whether the history
   changes. No session changes a history, nor writes anywhere public where a live secret is. In a public repository, one
-  that only the refs of pull requests reach, each opened by someone outside the project, as the service's piece tells,
-  can be a stranger's: listed apart, it is neither a stop nor urgent.
+  that only the refs of pull requests reach, each opened by someone outside the project, can be a stranger's: listed
+  apart, it is neither a stop nor urgent.
 - **A public repository's history is public:** a secret there is taken for used, and revoking it is the remedy, since
   forks, clones and archives keep it whatever the history becomes. In a private one revoking comes first too, and a new
   history narrows who reads it later, at the cost of every clone and open branch. Made public, a repository publishes
