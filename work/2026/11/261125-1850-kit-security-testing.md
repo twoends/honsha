@@ -442,7 +442,30 @@ downloads listed under "For the person" included, the first choice as oxlint wit
   3. gitleaks's error reached the output with its control characters: fixed, it is printed as a finding is, with a
      test. What it could not judge, the job context's type that actionlint prints, the runs answered: the ignore
      matched on this host, and the copy with a mistyped input was still reported.
+- The fix is `cce6385`. The verification ran again on it and passed. The second repeated security review, of the diff
+  since `ec28760`, passes with no finding and two weak points, both left to the person:
+  1. git's failure message and the linters' output are printed as they come, while a linter can quote a line of the
+     branch's files: the same run executes the branch's code anyway, and git refuses a control character in a ref's
+     name.
+  2. The guard of `lessons` reads the path's text and resolves no link: the wording is accurate, and the guard is not
+     this item's.
+  The review ends there: no fix is left that lies inside the scope.
+- The first check, of `cce6385` (full), fails on two findings, both answered in one commit of their own:
+  1. Criterion 1 names the program's path inside each archive among what a pin holds, and no pin holds one: the
+     install finds the program as the one entry of its name. Written under "Deviations".
+  2. The reason in `.oxlintrc.json` held the counts of this item's first run, which are history: fixed, the reason
+     stands without them, and the counts are in this log.
+  Of what it could not verify: actionlint's latest release, read again on 2026-11-26, is still 1.7.12 of 2026-03-30,
+  as ShellCheck's is 0.11.0 and gitleaks's 8.30.1, so no later release of the three qualifies.
 
 ## Verification
+
+## Deviations
+
+- Criterion 1: a pin holds each archive's name and SHA-256, and not the program's path inside it. The install takes the
+  program as the one entry of the archive with its name, in whatever folder, and refuses an archive with none, with
+  two, or with one outside the folder it is extracted into. The layout of the archives for the platforms other than
+  this host's could be read only by downloading them, which the approval did not give leave for; and the digest
+  already fixes each archive, and so where the program stands in it.
 
 ## Outcome

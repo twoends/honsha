@@ -27,8 +27,8 @@
     // their own arguments, their constants and those files, with the rights of a session or a pipeline that runs that
     // repository's own code anyway. The one path that a project's file leads into the home, a technology's lessons, is
     // a plain name, and `checks/profile.mjs` refuses any other, as it refuses a `lessons` whose path leads out of the
-    // project: a guard there, not these rules, which flagged every path and key alike. Their first run gave 177
-    // findings and 49, every one of that kind, which a comment at each place would bury.
+    // project: a guard there, not these rules, which flag every path and key alike, so that a comment at each place
+    // would bury the one that matters.
     "security/detect-non-literal-fs-filename": "off",
     "security/detect-object-injection": "off"
   },
