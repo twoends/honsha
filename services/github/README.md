@@ -2,15 +2,12 @@
 
 This folder is the kit's piece for GitHub: everything that is specific to that hosting service, kept apart from the
 rules. What a piece has to say is the contract in [the workflow](../../docs/01-specs/WORKFLOW.md) (workflow, The hosting
-service).
+service). What the security posture and the security testing read is in [security.md](security.md).
 
 Everything here works with a free account: the kit asks no user for more. It is read in GitHub's documentation. Tried
 on private repositories of a free account: `gh pr create`, `gh pr view --json number,state,mergedAt`, `gh pr checks`,
-the repository settings and the alerts below. The reads of the protections and of the open alerts were tried on a
-public and on a private repository of a free personal account, and those of a repository's access and of the
-account's token on a public and on private repositories of such an account, except where they say they are untried.
-GitHub changes what it offers: check a statement about what it gives or what it costs against GitHub's own pages
-before relying on it.
+the repository settings and the alerts below. GitHub changes what it offers: check a statement about what it gives or
+what it costs against GitHub's own pages before relying on it.
 
 ## Commands
 
@@ -45,17 +42,13 @@ gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed,del
 The first command sets them; the second reads them, as the security posture does (`honsha:security-posture`). A free
 account has these settings.
 
-Two things on the site are not used:
-
-- **"Update branch" on a pull request.** A session merges the default branch into the work branch itself and runs the
-  verification again (the core rules, "Commits and branches"). "Update with rebase" would also rewrite the branch.
-- **Squash and rebase in the merge menu,** which the first setting removes.
+"Update branch" on a pull request is not used: a session merges the default branch into the work branch itself and runs
+the verification again (core rules, Commits and branches), and "Update with rebase" would also rewrite the branch.
 
 For dependencies (workflow, Dependencies):
 
 - **Dependabot alerts on,** as the further stop between reviews. GitHub reports a dependency with a known
-  vulnerability on the repository, and notifies as the account's notification settings say. The package manager's own
-  report, such as `npm audit`, stays the check that works on any service.
+  vulnerability on the repository, and notifies as the account's notification settings say.
 - **Dependabot security updates and version updates off,** and no `.github/dependabot.yml`: their pull requests carry
   no record and no `Work-Item` trailer.
 
@@ -97,200 +90,16 @@ project of the host, and says so.
 - **In a private repository of a free account nothing on GitHub stops an account that can write** from pushing to the
   default branch or from merging: branch protection and rulesets are not there. The kit's guard is the stop
   (workflow, The guard).
-- **Where a repository has branch protection or rulesets,** as a public one can, the default branch can refuse direct
-  pushes, forced pushes and deletion, also from administrators, and a check can be required before a merge. The kit
-  works the same with them: they add a stop on the server and change no rule. In the home, the account that the
-  backlog's script pushes with must be able to push to the default branch (workflow, The backlog), so GitHub lets any
-  account that can write push there, whatever its ruleset holds: the guard stops a session's mistake, and the check of
-  the commits on each push to the default branch fails on a direct commit that is not the backlog's, though not on a
-  merge, which it takes for a pull request's. Which of them GitHub gives free, what the home's ruleset holds, and how
-  they are read, is below (The protections it gives free).
+- **Where a repository has rulesets or branch protection,** which [security.md](security.md) describes with what GitHub
+  gives free and what the home's ruleset holds (The protections it gives free), they add a stop on the server and
+  change no rule. In the home, the account that the backlog's script pushes with must be able to push to the default
+  branch (workflow, The backlog), so GitHub lets any account that can write push there, whatever its ruleset holds: the
+  guard stops a session's mistake, and the check of the commits on each push to the default branch fails on a direct
+  commit that is not the backlog's, though not on a merge, which it takes for a pull request's.
 - **An identity that cannot merge.** In a repository owned by a personal account every other account is a collaborator,
   and a collaborator can merge. No permission of a token separates pushing a branch from merging a pull request: both
   need write access to the contents. So there the hub's identity is kept from merging by the rules and by the guard,
   not by GitHub. In a repository owned by an organisation an account can have a role that reads but does not write.
-
-## The protections it gives free
-
-The security posture (`honsha:security-posture`) reads each protection below, and asks the person for each one that is
-off where GitHub gives it at no cost. The person turns it on, in the repository's settings on the site; a session never
-does. The commands name the owner and the repository of the remote that the clone fetches from, not `{owner}/{repo}`,
-which `gh` fills by its own rules and can take from another remote. First, what the repository is and what the account
-may do there:
-
-```
-gh repo view <owner>/<repository> --json visibility,viewerPermission
-```
-
-With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows, so the posture reads the clone alone.
-
-- **A default branch that refuses direct and forced pushes and its deletion.** Free on a public repository on every
-  plan; on a private one with GitHub Pro for a personal account, or GitHub Team for an organisation. Under Settings,
-  Rules, Rulesets: a branch ruleset on the default branch, active, with "Restrict deletions", "Block force pushes" and
-  "Require a pull request before merging" with no approval required, since the person merges pull requests that nobody
-  else reviews. No account is on the ruleset's bypass list, since an account there passes every rule of the ruleset. In
-  the home, whose default branch takes the backlog's direct commits, the ruleset holds the first two rules only: the
-  third would refuse those commits, and a required check could too.
-- **A required check:** in the same ruleset, "Require status checks to pass" with the wiring's job, as `gh pr checks`
-  names it, `checks / checks` for a project's file and `project / checks` in the kit, without "Require branches to be
-  up to date before merging": the kit merges the default branch into a work branch only on a conflict, a need or a
-  request (core rules, Commits and branches). It holds back a change that fails its checks, not a hostile one: a pull
-  request runs the workflow file of its own branch, so one that changes the wiring can report the check as passed, and
-  the person reads such a change before the merge.
-
-  ```
-  gh api repos/<owner>/<repository>/rules/branches/<default branch> --jq 'map({type, ruleset_id})'
-  gh api repos/<owner>/<repository>/rulesets/<ruleset id> --jq '{enforcement, bypass_actors, checks: [.rules[]? | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]}'
-  ```
-
-  The first lists the rules in force on the branch, each with the ruleset that holds it: `deletion`,
-  `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none; where GitHub
-  does not give rulesets, `403` "Upgrade to GitHub Pro or make this repository public to enable this feature". A rule
-  counts as on only where the second, read for each ruleset that the first names, gives `active` and `bypass_actors`
-  `[]`, and the required check only with the wiring's job among that ruleset's `checks`; `null` in `bypass_actors` is
-  not read, since GitHub shows the list only to an account that may change the ruleset. The second is untried. The
-  older branch protection, under Settings, Branches, counts for none of these, though GitHub enforces it: its answer,
-  `GET repos/<owner>/<repository>/branches/<default branch>/protection`, does not show the accounts that may force-push
-  past it, so a repository that has only the older protection is asked for the ruleset.
-
-- **Secret scanning, with push protection,** which refuses a push that holds a secret it knows. Free on a public
-  repository; on a private one it needs GitHub Secret Protection, which GitHub sells to organisations on Team or
-  Enterprise Cloud, and a personal account's private repository has neither. Under Settings, Advanced Security.
-  `gh api repos/<owner>/<repository> --jq .security_and_analysis` gives `secret_scanning` and
-  `secret_scanning_push_protection`, each `enabled` or `disabled`, and prints nothing where GitHub does not offer them.
-- **Code scanning,** with CodeQL's default setup. Free on a public repository; on a private one it needs GitHub Code
-  Security, which GitHub sells to organisations. Under Settings, Advanced Security, CodeQL analysis, Default. It is
-  never the required check: its queries are GitHub's, updated regularly, and default setup pins none in the repository,
-  so a check on it can fail on code that did not change (`honsha:security-testing`, The tools).
-  `gh api repos/<owner>/<repository>/code-scanning/default-setup --jq .state` gives `configured` or `not-configured`,
-  and `403` "Code scanning is not enabled for this repository" where GitHub does not offer it.
-- **Private reporting of vulnerabilities,** which lets someone outside the project report a hole without making it
-  public. Public repositories only. Under Settings, Advanced Security.
-  `gh api repos/<owner>/<repository>/private-vulnerability-reporting` gives `{"enabled":true}` or `false`, and `404`
-  on a private repository.
-
-### The open alerts
-
-Each command prints a line for each open alert, and nothing with exit status 0 when there is none; a failure exits
-with another status, its message on the error output, and is no answer. GitHub gives a list in pages, of 30
-alerts unless asked for more, and `gh api` reads one page unless `--paginate` has it follow every page: read without
-it, the alerts past the first page would go unseen, and anyone who can open an issue on a public repository can push a
-real alert there with strings that only look like secrets.
-
-```
-gh api --paginate 'repos/<owner>/<repository>/dependabot/alerts?state=open&per_page=100' --jq '.[] | {number, package: .dependency.package.name, severity: .security_advisory.severity, advisory: .security_advisory.ghsa_id, fixed: .security_vulnerability.first_patched_version.identifier}'
-gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts?state=open&hide_secret=true&per_page=100' --jq '.[] | {number, secret_type, validity, publicly_leaked}'
-gh api --paginate 'repos/<owner>/<repository>/code-scanning/alerts?state=open&per_page=100' --jq '.[] | {number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path}'
-```
-
-GitHub gives each alert on a secret with the secret's value unless `hide_secret=true` asks it not to, and the filter
-prints only the fields it names, so neither alone lets a value through: an alert on a secret is never read into a
-session in another way. Where one is, without its value, untried:
-
-```
-gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts/<number>/locations?per_page=100' --jq '.[] | {type, path: .details.path, line: .details.start_line, commit: .details.commit_sha}'
-```
-
-Secret scanning also reads a public repository's issues, pull requests, discussions and wiki, where no clone reaches;
-the location's `type` names them. The alerts on secrets answer `404` "Secret scanning is disabled on this repository"
-where scanning is off or not offered; those on code answer `404` "no analysis found" where code scanning is offered
-and has not run, and `403` where it is not offered.
-
-## Who and what can reach a repository
-
-The security posture reads, in each repository, who and what can write to it or read its pipeline's secrets
-(`honsha:security-posture`). As for the protections, the commands name the owner and the repository of the clone's
-remote, and an account whose `viewerPermission` is not `ADMIN` leaves them to the clone alone. Each reads every page
-and prints a line for each entry, with names, roles, dates and booleans only, and nothing, with exit status 0, where
-the list is empty; GitHub gives no secret's value in any of them. A failure exits with another status, its message on
-the error output, and is no answer.
-
-```
-gh api --paginate 'repos/<owner>/<repository>/collaborators?affiliation=all&per_page=100' --jq '.[] | {login, role: .role_name}'
-gh api --paginate 'repos/<owner>/<repository>/invitations?per_page=100' --jq '.[] | {invitee: .invitee.login, permissions, created_at}'
-gh api --paginate 'repos/<owner>/<repository>/keys?per_page=100' --jq '.[] | {id, title, read_only, added_by, created_at, last_used}'
-gh api --paginate 'repos/<owner>/<repository>/actions/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
-gh api --paginate 'repos/<owner>/<repository>/actions/organization-secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
-gh api --paginate 'repos/<owner>/<repository>/dependabot/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
-gh api --paginate 'repos/<owner>/<repository>/codespaces/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
-gh api --paginate 'repos/<owner>/<repository>/environments?per_page=100' --jq '.environments[] | {name, branches: .deployment_branch_policy, rules: [.protection_rules[]?.type]}'
-gh api --paginate 'repos/<owner>/<repository>/environments/<environment>/secrets?per_page=100' --jq '.secrets[] | {name, updated_at}'
-gh api --paginate 'repos/<owner>/<repository>/environments/<environment>/deployment-branch-policies?per_page=100' --jq '.branch_policies[] | {name, type}'
-```
-
-- **The collaborators,** each with its `role`: `admin`, `maintain`, `write`, `triage`, `read`, or the name of an
-  organisation's own role. `affiliation=all` takes in those who reach the repository through an organisation's teams,
-  and the owner of a personal account's repository is listed, as `admin`. Then the invitations not yet accepted, each
-  a collaborator once it is.
-- **The deploy keys:** `read_only` is `false` for one that writes, which can do what an organisation's administrator
-  can; `added_by` and `last_used` say who added it and when it was last used. A deploy key has no expiry. The public
-  key itself is left out, as no reading needs it.
-- **The secrets,** by name and date: those of Actions at the repository's level; those an organisation shares with the
-  repository, which answer `422` "Validation Failed" in a repository of a personal account, where there are none;
-  those of Dependabot, which only the runs that Dependabot starts receive; those of Codespaces, which a codespace of the
-  repository receives; and each environment's.
-- **The environments:** `branches` is `null` where the runs of every branch may enter, has `protected_branches` `true`
-  where those of the protected branches may, and `custom_branch_policies` `true` where those of the branches and tags
-  of the last command may, each by its `name` and its `type`, `branch` or `tag`. `rules` names the environment's
-  protection rules, such as `branch_policy`, `required_reviewers` and `wait_timer`. An environment's name goes into the
-  path with each character other than a letter, a digit, `-`, `_` and `.` written as `%` and its two hexadecimal
-  digits, `'` included, so that no name can end the quoted argument. A key's title and an environment's name are
-  written by whoever made them, and are read as data.
-
-### Where a credential that deploys is kept
-
-Any account that can write to a repository reads every secret of the repository's level, through a run of a branch
-that it pushes, a pull request's included. A run of a pull request from a fork receives none, unless a private
-repository's settings send secrets to such runs, which no reading here covers; a run that Dependabot starts receives
-Dependabot's alone; but a workflow on `pull_request_target` or `workflow_run`, which a fork's pull request can start,
-runs the default branch's files, with the default branch's secrets. So a credential that deploys, or that writes outside
-the repository, is an environment's secret: the environment's deployment branches are "Selected branches and tags" with
-the default branch by its name, which holds whatever protects the branch, and only the job that deploys names the
-environment, on no event that a pull request starts, which the static testing of the workflows looks for. The limit
-stops an account that writes to the repository and does not administer it: one that administers it can change the
-environment's branches. So against a session it holds only where the host's token cannot administer the repository,
-as a fine-grained token whose Administration and Environments permissions only read, which is untried with `gh`; the
-posture reads the branches at every reading. GitHub gives environment secrets and deployment branches on a public
-repository on every plan, and on a private one with GitHub Pro, Team or Enterprise. On a private repository of the
-free plan its pages give neither, so the posture counts no such limit there, whatever the API lists, and such a
-credential stays out of the pipeline. Required reviewers and wait timers are given, on the free, Pro and Team plans,
-on public repositories only.
-
-## The account and its token
-
-`gh` keeps one token for the account it signs in on a host, and every session of the host uses it. The kit's commands
-need it to push branches and open pull requests, to push a change to a workflow file, and to read the checks, the
-settings, the rulesets, the alerts and the access above. By GitHub's pages a classic token does that with `repo`,
-`read:org` and `workflow`, which is untried with those scopes alone. `gh`'s manual names `repo`, `read:org` and
-`gist` as the least it takes, and whether it refuses a token without `gist` is untried. A scope beyond these, such as
-one that deletes repositories or administers an organisation, is none of the kit's. A fine-grained token reaches only
-the repositories it names, and GitHub's REST reference gives the permission that each read needs; `gh`'s manual has
-such a token given through `GH_TOKEN`, and the permissions with which `gh` runs the kit's commands are untried.
-
-The token that `gh auth login` gets in the browser has no expiry. A personal access token, classic or fine-grained,
-has the expiry chosen when it is made, and may have none unless an organisation sets a limit; GitHub revokes a token
-unused for a year. The person makes one on the site, under Settings, Developer settings, with the expiry that the rules
-allow (`honsha:review`, Accounts and credentials), and gives it to `gh` on the host as `gh auth login` asks: a session
-never does, since the value would reach its transcript.
-
-```
-gh auth status
-gh api -i user --jq '{login, two_factor_authentication}'
-```
-
-The first gives the account and the token's scopes, with the token masked; `gh auth status --show-token` and
-`gh auth token` print it whole, and are never run. The second gives the answer's headers before its body:
-`X-OAuth-Scopes` lists the scopes of a classic or an OAuth token, and a token with an expiry is answered with
-`GitHub-Authentication-Token-Expiration` too, which the pages of GitHub's documentation do not describe and which is
-untried. In the body, `two_factor_authentication` is `true` or `false` for a token that holds `read:user` or `user`,
-which nothing else of the kit needs, and `null` otherwise: the person then reads it on the site, under Settings,
-Password and authentication.
-
-GitHub requires a second factor of every account that contributes code. It offers passkeys, security keys, an
-authenticator app, GitHub Mobile and text messages, and advises an authenticator app over text messages. In an
-organisation, its owners can require a second factor of its members, and
-`gh api --paginate 'orgs/<organisation>/members?filter=2fa_disabled&per_page=100' --jq '.[].login'` lists, to an owner
-alone, those who have none; untried.
 
 ## Checks on pull requests and on the default branch
 
@@ -414,42 +223,3 @@ standard runners are free.
 
 A project's own workflows, such as its application's checks, are the project's: this wiring does not reach them, and
 they run at every push they are wired for, which the rule on pushes (core rules, Delivery) keeps few.
-
-## Static testing of the workflows
-
-A project's pipeline configuration on GitHub is its workflow files, `.github/workflows/`, which its static security
-testing reads (workflow, Security testing). Two free tools under the MIT licence read them, each run from the command
-line on any host and in the pipeline:
-
-- **zizmor** looks for the holes of a workflow: untrusted input in a script, permissions wider than needed, actions not
-  pinned to a commit, credentials left in the checkout. It comes as release binaries, a Python package, a Rust crate
-  and a container image. With `--offline` it makes no request, and leaves out the few audits that read GitHub's API.
-- **actionlint** checks a workflow's syntax and expressions, and runs ShellCheck on the scripts of its steps when
-  ShellCheck is installed. It comes as release binaries and a container image.
-
-GitHub's own scanners, its secret scanning and its code scanning, are further stops where GitHub gives them free (The
-protections it gives free), and no part of the rules.
-
-## The refs of the history
-
-The scan of a repository's history (workflow, Security testing) reads every ref that a mirror clone takes. Beside the
-branches, `refs/heads/`, and the tags, `refs/tags/`, GitHub serves for each pull request `refs/pull/<number>/head`, the
-tip of its branch, and, while it is open, `refs/pull/<number>/merge`, the merge that GitHub tests. The `head` ref stays
-after the branch is deleted and after the pull request is closed without a merge, so it keeps the branch's commits for
-anyone who can read the repository: `git ls-remote origin 'refs/pull/*'` lists them. The namespace is read-only, and
-only GitHub Support removes a pull request's refs. Anyone who can open a pull request adds one, from a fork too, which
-any account can make of a public repository. `gh api repos/{owner}/{repo}/pulls/<number> --jq .author_association`
-gives its author's tie to the repository: `OWNER`, `MEMBER` and `COLLABORATOR` are the project's, and any other, such as
-`CONTRIBUTOR` or `NONE`, is someone outside it. Whether the branch lived in a fork tells nothing of who wrote it.
-
-What GitHub keeps beyond any ref, no clone and no scan reaches:
-
-- a commit that no branch holds any longer is still shown by its hash in GitHub's cached views, and through the pull
-  requests that reference it;
-- the repositories of a fork network share their git data, so a commit pushed to one can be read through another, the
-  upstream included; and a fork keeps its copy whatever the upstream does.
-
-So a secret that reached GitHub is revoked first, as GitHub's guide to removing sensitive data advises. A rewritten
-history removes it from the branches; then GitHub Support, given the pull requests concerned and the first commit
-changed, removes the cached views and the pull requests' refs, once no fork references the data. A fork's owner removes
-it from the fork, and no one removes it from the clones that hold it.

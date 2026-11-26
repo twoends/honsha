@@ -1,14 +1,12 @@
 ---
 name: security-posture
-description: Use when an assessment or the periodic review reads a repository's security posture, as `honsha:assessment` and `honsha:review` ask. It holds what is read, in order: the scan of the whole history for secrets, the kinds of security testing that the files call for, the pipeline's wiring and its token, the hosting service's settings, the protections it gives free, its open alerts, and who and what can reach the repository; what each finding becomes; and what a reading keeps for the next.
+description: Use when an assessment or the periodic review reads a repository's security posture, as `honsha:assessment` and `honsha:review` ask. It holds what is read, in order, from the scan of the history to who and what can reach the repository, what each finding becomes, and what a reading keeps.
 ---
 
-A repository's security rests also on what lies around its code: the testing that reads it, the pipeline that runs
-that testing, the hosting service's settings and protections, who and what can reach it, and the history already
-pushed. An assessment reads it before a project joins, and the periodic review reads it again in each repository it
-reads: between two readings a setting changes, a protection goes off, an alert opens, a key or an account gains access,
-and new files call for a kind of testing. The reading changes nothing. The hosting service's commands are in its
-piece, `services/<name>/README.md` in the kit directory.
+An assessment reads a repository's security posture before a project joins, and the periodic review reads it again in
+each repository it reads (workflow, Security posture). The reading changes nothing. The hosting service's commands are
+in its piece in the kit directory: the wiring and the settings in `services/<name>/README.md`, the rest in
+`services/<name>/security.md`.
 
 ## What is read
 
@@ -21,7 +19,8 @@ so.
    and its revocation waits for nothing else.
 2. **The kinds of security testing** that the repository's files and surface call for (`honsha:security-testing`, The
    kinds), against the commands of `verify` and `dynamic-testing` in its profile, or what a profile would hold. Each
-   kind that is missing is a finding, with its item proposed.
+   kind that is missing is a finding, with its item proposed; so is a configuration or ignore file of their tools that
+   the profile does not list under `security-review` (`honsha:security-testing`, A finding).
 3. **The wiring and its token:** the wiring that the piece shows under "Checks on pull requests and on the default
    branch", which runs the kit's checks, `verify` and `dynamic-testing` on every pull request and on each push to the
    default branch; its token, which holds no more than the piece names; and, where the service has one, the
@@ -32,10 +31,9 @@ so.
    visibility and the account's plan. A default branch that refuses direct and forced pushes and its deletion, but for
    what the piece says of the home; the wiring's check, required before a merge; the service's scanning for secrets,
    with the refusal of a push that holds one; its code scanning; private reporting of vulnerabilities. One that is off
-   is asked of the person, who turns it on as the piece says. A session never turns one on: each limits what the
-   person's own account can do. The person's answer, on or declined, goes into the home's decision log, and later
-   readings name a declined one in a line without asking again; one the service sells is named in a line, and is no
-   gap.
+   is asked of the person, who turns it on as the piece says; a session never turns one on. The person's answer, on or
+   declined, goes into the home's decision log, and later readings name a declined one in a line without asking again;
+   one the service sells is named in a line, and is no gap.
 6. **The open alerts** of the service on dependencies, secrets and code, each read with the piece's command, which
    prints no secret's value. One on a dependency is a vulnerability (`honsha:dependencies`). One on a secret is a secret
    found in the history (`honsha:security-testing`, The history), wherever the service found it. One on code is a
@@ -45,18 +43,18 @@ so.
    name and never by value: its collaborators with their role, and the invitations pending; its deploy keys, and
    whether each writes; its secrets, with where each is kept, the repository, an environment or an organisation; its
    environments, with the branches whose runs enter each. A credential that deploys, or that writes outside the
-   repository, is given only to the default branch's runs, never to a run that a pull request starts, which runs the
-   workflow files of its own branch; where the piece says that the service cannot hold that limit for the repository,
-   such a credential stays out of its pipeline. A deploy key writes only where its work writes. One that breaks these
-   rules is a finding, whose fix is an item of the project; one that the home's inventory lacks (`honsha:review`,
-   Accounts and credentials), a finding that an item of the home answers.
+   repository, is given only to the default branch's runs that no one outside the project can start, as a push to it,
+   a run started by hand or a schedule: never to a pull request's run, which runs the workflow files of its own branch,
+   nor to one that a comment or another run starts. Where the piece says that the service cannot hold that limit for
+   the repository, such a credential stays out of its pipeline. A deploy key writes only where its work writes. One
+   that breaks these rules is a finding, whose fix is an item of the project; one that the home's inventory lacks
+   (`honsha:review`, Accounts and credentials), a finding that an item of the home answers.
 
 ## What is kept
 
 In the record of the assessment, and in the review's report, for each repository: its visibility, the commit read and
-the date the service was read; the scan of the history as it printed it, the scanner's version, the refs and commits
-read and each finding, with the reason of each set aside; for each setting and protection, whether it is on, off, not
-given free or not read; and the access, by name. A review commits nothing, so it compares with the assessment's record
-of the repository and the home's decision log and inventory, and names what none holds. A repository made public, a
-setting or a protection that either has on and is now off or not read, or access that neither the last reading nor
-the inventory holds, changed outside any work item, and is urgent.
+the date the service was read; the scan of the history as it printed it, with the reason of each finding set aside; for
+each setting and protection, whether it is on, off, not given free or not read; and the access, by name. A review
+commits nothing, so it compares with the assessment's record of the repository and the home's decision log and
+inventory, and names what none holds. A repository made public, a setting or a protection that either has on and is
+now off or not read, or access that neither the last reading nor the inventory holds, is urgent.

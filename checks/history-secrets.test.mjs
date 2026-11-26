@@ -10,6 +10,7 @@ import {
   LOG_OPTIONS,
   environment,
   fingerprint,
+  ignoreList,
   isName,
   makeMirror,
   maskLine,
@@ -18,6 +19,7 @@ import {
   reachedBy,
   readHistory,
   readIgnored,
+  runScanner,
   scan,
   scannerArgs,
 } from "./history-secrets.mjs";
@@ -164,8 +166,7 @@ test("a platform with no pinned archive exits 2 before anything is downloaded or
         installed = true;
         return "";
       },
-      version: () => "",
-      run: () => {},
+      exec: () => ({ status: 0, stdout: "", stderr: "" }),
     },
     out: () => {},
     err: (line) => errors.push(line),
@@ -203,9 +204,11 @@ test("the scanner reads what a merge adds of its own, as a conflict's resolution
   assert.ok(git(mirror, ["log", "-p", "-U0", ...merge, "-1", shared.merge]).includes(line));
   assert.ok(git(mirror, ["log", "-p", "-U0", ...LOG_OPTIONS]).includes(line));
   assert.ok(!git(mirror, ["log", "-p", "-U0", "--all"]).includes(line));
-  const args = scannerArgs(mirror, "report.json", "empty");
-  assert.ok(args.includes(`--log-opts=${LOG_OPTIONS.join(" ")}`));
-  assert.ok(args.includes("--redact=100") && args.includes("--ignore-gitleaks-allow"));
+  const args = scannerArgs(mirror, LOG_OPTIONS, "report.json", "empty");
+  assert.deepEqual(args.slice(0, 3), ["git", mirror, `--log-opts=${LOG_OPTIONS.join(" ")}`]);
+  for (const arg of ["--redact=100", "--ignore-gitleaks-allow", "--gitleaks-ignore-path=empty", "--exit-code=0"]) {
+    assert.ok(args.includes(arg), arg);
+  }
   assert.ok(!args.some((arg) => arg.startsWith("--config")));
 });
 
@@ -265,6 +268,12 @@ test("the ignore file is read on the default branch, not on another branch or in
   git(shared.clone, ["checkout", "-q", "--", IGNORE_FILE]);
 });
 
+test("an ignore list holds fingerprints, one a line, with lines of comment", () => {
+  assert.deepEqual(ignoreList(""), new Set());
+  const text = "# A fixture, no secret.\n  abc:file:rule:1  \n\n#def:file:rule:2\nghi:file:rule:3\r\n";
+  assert.deepEqual(ignoreList(text), new Set(["abc:file:rule:1", "ghi:file:rule:3"]));
+});
+
 test("a name is shown, and a run that could be a value is not", () => {
   for (const name of ["api_key", "credentialId", "Content-Type", "TOKEN", "aws.secret", "--force", "__init__"]) {
     assert.ok(isName(name), name);
@@ -313,20 +322,24 @@ test("a report holds a finding by commit, file, line and rule, or is refused", (
 });
 
 /**
- * A scanner that installs nothing and writes the given findings to its report, as gitleaks writes them, with the
- * author, the commit's message and the value besides what the script reads.
+ * A scanner that installs nothing, gives the pinned version, and writes the given findings to its report, as gitleaks
+ * writes them, with the author, the commit's message and the value besides what the script reads.
  * @param {object[]} findings
- * @param {{ runs?: string[] }} [seen] where each run's folder is written
+ * @param {{ runs?: string[], status?: number, stderr?: string }} [run] where each run's folder is written, and the
+ * exit code and the error output that the run ends with
  */
-function fakeScanner(findings, seen = {}) {
+function fakeScanner(findings, { runs, status = 0, stderr = "" } = {}) {
   return {
     install: async () => "gitleaks",
-    version: () => `${SCANNER.version}\n`,
-    /** @param {string} program @param {string[]} args @param {string} cwd */
-    run: (program, args, cwd) => {
-      seen.runs?.push(cwd);
+    /** @type {import("./releases.mjs").Exec} */
+    exec: (program, args, options) => {
+      if (args.join(" ") === SCANNER.versionArgs.join(" ")) {
+        return { status: 0, stdout: `${SCANNER.version}\n`, stderr: "" };
+      }
+      runs?.push(options.cwd);
       const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
       fs.writeFileSync(report, JSON.stringify(findings));
+      return { status, stdout: "", stderr };
     },
   };
 }
@@ -385,11 +398,15 @@ test("the findings are printed by where they are, with no value, no unmasked lin
     new RegExp(`^gitleaks ${SCANNER.version.replaceAll(".", "\\.")} read \\d+ refs and \\d+ commits`, "m"),
   );
   assert.match(output, /^4 findings; 1 left out, as \.gitleaksignore on main lists them\.$/m);
-  assert.match(output, new RegExp(`^github-pat in config\\.env, line 1, commit ${shared.added}$`, "m"));
-  assert.match(output, new RegExp(`^  fingerprint: ${shared.pulled}:secret\\.txt:generic-api-key:1$`, "m"));
-  assert.match(output, /^ {2}line: TOKEN=\*+$/m);
-  assert.match(output, /^ {2}line: key = \*+$/m);
-  assert.match(output, /^ {2}line: resolved = \*+$/m);
+  assert.match(
+    output,
+    new RegExp(`^commit ${shared.added}\n {2}on the default branch: yes\n {2}reached by: refs/heads/main, `, "m"),
+  );
+  assert.match(output, /^ {2}github-pat in config\.env, line 1$/m);
+  assert.match(output, new RegExp(`^ {4}fingerprint: ${shared.pulled}:secret\\.txt:generic-api-key:1$`, "m"));
+  assert.match(output, /^ {4}line: TOKEN=\*+$/m);
+  assert.match(output, /^ {4}line: key = \*+$/m);
+  assert.match(output, /^ {4}line: resolved = \*+$/m);
   assert.equal(output.match(/on the default branch: yes/g)?.length, 2);
   assert.equal(output.match(/on the default branch: no/g)?.length, 2);
   assert.match(output, /^ {2}reached by: no branch or tag, only refs\/pull\/1\/head$/m);
@@ -399,6 +416,72 @@ test("the findings are printed by where they are, with no value, no unmasked lin
   }
   assert.equal(runs.length, 1);
   assert.ok(runs[0].startsWith(temp));
+  assert.deepEqual(fs.readdirSync(temp), []);
+});
+
+test("a commit is printed once, with the default branch and its refs, and then each of its findings", async () => {
+  /** @type {string[]} */
+  const lines = [];
+  const code = await scan({
+    cwd: shared.clone,
+    platform: "linux",
+    arch: "x64",
+    temporary: temporary("honsha-history-temp-"),
+    scanner: fakeScanner([
+      reported(shared.pulled, "secret.txt", "generic-api-key", "REDACTED", "key = REDACTED"),
+      reported(shared.tagged, "tagged.txt", "generic-api-key", "REDACTED", "secret = REDACTED"),
+      reported(shared.pulled, "secret.txt", "fake-second-rule", "REDACTED", "key = REDACTED"),
+    ]),
+    out: (line) => lines.push(line),
+    err: (line) => lines.push(line),
+  });
+  assert.equal(code, 1);
+  const pull = "*".repeat(VALUES.pull.length);
+  assert.deepEqual(lines.slice(2), [
+    "",
+    `commit ${shared.pulled}`,
+    "  on the default branch: no",
+    "  reached by: no branch or tag, only refs/pull/1/head",
+    "  generic-api-key in secret.txt, line 1",
+    `    fingerprint: ${shared.pulled}:secret.txt:generic-api-key:1`,
+    `    line: key = ${pull}`,
+    "  fake-second-rule in secret.txt, line 1",
+    `    fingerprint: ${shared.pulled}:secret.txt:fake-second-rule:1`,
+    `    line: key = ${pull}`,
+    "",
+    `commit ${shared.tagged}`,
+    "  on the default branch: no",
+    "  reached by: refs/tags/v1",
+    "  generic-api-key in tagged.txt, line 1",
+    `    fingerprint: ${shared.tagged}:tagged.txt:generic-api-key:1`,
+    `    line: secret = ${"*".repeat(VALUES.tag.length)}`,
+  ]);
+});
+
+test("a scanner that writes an error fails the scan, though it exits 0 with an empty report, and exits 2", async () => {
+  const temp = temporary("honsha-history-temp-");
+  /** @type {string[]} */
+  const lines = [];
+  /** @type {string[]} */
+  const errors = [];
+  const address = "https://jane:FAKEtokenInAnAddress@example.org/repository.git/";
+  const escape = String.fromCodePoint(0x1b);
+  const stderr = `ERR [git] fatal: unable to access '${address}' ${escape}[2J\n\nERR failed to scan Git repository\n`;
+  const code = await scan({
+    cwd: shared.clone,
+    platform: "linux",
+    arch: "x64",
+    temporary: temp,
+    scanner: fakeScanner([], { status: 0, stderr }),
+    out: (line) => lines.push(line),
+    err: (line) => errors.push(line),
+  });
+  assert.equal(code, 2);
+  assert.deepEqual(lines, [], "no line reads as a scan that found nothing");
+  assert.deepEqual(errors, [
+    String.raw`gitleaks failed: ERR [git] fatal: unable to access 'https://***@example.org/repository.git/' \u{1b}[2J` +
+      "\nERR failed to scan Git repository",
+  ]);
   assert.deepEqual(fs.readdirSync(temp), []);
 });
 
@@ -424,12 +507,6 @@ test("an error exits 2, and the temporary folder is deleted all the same", async
   const temp = temporary("honsha-history-temp-");
   /** @type {string[]} */
   const errors = [];
-  const failing = {
-    ...fakeScanner([]),
-    run: () => {
-      throw new Error("gitleaks failed: no message");
-    },
-  };
   const options = {
     platform: "linux",
     arch: "x64",
@@ -437,9 +514,14 @@ test("an error exits 2, and the temporary folder is deleted all the same", async
     out: () => {},
     err: (/** @type {string} */ line) => errors.push(line),
   };
-  assert.equal(await scan({ ...options, cwd: shared.clone, scanner: failing }), 2);
-  assert.match(errors.join("\n"), /gitleaks failed/);
+  assert.equal(await scan({ ...options, cwd: shared.clone, scanner: fakeScanner([], { status: 1 }) }), 2);
+  assert.match(errors.join("\n"), /^gitleaks failed: exit code 1$/m);
   assert.deepEqual(fs.readdirSync(temp), []);
+  const error = new Error("spawn gitleaks ENOENT");
+  assert.throws(
+    () => runScanner("gitleaks", [], { cwd: temp }, () => ({ status: null, stdout: "", stderr: "", error })),
+    /^Error: gitleaks could not run: spawn/,
+  );
 
   const alone = temporary("honsha-history-alone-");
   execFileSync("git", ["init", "-q", alone]);
@@ -447,7 +529,7 @@ test("an error exits 2, and the temporary folder is deleted all the same", async
   assert.match(errors.join("\n"), /has no remote/);
   assert.deepEqual(fs.readdirSync(temp), []);
 
-  const version = { ...fakeScanner([]), version: () => "8.0.0" };
+  const version = { ...fakeScanner([]), exec: () => ({ status: 0, stdout: "8.0.0\n", stderr: "" }) };
   assert.equal(await scan({ ...options, cwd: shared.clone, scanner: version }), 2);
   assert.match(errors.join("\n"), /not the pinned/);
   assert.deepEqual(fs.readdirSync(temp), []);

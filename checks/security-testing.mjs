@@ -1,57 +1,71 @@
 // The kit's own static security testing (`honsha:security-testing`): the scan for secrets over the branch's commits
-// and the linters of its shell scripts and its workflow files, each a program that `checks/releases.mjs` pins. The
-// kit's profile runs `--setup` in its `setup` and each other command in its `verify`; the security rules of its
-// JavaScript are oxlint's, in `.oxlintrc.json`. The script is not part of the kit's interface: a project's `verify`
-// cannot name the kit's folder.
+// and the linters of its workflow files, each a program that `checks/releases.mjs` pins. The kit's profile runs
+// `--setup` in its `setup` and each other command in its `verify`; the security rules of its JavaScript are oxlint's,
+// in `.oxlintrc.json`. The script is not part of the kit's interface: a project's `verify` cannot name the kit's
+// folder.
 //
 // `--setup` installs each program for the host's platform under `node_modules/.cache/honsha-tools/`, once in each
-// checkout, after `npm ci`, which empties that folder. The archive's digest is checked at the install, as npm checks a
-// package's at its own, so the download is paid once in each checkout and not at each verification. A program with no
-// archive pinned for the platform is named, and its command then fails on that host, which leaves it to the pipeline.
-// Each other command runs one program, after asking it for its version, so that a program left from another pin fails:
+// checkout, after `npm ci`, which empties that folder: gitleaks, actionlint, zizmor, and ShellCheck, which actionlint
+// runs. The archive's digest is checked at the install, as npm checks a package's at its own, so the download is paid
+// once in each checkout and not at each verification. A program with no archive pinned for the platform is named, and
+// its command then fails on that host, which leaves it to the pipeline. Each of the three other commands runs one
+// program, after asking it for its version, so that a program left from another pin fails:
 //
 // - `gitleaks` reads every commit from `HONSHA_BASE` to `HONSHA_HEAD`, where a pipeline sets them, and otherwise from
 //   the default branch on the hosting service to `HEAD`; each merge by what it adds of its own beyond what git would
 //   have merged, so that a merge of the default branch reports nothing of what other items brought, which their own
 //   scans read. It reads git's attributes from no tree, so that a file of text marked binary in `.gitattributes` is
-//   still read. Its findings are redacted; those whose fingerprints the checkout's `.gitleaksignore` lists are left
-//   out, the file that the scan of the history reads on the default branch, and no allowance written inline is
-//   honoured, as that scan honours none. Each other finding is printed by where it is, with its line masked, never by
-//   its value: the pipeline's output is public.
-// - `shellcheck` reads every shell script the repository tracks, known by its extension or its first line, with no rc
-//   file, so that no file of the host changes its checks.
-// - `actionlint` reads every workflow file, with the pinned ShellCheck on the scripts of its steps and no linter of
-//   Python, which no step runs.
+//   still read. It runs the scanner with the functions that the scan of the history runs it with, in
+//   `checks/history-secrets.mjs`: findings redacted, no allowance written inline honoured, and a scan that writes an
+//   error failed. The findings whose fingerprints the checkout's `.gitleaksignore` lists are left out, the file that
+//   the scan of the history reads on the default branch. Each other finding is printed by where it is, with its line
+//   masked, never by its value: the pipeline's output is public.
+// - `actionlint` reads every workflow file, with the pinned ShellCheck on the scripts of its steps, where the kit's
+//   shell is, and no linter of Python, which no step runs.
 // - `zizmor` audits every workflow file offline, with `.github/zizmor.yml` as its configuration where it exists and
 //   with none otherwise.
 //
-// Exit code 0 when the command finds nothing, 1 with a finding or on an error, 2 on a wrong usage.
+// What a linter or git writes is printed line by line with its control characters escaped, as a finding is: it can
+// quote what a file holds. Exit code 0 when the command finds nothing, 1 with a finding or on an error, 2 on a wrong
+// usage.
 //
 //   node checks/security-testing.mjs --setup
-//   node checks/security-testing.mjs gitleaks | shellcheck | actionlint | zizmor
+//   node checks/security-testing.mjs gitleaks | actionlint | zizmor
 
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { IGNORE_FILE, environment, fingerprint, maskLine, parseReport, printable } from "./history-secrets.mjs";
+import {
+  IGNORE_FILE,
+  environment,
+  errorText,
+  findingLines,
+  fingerprint,
+  ignoreList,
+  parseReport,
+  printableLines,
+  runScanner,
+  scannerArgs,
+} from "./history-secrets.mjs";
 import { readProfile } from "./profile.mjs";
-import { ACTIONLINT, GITLEAKS, SHELLCHECK, ZIZMOR, archiveFor, install, programName } from "./releases.mjs";
+import {
+  ACTIONLINT,
+  GITLEAKS,
+  SHELLCHECK,
+  ZIZMOR,
+  archiveFor,
+  checkVersion,
+  install,
+  programName,
+  spawn,
+} from "./releases.mjs";
 
 /** @typedef {import("./releases.mjs").Release} Release */
 
-/** The programs, by the name of their command. */
+/** The programs that the setup installs, by name. */
 export const TOOLS = { gitleaks: GITLEAKS, shellcheck: SHELLCHECK, actionlint: ACTIONLINT, zizmor: ZIZMOR };
-
-/** The arguments that make each program print its version. */
-const VERSION_ARGS = {
-  gitleaks: ["version"],
-  shellcheck: ["--version"],
-  actionlint: ["-version"],
-  zizmor: ["--version"],
-};
 
 /** Where the setup installs the programs, from the checkout's root: a folder that git and the linters already skip. */
 export const TOOLS_DIR = path.join("node_modules", ".cache", "honsha-tools");
@@ -60,9 +74,9 @@ export const TOOLS_DIR = path.join("node_modules", ".cache", "honsha-tools");
 export const ZIZMOR_CONFIG = ".github/zizmor.yml";
 
 /**
- * What `git log` is asked for, besides the range and `-p -U0`, which the scanner always gives. A merge is read by
- * git's remerge diff, what it holds beyond the merge that git would have made; text conversions and external diff
- * programs, which a user's git configuration can name, would change what the scanner reads.
+ * What `git log` is asked for, besides the range. A merge is read by git's remerge diff, what it holds beyond the merge
+ * that git would have made; text conversions and external diff programs, which a user's git configuration can name,
+ * would change what the scanner reads.
  */
 export const LOG_OPTIONS = [
   "--full-history",
@@ -73,9 +87,7 @@ export const LOG_OPTIONS = [
 ];
 
 /**
- * @typedef {{ status: number | null, stdout: string, stderr: string, error?: Error }} Result
- * @typedef {{ cwd: string, env?: NodeJS.ProcessEnv, input?: string }} ExecOptions
- * @typedef {(program: string, args: string[], options: ExecOptions) => Result} Exec
+ * @typedef {import("./releases.mjs").Exec} Exec
  * @typedef {{ release: Release, archive: import("./releases.mjs").Archive, platform: string }} InstallOptions
  * @typedef {(dir: string, options: InstallOptions) => Promise<string>} Installer
  * @typedef {{
@@ -90,12 +102,6 @@ export const LOG_OPTIONS = [
  * }} Context
  */
 
-/** @type {Exec} */
-const spawn = (program, args, { cwd, env = process.env, input }) => {
-  const result = spawnSync(program, args, { cwd, env, input, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", error: result.error };
-};
-
 /**
  * Runs git and returns its output, or throws with its message.
  * @param {Context} context
@@ -105,7 +111,7 @@ const spawn = (program, args, { cwd, env = process.env, input }) => {
 function git(context, args, input) {
   const result = context.exec("git", args, { cwd: context.root, env: environment(), input });
   if (result.error) throw new Error(`git ${args[0]} could not run: ${result.error.message}`);
-  if (result.status !== 0) throw new Error(`git ${args[0]} failed: ${result.stderr.trim() || "no message"}`);
+  if (result.status !== 0) throw new Error(`git ${args[0]} failed: ${errorText(result.stderr) || "no message"}`);
   return result.stdout;
 }
 
@@ -173,11 +179,7 @@ export function ready(context, name) {
   if (!fs.existsSync(program)) {
     throw new Error(`${release.name} ${release.version} is not installed: run \`node checks/verify.mjs --setup\`.`);
   }
-  const result = context.exec(program, VERSION_ARGS[name], { cwd: context.root, env: environment() });
-  if (result.error) throw new Error(`${release.name} could not run: ${result.error.message}`);
-  if (!result.stdout.includes(release.version)) {
-    throw new Error(`${release.name} says its version is ${result.stdout.trim()}, not the pinned ${release.version}.`);
-  }
+  checkVersion(release, program, context.exec, { cwd: context.root, env: environment() });
   return program;
 }
 
@@ -197,49 +199,6 @@ function tracked(context) {
     .map((entry) => entry.file);
 }
 
-/** The shells that ShellCheck reads. */
-const SHELLS = new Set(["sh", "bash", "dash", "ksh"]);
-
-/** @param {string | undefined} word a program's path, or its name */
-const name = (word) => word?.split("/").pop() ?? "";
-
-/**
- * Whether a first line runs one of those shells, by its path, as `#!/bin/sh`, or through `env` after its flags and
- * variables, as `#!/usr/bin/env -S bash -e` or `#!/usr/bin/env -i PATH=/bin sh`.
- * @param {string} line
- */
-export function runsShell(line) {
-  if (!line.startsWith("#!")) return false;
-  const words = line.slice(2).trim().split(/\s+/);
-  let at = 0;
-  if (name(words[0]) === "env") {
-    at = 1;
-    while (words[at]?.startsWith("-") || words[at]?.includes("=")) at += 1;
-  }
-  return SHELLS.has(name(words[at]));
-}
-
-/**
- * The shell scripts among the tracked files: by the extension `.sh` or `.bash`, or by a first line that runs a shell.
- * @param {Context} context
- */
-export function shellScripts(context) {
-  return tracked(context).filter((file) => {
-    if (/\.(?:sh|bash)$/.test(file)) return true;
-    const full = path.join(context.root, file);
-    // A tracked file deleted from the working tree has no first line to read.
-    if (!fs.existsSync(full)) return false;
-    const fd = fs.openSync(full, "r");
-    try {
-      const head = Buffer.alloc(256);
-      const read = fs.readSync(fd, head, 0, head.length, 0);
-      return runsShell(head.subarray(0, read).toString("utf8").split(/\r?\n/)[0] ?? "");
-    } finally {
-      fs.closeSync(fd);
-    }
-  });
-}
-
 /**
  * The workflow files among the tracked files, which GitHub reads in `.github/workflows/` and not in a folder below it.
  * @param {Context} context
@@ -257,21 +216,9 @@ export function workflowFiles(context) {
 function lint(context, program, args) {
   const result = context.exec(program, args, { cwd: context.root, env: { ...environment(), NO_COLOR: "1" } });
   if (result.error) throw new Error(`${path.basename(program)} could not run: ${result.error.message}`);
-  for (const line of result.stdout.split(/\r?\n/)) if (line) context.out(line);
-  for (const line of result.stderr.split(/\r?\n/)) if (line) context.err(line);
+  for (const line of printableLines(result.stdout)) context.out(line);
+  for (const line of printableLines(result.stderr)) context.err(line);
   return result.status === 0 ? 0 : 1;
-}
-
-/** @param {Context} context */
-export function shellcheck(context) {
-  const files = shellScripts(context);
-  if (files.length === 0) {
-    context.out("The repository tracks no shell script.");
-    return 0;
-  }
-  const code = lint(context, ready(context, "shellcheck"), ["--norc", "--color=never", "--", ...files]);
-  if (code === 0) context.out(`ShellCheck ${SHELLCHECK.version} found nothing in ${files.length} scripts.`);
-  return code;
 }
 
 /** @param {Context} context */
@@ -330,46 +277,6 @@ export function range(context, defaultBranch) {
 }
 
 /**
- * The scanner's arguments: the range's commits with the options above, its built-in rules, findings redacted, a report
- * in JSON, no allowance written inline, and the script's own reading of the ignore file in place of the scanner's.
- *
- * The scanner reads the repository's git folder, not its working tree: in the folder it scans, it would take a
- * `.gitleaks.toml` for its rules and a `.gitleaksignore` for its ignore file, and a branch could commit either, whose
- * rules could allow everything.
- * @param {string} gitDir
- * @param {{ base: string, head: string }} commits
- * @param {string} report
- * @param {string} empty a folder that holds nothing, where the scanner would look for an ignore file
- */
-export function gitleaksArgs(gitDir, { base, head }, report, empty) {
-  return [
-    "git",
-    gitDir,
-    `--log-opts=${base}..${head} ${LOG_OPTIONS.join(" ")}`,
-    "--redact=100",
-    "--ignore-gitleaks-allow",
-    `--gitleaks-ignore-path=${empty}`,
-    "--report-format=json",
-    `--report-path=${report}`,
-    "--exit-code=0",
-    "--no-banner",
-    "--no-color",
-    "--log-level=error",
-  ];
-}
-
-/**
- * The fingerprints that the checkout's ignore file lists: one a line, with `#` opening a line of comment.
- * @param {string} root
- */
-export function readIgnored(root) {
-  const file = path.join(root, IGNORE_FILE);
-  const text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
-  const lines = text.split(/\r?\n/).map((line) => line.trim());
-  return new Set(lines.filter((line) => line !== "" && !line.startsWith("#")));
-}
-
-/**
  * Scans the branch's commits for secrets. Returns the exit code.
  * @param {Context} context
  * @param {string} defaultBranch
@@ -390,19 +297,11 @@ export function gitleaks(context, defaultBranch) {
     const empty = path.join(dir, "empty");
     fs.mkdirSync(empty);
     const report = path.join(dir, "report.json");
-    const result = context.exec(program, gitleaksArgs(gitDir, commits, report, empty), {
-      cwd: empty,
-      env: { ...environment(), GIT_ATTR_SOURCE: emptyTree },
-    });
-    if (result.error) throw new Error(`gitleaks could not run: ${result.error.message}`);
-    // gitleaks exits 0, with an empty report, when the `git log` it runs fails: at the log level it is given, an error
-    // is the only thing it writes, so any line it writes fails the scan. Printed with its control characters escaped,
-    // as a finding is, since git's message can quote what the history holds.
-    if (result.status !== 0 || result.stderr.trim() !== "") {
-      throw new Error(`gitleaks failed: ${printable(result.stderr.trim()) || `exit code ${result.status}`}`);
-    }
+    const args = scannerArgs(gitDir, [`${commits.base}..${commits.head}`, ...LOG_OPTIONS], report, empty);
+    runScanner(program, args, { cwd: empty, env: { ...environment(), GIT_ATTR_SOURCE: emptyTree } }, context.exec);
     const found = parseReport(fs.readFileSync(report, "utf8"));
-    const ignored = readIgnored(context.root);
+    const file = path.join(context.root, IGNORE_FILE);
+    const ignored = ignoreList(fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "");
     const findings = found.filter((finding) => !ignored.has(fingerprint(finding)));
     context.out(`gitleaks ${GITLEAKS.version} read ${count} commits ${span}.`);
     context.out(
@@ -416,9 +315,7 @@ export function gitleaks(context, defaultBranch) {
         line = null;
       }
       context.out("");
-      context.out(printable(`${finding.rule} in ${finding.file}, line ${finding.line}, commit ${finding.commit}`));
-      context.out(printable(`  fingerprint: ${fingerprint(finding)}`));
-      context.out(`  line: ${line === null ? "(it could not be read)" : printable(maskLine(line, finding))}`);
+      for (const text of findingLines(finding, line)) context.out(text);
     }
     return findings.length > 0 ? 1 : 0;
   } finally {
@@ -427,7 +324,7 @@ export function gitleaks(context, defaultBranch) {
 }
 
 /** @type {Record<string, (context: Context, defaultBranch: string) => number>} */
-const COMMANDS = { gitleaks, shellcheck, actionlint, zizmor };
+const COMMANDS = { gitleaks, actionlint, zizmor };
 
 /**
  * Runs one command, and returns the exit code.

@@ -14,15 +14,19 @@
 // against its first parent, which a plain `git log -p` leaves out, so that what a merge adds of its own is read. The
 // findings are redacted, and the scanner reads no configuration and no ignore file: the script reads the default
 // branch's. It honours no allowance written inline in the history either, since no review has read one there. The
-// scanner sends nothing out.
+// scanner sends nothing out. A line that it writes on its error output fails the scan, though it exits 0: it does so,
+// with an empty report, when the `git log` it runs fails.
 //
 // It leaves out the findings whose fingerprints `.gitleaksignore` lists on the default branch, where an item under the
-// security review put them, and prints each other one by commit, file, line and rule, with its fingerprint, whether the
-// default branch holds its commit, the refs that reach it, which tell a branch or a tag from a ref such as a pull
-// request's, which someone outside the project can add, and its line read from the mirror, with the value found and
-// every run of characters that could be a value masked. It never prints a value, a commit's author or the remote's
-// address, which can hold a credential, nor a control character of the history: what it prints reaches a session's
-// transcript, which leaves the host.
+// security review put them, and prints the others by commit: once for each commit, whether the default branch holds it
+// and the refs that reach it, which tell a branch or a tag from a ref such as a pull request's, which someone outside
+// the project can add; under it, each of its findings by rule, file and line, with its fingerprint and its line read
+// from the mirror, with the value found and every run of characters that could be a value masked. It never prints a
+// value, a commit's author or the remote's address, which can hold a credential, nor a control character of the
+// history: what it prints reaches a session's transcript, which leaves the host.
+//
+// The scan of a branch's commits, `checks/security-testing.mjs gitleaks`, runs the scanner with the functions here:
+// its arguments, its run, its ignore list and a finding's lines, so that both scans keep the same guards.
 //
 // Everything it downloads or makes is in a temporary folder outside the clone, deleted when it ends, on an error too:
 // it changes nothing in the clone and installs nothing. Exit code 0 when it finds nothing, 1 with findings, and 2 on an
@@ -36,7 +40,12 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { GITLEAKS as SCANNER, archiveFor, install } from "./releases.mjs";
+import { GITLEAKS as SCANNER, archiveFor, checkVersion, install, spawn } from "./releases.mjs";
+
+/**
+ * @typedef {import("./releases.mjs").Exec} Exec
+ * @typedef {import("./releases.mjs").ExecOptions} ExecOptions
+ */
 
 /** The scanner's ignore file, read on the default branch. */
 export const IGNORE_FILE = ".gitleaksignore";
@@ -86,6 +95,31 @@ export function environment() {
 const anonymous = (/** @type {string} */ text) => text.replace(/:\/\/[^/\s@]+@/g, "://***@");
 
 /**
+ * A text with its control, format and line-separating characters written as escapes: a path, a ref or a line that the
+ * history holds could otherwise drive the terminal, add lines to the report or hide part of it.
+ * @param {string} text
+ */
+export const printable = (text) =>
+  text.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, (char) => `\\u{${(char.codePointAt(0) ?? 0).toString(16)}}`);
+
+/**
+ * The lines of a program's output that hold something, each printable: what a linter, git or the scanner writes can
+ * quote what a file or the history holds.
+ * @param {string} text
+ */
+export const printableLines = (text) =>
+  text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== "")
+    .map(printable);
+
+/**
+ * What a program wrote on its error output, line by line, printable and with the credential of any address hidden.
+ * @param {string} text
+ */
+export const errorText = (text) => printableLines(anonymous(text)).join("\n");
+
+/**
  * Runs git, and throws with its message alone: the command line, which an error of Node.js would quote, holds the
  * remote's address.
  * @param {string} dir
@@ -99,7 +133,7 @@ function git(dir, args) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (result.error) throw new Error(`git ${args[0]} could not run: ${result.error.message}`);
-  if (result.status !== 0) throw new Error(`git ${args[0]} failed: ${anonymous(result.stderr.trim()) || "no message"}`);
+  if (result.status !== 0) throw new Error(`git ${args[0]} failed: ${errorText(result.stderr) || "no message"}`);
   return result.stdout;
 }
 
@@ -184,29 +218,42 @@ export function readHistory(mirror) {
 }
 
 /**
- * The fingerprints that the ignore file lists on the default branch: one a line, with `#` opening a line of comment, as
- * the scanner reads it.
- * @param {string} mirror
- * @param {string | null} branch
+ * The fingerprints that the text of an ignore file lists: one a line, with `#` opening a line of comment, as the
+ * scanner reads it.
+ * @param {string} text
  */
-export function readIgnored(mirror, branch) {
-  const text = branch ? attempt(mirror, ["show", `${branch}:${IGNORE_FILE}`]) : null;
-  const lines = (text ?? "").split(/\r?\n/).map((line) => line.trim());
+export function ignoreList(text) {
+  const lines = text.split(/\r?\n/).map((line) => line.trim());
   return new Set(lines.filter((line) => line !== "" && !line.startsWith("#")));
 }
 
 /**
- * The scanner's arguments: its built-in rules, the history of the mirror, findings redacted, a report in JSON, and the
- * script's decisions in place of the scanner's own, whatever the status a finding would give.
+ * The fingerprints that the ignore file lists on the default branch.
  * @param {string} mirror
+ * @param {string | null} branch
+ */
+export function readIgnored(mirror, branch) {
+  return ignoreList((branch ? attempt(mirror, ["show", `${branch}:${IGNORE_FILE}`]) : null) ?? "");
+}
+
+/**
+ * The scanner's arguments: its built-in rules, the history that a git folder holds, findings redacted, a report in
+ * JSON, no allowance written inline, and the script's decisions in place of the scanner's own, whatever the status a
+ * finding would give.
+ *
+ * The scanner reads a git folder, the mirror or a checkout's, and not a working tree: in the folder it scans, it would
+ * take a `.gitleaks.toml` for its rules and a `.gitleaksignore` for its ignore file, and a branch could commit either,
+ * whose rules could allow everything.
+ * @param {string} gitDir
+ * @param {string[]} logOptions what `git log` is asked for, besides `-p -U0`, which the scanner always gives
  * @param {string} report
  * @param {string} empty a folder that holds nothing, where the scanner would look for an ignore file
  */
-export function scannerArgs(mirror, report, empty) {
+export function scannerArgs(gitDir, logOptions, report, empty) {
   return [
     "git",
-    mirror,
-    `--log-opts=${LOG_OPTIONS.join(" ")}`,
+    gitDir,
+    `--log-opts=${logOptions.join(" ")}`,
     "--redact=100",
     "--ignore-gitleaks-allow",
     `--gitleaks-ignore-path=${empty}`,
@@ -217,6 +264,24 @@ export function scannerArgs(mirror, report, empty) {
     "--no-color",
     "--log-level=error",
   ];
+}
+
+/**
+ * Runs the scanner, and throws unless it ran clean: on an error of its start, an exit code other than 0, or any line on
+ * its error output. gitleaks exits 0, with an empty report, when the `git log` it runs fails; at the log level its
+ * arguments give, an error is the only thing it writes, so a line there is a failed scan, not one that found nothing.
+ * @param {string} program
+ * @param {string[]} args
+ * @param {ExecOptions} options
+ * @param {Exec} exec
+ */
+export function runScanner(program, args, options, exec) {
+  const result = exec(program, args, options);
+  if (result.error) throw new Error(`${SCANNER.name} could not run: ${result.error.message}`);
+  const message = errorText(result.stderr);
+  if (result.status !== 0 || message !== "") {
+    throw new Error(`${SCANNER.name} failed: ${message || `exit code ${result.status}`}`);
+  }
 }
 
 /**
@@ -383,55 +448,47 @@ function lineOf(mirror, finding) {
 }
 
 /**
- * A text with its control, format and line-separating characters written as escapes: a path, a ref or a line that the
- * history holds could otherwise drive the terminal, add lines to the report or hide part of it.
- * @param {string} text
- */
-export const printable = (text) =>
-  text.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, (char) => `\\u{${(char.codePointAt(0) ?? 0).toString(16)}}`);
-
-/**
- * The lines that report one finding.
- * @param {string} mirror
+ * The lines that report one finding: where it is, its fingerprint, and its line, masked.
  * @param {Finding} finding
- * @param {Set<string>} onDefault
- * @param {Map<string, string>} [reached] the refs that reach each commit already read: many findings can share one
+ * @param {string | null} line the line as the commit holds it, or null when it cannot be read
  */
-export function describe(mirror, finding, onDefault, reached = new Map()) {
-  const line = lineOf(mirror, finding);
-  if (!reached.has(finding.commit)) reached.set(finding.commit, reachedBy(mirror, finding.commit));
+export function findingLines(finding, line) {
   return [
-    printable(`${finding.rule} in ${finding.file}, line ${finding.line}, commit ${finding.commit}`),
+    printable(`${finding.rule} in ${finding.file}, line ${finding.line}`),
     printable(`  fingerprint: ${fingerprint(finding)}`),
-    `  on the default branch: ${onDefault.has(finding.commit) ? "yes" : "no"}`,
-    printable(`  reached by: ${reached.get(finding.commit)}`),
     `  line: ${line === null ? "(it could not be read)" : printable(maskLine(line, finding))}`,
   ];
 }
 
 /**
- * The scanner's three actions, which a test replaces.
+ * The lines that report a commit's findings: the commit, whether the default branch holds it and the refs that reach
+ * it, once however many findings it has, since those refs are all named; then each of its findings.
+ * @param {string} mirror
+ * @param {string} commit
+ * @param {Finding[]} findings
+ * @param {Set<string>} onDefault
+ */
+export function commitLines(mirror, commit, findings, onDefault) {
+  return [
+    printable(`commit ${commit}`),
+    `  on the default branch: ${onDefault.has(commit) ? "yes" : "no"}`,
+    printable(`  reached by: ${reachedBy(mirror, commit)}`),
+    ...findings.flatMap((finding) => findingLines(finding, lineOf(mirror, finding)).map((line) => `  ${line}`)),
+  ];
+}
+
+/**
+ * How the scanner is installed and run, which a test replaces.
  * @typedef {{
- *   install: (dir: string, archive: { file: string, sha256: string }, platform: string) => Promise<string>,
- *   version: (program: string) => string,
- *   run: (program: string, args: string[], cwd: string) => void,
+ *   install: (dir: string, archive: import("./releases.mjs").Archive, platform: string) => Promise<string>,
+ *   exec: Exec,
  * }} Scanner
  */
 
 /** @type {Scanner} */
 export const gitleaks = {
   install: (dir, archive, platform) => install(dir, { release: SCANNER, archive, platform }),
-  version: (program) => {
-    const result = spawnSync(program, ["version"], { encoding: "utf8", env: environment() });
-    if (result.error) throw new Error(`${SCANNER.name} could not run: ${result.error.message}`);
-    return result.stdout.trim();
-  },
-  run: (program, args, cwd) => {
-    const result = spawnSync(program, args, { cwd, encoding: "utf8", env: environment(), maxBuffer: 64 * 1024 * 1024 });
-    if (result.error) throw new Error(`${SCANNER.name} could not run: ${result.error.message}`);
-    if (result.status !== 0)
-      throw new Error(`${SCANNER.name} failed: ${anonymous(result.stderr.trim()) || "no message"}`);
-  },
+  exec: spawn,
 };
 
 /**
@@ -483,16 +540,14 @@ export async function scan({
     if (within(dir, clone) || within(dir, common)) throw new Error(`The temporary folder ${dir} is inside the clone.`);
 
     const program = await scanner.install(dir, archive, platform);
-    const version = scanner.version(program);
-    if (!version.includes(SCANNER.version)) {
-      throw new Error(`${SCANNER.name} says its version is ${version}, not the pinned ${SCANNER.version}.`);
-    }
+    checkVersion(SCANNER, program, scanner.exec, { cwd: dir, env: environment() });
     const mirror = makeMirror(clone, dir);
     const history = readHistory(mirror);
     const empty = path.join(dir, "empty");
     fs.mkdirSync(empty);
     const report = path.join(dir, "report.json");
-    scanner.run(program, scannerArgs(mirror, report, empty), empty);
+    const args = scannerArgs(mirror, LOG_OPTIONS, report, empty);
+    runScanner(program, args, { cwd: empty, env: environment() }, scanner.exec);
     const ignored = readIgnored(mirror, history.branch);
     const found = parseReport(fs.readFileSync(report, "utf8"));
     const findings = found.filter((finding) => !ignored.has(fingerprint(finding)));
@@ -503,10 +558,9 @@ export async function scan({
     const left = found.length - findings.length;
     const branch = history.branch?.replace(/^refs\/heads\//, "") ?? "no default branch";
     out(`${findings.length} findings; ${left} left out, as ${IGNORE_FILE} on ${branch} lists them.`);
-    const reached = new Map();
-    for (const finding of findings) {
+    for (const [commit, ofCommit] of Map.groupBy(findings, (finding) => finding.commit)) {
       out("");
-      for (const line of describe(mirror, finding, history.onDefault, reached)) out(line);
+      for (const line of commitLines(mirror, commit, ofCommit, history.onDefault)) out(line);
     }
     return findings.length > 0 ? 1 : 0;
   } catch (error) {
