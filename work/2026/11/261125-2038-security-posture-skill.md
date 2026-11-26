@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
@@ -272,6 +272,9 @@ that a ruleset requires also refuses a direct push decides only the home's line 
 
 ## Approval
 
+Approved by the person on 2026-11-26, in this item's session, as written in `6404117`: the choices and the trial's
+reads listed under "For the person" included.
+
 ## Log
 
 - The hub gave the record from the home's backlog when it started the item; its intent is restated as the core rules
@@ -303,6 +306,7 @@ that a ruleset requires also refuses a direct push decides only the home's line 
   feature is off, not given, or read by an account that does not administer the repository.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval, in this
   session.
+- The person approved the strategy (Approval); the state is `in-progress`.
 
 ## Verification
 
