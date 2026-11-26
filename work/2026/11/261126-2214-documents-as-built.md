@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: awaiting-approval
+state: in-progress
 areas: []
 created: 2026-11-26
 updated: 2026-11-26
@@ -214,6 +214,10 @@ changes. A line that another item also changes conflicts at the second merge, wh
 
 ## Approval
 
+Approved by the person on 2026-11-26, in this item's session, as written in `8b6012c`, with the open choice taken:
+`legacy` is dropped, together with its exception in `rules/writing.md` and the step of `honsha:assessment` that reads
+it.
+
 ## Log
 
 - 2026-11-26: branch `work/261126-2214-documents-as-built` created from `origin/main` after `git fetch`, the record as
@@ -227,6 +231,15 @@ changes. A line that another item also changes conflicts at the second merge, wh
   "Home" and "Open design points" are cited outside it and stay; "Files and index" is cited in the workflow's "The
   record" too.
 - No area: the item has none, and the kit holds no pack.
+- The hub's answer on the files of the other items. `templates/record.md` and the workflow's "The record" stay with
+  `261126-2213`, which takes the comment of `source` into its own change: this item does not touch it. In "The record"
+  this item changes, on its branch and whatever the order of the merges, exactly the reference "(architecture, Files
+  and index)" into "(architecture, Files)", and nothing else in that section; `261126-2213` leaves the sentence that
+  holds it unchanged. This replaces the hub's first ruling, that the item merged second would change it, since this
+  branch's references test fails until it does. With `legacy` dropped, this item changes exactly the exception of
+  `legacy` in `rules/writing.md`, Documents, and step 5 of `skills/assessment/SKILL.md`, and nothing else in those two
+  files; the hub tells `261126-2213` and `261126-2215`.
+- The person approved the strategy, with `legacy` dropped (Approval); the state is `in-progress`.
 
 ## Verification
 
