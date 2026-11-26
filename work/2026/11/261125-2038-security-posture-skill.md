@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: blocked
+state: in-progress
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
@@ -425,6 +425,8 @@ reads listed under "For the person" included.
   boundary (core rules, Stop conditions): the branch's commits hold what the boundary ruled out, and a push would
   publish them. The person decides whether the branch is pushed as it is. The repeated security review of the piece's
   change and the repeated check wait for that decision. The state is `blocked`.
+- The person decided, on 2026-11-26 in this item's session, that the branch is pushed as it is (Deviations); the state
+  is `in-progress`.
 
 ## Verification
 
@@ -448,6 +450,6 @@ reads listed under "For the person" included.
   analysis of code scanning. The commits from `7683fb6` hold it, and the branch only grows. GitHub shows anyone the
   first two without a token (Log), and the checks of the kit's pull requests show that code scanning does not run on
   them. Nothing of the home's protections is said beyond what GitHub gives every private repository of a free personal
-  account. The branch is pushed only on the person's decision.
+  account. The person accepted it on 2026-11-26, in this item's session: the branch is pushed as it is.
 
 ## Outcome
