@@ -398,6 +398,11 @@ reads listed under "For the person" included.
   reports it, so an account that may write commit statuses could meet it; no gain follows, since a collaborator of a
   personal account's repository can merge anyway, and the piece says the check holds back a failing change, not a
   hostile one.
+- The verification ran again on `76960b9`, and passed. The fourth security review, of the diff since `c28a94c`,
+  passes and confirms the third finding fixed. Its weak point, fixed in a commit of its own: the sentence that counts a
+  rule as on could be read as asking the wiring's job of every rule, so the home's ruleset, which holds no required
+  check, would always read as off; the job is now asked of the required check alone. The fix touches what the review
+  guards, so a repeated review reads it.
 
 ## Verification
 

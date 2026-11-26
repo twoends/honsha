@@ -142,9 +142,9 @@ With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows,
   The first lists the rules in force on the branch, each with the ruleset that holds it: `deletion`,
   `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none; where GitHub
   does not give rulesets, `403` "Upgrade to GitHub Pro or make this repository public to enable this feature". A rule
-  counts as on only where the second, read for each ruleset that the first names, gives `active`, `bypass_actors` `[]`
-  and the wiring's job among its `checks`; `null` there is not read, since GitHub shows the list only to an account
-  that may change the ruleset. The second is untried: neither repository where the commands ran had a ruleset. The
+  counts as on only where the second, read for each ruleset that the first names, gives `active` and `bypass_actors`
+  `[]`, and the required check only with the wiring's job among that ruleset's `checks`; `null` in `bypass_actors` is
+  not read, since GitHub shows the list only to an account that may change the ruleset. The second is untried: neither repository where the commands ran had a ruleset. The
   older branch protection, under Settings, Branches, counts for none of these, though GitHub enforces it: its answer,
   `GET repos/<owner>/<repository>/branches/<default branch>/protection`, does not show the accounts that may force-push
   past it, so a repository that has only the older protection is asked for the ruleset.
