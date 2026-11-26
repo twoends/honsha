@@ -137,18 +137,17 @@ With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows,
   ```
   gh api repos/<owner>/<repository>/rules/branches/<default branch> --jq 'map({type, ruleset_id})'
   gh api repos/<owner>/<repository>/rulesets/<ruleset id> --jq '{enforcement, bypass_actors, checks: [.rules[]? | select(.type == "required_status_checks") | .parameters.required_status_checks[].context]}'
-  gh api repos/<owner>/<repository>/branches/<default branch>/protection --jq '{pr: (.required_pull_request_reviews != null), allowances: .required_pull_request_reviews.bypass_pull_request_allowances, restrictions, admins: .enforce_admins.enabled, force: .allow_force_pushes.enabled, deletions: .allow_deletions.enabled, checks: .required_status_checks.contexts}'
   ```
 
   The first lists the rules in force on the branch, each with the ruleset that holds it: `deletion`,
-  `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none. A rule counts as
-  on only where the second, read for each ruleset that the first names, gives `active`, `bypass_actors` `[]` and the
-  wiring's job among its `checks`; `null` there is not read, since GitHub shows the list only to an account that may
-  change the ruleset. The second is untried: neither repository where the commands ran had a ruleset. The third reads
-  the older branch protection, which counts as on only with `admins` true, `force` and `deletions` false, and, but in
-  the home, `pr` true with no account in its `allowances` or `restrictions`, the older form of a bypass list; it
-  answers `404` "Branch not protected" when there is none. Where GitHub does not give them, the first and the third
-  answer `403` "Upgrade to GitHub Pro or make this repository public to enable this feature".
+  `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none; where GitHub
+  does not give rulesets, `403` "Upgrade to GitHub Pro or make this repository public to enable this feature". A rule
+  counts as on only where the second, read for each ruleset that the first names, gives `active`, `bypass_actors` `[]`
+  and the wiring's job among its `checks`; `null` there is not read, since GitHub shows the list only to an account
+  that may change the ruleset. The second is untried: neither repository where the commands ran had a ruleset. The
+  older branch protection, under Settings, Branches, counts for none of these, though GitHub enforces it: its answer,
+  `GET repos/<owner>/<repository>/branches/<default branch>/protection`, does not show the accounts that may force-push
+  past it, so a repository that has only the older protection is asked for the ruleset.
 
 - **Secret scanning, with push protection,** which refuses a push that holds a secret it knows. Free on a public
   repository; on a private one it needs GitHub Secret Protection, which GitHub sells to organisations on Team or

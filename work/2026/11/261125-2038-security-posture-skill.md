@@ -386,6 +386,18 @@ reads listed under "For the person" included.
   required checks, untried as the rest of that command.
 - The posture's step 4 named the settings that the piece lists; it now points to the piece alone. Sizes:
   `skills/security-posture/SKILL.md` 4,431, `skills/review/SKILL.md` 4,457, `docs/01-specs/WORKFLOW.md` 45,039.
+- The verification ran again on `c28a94c`, and passed.
+- The third security review, of the diff since `71f0745` at `c28a94c`, confirms the second finding fixed and fails on
+  a new one: the older branch protection's answer says whether everyone may force-push, and not which accounts are
+  named to force-push past it, so a home whose older protection lets a named account force-push read as refusing
+  forced pushes. Fixed in a commit of its own: no protection is counted from the older branch protection; the posture
+  counts the rules of the rulesets in force, whose bypass list the read shows, and a repository that has only the
+  older protection is asked for the ruleset. The read of the older protection goes, and with it the second finding's
+  case.
+- Its weak point, left to the person: a ruleset's required check is matched by its name and not by the app that
+  reports it, so an account that may write commit statuses could meet it; no gain follows, since a collaborator of a
+  personal account's repository can merge anyway, and the piece says the check holds back a failing change, not a
+  hostile one.
 
 ## Verification
 
