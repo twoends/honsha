@@ -585,7 +585,7 @@ reviewer's.
   it is valid. The review reads the dates, so that a credential is replaced before it stops a session.
 - **A credential that deploys reaches only the default branch's runs:** a pull request's run executes the workflow
   files of its own branch, so whoever can push a branch, a session among them, could have it print or send the
-  credential.
+  credential. A token that administers the repository can widen the limit, which the posture then reads.
 - **No value in a session:** what a session reads stays in its transcript on the host.
 - **The inventory is Markdown:** no script reads it, so the kit fixes what it holds and not its layout.
 - **A provider's own security is weighed in its radar entry:** one that holds the installation's data or credentials is

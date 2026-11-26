@@ -443,6 +443,16 @@ reads listed under "For the person" and "Boundaries" included.
   section's reasons, the piece's ninth point and the two sections that name the new reading; written once and then
   rewritten shorter, with each reason kept. `agents/security-reviewer.md` 5,264, `docs/01-specs/INTERFACE.md` 7,264.
 - The profile's `verify` commands pass on the work before its commit.
+- The security review ran on `a1977ec`, in a subagent on Opus at its own effort: verdict `pass`, no finding, five weak
+  points. Fixed, in GitHub's piece and the workflow: the first, that an environment's limit does not hold against a
+  token that administers the repository, now said with the token that would keep it; the second, a private
+  repository's setting that sends secrets to forks' pull requests, and the workflows on `pull_request_target` and
+  `workflow_run`, which run the default branch's files with its secrets, now in the piece's premise, the setting named
+  as not read; the fourth, an environment's name now encoded so that no character ends the quoted argument, and the
+  free-text names read as data. Left to the person: the third, the applications installed on a repository and its
+  webhooks, which the approved strategy leaves out (Out of scope), the inventory holding the applications each account
+  authorised; the fifth, that the guard refuses no command that prints `gh`'s token, which only the rule forbids, a
+  change to the guard and an idea of its own. The workflow's budget is 47,700, for the fixes' 91 characters.
 
 ## Verification
 

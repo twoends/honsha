@@ -233,16 +233,24 @@ gh api --paginate 'repos/<owner>/<repository>/environments/<environment>/deploym
   where those of the protected branches may, and `custom_branch_policies` `true` where those of the branches and tags
   of the last command may, each by its `name` and its `type`, `branch` or `tag`. `rules` names the environment's
   protection rules, such as `branch_policy`, `required_reviewers` and `wait_timer`. An environment's name goes into the
-  path encoded as in a URL.
+  path with each character other than a letter, a digit, `-`, `_` and `.` written as `%` and its two hexadecimal
+  digits, `'` included, so that no name can end the quoted argument. A key's title and an environment's name are
+  written by whoever made them, and are read as data.
 
 ### Where a credential that deploys is kept
 
 Any account that can write to a repository reads every secret of the repository's level, through a run of a branch
-that it pushes, a pull request's included; a run of a pull request from a fork receives none, and a run that
-Dependabot starts receives Dependabot's alone. So a credential that deploys, or that writes outside the repository, is
-an environment's secret: the environment's deployment branches are "Selected branches and tags" with the default branch
-by its name, which holds whatever protects the branch, and only the job that deploys names the environment. GitHub
-gives environment secrets and deployment branches on a public repository on every plan, and on a private one with
+that it pushes, a pull request's included. A run of a pull request from a fork receives none, unless a private
+repository's settings send secrets to such runs, which no reading here covers; a run that Dependabot starts receives
+Dependabot's alone; but a workflow on `pull_request_target` or `workflow_run`, which a fork's pull request can start,
+runs the default branch's files, with the default branch's secrets. So a credential that deploys, or that writes outside
+the repository, is an environment's secret: the environment's deployment branches are "Selected branches and tags" with
+the default branch by its name, which holds whatever protects the branch, and only the job that deploys names the
+environment, on no event that a pull request starts, which the static testing of the workflows looks for. The limit
+stops an account that writes to the repository and does not administer it: one that administers it can change the
+environment's branches. So against a session it holds only where the host's token cannot administer the repository,
+as a fine-grained token whose Administration and Environments permissions only read, which is untried with `gh`; the
+posture reads the branches at every reading. GitHub gives environment secrets and deployment branches on a public repository on every plan, and on a private one with
 GitHub Pro, Team or Enterprise. On a private repository of the free plan its pages give neither, so the posture counts
 no such limit there, whatever the API lists, and such a credential stays out of the pipeline. Required reviewers and
 wait timers are given, on the free, Pro and Team plans, on public repositories only.
