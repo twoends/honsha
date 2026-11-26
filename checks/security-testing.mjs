@@ -395,7 +395,11 @@ export function gitleaks(context, defaultBranch) {
       env: { ...environment(), GIT_ATTR_SOURCE: emptyTree },
     });
     if (result.error) throw new Error(`gitleaks could not run: ${result.error.message}`);
-    if (result.status !== 0) throw new Error(`gitleaks failed: ${result.stderr.trim() || "no message"}`);
+    // gitleaks exits 0, with an empty report, when the `git log` it runs fails: at the log level it is given, an error
+    // is the only thing it writes, so any line it writes fails the scan.
+    if (result.status !== 0 || result.stderr.trim() !== "") {
+      throw new Error(`gitleaks failed: ${result.stderr.trim() || `exit code ${result.status}`}`);
+    }
     const found = parseReport(fs.readFileSync(report, "utf8"));
     const ignored = readIgnored(context.root);
     const findings = found.filter((finding) => !ignored.has(fingerprint(finding)));

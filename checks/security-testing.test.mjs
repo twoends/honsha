@@ -373,6 +373,26 @@ test("the findings are printed by where they are, never by their value, the list
   );
 });
 
+test("a scanner that writes an error fails the scan, though it exits 0 with an empty report", () => {
+  const root = repository();
+  git(root, ["switch", "-q", "-c", "work"]);
+  write(root, "a.txt", "a\n");
+  git(root, ["add", "."]);
+  git(root, ["commit", "-q", "-m", "a"]);
+  installAll(root);
+  const run = context(root, {
+    program: (name, args) => {
+      const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
+      fs.writeFileSync(report, "[]");
+      return { status: 0, stderr: "ERR [git] fatal: Invalid revision range\n" };
+    },
+  });
+  assert.throws(
+    () => gitleaks(run.context, "main"),
+    /^Error: gitleaks failed: ERR \[git\] fatal: Invalid revision range$/,
+  );
+});
+
 test("no commit in the range passes without running the scanner", () => {
   const root = repository();
   const run = context(root);

@@ -402,6 +402,34 @@ downloads listed under "For the person" included, the first choice as oxlint wit
   profile reader reads: 11 commands, 2 of setup, 19 paths. `docs/01-specs/INTERFACE.md` holds 7,111 characters of its
   9,000. `checks/profile.test.mjs`, whose test of the kit's own profile named its one command of setup, now names both,
   the four new commands and four of the paths.
+- The security review of `5cf6104` passes, with no finding and six weak points (Verification). What was done with each:
+  1. A branch's own `.gitleaksignore` silences its own finding: left to the person. It is the skill's path for a
+     finding believed mistaken in the item's own commit, and `checks/record.mjs` names a change to the file, which
+     calls for the review; the history scan reads the default branch's file alone.
+  2. The list under `security-review` leaves out the profile itself, the workflows and the scripts that read and run
+     the list: left to the person. A change of the profile that weakens the testing is `261125-1849`'s, the workflows
+     are deploy or CI configuration, which the skill already names, and `checks/record.mjs` is out by the person's
+     choice 4.
+  3. The ignore of `.github/actionlint.yaml` gave a reason that the kit's own runs cannot show, and matched the two
+     names on any object of `project.yml`: fixed. Its pattern names them on the job context's type alone, and a copy
+     with a mistyped `inputs.workflow_sha` was still reported; its reason is GitHub's documentation of the contexts,
+     which a lookup on Haiku at medium effort read on 2026-11-26: the job context lists `workflow_repository`,
+     `workflow_sha`, `workflow_ref` and `workflow_file_path`, of the file that defines the job.
+  4. `project.yml` installs npm and Claude Code at the version its caller passes, which could be a tag: left to the
+     person. Refusing any but an exact version would change what the workflow does for a project.
+  5. `.oxlintrc.json` said that no path crosses a boundary, while a project's profile names a file of the home's
+     lessons: fixed. Its reason now names that path, and the guard of `checks/profile.mjs` that holds it.
+  6. The reading of a front matter line, quadratic at worst, can stall a pull request's own run: left to the person.
+     It was there before this item, and the run's limit of minutes bounds it.
+- What the review could not judge without running the programs, tried on this host. gitleaks 8.30.1 exits 0, with an
+  empty report, when the `git log` it runs fails, as on a range or an option that git refuses, and writes the error
+  alone: the scan of the branch now fails when gitleaks writes anything, with a test; its real runs, on the kit and on
+  the trial's repository, write nothing and find what they found before. The history scan, `checks/history-secrets.mjs`,
+  takes gitleaks's exit code alone too: its weak points are not this item's, and the person is told. actionlint runs
+  ShellCheck with no rc file: a `.shellcheckrc` that disables every check, in a copy's root, left the step's SC2086
+  reported. A `# zizmor: ignore[...]` comment above one step's `run` left the same finding in the next step reported.
+  A file that git takes for binary by its content shows no patch to gitleaks, as in the history scan, which `--text`
+  would change for both: not this item's.
 
 ## Verification
 
