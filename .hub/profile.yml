@@ -1,9 +1,7 @@
 name: honsha
-description: A workflow for running software projects with AI agents, packaged as a Claude Code plugin.
 language: en
 stack: [node]
 default-branch: main
-merge-deploys: false
 public: true
 # The static security testing is oxlint's security rules in `.oxlintrc.json` and three commands of
 # `checks/security-testing.mjs`: secrets over the branch's commits, and the workflow files twice, by actionlint with

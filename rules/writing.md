@@ -17,8 +17,7 @@ In code and in every other file of the project:
 - A document says what holds now. What a change replaces is deleted, not kept beside the new text with a note; an
   entry of a list that no longer holds is deleted, one that holds in part is rewritten, and the entry that deletes
   another may name its identifier once. An identifier is never reused. Git and the records keep the history.
-  Exceptions: records, which follow their own rules; notes of a past discussion kept as such; documents listed under
-  `legacy` in the profile.
+  Exceptions: records, which follow their own rules; notes of a past discussion kept as such.
 - A rule is stated in one place; another document that needs it points there. The exception is an agent's file that
   must check a rule its agent does not otherwise receive. A record copies nothing that another document holds.
 - Outside the kit, a document other than a record names the kit only by what the kit's interface lists

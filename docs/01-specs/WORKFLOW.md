@@ -10,10 +10,10 @@ Terms are defined in the [vision](../00-vision/VISION.md) glossary.
 - **Three sizes:** trivial, small, full. Only full items stop for approval before work starts.
 - **A project's default branch changes only through pull requests.** The record travels in the same pull request as
   the change. The person merges. The one exception is the home's backlog (core rules, Delivery; workflow, The backlog).
-- **The home is a project like any other.** What is not a change to another project lives there: backlog, inbox and
-  verdicts, reports, check outcomes. It reaches the home's default branch as any change does, through a work item and
-  a pull request, the writes the hub and its scripts make included; only the backlog's records are pushed there by a
-  script of the kit, at once (workflow, The backlog).
+- **The home is a project like any other.** What is not a change to another project lives there: backlog, reports,
+  check outcomes. It reaches the home's default branch as any change does, through a work item and a pull request, the
+  writes the hub and its scripts make included; only the backlog's records are pushed there by a script of the kit, at
+  once (workflow, The backlog).
 - **Nothing is indexed by hand.** Status, lists and history are read from front matter.
 - **Parallel by default.** Work is split and run in parallel whenever its parts are independent, without being asked.
 
@@ -88,8 +88,7 @@ its record follows the same states on a branch of the home.
 ## The record
 
 One Markdown file, whose path and branch are named in the core rules (Work items). The identifier is a time in UTC so
-that two branches cannot produce the same one; folders by year and month keep each folder small (architecture, Files and
-index).
+that two branches cannot produce the same one; folders by year and month keep each folder small (architecture, Files).
 
 ### Front matter
 
@@ -152,8 +151,7 @@ extended instead.
 7. **Deliver.** The worker opens the pull request and makes the closing commit (core rules, Delivery; Commits and
    branches). The checks that are wired to the hosting service run on the pull request (workflow, Checks on pull
    requests and on the default branch).
-8. **Merge.** The person reviews and merges (workflow, Merging). A project whose profile says that merging deploys is
-   deployed by that merge.
+8. **Merge.** The person reviews and merges (workflow, Merging).
 9. **Persist.** Specifications affected by the change are updated in the same pull request.
 
 A trivial item goes from step 3 to step 5.
@@ -213,9 +211,9 @@ stops instead of guessing leaves a choice to the person that only the person can
 ## Deferred checks
 
 An acceptance criterion that only a future event can verify does not keep the item open. It is written in `checks` with
-a date and what to look at. The scheduler runs it on that date; until an installation has one, the periodic review lists
-the checks past their date (`honsha:review`). The outcome is a report in the home, linked to the item; who writes it,
-and where, is in the hub's procedure (`agents/hub.md`, Deferred checks). A failed check creates a new work item.
+a date and what to look at. The periodic review lists the checks past their date (`honsha:review`). The outcome is a
+report in the home, linked to the item; who writes it, and where, is in the hub's procedure (`agents/hub.md`, Deferred
+checks). A failed check creates a new work item.
 
 ---
 
@@ -262,7 +260,7 @@ record format are not customised.
 
 - **Status of a project:** records on its branches, open pull requests, its entries in the home's backlog.
 - **Waiting for the person:** records in `awaiting-approval` or `blocked`, and open pull requests.
-- **History:** `done` records on default branches, plus verdicts and reports in the home.
+- **History:** `done` records on default branches, plus reports in the home.
 - **Measures:** counts and durations by size, area and model, from front matter.
 
 ---
@@ -461,8 +459,9 @@ its own rules. What the checker reviews of them is in `agents/checker.md`.
   identifier is never reused for the same reason.
 - A rule stated twice drifts: one copy is changed and the other is not. The second document points to the first. A
   record that copies another document grows with every item and says nothing new.
-- The records' own rules are given with the record (workflow, The record); a project's earlier documents are listed
-  under `legacy` in its profile (`templates/profile.yml`).
+- The records' own rules are given with the record (workflow, The record). A project's earlier workflow documents are
+  deleted once its adoption no longer reads them (`honsha:assessment`): kept, any session there can take one for a
+  rule, and git keeps them for a question about history.
 - An installation's documents cite only the kit's interface (`docs/01-specs/INTERFACE.md`), because the kit's other
   documents are rewritten as it grows: a section that moves or goes leaves a citation of it pointing at nothing, and
   nothing in the installation shows it.
