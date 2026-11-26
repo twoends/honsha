@@ -13,9 +13,9 @@ const root = new URL("..", import.meta.url);
  *   calls for its review, the hub's at the start of every session in a home's own folder, and a skill whenever its
  *   situation comes: what they hold is paid for each time, so each is kept to what its reader needs. The hub's and the
  *   worker's budgets are also what `hooks/hooks.test.mjs` counts for them at a session's start.
- * - A skill has 6,000 characters. The security testing's has more: beside the kinds of testing it holds the scan of a
- *   repository's whole history, which belongs with its rule on a secret found in a commit, and which the assessment's
- *   skill, close to its own budget, could not hold.
+ * - A skill has 6,000 characters. The security testing's has more: beside the kinds of testing it holds the rules of
+ *   the scan of a repository's whole history, which belong with its rule on a secret found in a commit, and which an
+ *   item that answers the scan's findings reads there, while the security posture only runs the scan.
  * - The profile's template is read whenever a profile is written or read for what a key holds.
  * - The workflow is read by whoever changes the kit, not by a session at work; nothing else stops its growth, and a
  *   rule that a session applies belongs elsewhere (workflow, Where the rules are).
@@ -28,9 +28,9 @@ const budgets = {
   "agents/worker.md": 6600,
   "agents/checker.md": 7600,
   "agents/security-reviewer.md": 6000,
-  "skills/security-testing/SKILL.md": 7800,
+  "skills/security-testing/SKILL.md": 7900,
   "templates/profile.yml": 5200,
-  "docs/01-specs/WORKFLOW.md": 43100,
+  "docs/01-specs/WORKFLOW.md": 44900,
   "docs/01-specs/INTERFACE.md": 9000,
 };
 const SKILL = 6000;

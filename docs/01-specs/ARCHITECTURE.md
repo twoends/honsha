@@ -77,7 +77,7 @@ The template, shared by every installation. Indicative layout:
 ```
 .claude-plugin/        plugin manifest and marketplace manifest
 rules/                 the always-on rules, in parts of one topic each
-skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review, a security review, security testing
+skills/                workflow, triage, radar, status, one pack per area; parallel parts, a branch update, an assessment, dependencies, the periodic review, the security posture, a security review, security testing
 agents/                hub, worker, reader, checker, security reviewer
 hooks/                 session and checker start, the installation's models, and the hub's or the worker's procedure; the guard on shell commands; write the effort level into records
 checks/                run a profile's verification commands; check a work branch's record and commits, and the default branch's commits; scan a repository's whole history for secrets

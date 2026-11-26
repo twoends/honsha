@@ -307,6 +307,49 @@ reads listed under "For the person" included.
 - The strategy is written and the state set to `awaiting-approval`; the work waits for the person's approval, in this
   session.
 - The person approved the strategy (Approval); the state is `in-progress`.
+- No part of the change ran in parallel, as the strategy says. The second lookup ran in a subagent on Haiku at medium
+  effort while this session wrote the posture and the changes to the three skills.
+- The second lookup, in GitHub's public pages: GitHub's plans list Dependabot alerts for a personal account on Free;
+  secret scanning runs free on a public repository, and on a private one needs GitHub Secret Protection, on Team or
+  Enterprise Cloud; push protection of a repository is off by default; `hide_secret` defaults to `false`, and the list
+  of alerts on secrets answers `404` where scanning is off; code scanning's endpoints answer `403` where it is not
+  offered; CodeQL's queries are "regularly updated"; the paths in the settings. The pages say a required check must
+  pass before a merge, and nothing of a direct push; who may bypass a rule in a personal account's repository is
+  stated both ways, by the page on protected branches and by the one on rulesets; the reference of the endpoint for
+  private reporting could not be read. So the piece claims neither of the two unsettled points: in the home the
+  ruleset holds only the refusals of forced pushes and deletion, unless the backlog's account is on its bypass list.
+- The trial ran `posture-reads.sh` in the scratchpad: every read of the piece, on the kit's own repository, public, and
+  on the home's, private, both of a free personal account whose `gh` token has the scopes `repo`, `workflow`,
+  `read:org` and `gist`; 14 seconds for both, every call a read. The answers, by form:
+  - `gh repo view --json visibility,viewerPermission` gives `PUBLIC` or `PRIVATE`, and `ADMIN` on both; the merge
+    settings and `vulnerability-alerts`, `204`, as the piece already said.
+  - `security_and_analysis`: on the public repository, `secret_scanning` and `secret_scanning_push_protection`, each
+    with a `status`, beside keys the posture does not read; on the private one, nothing, with `ADMIN`.
+  - The rules of the default branch: `[]` with none on the public repository, and `404` "Branch not protected" from
+    the older branch protection; on the private one, both and the list of rulesets `403` "Upgrade to GitHub Pro or
+    make this repository public to enable this feature".
+  - Code scanning's default setup: `state` with `configured` or `not-configured` on the public repository; `403`
+    "Code scanning is not enabled for this repository" on the private one, as for its alerts. Its open alerts on the
+    public one: `404` "no analysis found", with a hint of `gh` on a scope, `admin:repo_hook`, that no read here needs.
+  - Private reporting: `{"enabled":…}` on the public repository, `404` on the private one.
+  - The token's default: `default_workflow_permissions` and `can_approve_pull_request_reviews` on both.
+  - Open alerts: on dependencies a list on both; on secrets a list on the public repository, read with
+    `hide_secret=true` and its filter, and `404` "Secret scanning is disabled on this repository" on the private one.
+    No alert was open on either, so the locations of an alert on a secret are untried, and the piece says so.
+  - No output held a secret, a value or a repository's name; the script numbered the repositories.
+- `gh pr checks 62` names the kit's wiring job `project / checks`, so a project's file, whose caller job is `checks`,
+  gives `checks / checks`.
+- Decided while writing: the piece first reads `viewerPermission`, so that an account that does not administer the
+  repository is told from a protection that is off; the review's report puts the protections asked of the person with
+  its proposed items; GitHub's own scanners, at the end of "Static testing of the workflows", become a pointer to the
+  new section. The opening comment of `checks/history-secrets.mjs`, which says the scan runs at an assessment and at
+  the periodic review, still holds and is unchanged.
+- Sizes: `skills/security-posture/SKILL.md` 4,429 characters, within the 4,500 of criterion 1;
+  `skills/assessment/SKILL.md` 4,719; `skills/review/SKILL.md` 4,423; `skills/security-testing/SKILL.md` 7,852, whose
+  pointers to the posture and longer description take more than the reading of the kinds gave, so its budget is 7,900;
+  `docs/01-specs/WORKFLOW.md` 44,886, its budget 44,900, about 400 more than the strategy expected, for the points of a
+  service's piece; `docs/01-specs/INTERFACE.md` 7,041. The assessment's later steps are renumbered; nothing in the kit
+  cites them by number.
 
 ## Verification
 
