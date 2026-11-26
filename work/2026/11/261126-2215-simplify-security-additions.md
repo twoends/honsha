@@ -5,14 +5,14 @@ project: honsha
 type: change
 size: full
 kind: upkeep
-state: in-progress
+state: done
 areas: []
 created: 2026-11-26
-updated: 2026-11-26
+updated: 2026-11-27
 requested-by: person
 source: null
-pr: null
-model: null
+pr: 67
+model: claude-opus-5-5
 effort: xhigh
 checks: []
 ---
@@ -489,6 +489,155 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   piece" where it pointed to what the service keeps beyond any ref and to who opened a pull request, which are in
   `services/<name>/security.md`, and now names that file once, the second pointer, which said the same, gone; the
   version check's place in `checks/releases.mjs` is declared under "Deviations". The skill holds 7,200 characters.
+- The fix, `cc9efd5`, touches a path under `security-review`, so it had a repeated review: it passes, no finding. Its
+  one weak point, that the skill's new pointer names `services/<name>/security.md` without "in the kit directory", so
+  that a session could look for it in the project's clone: left to the person, since the same skill names the kit
+  directory for that file in its kinds, the review's step names it the same way, and a file planted there needs write
+  access to the project.
+- The repeated check, of `cc9efd5`: `pass`, no finding (Verification).
+- `261126-2214` was merged into the default branch meanwhile, in pull request 66, and this branch was verified without
+  its change, so the default branch was merged into it in `6643d8f`, after the repeated check, as `honsha:branch-update`
+  asks. The merge had no conflict in the three files that both items change, `.hub/profile.yml`, `README.md` and the
+  workflow, so no repeated check or review follows it; the verification ran again on it (Verification). The
+  workflow holds 47,901 characters with both changes, within its budget of 48,000.
+- The branch was pushed at `6643d8f`, and pull request 67 opened to `main`, its description from this record; its four
+  checks were running.
+- The four checks of pull request 67 passed, in run 45910615585 on `6643d8f`; the closing commit follows.
+
+## Verification
+
+On this host, at `6643d8f`, the merge of the default branch:
+
+- `node <kit directory>/checks/record.mjs`: passes, and names the 5 paths under `security-review` that the branch
+  changes, for which the security review is due.
+- `node <kit directory>/checks/commits.mjs`: the 8 commits of the branch follow the rules.
+- `node checks/verify.mjs`: the 10 `verify` commands pass, in 57 seconds. Prettier, oxlint and tsc; 296 tests of 296;
+  `node checks/security-testing.mjs gitleaks`, 8 commits read and no finding; `actionlint` and `zizmor`, nothing in 2
+  workflow files; `claude plugin validate .`, with its usual warnings on the version and the licence;
+  `node checks/record.mjs` and `node checks/commits.mjs`.
+- `node checks/verify.mjs --dynamic`: the profile lists no dynamic testing.
+- The kit's pipeline on pull request 67, run 45910615585 on `6643d8f`: its four jobs pass, `personal content`,
+  `project / checks`, and `verify` on Ubuntu and on Windows.
+
+The security review of `1b9ac27`, since `516e0db`: **pass**, no findings; its four weak points are in the log.
+
+The repeated review of `9fbeb8e`, since `1b9ac27`: **pass**, no findings; weak points 2 and 3 of the first review
+fixed; its one weak point is in the log.
+
+The repeated review of `488f083`, since `9fbeb8e`: **pass**, no findings; the weak point of the review before it
+fixed; its one weak point is in the log.
+
+The repeated review of `cc9efd5`, since `488f083`:
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** `skills/security-testing/` (SKILL.md, the whole skill, to see the changed lines in context);
+`services/github/` (security.md, the file the change now names); `.hub/profile.yml`; the other places that name
+`services/<name>/security.md` (`skills/review/SKILL.md`, `skills/security-posture/SKILL.md`,
+`docs/01-specs/WORKFLOW.md`)
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. `skills/security-testing/SKILL.md:74`: the new pointer names `services/<name>/security.md` without "in the kit
+   directory". The scan this bullet describes runs "in the repository's clone" (line 72), so a session could look for
+   that relative path in the project's checkout instead of the kit. A file planted at that path in a user's project
+   could then decide which pull request authors count as outside the project, and with that, which secrets are
+   "neither a stop nor urgent". This cannot be exploited as written, for three reasons:
+   - Line 16 of the same skill already says this file is "in the kit directory".
+   - To plant the file, someone has to land it on the branch the session reads. That takes write access to the
+     project, which already counts as trusted.
+   - The session reads what it finds there as data.
+
+   `skills/review/SKILL.md:36` names the file the same way, so this was not introduced here. Adding "in the kit
+   directory" at line 74 would remove the ambiguity.
+
+**Not reviewed**
+
+- Nothing in this change runs. Both hunks only change wording. The first rewords "Examples, each free" to "Free
+  examples". The second names `services/<name>/security.md` as where to find two things: what the hosting service
+  keeps beyond any ref, and who opened a pull request. The same pointer is dropped from the rule about a stranger's
+  secret. The rule itself is the same as before: a secret reached only through refs of pull requests that outsiders
+  opened is listed apart, and is neither a stop nor urgent. `services/github/security.md` covers both things the
+  pointer promises: "What GitHub keeps beyond any ref" and the `author_association` read under "The refs of the
+  history". No pointer is left without a target. How sound that classification is was settled by the last review and
+  is not touched by this change.
+
+The checker's first check, of `488f083`: **fail**, two findings.
+
+1. Criterion 2 is not met. `skills/security-testing/SKILL.md:74` ("what the service keeps beyond any ref is in its
+   piece") and `:81` ("as the service's piece tells") point to content that has moved into
+   `services/<name>/security.md`, "The refs of the history", without naming that file. Line 74 is rewritten by this
+   diff. Fix: name `services/<name>/security.md` in both lines.
+2. Criterion 5 and the in-scope bullet "The two scans of secrets on one set of functions, in
+   `checks/history-secrets.mjs`" both list "its version" among those functions. The version check is `checkVersion` at
+   `checks/releases.mjs:254`, and both scans import it from there (`checks/history-secrets.mjs:43`,
+   `checks/security-testing.mjs:59`). The departure is written in the log ("the version check sits in
+   `checks/releases.mjs`") and is not declared under Deviations. Fix: declare it under Deviations, with its reason.
+
+The repeated check, of `cc9efd5`, since `488f083`:
+
+### Checker report
+
+**Verdict:** pass
+
+Both findings of the last check, of `488f083`, are fixed:
+
+- Finding 1 (criterion 2): `skills/security-testing/SKILL.md:72-75` now says that what the service keeps beyond any
+  ref, and who opened a pull request, are in `services/<name>/security.md`. The second pointer, "as the service's piece
+  tells", is gone from `:81-83`. Both targets exist: "What GitHub keeps beyond any ref" at
+  `services/github/security.md:205` and the `author_association` read at `services/github/security.md:200`.
+- Finding 2 (criterion 5): the version check's place is now declared under "Deviations", with its reason. The reason
+  holds: `checkVersion` is at `checks/releases.mjs:254`, the history scan uses it at `checks/history-secrets.mjs:543`,
+  and `ready` uses it for every pinned tool at `checks/security-testing.mjs:182`.
+
+**Acceptance criteria**
+
+The diff since `488f083` changes only `skills/security-testing/SKILL.md`, so it touches criteria 2, 4 and 5 (the last
+through the record). The other criteria are as the last check read them.
+
+1. GitHub's piece in two files: not touched by this diff. The size over 15,500 is declared under "Deviations".
+2. Pointers name the file of the piece: met, `skills/security-testing/SKILL.md:16` and `:74`. No moved section is cited
+   in its old file there.
+3. Each rule stated in one place: not touched by this diff.
+4. Descriptions and bodies within budget: met for this diff. The skill's description is unchanged. Its body is at its
+   budget of 7,200, set at `checks/budgets.test.mjs:33`; the log records 7,200 characters, and the recorded test run
+   passes 296 of 296.
+5. One set of functions for both scans: met. The version check in `checks/releases.mjs` is declared under "Deviations"
+   (record, Deviations, second entry).
+6. `shellcheck` dropped, output escaped, profile updated: not touched by this diff.
+7. Weak points fixed or set aside: not touched by this diff.
+8. Tests with no network, and the trial: not touched by this diff. The trial is in the log.
+9. What the intent names stays guarded: met for this diff. The rule on a stranger's secret is unchanged at
+   `skills/security-testing/SKILL.md:81-83`. Whether the pipeline passes on the pull request is not verifiable from
+   here.
+
+- **Intent:** in order
+- **Scope:** in order
+- **Comments and documents:** in order
+- **Gates:** in order
+- **Verification evidence:** in order; covers formatting, lint, types, tests and security
+- **Security review:** in order
+- **Record:** in order
+- **Commits:** in order
+
+**Findings**
+
+none
+
+**Not verified**
+
+- Criterion 9, that the kit's pipeline passes on the pull request: the pipeline runs after the push.
+
+The repeated review of `cc9efd5` was due, because `skills/security-testing/SKILL.md` is listed under `security-review`
+in `.hub/profile.yml:39`. It is in Verification: pass, no findings. The log says its one weak point was left to the
+person, and why. That reasoning checks out: `skills/security-testing/SKILL.md:16` names the file "in the kit
+directory", and `skills/review/SKILL.md:36` names it the same way as line 74 does.
 
 ## Deviations
 
@@ -500,3 +649,15 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   `checks/releases.mjs`, `checkVersion`, beside the pins whose arguments for the version it reads, and both scans take
   it from there: the kit's security testing checks with it the version of actionlint and zizmor too, which the history
   scan does not pin.
+
+## Outcome
+
+What the four security items added guards what it guarded, at a lower cost. A worker reads GitHub's `README.md` at
+16,437 characters instead of 35,491, since the posture's reads are in `services/github/security.md`; the descriptions
+of the three security skills, in every session, take 844 characters instead of 1,417, and each rule is stated once,
+with its reason in the workflow. The two scans of secrets run on one set of functions, and a scan whose scanner writes
+an error fails, where the history scan read a failed `git log` as no finding; the history report gives a commit's refs
+once. The kit's security testing has no `shellcheck` command, ShellCheck staying in actionlint, and the workflow files
+are under `security-review`. Each weak point of pull requests 62 to 65 is fixed or set aside with its reason
+(Strategy), and the security reviews of this item left four more, which pull request 67 names for the person. No check
+is deferred.
