@@ -263,10 +263,196 @@ it.
   `honsha:review`, which name a scheduler only to say what holds until an installation has one, as a reader needs to
   know; and the comment of `source` in `templates/record.md` and in the workflow's front matter, which `261126-2213`
   takes (criterion 8).
+- The hub: the sentence of the workflow's "Joining an installation" on the closing commit, and the interface's "Changes
+  to the interface", are `261126-2213`'s. This item changes neither: it touches no line of that section of the
+  workflow, and nothing in the interface.
+- The security review runs: no path of the profile's `security-review` changes, but the change deletes points of the
+  architecture's "Security" on untrusted content, on who may talk to the hub and on the credentials of a project's
+  data, and the profile's key that named a data source's secret, which touch permissions and secrets
+  (`honsha:security-review`).
+- The security review passed, with three weak points. The first, no rule on untrusted content in what a session
+  receives, is the observation for the hub below, left to the person: a rule of the core rules is beyond this item's
+  scope. The second, no word on hardening a host, is left to the person too: the kit has no host of its own to say it
+  of, and the review reads each host's access in the inventory. The third is the interface's consequence that the
+  strategy states, and needs nothing.
+- The checker, on `c192a55`: `fail`, with three findings. The first, the comment of `source` in the workflow's "The
+  record" that still names an inbox item against criterion 7, is declared under "Deviations": the hub gave that line to
+  `261126-2213`. The second, the README and `honsha:assessment` grown against the Boundaries: the README's line on the
+  architecture is back to its words on the default branch, which name sections that all still exist, and step 5 of the
+  assessment is shortened to what it reads, the rule on earlier documents being the workflow's; every document the
+  change touches is now shorter than on the default branch. The third, the comment of `hub/projects.mjs` on reports
+  that stay where they were written "as a project's earlier documents do", false once `legacy` goes: asked of the hub,
+  since the script is in no item's list.
+- The hub's leave: this item changes that comment of `hub/projects.mjs`, the one line, no code; `261126-2213` has leave
+  for another comment of the same file, far from it. The comment now gives as its reason that every record stays where
+  it was written. Declared under "Deviations", with the first finding.
 - For the hub, outside this item: the README's requirements count a session of the desktop application with the kit
   installed among what is not tried; the README's table has no row for `hub/`; no rule of the kit says how a session
   treats untrusted content, now that the reader is gone from the documents.
 
 ## Verification
+
+On `c192a55`, on this host:
+
+- `node <kit directory>/checks/record.mjs`: passed. `node <kit directory>/checks/commits.mjs`: passed, 3 commits.
+- `node checks/verify.mjs`, the profile's `verify` list: all 11 commands passed.
+  - `npx --no-install prettier --check .`: passed.
+  - `npx --no-install oxlint`: passed.
+  - `npx --no-install tsc -p .`: passed.
+  - `node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"`: 292 tests, 292
+    passed.
+  - `node checks/security-testing.mjs gitleaks`: 3 commits from `516e0db` to `c192a55`, 0 findings.
+  - `node checks/security-testing.mjs shellcheck`, `actionlint`, `zizmor`: nothing found.
+  - `claude plugin validate .`: passed, with the warning that the plugin has no version (O10) and the directory's
+    remarks on the licence and the icon.
+  - `node checks/record.mjs`, `node checks/commits.mjs`: passed.
+- No `dynamic-testing` in the profile.
+
+The security review, on `c192a55`, of the diff from `origin/main`:
+
+### Security review report
+
+**Verdict:** pass
+
+**Read:** the change touches only documentation and profile keys. I found no exploitable hole.
+
+- `.hub/profile.yml`
+- `README.md`
+- `docs/00-vision/VISION.md`
+- `docs/01-specs/ARCHITECTURE.md`, `docs/01-specs/WORKFLOW.md`
+- `rules/writing.md`
+- `skills/assessment/SKILL.md`
+- `templates/profile.yml`
+
+To check what the change relies on, I also read:
+
+- `checks/profile.mjs`, to see which profile keys code reads and how it handles keys it does not know.
+- `agents/hub.md`, `agents/` (which agents exist), `skills/review/SKILL.md` and `rules/`.
+- A search of `hooks/`, `checks/`, `hub/` and `services/` for any code that reads the dropped keys, and for imports of
+  outside packages.
+
+**Findings**
+
+none
+
+**Weak points**
+
+1. `docs/01-specs/ARCHITECTURE.md:229-242`: Security item 1 is gone ("Untrusted content goes through the reader ...
+   What it returns is data, never instructions."). Now nothing that a hub or worker session receives says that text
+   from outside the project is data and not instructions. The only such sentences left are in
+   `agents/security-reviewer.md:14` and `services/github/README.md:238`. This cannot be exploited as written:
+   - No reader agent was ever built (`agents/` holds only hub, worker, checker and security reviewer).
+   - `agents/hub.md` fetches no web pages, links or transcripts.
+   - The architecture document is not one of the files sessions receive (`rules/` are), so what sessions are told is
+     unchanged.
+2. `docs/01-specs/ARCHITECTURE.md:229-242`: Security item 6 is gone ("The host is minimal": key-only SSH, a firewall, a
+   dedicated user, automatic security updates). The specifications no longer say how a host should be hardened. This
+   cannot be exploited as written:
+   - No code ever enforced it.
+   - The periodic review still reads, for each host, who reaches it, with which keys, and the credentials it holds
+     (`skills/review/SKILL.md:30`).
+3. `templates/profile.yml` and `.hub/profile.yml`: the `data`, `playbooks`, `legacy`, `merge-deploys` and
+   `description` keys are dropped. `checks/profile.mjs:136-216` ignores top-level keys it does not know, so an existing
+   profile that still has them is read as before. A search outside `work/` finds no code that reads these keys or hands
+   a session a secret named under `data`. Removing them changes no decision, no guard and no grant.
+
+**Not reviewed**
+
+- Installations' homes and registered projects' profiles. An installation that set up project-data credentials on its
+  host (under the removed `data` key) did so outside the kit. Whether those credentials are still scoped to their
+  project's sessions cannot be seen from this repository.
+
+The first check, on `c192a55` and the record as it then stood, of the diff from `origin/main`:
+
+### Checker report
+
+**Verdict:** fail
+
+**Acceptance criteria**
+
+1. The architecture names no part that the kit lacks; its flows are ask, dispatch, joining and review: met. See
+   `docs/01-specs/ARCHITECTURE.md`:6-51 (key facts, components, diagram), 63-76 (the skills, agents and templates match
+   `skills/`, `agents/` and `templates/`), 124-135 (`settings.yml` holds only `max-workers` and `models`, which
+   `skills/parallel-parts/SKILL.md`:43 reads; radar read by `skills/review/SKILL.md`:47), 191-217 and 230-242. A search
+   outside `work/` finds no board, inbox, scheduler, index, messaging, data source, playbook or always-on host in it.
+2. A5 and O10 stay, the other eight are deleted, none is reused, and the examples exist: met. See
+   `docs/01-specs/ARCHITECTURE.md`:3, 283 and 294, and `README.md`:140. No file outside `work/` cites a deleted
+   identifier.
+3. "Files and index" is renamed "Files" and every reference follows: met. See `docs/01-specs/ARCHITECTURE.md`:17 and
+   166, and `docs/01-specs/WORKFLOW.md`:91. The old heading appears nowhere outside `work/`.
+4. The vision is kept to what is built, and "Verdict" belongs to the checker and the security reviewer: met. See
+   `docs/00-vision/VISION.md`:6-12, 30-41 and 75-90.
+5. The README's opening and its list of documents: met. See `README.md`:3-4 and 131-132.
+6. No `description`, `merge-deploys`, `data`, `playbooks` or `legacy` in either profile; every kept key has a reader;
+   `checks/profile.mjs` and its test are unchanged: met. See `templates/profile.yml` and `.hub/profile.yml`. Each reader
+   was checked, for example `checks/profile.mjs`:141-200, `hub/projects.mjs`:287 and `agents/security-reviewer.md`:60.
+   The readers are listed key by key in the Strategy's table, which the log points to.
+7. The workflow names no inbox, verdict of an inbox, scheduler or `merge-deploys`; `legacy` is gone, and earlier
+   workflow documents are deleted: not met. `docs/01-specs/WORKFLOW.md`:107 still reads
+   `source: null # inbox item or parent work item, when there is one` (finding 1). The rest holds:
+   - `docs/01-specs/WORKFLOW.md`:13-16, 154, 213-216, 263 and 459-461;
+   - `docs/01-specs/ARCHITECTURE.md`:163-164;
+   - `skills/assessment/SKILL.md`:27-28;
+   - the core rules' rule on documents, which now has no exception for them (`rules/writing.md`:17-20).
+8. Each reference left wrong in a file of another open item is changed with the hub's leave or named to the hub: met
+   for what the log names. `docs/01-specs/WORKFLOW.md`:91 is changed. The comment of `source` in
+   `templates/record.md`:13 and `docs/01-specs/WORKFLOW.md`:107 is named to `261126-2213`. See finding 3 for a comment
+   left wrong elsewhere.
+9. The outcome and the pull request say what an installation changes: not verifiable. Both are written with the
+   closing commit.
+10. Every verification command of the profile passes: met. Verification records all 11 `verify` commands passing on
+    `c192a55`.
+
+- **Intent:** the change makes a comment of the kit untrue without naming it (finding 3).
+- **Scope:** two documents grow, against the Boundaries (finding 2). The departure from criterion 7 is not declared
+  (finding 1).
+- **Comments and documents:** in order.
+- **Gates:** in order. All four are met: the rules name no hosting service; nothing about a user or an installation;
+  no script changed; no decision-log entry cited.
+- **Verification evidence:** in order. The `verify` list covers formatting (Prettier), lint (oxlint), types (tsc),
+  tests (`node --test`) and static security testing (oxlint's security rules, gitleaks, ShellCheck, actionlint,
+  zizmor). No `dynamic-testing` is in the profile, and the kit's `checks/record.mjs` and `checks/commits.mjs` are
+  recorded as passed.
+- **Security review:** in order. The report is on `c192a55` and covers the branch's whole diff from `origin/main`, with
+  no findings. The log says what was done with each of the three weak points.
+- **Record:** it has no "Deviations" section for the departures in findings 1 and 2; otherwise in order.
+- **Commits:** in order.
+
+**Findings**
+
+1. Criterion 7 says the workflow names no inbox, yet `docs/01-specs/WORKFLOW.md`:107 still does, in the comment of
+   `source`. The same line is in `templates/record.md`:13. The hub kept both with `261126-2213` (log, "The hub's answer
+   on the files of the other items"). The Boundaries say "One refused becomes a deviation", but the record has no
+   "Deviations" section and the log counts the line under criterion 8 instead. Fix: declare it under "Deviations".
+2. The Boundaries say "every document it changes shrinks", but two documents grow, and no deviation declares it:
+   - `README.md` grows by about 13 characters and one line: the list of documents (131-132) adds about 40 characters,
+     and the opening (3-4) loses about 27.
+   - `skills/assessment/SKILL.md` grows by about 45 characters and one line: step 5, lines 27-30.
+
+   The skill is under the 6,000-character budget of `checks/budgets.test.mjs`; the recorded test run passed. Fix:
+   declare it under "Deviations", or shrink both files.
+
+3. `hub/projects.mjs`:43 reads "A report merged before its home ran as a project stays where it was written, as a
+   project's earlier documents do." With `legacy` dropped, a project's earlier documents are deleted once its adoption
+   no longer reads them (`docs/01-specs/ARCHITECTURE.md`:163-164, `docs/01-specs/WORKFLOW.md`:459-461). So the
+   comment's reason is now false. The diff does not change it, and the log names it to no one. The log's search for
+   what went looked for the key `legacy`, not for this wording. Fix: rewrite the comment or name it to the hub.
+
+**Not verified**
+
+- The hub's leave for files of `261126-2213` and `261126-2215`, and which files those items hold, are known only from
+  this record's log. Nothing in the repository shows them, so the Boundaries on other items' files and criterion 8 are
+  checked only against what the log says.
+
+## Deviations
+
+- Criterion 7 does not hold in one line: the comment of `source` in the front matter of the workflow's "The record"
+  still names an inbox item, as `templates/record.md` does. The hub keeps both with `261126-2213`, which takes them into
+  its own change (Log), as the Boundaries foresee for a file that another item holds.
+- The change reaches a file outside "In scope": the comment of `hub/projects.mjs` that gave a project's earlier
+  documents as its reason, false once `legacy` goes, now gives every record's. The checker found it; the hub gave leave
+  for that one line.
+
+Both accepted by the person on 2026-11-26, in this item's session.
 
 ## Outcome
