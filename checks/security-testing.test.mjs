@@ -12,16 +12,11 @@ import {
   ZIZMOR_CONFIG,
   actionlint,
   gitleaks,
-  gitleaksArgs,
   installed,
   main,
   range,
   ready,
-  readIgnored,
-  runsShell,
   setup,
-  shellScripts,
-  shellcheck,
   workflowFiles,
   zizmor,
 } from "./security-testing.mjs";
@@ -68,7 +63,7 @@ function repository() {
 }
 
 /**
- * @typedef {import("./security-testing.mjs").ExecOptions} ExecOptions
+ * @typedef {import("./releases.mjs").ExecOptions} ExecOptions
  * @typedef {(name: string, args: string[], options: ExecOptions) => { status: number, stdout?: string, stderr?: string }} Fake
  */
 
@@ -84,7 +79,7 @@ function context(root, { platform = process.platform, arch = process.arch, env =
   const err = [];
   /** @type {Array<{ name: string, args: string[], options: ExecOptions }>} */
   const calls = [];
-  /** @type {import("./security-testing.mjs").Exec} */
+  /** @type {import("./releases.mjs").Exec} */
   const exec = (file, args, options) => {
     if (file === "git") {
       const result = spawnSync("git", args, { ...options, encoding: "utf8" });
@@ -135,6 +130,22 @@ function installAll(root) {
   }
 }
 
+/**
+ * A repository with one commit on the branch `work` beyond `main`, which adds a file, and every program in its place.
+ * @param {string} [file]
+ * @param {string} [text]
+ */
+function branch(file = "a.txt", text = "a\n") {
+  const root = repository();
+  const base = git(root, ["rev-parse", "HEAD"]);
+  git(root, ["switch", "-q", "-c", "work"]);
+  write(root, file, text);
+  git(root, ["add", "."]);
+  git(root, ["commit", "-q", "-m", "work"]);
+  installAll(root);
+  return { root, base, head: git(root, ["rev-parse", "HEAD"]) };
+}
+
 test("the setup installs each program pinned for the host, names the others, and fails on a refused archive", async () => {
   const root = temporary("honsha-security-testing-setup-");
   const run = context(root, { platform: "win32", arch: "arm64" });
@@ -174,50 +185,6 @@ test("a program runs only once installed, pinned for the host, and at the pinned
   assert.throws(() => ready(other.context, "zizmor"), /says its version is zizmor 0\.1\.0, not the pinned/);
 });
 
-test("a first line runs a shell by its path, or through `env` and its options", () => {
-  for (const line of [
-    "#!/bin/sh",
-    "#! /bin/bash -e",
-    "#!/usr/bin/env bash",
-    "#!/usr/bin/env -i PATH=/bin dash",
-    "#!ksh",
-  ]) {
-    assert.equal(runsShell(line), true, line);
-  }
-  for (const line of ["#!/usr/bin/env node", "#!/bin/zsh", "#!/usr/bin/env", "#!", "# /bin/sh", "echo sh", ""]) {
-    assert.equal(runsShell(line), false, line);
-  }
-});
-
-test("the shell scripts are the tracked files with a shell's extension or first line", () => {
-  const root = repository();
-  const files = {
-    "a.sh": "echo a\n",
-    "b.bash": "echo b\n",
-    ".githooks/pre-push": "#!/bin/sh\nexec true\n",
-    "tools/run": "#!/usr/bin/env bash\ntrue\n",
-    "tools/options": "#!/usr/bin/env -S bash -e\ntrue\n",
-    "tools/dash": "#! /bin/dash\ntrue\n",
-    "tools/node": "#!/usr/bin/env node\n",
-    "tools/zsh": "#!/bin/zsh\ntrue\n",
-    "tools/shell.txt": "a text about sh\n",
-    "tools/gone": "#!/bin/sh\ntrue\n",
-  };
-  for (const [file, text] of Object.entries(files)) write(root, file, text);
-  git(root, ["add", "."]);
-  git(root, ["commit", "-q", "-m", "scripts"]);
-  write(root, "untracked.sh", "echo c\n");
-  fs.rmSync(path.join(root, "tools/gone"));
-  assert.deepEqual(shellScripts(context(root).context).toSorted(), [
-    ".githooks/pre-push",
-    "a.sh",
-    "b.bash",
-    "tools/dash",
-    "tools/options",
-    "tools/run",
-  ]);
-});
-
 test("the workflow files are those in `.github/workflows/` itself", () => {
   const root = repository();
   for (const file of [
@@ -235,23 +202,16 @@ test("the workflow files are those in `.github/workflows/` itself", () => {
 });
 
 test("each linter runs offline on its files, with the pinned programs and no file of the host, and fails on a finding", () => {
-  const root = repository();
-  write(root, ".githooks/pre-push", "#!/bin/sh\nexec true\n");
-  write(root, ".github/workflows/a.yml", "name: a\n");
-  git(root, ["add", "."]);
-  git(root, ["commit", "-q", "-m", "files"]);
-  installAll(root);
+  const { root } = branch(".github/workflows/a.yml", "name: a\n");
   const shellcheckPath = installed(root, SHELLCHECK, process.platform).program;
 
   const clean = context(root);
-  assert.equal(shellcheck(clean.context), 0);
   assert.equal(actionlint(clean.context), 0);
   assert.equal(zizmor(clean.context), 0);
   const runs = clean.calls.filter((call) => !(call.args[0] ?? "").endsWith("version"));
   assert.deepEqual(
     runs.map((call) => [call.name, call.args]),
     [
-      ["shellcheck", ["--norc", "--color=never", "--", ".githooks/pre-push"]],
       ["actionlint", ["-no-color", `-shellcheck=${shellcheckPath}`, "-pyflakes=", ".github/workflows/a.yml"]],
       ["zizmor", ["--offline", "--no-progress", "--color=never", "--no-config", "--", ".github/workflows/a.yml"]],
     ],
@@ -264,15 +224,36 @@ test("each linter runs offline on its files, with the pinned programs and no fil
   });
   assert.equal(zizmor(finding.context), 1);
   assert.deepEqual(finding.calls.at(-1)?.args.slice(3, 5), ["--config", ZIZMOR_CONFIG]);
-  assert.equal(shellcheck(finding.context), 1);
   assert.equal(actionlint(finding.context), 1);
-  assert.deepEqual(finding.out, ["zizmor: a finding", "shellcheck: a finding", "actionlint: a finding"]);
+  assert.deepEqual(finding.out, ["zizmor: a finding", "actionlint: a finding"]);
+});
+
+test("what a linter or git writes is printed line by line, with its control characters escaped", () => {
+  const { root } = branch(".github/workflows/a.yml", "name: a\n");
+  const [escape, bidi] = [0x1b, 0x20_2e].map((code) => String.fromCodePoint(code));
+  const run = context(root, {
+    program: () => ({
+      status: 1,
+      stdout: `a.yml:1: run: echo ${escape}[2J\n\n  hidden${bidi}\n`,
+      stderr: `${escape}]0\n`,
+    }),
+  });
+  assert.equal(zizmor(run.context), 1);
+  assert.deepEqual(run.out, [String.raw`a.yml:1: run: echo \u{1b}[2J`, String.raw`  hidden\u{202e}`]);
+  assert.deepEqual(run.err, [String.raw`\u{1b}]0`]);
+
+  const failing = context(root).context;
+  failing.exec = () => ({ status: 128, stdout: "", stderr: `fatal: a ref ${escape}[2J\nhint: another line\n` });
+  assert.throws(
+    () => workflowFiles(failing),
+    (error) =>
+      error instanceof Error && error.message === "git ls-files failed: fatal: a ref \\u{1b}[2J\nhint: another line",
+  );
 });
 
 test("a repository with nothing for a linter passes without running it", () => {
   const root = repository();
   const run = context(root);
-  assert.equal(shellcheck(run.context), 0);
   assert.equal(actionlint(run.context), 0);
   assert.equal(zizmor(run.context), 0);
   assert.deepEqual(run.calls, []);
@@ -298,29 +279,36 @@ test("the range is the pipeline's where it sets it, and otherwise from the defau
   }
 });
 
-test("the scanner reads the range from the git folder, redacted, with its own rules and no inline allowance", () => {
-  const args = gitleaksArgs("/repo/.git", { base: "a".repeat(40), head: "b".repeat(40) }, "/tmp/report.json", "/tmp/e");
-  assert.deepEqual(args.slice(0, 3), [
-    "git",
-    "/repo/.git",
-    `--log-opts=${"a".repeat(40)}..${"b".repeat(40)} ${LOG_OPTIONS.join(" ")}`,
-  ]);
-  assert.ok(LOG_OPTIONS.includes("--diff-merges=remerge"));
-  for (const arg of ["--redact=100", "--ignore-gitleaks-allow", "--gitleaks-ignore-path=/tmp/e", "--exit-code=0"]) {
-    assert.ok(args.includes(arg), arg);
-  }
-  assert.ok(!args.some((arg) => arg.startsWith("--config")));
-});
+/**
+ * A scanner that writes the given findings to its report and ends as told.
+ * @param {object[]} findings
+ * @param {string} [stderr]
+ * @returns {Fake}
+ */
+const scanner =
+  (findings, stderr = "") =>
+  (name, args) => {
+    const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
+    fs.writeFileSync(report, JSON.stringify(findings));
+    return { status: 0, stderr };
+  };
 
-test("the ignore file lists fingerprints, one a line, with lines of comment", () => {
-  const root = temporary("honsha-security-testing-ignore-");
-  assert.deepEqual(readIgnored(root), new Set());
-  write(
-    root,
-    ".gitleaksignore",
-    "# A fixture, no secret.\n  abc:file:rule:1  \n\n#def:file:rule:2\nghi:file:rule:3\r\n",
-  );
-  assert.deepEqual(readIgnored(root), new Set(["abc:file:rule:1", "ghi:file:rule:3"]));
+test("the scanner reads the range from the git folder, redacted, with its own rules and no inline allowance", () => {
+  const { root, base, head } = branch();
+  const run = context(root, { program: scanner([]) });
+  assert.equal(gitleaks(run.context, "main"), 0);
+  const call = run.calls.find((each) => each.name === "gitleaks" && each.args[0] === "git");
+  assert.ok(call);
+  assert.equal(real(call.args[1]), real(path.join(root, ".git")));
+  assert.equal(call.args[2], `--log-opts=${base}..${head} ${LOG_OPTIONS.join(" ")}`);
+  assert.ok(LOG_OPTIONS.includes("--diff-merges=remerge"));
+  const empty = call.options.cwd;
+  for (const arg of ["--redact=100", "--ignore-gitleaks-allow", `--gitleaks-ignore-path=${empty}`, "--exit-code=0"]) {
+    assert.ok(call.args.includes(arg), arg);
+  }
+  assert.ok(!call.args.some((arg) => arg.startsWith("--config")));
+  assert.equal(call.options.env?.GIT_DIR, undefined);
+  assert.equal(call.options.env?.GIT_NO_REPLACE_OBJECTS, "1");
 });
 
 test("the findings are printed by where they are, never by their value, the listed ones left out, and exit 1", () => {
@@ -346,21 +334,17 @@ test("the findings are printed by where they are, never by their value, the list
     Match: "TOKEN=REDACTED",
     Secret: "REDACTED",
   });
-  const run = context(root, {
-    program: (name, args) => {
-      const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
-      fs.writeFileSync(report, JSON.stringify([finding("config.env"), finding("other.env")]));
-      return { status: 0 };
-    },
-  });
+  const run = context(root, { program: scanner([finding("config.env"), finding("other.env")]) });
   assert.equal(gitleaks(run.context, "main"), 1);
-  const output = run.out.join("\n");
-  assert.match(output, /read 1 commits from/);
-  assert.match(output, /1 findings; 1 left out, as \.gitleaksignore lists them\./);
-  assert.match(output, new RegExp(`github-pat in config\\.env, line 1, commit ${commit}`));
-  assert.match(output, /^ {2}line: TOKEN=\*+$/m);
-  assert.ok(!output.includes(value));
-  assert.ok(!output.includes("other.env, line"));
+  assert.deepEqual(run.out.slice(1), [
+    "1 findings; 1 left out, as .gitleaksignore lists them.",
+    "",
+    "github-pat in config.env, line 1",
+    `  fingerprint: ${commit}:config.env:github-pat:1`,
+    `  line: TOKEN=${"*".repeat(value.length)}`,
+  ]);
+  assert.match(run.out[0], /read 1 commits from/);
+  assert.ok(!run.out.join("\n").includes(value));
   const scan = run.calls.find((call) => call.name === "gitleaks" && call.args[0] === "git");
   assert.ok(scan);
   assert.equal(scan.options.env?.GIT_ATTR_SOURCE, emptyTree);
@@ -371,31 +355,27 @@ test("the findings are printed by where they are, never by their value, the list
     [],
     "the scan's temporary folder is deleted",
   );
+
+  // With no ignore file, nothing is left out.
+  fs.rmSync(path.join(root, ".gitleaksignore"));
+  const unlisted = context(root, { program: scanner([finding("config.env"), finding("other.env")]) });
+  assert.equal(gitleaks(unlisted.context, "main"), 1);
+  assert.equal(unlisted.out[1], "2 findings; 0 left out, as .gitleaksignore lists them.");
 });
 
-test("a scanner that writes an error fails the scan, though it exits 0 with an empty report", () => {
-  const root = repository();
-  git(root, ["switch", "-q", "-c", "work"]);
-  write(root, "a.txt", "a\n");
-  git(root, ["add", "."]);
-  git(root, ["commit", "-q", "-m", "a"]);
-  installAll(root);
-  /** @param {string} stderr */
-  const scanner = (stderr) =>
-    context(root, {
-      program: (name, args) => {
-        const report = args.find((arg) => arg.startsWith("--report-path="))?.slice("--report-path=".length) ?? "";
-        fs.writeFileSync(report, "[]");
-        return { status: 0, stderr };
-      },
-    }).context;
-  assert.throws(
-    () => gitleaks(scanner("ERR [git] fatal: Invalid revision range\n"), "main"),
-    /^Error: gitleaks failed: ERR \[git\] fatal: Invalid revision range$/,
-  );
+test("a scanner that writes an error fails the scan, though it exits 0 with an empty report, and exits 1", async () => {
+  const { root } = branch();
+  const failing = context(root, { program: scanner([], "ERR [git] fatal: Invalid revision range\n") });
+  assert.equal(await main(["gitleaks"], failing.context), 1);
+  assert.deepEqual(failing.err, ["gitleaks failed: ERR [git] fatal: Invalid revision range"]);
+  assert.deepEqual(failing.out, [], "no line reads as a scan that found nothing");
   // A control character that git's message quotes from the history is printed as an escape.
   assert.throws(
-    () => gitleaks(scanner(`ERR [git] fatal: bad ref ${String.fromCodePoint(0x1b)}[2J\n`), "main"),
+    () =>
+      gitleaks(
+        context(root, { program: scanner([], `ERR [git] fatal: bad ref ${String.fromCodePoint(0x1b)}[2J\n`) }).context,
+        "main",
+      ),
     /^Error: gitleaks failed: ERR \[git\] fatal: bad ref \\u\{1b\}\[2J$/,
   );
 });
@@ -413,7 +393,7 @@ test("a wrong usage exits 2, and an error exits 1 with its message", async () =>
     /** @type {string[]} */
     const err = [];
     assert.equal(await main(args, { err: (line) => err.push(line) }), 2, args.join(" "));
-    assert.match(err.join("\n"), /^Usage: node checks\/security-testing\.mjs --setup \| gitleaks \| shellcheck/);
+    assert.equal(err.join("\n"), "Usage: node checks/security-testing.mjs --setup | gitleaks | actionlint | zizmor");
   }
   const root = temporary("honsha-security-testing-no-repository-");
   /** @type {string[]} */

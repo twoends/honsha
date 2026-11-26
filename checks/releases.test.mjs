@@ -11,6 +11,7 @@ import {
   SHELLCHECK,
   ZIZMOR,
   archiveFor,
+  checkVersion,
   install,
   programEntry,
   programName,
@@ -57,6 +58,28 @@ test("each pin names its release by its version, and each archive by its digest,
   // Neither builds for Windows on Arm, and a pin names no archive that its release does not publish.
   assert.equal(archiveFor(SHELLCHECK, "win32", "arm64"), undefined);
   assert.equal(archiveFor(ZIZMOR, "win32", "arm64"), undefined);
+});
+
+test("an installed program passes only when it says it is at the pinned version", () => {
+  /** @type {string[][]} */
+  const asked = [];
+  /** @param {string} stdout */
+  const says = (stdout) => (/** @type {string} */ program, /** @type {string[]} */ args) => {
+    asked.push(args);
+    return { status: 0, stdout, stderr: "" };
+  };
+  checkVersion(ZIZMOR, "zizmor", says(`zizmor ${ZIZMOR.version}\n`), { cwd: ROOT });
+  checkVersion(GITLEAKS, "gitleaks", says(`${GITLEAKS.version}\n`), { cwd: ROOT });
+  assert.deepEqual(asked, [["--version"], ["version"]]);
+  assert.throws(
+    () => checkVersion(ZIZMOR, "zizmor", says("zizmor 0.1.0\n"), { cwd: ROOT }),
+    /^Error: zizmor says its version is zizmor 0\.1\.0, not the pinned \d/,
+  );
+  const error = new Error("spawn zizmor ENOENT");
+  assert.throws(
+    () => checkVersion(ZIZMOR, "zizmor", () => ({ status: null, stdout: "", stderr: "", error }), { cwd: ROOT }),
+    /^Error: zizmor could not run: spawn/,
+  );
 });
 
 test("the program's name takes `.exe` on Windows alone", () => {

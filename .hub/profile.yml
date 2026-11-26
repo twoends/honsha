@@ -5,16 +5,17 @@ stack: [node]
 default-branch: main
 merge-deploys: false
 public: true
-# The static security testing is oxlint's security rules in `.oxlintrc.json` and the four commands of
-# `checks/security-testing.mjs`: secrets over the branch's commits, shell scripts, and the workflow files twice. No
-# `dynamic-testing`: the kit serves no HTTP.
+# The static security testing is oxlint's security rules in `.oxlintrc.json` and three commands of
+# `checks/security-testing.mjs`: secrets over the branch's commits, and the workflow files twice, by actionlint with
+# ShellCheck on the scripts of their steps and by zizmor. The one shell script the kit tracks, `.githooks/pre-push`,
+# only hands its arguments to Node.js, so ShellCheck reads the kit's shell in those steps. No `dynamic-testing`: the
+# kit serves no HTTP.
 verify:
   - npx --no-install prettier --check .
   - npx --no-install oxlint
   - npx --no-install tsc -p .
   - node --test "hooks/*.test.mjs" "checks/*.test.mjs" "hub/*.test.mjs" "services/*/*.test.mjs"
   - node checks/security-testing.mjs gitleaks
-  - node checks/security-testing.mjs shellcheck
   - node checks/security-testing.mjs actionlint
   - node checks/security-testing.mjs zizmor
   - claude plugin validate .
@@ -23,8 +24,8 @@ verify:
 setup:
   - npm ci --ignore-scripts
   - node checks/security-testing.mjs --setup
-# The files that guard, and those of the security review and testing with their tools' configuration: a change to any
-# of them calls for the security review.
+# The files that guard, the workflow files, and those of the security review and testing with their tools'
+# configuration: a change to any of them calls for the security review.
 security-review:
   - hooks/guard.mjs
   - hooks/hooks.json
@@ -42,6 +43,7 @@ security-review:
   - checks/security-testing.mjs
   - .oxlintrc.json
   - .gitleaksignore
+  - .github/workflows/*
   - .github/actionlint.*
   - .github/zizmor.*
   - zizmor.*

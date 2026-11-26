@@ -1,7 +1,8 @@
-// The release programs that the kit's checks run, each pinned as `honsha:dependencies` says, and the install that
-// checks an archive before anything of it is written or run. `checks/history-secrets.mjs` installs gitleaks into a
-// temporary folder at each run, since it runs in a project's clone, where the kit's setup never ran;
-// `checks/security-testing.mjs --setup` installs each program once in the kit's own checkout.
+// The release programs that the kit's checks run, each pinned as `honsha:dependencies` says, the install that checks
+// an archive before anything of it is written or run, and the check that an installed program is at its pinned
+// version. `checks/history-secrets.mjs` installs gitleaks into a temporary folder at each run, since it runs in a
+// project's clone, where the kit's setup never ran; `checks/security-testing.mjs --setup` installs each program once
+// in the kit's own checkout.
 //
 // A pin is a version released at least 7 days before it was taken, and the SHA-256 of each archive that the release
 // publishes for the platforms of the kit's hosts, by `<platform>-<arch>` as Node.js names them: read from the release's
@@ -17,14 +18,26 @@ import path from "node:path";
 
 /**
  * @typedef {{ file: string, sha256: string }} Archive
- * @typedef {{ name: string, version: string, release: string, archives: Record<string, Archive> }} Release
- * `name` is the program's file name, with `.exe` on Windows, and `release` the address its archives are fetched from.
+ * @typedef {{
+ *   name: string,
+ *   version: string,
+ *   versionArgs: string[],
+ *   release: string,
+ *   archives: Record<string, Archive>,
+ * }} Release
+ * `name` is the program's file name, with `.exe` on Windows, `versionArgs` the arguments that make it print its
+ * version, and `release` the address its archives are fetched from.
+ * @typedef {{ status: number | null, stdout: string, stderr: string, error?: Error }} Result
+ * @typedef {{ cwd: string, env?: NodeJS.ProcessEnv, input?: string }} ExecOptions
+ * @typedef {(program: string, args: string[], options: ExecOptions) => Result} Exec
+ * How a check runs a program, which a test replaces.
  */
 
 /** @type {Release} the scanner of secrets, from its checksums file */
 export const GITLEAKS = {
   name: "gitleaks",
   version: "8.30.1",
+  versionArgs: ["version"],
   release: "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/",
   archives: {
     "darwin-arm64": {
@@ -58,6 +71,7 @@ export const GITLEAKS = {
 export const SHELLCHECK = {
   name: "shellcheck",
   version: "0.11.0",
+  versionArgs: ["--version"],
   release: "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/",
   archives: {
     "darwin-arm64": {
@@ -87,6 +101,7 @@ export const SHELLCHECK = {
 export const ACTIONLINT = {
   name: "actionlint",
   version: "1.7.12",
+  versionArgs: ["-version"],
   release: "https://github.com/rhysd/actionlint/releases/download/v1.7.12/",
   archives: {
     "darwin-arm64": {
@@ -120,6 +135,7 @@ export const ACTIONLINT = {
 export const ZIZMOR = {
   name: "zizmor",
   version: "1.32.0",
+  versionArgs: ["--version"],
   release: "https://github.com/zizmorcore/zizmor/releases/download/v1.32.0/",
   archives: {
     "darwin-arm64": {
@@ -219,6 +235,28 @@ function extract(archive, dir, program, platform) {
   const entry = programEntry(entries, program, path.basename(archive));
   tar(platform, ["-xf", archive, "-C", dir, entry]);
   return entry;
+}
+
+/** @type {Exec} */
+export const spawn = (program, args, { cwd, env = process.env, input }) => {
+  const result = spawnSync(program, args, { cwd, env, input, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", error: result.error };
+};
+
+/**
+ * Throws unless an installed program says it is at the pinned version, so that a program left from another pin fails
+ * before it reads anything.
+ * @param {Release} release
+ * @param {string} program
+ * @param {Exec} exec
+ * @param {ExecOptions} options
+ */
+export function checkVersion(release, program, exec, options) {
+  const result = exec(program, release.versionArgs, options);
+  if (result.error) throw new Error(`${release.name} could not run: ${result.error.message}`);
+  if (!result.stdout.includes(release.version)) {
+    throw new Error(`${release.name} says its version is ${result.stdout.trim()}, not the pinned ${release.version}.`);
+  }
 }
 
 /**
