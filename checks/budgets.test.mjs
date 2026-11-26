@@ -30,7 +30,7 @@ const budgets = {
   "agents/security-reviewer.md": 6000,
   "skills/security-testing/SKILL.md": 7900,
   "templates/profile.yml": 5200,
-  "docs/01-specs/WORKFLOW.md": 44900,
+  "docs/01-specs/WORKFLOW.md": 45100,
   "docs/01-specs/INTERFACE.md": 9000,
 };
 const SKILL = 6000;

@@ -350,6 +350,27 @@ reads listed under "For the person" included.
   `docs/01-specs/WORKFLOW.md` 44,886, its budget 44,900, about 400 more than the strategy expected, for the points of a
   service's piece; `docs/01-specs/INTERFACE.md` 7,041. The assessment's later steps are renumbered; nothing in the kit
   cites them by number.
+- The security review of `7683fb6` fails on one finding: the reads of the open alerts took one page, 30 alerts, so an
+  alert past it went unseen, and on a public repository anyone who can open an issue could push a real alert on a
+  secret off the page. Fixed in a commit of its own: the three reads and that of an alert's locations follow every page
+  with `--paginate` and `per_page=100`, and print a line for each alert. Tried on the same two repositories: each
+  answered as before, with no alert, open or closed, on either; so `--paginate` was tried on the kit's own pull
+  requests, 10 a page, which gave 10 lines without it and all 27 with it.
+- Its weak points. 1, fixed: an account on a ruleset's bypass list passes every rule of it, so the piece puts no
+  account there, and the home's ruleset holds only the refusals of forced pushes and deletion. 2, fixed: a protection
+  weakened read as on; the piece reads the ruleset of each rule in force, `active` with an empty `bypass_actors`,
+  untried since neither repository has a ruleset, and the older branch protection's `enforce_admins`, forced pushes and
+  deletion. 3, fixed: a review commits nothing, so no later reading of its was kept; the posture keeps the
+  repository's visibility, the review compares with the assessment's record, and a repository made public, or a
+  setting or protection that was on and is now off or not read, is urgent. 4, left to the person: that a session never
+  turns a protection on, off or around is a rule, which no guard holds, and a push that the service refuses for a
+  secret has no rule of its own beyond the stop conditions; a guard of the service's writes, or such a rule, lies in
+  the guard or the core rules, outside this item's files. 5, left to the person: an alert on a secret that only an
+  outsider's issue holds stops an assessment and is urgent; it fails closed, and setting it apart would set apart too a
+  secret of the project that someone outside posted. 6, fixed: the piece says that a required check holds back a change
+  that fails, not a hostile one, since a pull request runs the workflow file of its own branch.
+- With the fix, `skills/security-posture/SKILL.md` holds 4,468 characters, `skills/review/SKILL.md` 4,431, and
+  `docs/01-specs/WORKFLOW.md` 45,002, its budget 45,100.
 
 ## Verification
 

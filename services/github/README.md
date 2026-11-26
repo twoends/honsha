@@ -124,23 +124,29 @@ With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows,
   plan; on a private one with GitHub Pro for a personal account, or GitHub Team for an organisation. Under Settings,
   Rules, Rulesets: a branch ruleset on the default branch, active, with "Restrict deletions", "Block force pushes" and
   "Require a pull request before merging" with no approval required, since the person merges pull requests that nobody
-  else reviews. In the home, whose default branch takes the backlog's direct commits, the ruleset holds the first two
-  rules only, unless the account that the backlog's script pushes with is on its bypass list: the third would refuse
-  those commits, and a required check could too.
+  else reviews. No account is on the ruleset's bypass list, since an account there passes every rule of the ruleset. In
+  the home, whose default branch takes the backlog's direct commits, the ruleset holds the first two rules only: the
+  third would refuse those commits, and a required check could too.
 - **A required check:** in the same ruleset, "Require status checks to pass" with the wiring's job, as `gh pr checks`
   names it, `checks / checks` for a project's file and `project / checks` in the kit, without "Require branches to be
   up to date before merging": the kit merges the default branch into a work branch only on a conflict, a need or a
-  request (core rules, Commits and branches).
+  request (core rules, Commits and branches). It holds back a change that fails its checks, not a hostile one: a pull
+  request runs the workflow file of its own branch, so one that changes the wiring can report the check as passed, and
+  the person reads such a change before the merge.
 
   ```
-  gh api repos/<owner>/<repository>/rules/branches/<default branch> --jq 'map(.type)'
-  gh api repos/<owner>/<repository>/branches/<default branch>/protection
+  gh api repos/<owner>/<repository>/rules/branches/<default branch> --jq 'map({type, ruleset_id})'
+  gh api repos/<owner>/<repository>/rulesets/<ruleset id> --jq '{enforcement, bypass_actors}'
+  gh api repos/<owner>/<repository>/branches/<default branch>/protection --jq '{admins: .enforce_admins.enabled, force: .allow_force_pushes.enabled, deletions: .allow_deletions.enabled, checks: .required_status_checks.contexts}'
   ```
 
-  The first lists the rules in force on the branch, `deletion`, `non_fast_forward`, `pull_request` and
-  `required_status_checks` once all are on, and `[]` with none; the second reads the older branch protection, which
-  answers `404` "Branch not protected" when there is none. Where GitHub does not give them, both answer `403` "Upgrade
-  to GitHub Pro or make this repository public to enable this feature".
+  The first lists the rules in force on the branch, each with the ruleset that holds it: `deletion`,
+  `non_fast_forward`, `pull_request` and `required_status_checks` once all are on, and `[]` with none. A rule counts as
+  on only where the second, read for each ruleset that the first names, gives `active` and an empty `bypass_actors`;
+  untried, since neither repository where the commands ran had a ruleset. The third reads the older branch
+  protection, which counts as on only with `admins` true and `force` and `deletions` false, and answers `404` "Branch
+  not protected" when there is none. Where GitHub does not give them, the first and the third answer `403` "Upgrade to
+  GitHub Pro or make this repository public to enable this feature".
 
 - **Secret scanning, with push protection,** which refuses a push that holds a secret it knows. Free on a public
   repository; on a private one it needs GitHub Secret Protection, which GitHub sells to organisations on Team or
@@ -160,12 +166,15 @@ With a `viewerPermission` other than `ADMIN`, GitHub hides some of what follows,
 
 ### The open alerts
 
-Each command prints a list, `[]` when there is no open alert:
+Each command prints a line for each open alert, and nothing when there is none. GitHub gives a list in pages, of 30
+alerts unless asked for more, and `gh api` reads one page unless `--paginate` has it follow every page: read without
+it, the alerts past the first page would go unseen, and anyone who can open an issue on a public repository can push a
+real alert there with strings that only look like secrets.
 
 ```
-gh api 'repos/<owner>/<repository>/dependabot/alerts?state=open' --jq 'map({number, package: .dependency.package.name, severity: .security_advisory.severity, advisory: .security_advisory.ghsa_id, fixed: .security_vulnerability.first_patched_version.identifier})'
-gh api 'repos/<owner>/<repository>/secret-scanning/alerts?state=open&hide_secret=true' --jq 'map({number, secret_type, validity, publicly_leaked})'
-gh api 'repos/<owner>/<repository>/code-scanning/alerts?state=open' --jq 'map({number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path})'
+gh api --paginate 'repos/<owner>/<repository>/dependabot/alerts?state=open&per_page=100' --jq '.[] | {number, package: .dependency.package.name, severity: .security_advisory.severity, advisory: .security_advisory.ghsa_id, fixed: .security_vulnerability.first_patched_version.identifier}'
+gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts?state=open&hide_secret=true&per_page=100' --jq '.[] | {number, secret_type, validity, publicly_leaked}'
+gh api --paginate 'repos/<owner>/<repository>/code-scanning/alerts?state=open&per_page=100' --jq '.[] | {number, rule: .rule.id, severity: .rule.security_severity_level, path: .most_recent_instance.location.path}'
 ```
 
 GitHub gives each alert on a secret with the secret's value unless `hide_secret=true` asks it not to, and the filter
@@ -173,7 +182,7 @@ prints only the fields it names, so neither alone lets a value through: an alert
 session in another way. Where one is, without its value, untried, since no alert was open where the commands ran:
 
 ```
-gh api repos/<owner>/<repository>/secret-scanning/alerts/<number>/locations --jq 'map({type, path: .details.path, line: .details.start_line, commit: .details.commit_sha})'
+gh api --paginate 'repos/<owner>/<repository>/secret-scanning/alerts/<number>/locations?per_page=100' --jq '.[] | {type, path: .details.path, line: .details.start_line, commit: .details.commit_sha}'
 ```
 
 Secret scanning also reads a public repository's issues, pull requests, discussions and wiki, where no clone reaches;

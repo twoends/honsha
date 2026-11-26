@@ -557,8 +557,9 @@ a later reading is added in one place.
   a secret's value, as the history is scanned.
 - **Code scanning is never the required check:** its rules are the service's and change by themselves (workflow,
   Security testing).
-- **A setting or a protection off since the last reading is urgent:** it changed outside any work item, by a mistake
-  or by an account that should not have.
+- **A repository made public, or a setting or a protection off since its assessment, is urgent:** it changed outside
+  any work item, by a mistake or by an account that should not have. The assessment's record is the reading compared
+  with, since a review commits nothing.
 
 ---
 

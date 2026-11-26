@@ -43,8 +43,9 @@ so.
 
 ## What is kept
 
-In the record of the assessment or the review, for each repository: the commit read and the date the service was read;
-the scan of the history as it printed it, the scanner's version, the refs and commits read and each finding, with the
-reason of each set aside; and, for each setting and protection, whether it is on, off, not given free or not read. The
-review compares with the last reading of the same repository, in the home, and names what had none: a setting or a
-protection that was on and is now off changed outside any work item, and is urgent, so the person gets it at once.
+In the record of the assessment, and in the review's report, for each repository: its visibility, the commit read and
+the date the service was read; the scan of the history as it printed it, the scanner's version, the refs and commits
+read and each finding, with the reason of each set aside; and, for each setting and protection, whether it is on, off,
+not given free or not read. A review commits nothing, so it compares with the assessment's record of the repository,
+in the home: a repository made public, or a setting or a protection that was on and is now off or not read, changed
+outside any work item, and is urgent.
