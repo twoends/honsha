@@ -40,7 +40,7 @@ const STATES = ["assessing", "adopting", "active"];
 export const NAME = /^[a-z0-9][a-z0-9-]*$/;
 const ID = /^\d{6}-\d{4}$/;
 const KIT = new URL("..", import.meta.url);
-// A report merged before its home ran as a project stays where it was written, as a project's earlier documents do.
+// A report merged before its home ran as a project stays where it was written, as every merged record does.
 const RECORD_FOLDERS = ["work", "reports"];
 
 /**
