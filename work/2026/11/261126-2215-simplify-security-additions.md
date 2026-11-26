@@ -402,3 +402,58 @@ Approved by the person on 2026-11-26, in this item's session, as written in `bc7
   "Boundaries" says how this item keeps apart from it. No other file changes hands.
 - The person approved the strategy (Approval); the state is `in-progress`. The item has no areas, so no area's pack is
   loaded.
+- The hub was asked, on 2026-11-26, for the three lines that "Boundaries" names, and for the words of point 9 of "What
+  the piece of a service says", which say that a credential that deploys is kept so that "only the default branch's
+  runs reach it": the approved rule narrows them.
+- Two parts ran in parallel, as `honsha:parallel-parts` lets them: they share no file, neither needs the other's
+  result, and each is verified alone. The scripts, their tests and the profile ran in a subagent on the session's
+  model, in its own worktree on the local branch `work/261126-2215-simplify-security-additions.scripts`, cut from
+  `42bd307`; the documents ran in this worktree.
+- The documents. GitHub's `README.md` went from 35,491 characters to 16,437, with its two sections that `261126-2213`
+  owns unchanged; `services/github/security.md`, new, holds 16,822, of which the commands take 2,665. Its first
+  section says once what the protections', the alerts' and the access's sections each said: how a command names the
+  repository, the account's permission, every page, an empty list against a failure, no value. The README's
+  "Two things on the site are not used" became one sentence, since the second was what the first setting does, and
+  the sentence that the package manager's report stays the check went, since `honsha:dependencies` states it.
+- The skills: the descriptions of the security testing, the posture and the review hold 293, 289 and 262 characters,
+  844 in all where they held 1,417; their bodies 7,178, 5,308 and 6,000. The reasons that the workflow's "Security
+  testing", "Security posture" and "Upkeep review" give went from the skills, which keep the rules.
+- The hub's answers, on 2026-11-26. In the workflow's "Security testing", the "Cost" point's clause on a push that
+  changes only records is `261126-2213`'s to delete: this item leaves that sentence as it is. Granted, and nothing more
+  in each file: in "What the piece of a service says", points 4, 7, 8 and 9 and one sentence that sends their reads to
+  `services/<name>/security.md`, point 9 with the narrower rule; in `checks/profile.test.mjs`, the word `shellcheck`
+  of its list of commands; in `README.md`, the words of "Checking a change to the kit" that name ShellCheck as a check
+  of its own. A line in the interface or the architecture for the new file would be asked first: none is needed, since
+  the architecture's line on `services/<name>/` names no file of it, and the interface names `README.md` for the
+  install alone. Points 4, 7 and 8 needed no change. The workflow then holds 47,976 characters, 276 more than at
+  `516e0db`, for the contract's sentence and the narrower rule on a credential that deploys; its budget is 48,000.
+- The scripts, in `ce14442`. `checks/history-secrets.mjs` exports the scanner's arguments, its run, which fails on a
+  start's error, an exit code other than 0 or any line of error output, an ignore list read from a text, a finding's
+  lines and the escaping of a program's output; `checks/releases.mjs` gives each pin the arguments that print its
+  version, and the version check. The history scan prints, once for each commit, whether the default branch holds it
+  and the refs that reach it, then its findings. `checks/security-testing.mjs` lost its `shellcheck` command, the
+  detection of shell scripts and its own copies of the scanner's parts, and prints what a linter or git writes line by
+  line, escaped. The scripts went from 1,244 lines to 1,233, since the shared functions came with their comments, and
+  the tests grew by about 90 lines for the new cases; the duplicated forms are gone.
+- Decided in that part: the version check sits in `checks/releases.mjs`, beside the pins, which it reads; the branch's
+  scan no longer ends a finding's first line with its commit, which the fingerprint, on the next line, opens with; a
+  program's error output is printed one escaped line for each line, and a run that exits with another code and writes
+  nothing says its exit code.
+- The part's verification, in its worktree at `ce14442`: Prettier, oxlint and tsc pass; 294 tests of 294 pass; the
+  three commands of the security testing find nothing; `shellcheck` is refused as a wrong usage; the commits' check
+  passes.
+- The trial, in the scratchpad, read by name. (a) A scratch repository with a fake key and a fake token in one commit,
+  pushed to a bare remote with a tag and a `refs/pull/1/head`: the history scan, which downloaded gitleaks 8.30.1 and
+  checked its digest, read 3 refs and 3 commits, printed the commit once with the branch and the tag that reach it,
+  then its two findings with their lines masked, and exited 1; no value was printed. (b) The gitleaks of the setup,
+  given an option that its `git log` refuses: run alone it exited 0 with an empty report and two lines of error output;
+  through the shared run it failed with that message.
+- The part was brought into this branch by a fast-forward to `ce14442`, as nothing else was committed here since
+  `42bd307`; its worktree and branch were then removed.
+
+## Deviations
+
+- Criterion 1: `services/github/security.md` holds 16,822 characters, not at most 15,500. Its commands take 2,665, and
+  each read keeps the answers by which a reading tells a protection on from off and an empty list from one it could not
+  read; the cut came from what three sections repeated, from the read that serves no project and from the wording. Its
+  budget is set to what it holds.

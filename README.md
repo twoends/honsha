@@ -118,8 +118,8 @@ install scripts, then the programs of the kit's security testing from their rele
 has the digest that `checks/releases.mjs` pins: it is needed once in each clone or worktree, and again when
 `package-lock.json` or a pin changes. The second runs the verification commands that `.hub/profile.yml` lists:
 formatting with Prettier, lint with oxlint and the security rules of `eslint-plugin-security`, types with TypeScript
-checking the JavaScript files, the tests, the scan of the branch's commits for secrets with gitleaks, ShellCheck on the
-shell scripts, actionlint and zizmor on the workflow files, `claude plugin validate .`, and the checks of the branch's
+checking the JavaScript files, the tests, the scan of the branch's commits for secrets with gitleaks, actionlint, with
+ShellCheck on their steps, and zizmor on the workflow files, `claude plugin validate .`, and the checks of the branch's
 record and commits. Both run on every pull request and every push to `main`, on Linux and on Windows.
 
 The validator warns that the plugin has no version, which is deliberate (O10; architecture, Open design points). It also

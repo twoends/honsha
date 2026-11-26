@@ -376,8 +376,11 @@ Where a service gives one free, the security posture asks the person to turn it 
 9. **Who and what can reach a repository, and the client's token:** the commands that read a repository's
    collaborators, deploy keys, secrets by name and environments, the scopes and expiry of the token that the service's
    client holds, and the account's second factor, each printing no value; where a credential that deploys is kept so
-   that only the default branch's runs reach it, and on which plans the service gives that place; what the kit's
-   commands need of the token (workflow, Accounts and credentials).
+   that only the default branch's runs that no one outside the project can start reach it, and on which plans the
+   service gives that place; what the kit's commands need of the token (workflow, Accounts and credentials).
+
+The reads of points 4, 7, 8 and 9 are in a file of their own, `services/<name>/security.md`, which an assessment, the
+periodic review and an item of security testing read, so that a worker reads only what a delivery needs.
 
 ### Checks on pull requests and on the default branch
 
@@ -564,8 +567,7 @@ it with one skill, `honsha:security-posture`, so that they read the same and a l
   Security testing).
 - **A repository made public, a setting or a protection off since its assessment, or access that nothing records, is
   urgent:** it changed outside any work item, by a mistake or by an account that should not have. A review commits
-  nothing, so it compares with the assessment's record, the person's answers in the home's decision log and the home's
-  inventory (workflow, Accounts and credentials).
+  nothing, so it compares with what the assessment and the home recorded.
 
 ---
 
@@ -583,9 +585,10 @@ reviewer's.
   by text message by whoever moves the number to another card.
 - **Narrow scopes and an expiry, shorter for a token that a session can read:** a token does what its scopes allow while
   it is valid. The review reads the dates, so that a credential is replaced before it stops a session.
-- **A credential that deploys reaches only the default branch's runs:** a pull request's run executes the workflow
-  files of its own branch, so whoever can push a branch, a session among them, could have it print or send the
-  credential. A token that administers the repository can widen the limit, which the posture then reads.
+- **A credential that deploys reaches only the default branch's runs that no one outside the project can start:** a
+  pull request's run executes the workflow files of its own branch, so whoever can push a branch, a session among them,
+  could have it print or send the credential, and a comment's run or another run's can be caused from outside the
+  project. A token that administers the repository can widen the limit, which the posture then reads.
 - **No value in a session:** what a session reads stays in its transcript on the host.
 - **The inventory is Markdown:** no script reads it, so the kit fixes what it holds and not its layout.
 - **A provider's own security is weighed in its radar entry:** one that holds the installation's data or credentials is
