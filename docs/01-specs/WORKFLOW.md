@@ -551,8 +551,8 @@ tools that know classes of holes that no reader keeps in mind. The rules are in 
 
 Between two readings of a repository a setting changes, a protection goes off, an alert opens, a key or an account
 gains access and new files call for a kind of testing, so the periodic review reads again what the assessment read: the
-testing, the pipeline, the hosting service's side, who and what can reach the repository, and the history. Both read it with one skill, `honsha:security-posture`, so that they read the same and
-a later reading is added in one place.
+testing, the pipeline, the hosting service's side, who and what can reach the repository, and the history. Both read
+it with one skill, `honsha:security-posture`, so that they read the same and a later reading is added in one place.
 
 - **The protections a service gives free are asked for:** the rules rely on none, but each is a stop on the server,
   which the guard is not (workflow, The guard). A session never turns one on: each limits what the person's own account
@@ -599,8 +599,8 @@ Documents and logs grow by small additions, each reasonable on its own: a rule r
 paragraph kept after it stopped holding, a record that copies what another document says. Nobody notices while
 working, so a review on a date looks for it, together with the radar's dates, the dependencies, the security posture
 of each repository (workflow, Security posture), the accounts and credentials of the home's inventory (workflow,
-Accounts and credentials), the deferred checks, the lessons and the measures. What it reads and
-how it reports are in the skill `honsha:review`.
+Accounts and credentials), the deferred checks, the lessons and the measures. What it reads and how it reports are in
+the skill `honsha:review`.
 
 ---
 

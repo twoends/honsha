@@ -7,7 +7,8 @@ A repository's security rests also on what lies around its code: the testing tha
 that testing, the hosting service's settings and protections, who and what can reach it, and the history already
 pushed. An assessment reads it before a project joins, and the periodic review reads it again in each repository it
 reads: between two readings a setting changes, a protection goes off, an alert opens, a key or an account gains access,
-and new files call for a kind of testing. The reading changes nothing. The hosting service's commands are in its piece, `services/<name>/README.md` in the kit directory.
+and new files call for a kind of testing. The reading changes nothing. The hosting service's commands are in its
+piece, `services/<name>/README.md` in the kit directory.
 
 ## What is read
 

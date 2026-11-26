@@ -250,21 +250,22 @@ environment, on no event that a pull request starts, which the static testing of
 stops an account that writes to the repository and does not administer it: one that administers it can change the
 environment's branches. So against a session it holds only where the host's token cannot administer the repository,
 as a fine-grained token whose Administration and Environments permissions only read, which is untried with `gh`; the
-posture reads the branches at every reading. GitHub gives environment secrets and deployment branches on a public repository on every plan, and on a private one with
-GitHub Pro, Team or Enterprise. On a private repository of the free plan its pages give neither, so the posture counts
-no such limit there, whatever the API lists, and such a credential stays out of the pipeline. Required reviewers and
-wait timers are given, on the free, Pro and Team plans, on public repositories only.
+posture reads the branches at every reading. GitHub gives environment secrets and deployment branches on a public
+repository on every plan, and on a private one with GitHub Pro, Team or Enterprise. On a private repository of the
+free plan its pages give neither, so the posture counts no such limit there, whatever the API lists, and such a
+credential stays out of the pipeline. Required reviewers and wait timers are given, on the free, Pro and Team plans,
+on public repositories only.
 
 ## The account and its token
 
 `gh` keeps one token for the account it signs in on a host, and every session of the host uses it. The kit's commands
 need it to push branches and open pull requests, to push a change to a workflow file, and to read the checks, the
 settings, the rulesets, the alerts and the access above. By GitHub's pages a classic token does that with `repo`,
-`read:org` and `workflow`, which is untried with those scopes alone. `gh`'s manual names `repo`, `read:org` and `gist` as the least it takes, and whether it refuses a token
-without `gist` is untried. A scope beyond these, such as one that deletes repositories or administers an organisation,
-is none of the kit's. A fine-grained token reaches only the repositories it names, and GitHub's REST reference gives
-the permission that each read needs; `gh`'s manual has such a token given through `GH_TOKEN`, and the permissions with
-which `gh` runs the kit's commands are untried.
+`read:org` and `workflow`, which is untried with those scopes alone. `gh`'s manual names `repo`, `read:org` and
+`gist` as the least it takes, and whether it refuses a token without `gist` is untried. A scope beyond these, such as
+one that deletes repositories or administers an organisation, is none of the kit's. A fine-grained token reaches only
+the repositories it names, and GitHub's REST reference gives the permission that each read needs; `gh`'s manual has
+such a token given through `GH_TOKEN`, and the permissions with which `gh` runs the kit's commands are untried.
 
 The token that `gh auth login` gets in the browser has no expiry. A personal access token, classic or fine-grained,
 has the expiry chosen when it is made, and may have none unless an organisation sets a limit; GitHub revokes a token

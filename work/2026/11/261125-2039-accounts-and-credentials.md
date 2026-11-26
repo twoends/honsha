@@ -453,6 +453,22 @@ reads listed under "For the person" and "Boundaries" included.
   webhooks, which the approved strategy leaves out (Out of scope), the inventory holding the applications each account
   authorised; the fifth, that the guard refuses no command that prints `gh`'s token, which only the rule forbids, a
   change to the guard and an idea of its own. The workflow's budget is 47,700, for the fixes' 91 characters.
+- The repeated security review ran on `1f79820`, on the diff since `a1977ec`, in a subagent on Opus at its own effort:
+  verdict `pass`, no finding, the three weak points confirmed fixed, and three more, left to the person. The first:
+  where the host's token administers the repository, a session could widen an environment's branches and restore them
+  between two readings, so the posture's reading is no check against it, and no rule says what follows; whether a
+  session's token may administer a repository that holds a credential that deploys is a decision that the approved
+  strategy does not take, and the person takes it, as the home's inventory records the token. The second: events that
+  someone outside the repository can start, such as a comment, also run on the default branch's ref, and the private
+  repository's setting that sends secrets to forks' runs is not read; a reading the approved strategy does not name, and
+  untried. The third: the wording of the name's encoding leaves letters outside ASCII, characters of more than one
+  byte and a name of dots loose, none of which ends the quoted argument.
+- The checker read `1f79820`, in a subagent on Opus at its own effort: verdict `fail`, one finding, four prose lines
+  past the 120 characters that the kit's documents wrap to and a paragraph not wrapped again, in the posture, the
+  workflow and GitHub's piece, where an edit had joined two lines; Prettier, which preserves prose as written, does not
+  see them. Fixed by wrapping the five paragraphs again, with no word changed. Its points not verified: GitHub's
+  statements, which the two lookups read (Log); and whether the reads that take an environment's name ran, which the
+  trial's entry says they did, for each environment the list gave.
 
 ## Verification
 
