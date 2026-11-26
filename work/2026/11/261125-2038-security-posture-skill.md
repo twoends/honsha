@@ -5,7 +5,7 @@ project: honsha
 type: change
 size: full
 kind: capability
-state: in-progress
+state: blocked
 areas: []
 created: 2026-11-25
 updated: 2026-11-26
@@ -421,6 +421,10 @@ reads listed under "For the person" included.
   other answer but `422` and no scope.
 - Read without a token on 2026-11-26: GitHub answers anyone that the kit's `main` is not protected, and gives `[]` for
   the rules of that branch.
+- The verification ran on `af0183c`, and passed. The item stops before any push, since the work went beyond its
+  boundary (core rules, Stop conditions): the branch's commits hold what the boundary ruled out, and a push would
+  publish them. The person decides whether the branch is pushed as it is. The repeated security review of the piece's
+  change and the repeated check wait for that decision. The state is `blocked`.
 
 ## Verification
 
